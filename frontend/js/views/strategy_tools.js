@@ -96,6 +96,37 @@ const TOOLS = {
             <p class="muted small">Press risk after wins (capped), cut back toward base after losses —
             the opposite of a martingale. The control row trades the same sequence at flat base risk.</p>`,
     },
+    'seasonality-screen': {
+        label: 'Seasonality Screen',
+        call: (b) => api.seasonalityScreen({
+            symbols: String(b.symbols).split(/[\s,]+/).filter(Boolean),
+            years: b.years,
+        }),
+        fields: [
+            { key: 'symbols', label: 'Symbols (comma-sep, ≤30)', def: 'SPY, QQQ, IWM, XLE, XLF, TLT, GLD', text: true },
+            { key: 'years', label: 'Lookback years', def: 10, int: true },
+        ],
+        render: (r) => {
+            const DOW = { 1: 'Mon', 2: 'Tue', 3: 'Wed', 4: 'Thu', 5: 'Fri' };
+            return `
+            <table class="gs-table">
+                <thead><tr><th>Symbol</th><th>TOM edge</th><th>Overnight</th><th>Intraday</th><th>Santa avg</th><th>Best day</th></tr></thead>
+                <tbody>${r.rows.map(row => `
+                    <tr>
+                        <td>${esc(row.symbol)}</td>
+                        <td class="${row.tom_edge_pp >= 0 ? 'pos' : 'neg'}">${(row.tom_edge_pp >= 0 ? '+' : '') + row.tom_edge_pp.toFixed(3)}pp</td>
+                        <td class="${row.overnight_total_pct >= 0 ? 'pos' : 'neg'}">${row.overnight_total_pct.toFixed(0)}%</td>
+                        <td class="${row.intraday_total_pct >= 0 ? 'pos' : 'neg'}">${row.intraday_total_pct.toFixed(0)}%</td>
+                        <td>${row.santa_avg_pct != null ? row.santa_avg_pct.toFixed(2) + '%' : '—'}</td>
+                        <td>${row.best_weekday != null ? DOW[row.best_weekday] || row.best_weekday : '—'}</td>
+                    </tr>`).join('')}
+                </tbody>
+            </table>
+            ${r.skipped.length ? `<p class="muted small neg">skipped (insufficient history): ${r.skipped.map(esc).join(', ')}</p>` : ''}
+            <p class="muted small">Calendar edges ranked by |TOM edge| — the same per-symbol studies as
+            the character sheet, side by side across the list.</p>`;
+        },
+    },
     'character-sheet': {
         label: 'Symbol Character',
         call: (b) => api.characterSheet(b.symbol, b.years),

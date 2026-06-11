@@ -589,6 +589,88 @@ pub async fn correlation_regime(
 }
 
 // ===========================================================================
+// Seasonality screener — calendar edges ranked across a symbol list
+// ===========================================================================
+
+#[derive(Debug, Clone, Serialize)]
+pub struct SeasonalityScreenRow {
+    pub symbol: String,
+    pub days: usize,
+    pub tom_edge_pp: f64,
+    pub overnight_total_pct: f64,
+    pub intraday_total_pct: f64,
+    pub santa_avg_pct: Option<f64>,
+    /// Weekday index (1=Mon) with the highest mean return.
+    pub best_weekday: Option<u8>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct SeasonalityScreen {
+    /// Ranked by |TOM edge| descending.
+    pub rows: Vec<SeasonalityScreenRow>,
+    /// Symbols skipped for insufficient history.
+    pub skipped: Vec<String>,
+}
+
+pub async fn seasonality_screen(
+    pool: &PgPool,
+    symbols: &[String],
+    years: u32,
+) -> SeasonalityScreen {
+    let mut rows = Vec::new();
+    let mut skipped = Vec::new();
+    for sym in symbols {
+        let Ok(dated) = daily_closes(pool, sym, years).await else {
+            skipped.push(sym.clone());
+            continue;
+        };
+        let tom = tom_stats(sym, &dated);
+        // Overnight legs need opens — the wrapper's own bar fetch hits
+        // the same price cache the closes came from.
+        let on = overnight_split(pool, sym, years).await.ok();
+        let santa = santa_stats(sym, &dated);
+        let tagged: Vec<traderview_core::day_of_week_seasonality::DailyClose> = dated
+            .iter()
+            .filter_map(|(d, c)| {
+                let wd = d.weekday().num_days_from_monday() as u8 + 1;
+                (wd <= 5).then_some(traderview_core::day_of_week_seasonality::DailyClose {
+                    day_of_week: wd,
+                    close: *c,
+                })
+            })
+            .collect();
+        let best_weekday = traderview_core::day_of_week_seasonality::compute(&tagged)
+            .and_then(|r| {
+                r.by_weekday
+                    .iter()
+                    .filter(|w| w.sample_count > 0)
+                    .max_by(|a, b| {
+                        a.mean_return
+                            .partial_cmp(&b.mean_return)
+                            .unwrap_or(std::cmp::Ordering::Equal)
+                    })
+                    .map(|w| w.day_of_week)
+            });
+        rows.push(SeasonalityScreenRow {
+            symbol: sym.clone(),
+            days: dated.len(),
+            tom_edge_pp: tom.edge_pct,
+            overnight_total_pct: on.as_ref().map(|o| o.stats.overnight_total_pct).unwrap_or(0.0),
+            intraday_total_pct: on.as_ref().map(|o| o.stats.intraday_total_pct).unwrap_or(0.0),
+            santa_avg_pct: santa.map(|s| s.rally_avg_return_pct),
+            best_weekday,
+        });
+    }
+    rows.sort_by(|a, b| {
+        b.tom_edge_pp
+            .abs()
+            .partial_cmp(&a.tom_edge_pp.abs())
+            .unwrap_or(std::cmp::Ordering::Equal)
+    });
+    SeasonalityScreen { rows, skipped }
+}
+
+// ===========================================================================
 // Pair character sheet — aligned fetch once, every pair analysis on it
 // ===========================================================================
 
