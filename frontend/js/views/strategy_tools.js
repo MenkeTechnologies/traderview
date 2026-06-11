@@ -1624,17 +1624,19 @@ const TOOLS = {
         render: (r) => renderEventStudy(r, 'third-Friday expiration'),
     },
     'paper-twap': {
-        label: 'Paper TWAP/VWAP',
+        label: 'Paper TWAP/VWAP/POV',
         call: async (b) => {
             if (String(b.symbol).trim()) {
                 const acct = await api.paperEnsure();
+                const style = String(b.style).toLowerCase();
                 await api.paperParentOrderCreate(acct.id, {
                     symbol: b.symbol,
                     side: String(b.side).toLowerCase(),
                     total_qty: String(b.total_qty),
                     slices: b.slices,
                     interval_seconds: b.interval_seconds,
-                    style: String(b.style).toLowerCase(),
+                    style,
+                    participation_rate: style === 'pov' ? String(b.participation_rate) : null,
                 });
             }
             return api.paperParentOrders();
@@ -1643,9 +1645,10 @@ const TOOLS = {
             { key: 'symbol', label: 'Symbol (empty = just list)', def: '', text: true },
             { key: 'side', label: 'Side (buy/sell/short/cover)', def: 'buy', text: true },
             { key: 'total_qty', label: 'Total quantity', def: 300, int: true },
-            { key: 'slices', label: 'Slices', def: 6, int: true },
-            { key: 'interval_seconds', label: 'Interval (seconds)', def: 60, int: true },
-            { key: 'style', label: 'Style (twap = equal, vwap = U-curve)', def: 'twap', text: true },
+            { key: 'slices', label: 'Slices (pov: max children)', def: 6, int: true },
+            { key: 'interval_seconds', label: 'Interval (seconds; pov ≥ 60)', def: 60, int: true },
+            { key: 'style', label: 'Style (twap/vwap/pov)', def: 'twap', text: true },
+            { key: 'participation_rate', label: 'POV participation rate (0–0.5]', def: 0.1 },
         ],
         render: (rows) => `
             <table class="gs-table">
@@ -1654,18 +1657,20 @@ const TOOLS = {
                     <tr>
                         <td>${esc(o.symbol)}</td>
                         <td>${esc(o.side)}</td>
-                        <td>${esc(o.style)}</td>
+                        <td>${esc(o.style)}${o.participation_rate ? ' ' + (Number(o.participation_rate) * 100).toFixed(0) + '%' : ''}</td>
                         <td>${o.slices_filled}/${o.slices}</td>
                         <td>${esc(String(o.qty_filled))} / ${esc(String(o.total_qty))}</td>
-                        <td class="${o.status === 'done' ? 'pos' : o.status === 'error' ? 'neg' : ''}">${esc(o.status)}${o.last_error ? ' — ' + esc(o.last_error) : ''}</td>
+                        <td class="${o.status === 'done' ? 'pos' : (o.status === 'error' || o.status === 'capped') ? 'neg' : ''}">${esc(o.status)}${o.last_error ? ' — ' + esc(o.last_error) : ''}</td>
                         <td class="muted small">${o.status === 'working' ? new Date(o.next_slice_at).toLocaleTimeString() : '—'}</td>
                     </tr>`).join('')}
                 </tbody>
             </table>
             <p class="muted small">Child MARKET orders through the paper engine's friction model (first
             slice fires within ~5s). TWAP slices equally; VWAP weights slices by the stylized intraday
-            volume U-curve (heavy open/close, light midday). A failed child stops the parent with the
-            error shown — execution risk is part of the lesson.</p>`,
+            volume U-curve (heavy open/close, light midday); POV sizes each child as the participation
+            rate × observed volume since the last tick — a silent tape means no child, and hitting the
+            child cap with quantity unfilled shows <b>capped</b>, never a fake done. A failed child
+            stops the parent with the error shown — execution risk is part of the lesson.</p>`,
     },
     'screener-snapshots': {
         label: 'Saved Screens',
