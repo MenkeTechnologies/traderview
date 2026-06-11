@@ -225,6 +225,7 @@ const STRATEGY_KINDS = [
     { value: 'ma_cross_adx',      label_key: 'view.algo.opt.strat_ma_cross_adx',      label: 'MA Cross + ADX filter (EMA cross gated on trend strength)' },
     { value: 'macd_cross',        label_key: 'view.algo.opt.strat_macd_cross',        label: 'MACD Cross (signal-line crossover, optional zero-line filter)' },
     { value: 'rsi_divergence',    label_key: 'view.algo.opt.strat_rsi_divergence',    label: 'RSI Divergence (exhaustion reversal at confirmed swings)' },
+    { value: 'gap_fade',          label_key: 'view.algo.opt.strat_gap_fade',          label: 'Gap Fade (fade 1-4% opening gaps toward prior close)' },
     { value: 'keltner_breakout',  label_key: 'view.algo.opt.strat_keltner_breakout',  label: 'Keltner Channel Breakout (EMA ± ATR band)' },
     { value: 'ichimoku_cloud',    label_key: 'view.algo.opt.strat_ichimoku_cloud',    label: 'Ichimoku Cloud (TK cross + cloud break + Chikou clear)' },
 ];
@@ -596,6 +597,31 @@ const STRATEGY_DOCS = {
         ],
         scope_note: 'Confirmed swings mean the signal lags the low by swing_lookback bars \u2014 that lag is the false-signal filter, not a defect. Divergences off mid-range RSI are noise; the oversold/overbought gate is what makes these tradeable.',
         when_to_use: 'Exhaustion turns after extended one-way moves. Complements trend-followers: this fires exactly where they stop out.',
+    },
+    gap_fade: {
+        title: 'Gap Fade',
+        family: 'Session reversal \u00b7 long or short \u00b7 mean-reversion to prior close',
+        entry: [
+            'Measure the opening gap vs the prior session close (sessions split on the bar-timestamp date change)',
+            'Only gaps of gap_min_pct..gap_max_pct qualify \u2014 moderate gaps fill; large gaps continue (gap-and-go is a different trade)',
+            'Long: gap DOWN, after confirm_bars the close has reclaimed above the session open and the gap has not already filled',
+            'Short: mirrored gap UP',
+            'No fresh entries after max_entry_bars \u2014 a stale gap is dead',
+        ],
+        exit: [
+            'Close crossing the prior close (\u201cgap_filled\u201d) \u2014 the fill IS the trade',
+            'ATR-multiple stop (atr_stop_mult) \u2014 the fade thesis failed',
+        ],
+        params: [
+            ['gap_min_pct', 1.0, 'Smallest gap worth fading (%)'],
+            ['gap_max_pct', 4.0, 'Largest gap to fade \u2014 beyond this gaps tend to continue (%)'],
+            ['confirm_bars', 3, 'Session bars to wait before entering'],
+            ['max_entry_bars', 30, 'Entry window in session bars'],
+            ['atr_period', 14, 'ATR window for the stop'],
+            ['atr_stop_mult', 1.5, 'Stop distance in ATRs'],
+        ],
+        scope_note: 'The target is fixed at the prior close \u2014 there is no take-profit parameter because the gap fill defines the trade. The reclaim-above-open condition is the confirmation that fading has begun; entering a still-sinking gap is catching a falling knife.',
+        when_to_use: 'Quiet-news moderate gaps in liquid names at the open. Skip earnings/news gaps \u2014 those are the continuation regime this strategy deliberately excludes.',
     },
     keltner_breakout: {
         title: 'Keltner Channel Breakout',
@@ -1083,6 +1109,11 @@ const OPTIMIZE_DEFAULT_GRIDS = {
         rsi_period: [9, 14, 21],
         swing_lookback: [3, 5, 8],
         rsi_oversold: [25, 30, 35],
+    },
+    gap_fade: {
+        gap_min_pct: [0.75, 1.0, 1.5],
+        gap_max_pct: [3.0, 4.0, 5.0],
+        confirm_bars: [2, 3, 5],
     },
     keltner_breakout: {
         period: [15, 20, 30],

@@ -3920,6 +3920,7 @@
   "view.algo.opt.strat_bb_squeeze": "Bollinger Squeeze (BBW pohjakymmenys + tauko)",
   "view.algo.opt.strat_connors_rsi2": "Connors RSI-2 + 200 SMA (keskiarvo-rev klassikko)",
   "view.algo.opt.strat_donchian_trend": "Donchian Trend / Kilpikonna (Donchian + ADX suodatin)",
+  "view.algo.opt.strat_gap_fade": "Gap Fade (fade 1-4% opening gaps toward prior close)",
   "view.algo.opt.strat_heikin_ashi_trend": "Heikin-Ashi Trend (HA ajaa + EMA vahvistaa)",
   "view.algo.opt.strat_macd_cross": "MACD Cross (signal-line crossover, optional zero-line filter)",
   "view.algo.opt.strat_mean_reversion": "Reversion keskiarvo (Connors RSI + VWAP z-score)",

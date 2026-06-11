@@ -3920,6 +3920,7 @@
   "view.algo.opt.strat_bb_squeeze": "Bollinger Squeeze (BBW alt decile + grup molası)",
   "view.algo.opt.strat_connors_rsi2": "Connors RSI-2 + 200 SMA (mean-rev klasik)",
   "view.algo.opt.strat_donchian_trend": "Donchian Trend / Kaplumbağa (Donchian + ADX filtre)",
+  "view.algo.opt.strat_gap_fade": "Gap Fade (fade 1-4% opening gaps toward prior close)",
   "view.algo.opt.strat_heikin_ashi_trend": "Heikin-Ashi Trendi (HA koşmak + EMA doğru)",
   "view.algo.opt.strat_macd_cross": "MACD Cross (signal-line crossover, optional zero-line filter)",
   "view.algo.opt.strat_mean_reversion": "Revers (Connors RSI + VWAP z-<)",

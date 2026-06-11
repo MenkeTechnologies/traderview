@@ -3920,6 +3920,7 @@
   "view.algo.opt.strat_bb_squeeze": "Thắt kiểu Bollinger (BBW..",
   "view.algo.opt.strat_connors_rsi2": "ConnorsRSI-2 + 200SMA (mian-rev cổ điển)",
   "view.algo.opt.strat_donchian_trend": "Donchian Trend / Turtle (Donchian + ADX filter)",
+  "view.algo.opt.strat_gap_fade": "Gap Fade (fade 1-4% opening gaps toward prior close)",
   "view.algo.opt.strat_heikin_ashi_trend": "Heikin-Ashi Trend (Tiếng voi chạy +EMA xác nhận)",
   "view.algo.opt.strat_macd_cross": "MACD Cross (signal-line crossover, optional zero-line filter)",
   "view.algo.opt.strat_mean_reversion": "Có nghĩa là đảo ngược (Connors RSI +VWAP z-score)",

@@ -3920,6 +3920,7 @@
   "view.algo.opt.strat_bb_squeeze": "Bollinger Squeeze (BBW нижня кришка + смуга розриву)",
   "view.algo.opt.strat_connors_rsi2": "Коннори RSI-2 + 200 SMA (меан-рев класичний)",
   "view.algo.opt.strat_donchian_trend": "Donchian Trend / Turtle (Дончян + ADX фільтр)",
+  "view.algo.opt.strat_gap_fade": "Gap Fade (fade 1-4% opening gaps toward prior close)",
   "view.algo.opt.strat_heikin_ashi_trend": "Heikin-Ashi Trend (HA run + EMA підтвердження)",
   "view.algo.opt.strat_macd_cross": "MACD Cross (signal-line crossover, optional zero-line filter)",
   "view.algo.opt.strat_mean_reversion": "Mean Reversion (Коннори RSI + VWAP z-score)",
