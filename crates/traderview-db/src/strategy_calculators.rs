@@ -709,6 +709,120 @@ pub async fn drawdown_episodes(
 }
 
 // ===========================================================================
+// Event-day studies (FOMC/CPI via caller dates, OpEx via computed
+// third Fridays) — per-offset stats delegate to holiday_seasonality
+// ===========================================================================
+
+/// Third Friday of a month — the standard monthly equity/index option
+/// expiration anchor. Pure calendar math, no hardcoded dates.
+pub fn third_friday(year: i32, month: u32) -> Option<chrono::NaiveDate> {
+    let first = chrono::NaiveDate::from_ymd_opt(year, month, 1)?;
+    let days_to_friday =
+        (chrono::Weekday::Fri.num_days_from_monday() + 7 - first.weekday().num_days_from_monday())
+            % 7;
+    first.checked_add_days(chrono::Days::new(days_to_friday as u64 + 14))
+}
+
+/// Index of the last trading day at or before `target` (None when the
+/// target precedes the sample).
+fn index_at_or_before(closes: &[(chrono::NaiveDate, f64)], target: chrono::NaiveDate) -> Option<usize> {
+    match closes.binary_search_by(|(d, _)| d.cmp(&target)) {
+        Ok(i) => Some(i),
+        Err(0) => None,
+        Err(i) => Some(i - 1),
+    }
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct EventStudyReport {
+    pub symbol: String,
+    pub events_used: usize,
+    pub events_supplied: usize,
+    /// Mean return and hit rate ON the event day itself, %.
+    pub event_day_avg_pct: f64,
+    pub event_day_hit_rate_pct: f64,
+    /// Per-offset stats from holiday_seasonality (offset 0 = event day).
+    pub offsets: traderview_core::holiday_seasonality::HolidaySeasonalityReport,
+}
+
+pub async fn event_study(
+    pool: &PgPool,
+    symbol: &str,
+    years: u32,
+    event_dates: &[chrono::NaiveDate],
+    window_before: u32,
+    window_after: u32,
+) -> Result<EventStudyReport, TomError> {
+    use traderview_core::holiday_seasonality::{self, TradingDay};
+    let closes = daily_closes(pool, symbol, years).await?;
+    let anchors: Vec<u32> = event_dates
+        .iter()
+        .filter_map(|d| index_at_or_before(&closes, *d))
+        .filter(|i| *i > 0)
+        .map(|i| i as u32)
+        .collect();
+    if anchors.is_empty() {
+        return Err(TomError::Insufficient {
+            symbol: symbol.to_string(),
+            got: 0,
+            need: 1,
+        });
+    }
+    let days: Vec<TradingDay> = closes
+        .iter()
+        .enumerate()
+        .map(|(i, (_, c))| TradingDay {
+            trading_day_index: i as u32,
+            close: *c,
+        })
+        .collect();
+    let offsets = holiday_seasonality::compute(&days, &anchors, window_before, window_after)
+        .ok_or_else(|| TomError::Insufficient {
+            symbol: symbol.to_string(),
+            got: closes.len(),
+            need: MIN_DAYS,
+        })?;
+    // Event-day simple returns (offset 0 in simple terms, not log).
+    let rets: Vec<f64> = anchors
+        .iter()
+        .filter_map(|&i| {
+            let i = i as usize;
+            let p0 = closes[i - 1].1;
+            (p0 > 0.0).then(|| (closes[i].1 / p0 - 1.0) * 100.0)
+        })
+        .collect();
+    let n = rets.len().max(1) as f64;
+    Ok(EventStudyReport {
+        symbol: symbol.to_string(),
+        events_used: anchors.len(),
+        events_supplied: event_dates.len(),
+        event_day_avg_pct: rets.iter().sum::<f64>() / n,
+        event_day_hit_rate_pct: rets.iter().filter(|r| **r > 0.0).count() as f64 / n * 100.0,
+        offsets,
+    })
+}
+
+pub async fn opex_week(
+    pool: &PgPool,
+    symbol: &str,
+    years: u32,
+) -> Result<EventStudyReport, TomError> {
+    let years = years.clamp(1, 20);
+    let now = Utc::now().date_naive();
+    let mut anchors = Vec::new();
+    for back in 0..=(years * 12) {
+        let months_total = now.year() * 12 + now.month() as i32 - 1 - back as i32;
+        let (y, m) = (months_total.div_euclid(12), months_total.rem_euclid(12) as u32 + 1);
+        if let Some(d) = third_friday(y, m) {
+            if d <= now {
+                anchors.push(d);
+            }
+        }
+    }
+    event_study(pool, symbol, years, &anchors, 4, 2).await
+}
+
+// ===========================================================================
 // Volatility cone (data wrapper around traderview_core::vol_cone)
 // ===========================================================================
 
@@ -1065,6 +1179,51 @@ mod tests {
             100.0,
         );
         assert!(santa_stats("TEST", &flat).is_none());
+    }
+
+    // ── event studies ─────────────────────────────────────────────────────
+
+    #[test]
+    fn third_friday_hand_checked_dates() {
+        // June 2026 starts Monday ⇒ Fridays 5/12/19 ⇒ 19th.
+        assert_eq!(
+            third_friday(2026, 6),
+            NaiveDate::from_ymd_opt(2026, 6, 19)
+        );
+        // January 2026 starts Thursday ⇒ Fridays 2/9/16 ⇒ 16th.
+        assert_eq!(
+            third_friday(2026, 1),
+            NaiveDate::from_ymd_opt(2026, 1, 16)
+        );
+        // A month starting ON Friday: August 2025 ⇒ 1/8/15 ⇒ 15th.
+        assert_eq!(
+            third_friday(2025, 8),
+            NaiveDate::from_ymd_opt(2025, 8, 15)
+        );
+        // Every result is a Friday.
+        for m in 1..=12 {
+            assert_eq!(
+                third_friday(2026, m).expect("valid").weekday(),
+                chrono::Weekday::Fri
+            );
+        }
+    }
+
+    #[test]
+    fn index_lookup_snaps_to_prior_trading_day() {
+        let closes: Vec<(NaiveDate, f64)> = [3, 4, 5, 10, 11]
+            .iter()
+            .map(|d| (NaiveDate::from_ymd_opt(2026, 6, *d).expect("valid"), 100.0))
+            .collect();
+        // Exact hit.
+        let hit = NaiveDate::from_ymd_opt(2026, 6, 5).expect("valid");
+        assert_eq!(index_at_or_before(&closes, hit), Some(2));
+        // Weekend date (June 7, Sunday) snaps back to June 5.
+        let weekend = NaiveDate::from_ymd_opt(2026, 6, 7).expect("valid");
+        assert_eq!(index_at_or_before(&closes, weekend), Some(2));
+        // Before the sample → None.
+        let early = NaiveDate::from_ymd_opt(2026, 6, 1).expect("valid");
+        assert_eq!(index_at_or_before(&closes, early), None);
     }
 
     // ── turn of month ─────────────────────────────────────────────────────

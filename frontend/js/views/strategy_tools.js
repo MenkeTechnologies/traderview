@@ -1390,6 +1390,32 @@ const TOOLS = {
             target over a wide stop posts a seductive win rate with the skew hidden in the loser.</p>`;
         },
     },
+    'opex-week': {
+        label: 'OpEx Week',
+        call: (b) => api.opexWeek(b.symbol, b.years),
+        fields: [
+            { key: 'symbol', label: 'Symbol', def: 'SPY', text: true },
+            { key: 'years', label: 'Lookback years', def: 10, int: true },
+        ],
+        render: (r) => renderEventStudy(r, 'third-Friday expiration'),
+    },
+    'event-study': {
+        label: 'Event Study',
+        call: (b) => api.eventStudy(b.symbol, {
+            dates: String(b.dates).split(/[\s,;]+/).filter(Boolean),
+            years: b.years,
+            window_before: b.window_before,
+            window_after: b.window_after,
+        }),
+        fields: [
+            { key: 'symbol', label: 'Symbol', def: 'SPY', text: true },
+            { key: 'dates', label: 'Event dates YYYY-MM-DD (comma-sep)', def: '2025-01-29, 2025-03-19, 2025-05-07, 2025-06-18, 2025-07-30, 2025-09-17', text: true },
+            { key: 'years', label: 'Lookback years', def: 10, int: true },
+            { key: 'window_before', label: 'Window before (days)', def: 3, int: true },
+            { key: 'window_after', label: 'Window after (days)', def: 3, int: true },
+        ],
+        render: (r) => renderEventStudy(r, 'supplied event'),
+    },
     'best-days': {
         label: 'Miss the Best Days',
         call: (b) => api.bestDays(b.symbol, b.years, b.n),
@@ -1666,6 +1692,29 @@ const TOOLS = {
             turn-of-month effect concentrates equity returns in the −1..+3 window.</p>`,
     },
 };
+
+function renderEventStudy(r, anchorLabel) {
+    return `
+        <div class="cards">
+            <div class="card"><div class="label">Event-day return</div>
+                <div class="value ${r.event_day_avg_pct >= 0 ? 'pos' : 'neg'}">${r.event_day_avg_pct.toFixed(3)}%</div>
+                <div class="small muted">hit ${r.event_day_hit_rate_pct.toFixed(0)}% · ${r.events_used}/${r.events_supplied} events in sample</div></div>
+        </div>
+        <table class="gs-table">
+            <thead><tr><th>Offset</th><th>Mean (log)</th><th>Std</th><th>Hit</th><th>N</th></tr></thead>
+            <tbody>${r.offsets.by_offset.map(o => `
+                <tr>
+                    <td>${o.offset > 0 ? '+' + o.offset : o.offset}</td>
+                    <td class="${o.mean_return >= 0 ? 'pos' : 'neg'}">${(o.mean_return * 100).toFixed(3)}%</td>
+                    <td>${(o.std_return * 100).toFixed(2)}%</td>
+                    <td>${(o.hit_rate * 100).toFixed(0)}%</td>
+                    <td>${o.sample_count}</td>
+                </tr>`).join('')}
+            </tbody>
+        </table>
+        <p class="muted small">Per-offset stats around each ${anchorLabel} day (offset 0 = the day) —
+        same engine as the Santa rally study.</p>`;
+}
 
 export async function renderStrategyTools(mount) {
     renderToolTabs(mount, {

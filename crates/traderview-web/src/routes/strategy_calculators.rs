@@ -34,6 +34,8 @@
 //!   GET  /symbols/:sym/overnight-split   — overnight vs intraday legs
 //!   GET  /symbols/:sym/best-days         — miss-the-best-days study
 //!   GET  /symbols/:sym/drawdown-episodes — top-N peak/trough/recovery
+//!   GET  /symbols/:sym/opex-week         — third-Friday expiration window
+//!   POST /symbols/:sym/event-study       — caller-dated FOMC/CPI study
 //!   POST /calc/double-barrier            — target-vs-stop hit-first odds
 //!   POST /calc/futures-sizing            — tick math + margin-capped size
 //!   POST /calc/impermanent-loss          — AMM IL + fee-APR breakeven
@@ -98,6 +100,8 @@ pub fn router() -> Router<AppState> {
             "/symbols/:symbol/drawdown-episodes",
             get(get_drawdown_episodes),
         )
+        .route("/symbols/:symbol/opex-week", get(get_opex_week))
+        .route("/symbols/:symbol/event-study", post(post_event_study))
         .route("/calc/double-barrier", post(post_double_barrier))
         .route("/calc/futures-sizing", post(post_futures_sizing))
         .route("/calc/impermanent-loss", post(post_impermanent_loss))
@@ -705,6 +709,57 @@ async fn get_drawdown_episodes(
         .await
         .map(Json)
         .map_err(map_tom_err)
+}
+
+async fn get_opex_week(
+    State(s): State<AppState>,
+    _u: AuthUser,
+    Path(symbol): Path<String>,
+    Query(q): Query<TomQ>,
+) -> Result<Json<strategy_calculators::EventStudyReport>, ApiError> {
+    let sym = validate_symbol(&symbol)?;
+    strategy_calculators::opex_week(&s.pool, &sym, q.years.unwrap_or(10))
+        .await
+        .map(Json)
+        .map_err(map_tom_err)
+}
+
+#[derive(Debug, Deserialize)]
+struct EventStudyBody {
+    /// Event dates as YYYY-MM-DD strings.
+    dates: Vec<String>,
+    years: Option<u32>,
+    window_before: Option<u32>,
+    window_after: Option<u32>,
+}
+
+async fn post_event_study(
+    State(s): State<AppState>,
+    _u: AuthUser,
+    Path(symbol): Path<String>,
+    Json(b): Json<EventStudyBody>,
+) -> Result<Json<strategy_calculators::EventStudyReport>, ApiError> {
+    let sym = validate_symbol(&symbol)?;
+    if b.dates.is_empty() || b.dates.len() > 500 {
+        return Err(ApiError::BadRequest("supply 1..=500 event dates".into()));
+    }
+    let dates: Vec<chrono::NaiveDate> = b
+        .dates
+        .iter()
+        .map(|s| s.trim().parse())
+        .collect::<Result<_, _>>()
+        .map_err(|_| ApiError::BadRequest("dates must be YYYY-MM-DD".into()))?;
+    strategy_calculators::event_study(
+        &s.pool,
+        &sym,
+        b.years.unwrap_or(10),
+        &dates,
+        b.window_before.unwrap_or(3).min(20),
+        b.window_after.unwrap_or(3).min(20),
+    )
+    .await
+    .map(Json)
+    .map_err(map_tom_err)
 }
 
 #[derive(Debug, Deserialize)]
