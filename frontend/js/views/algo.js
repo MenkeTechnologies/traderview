@@ -1676,11 +1676,21 @@ async function openTournamentModal(mount) {
                         <tr><td>${esc(k)}</td>${matrix.columns.map(c => {
                             const v = c.scores[ki];
                             const best = c.best_kind === k;
-                            return `<td class="${best ? 'pos' : ''}">${v != null ? (best ? '\u2605 ' : '') + v.toFixed(2) : '\u2014'}</td>`;
+                            return `<td class="${best ? 'pos' : ''}">${v != null ? (best ? '\u2605 ' : '') + v.toFixed(2) : '\u2014'}${best ? ` <button class="link matrix-deploy" data-kind="${esc(k)}" data-symbol="${esc(c.symbol)}" data-i18n="view.algo.btn.deploy">deploy</button>` : ''}</td>`;
                         }).join('')}</tr>`).join('')}
                         <tr><td class="muted">buy &amp; hold ${matrix.rank_by === 'total_return' ? 'return %' : 'baseline'}</td>${matrix.columns.map(c => `<td class="muted">${matrix.rank_by === 'sharpe' ? c.benchmark.sharpe.toFixed(2) : c.benchmark.total_return_pct.toFixed(1)}</td>`).join('')}</tr>
                     </tbody></table>
                     <p class="muted small">\u2605 = best per symbol \u00b7 \u2014 = never traded${skipped_symbols.length ? ` \u00b7 skipped (too few bars): ${skipped_symbols.map(esc).join(', ')}` : ''}</p>`;
+                out.querySelectorAll('.matrix-deploy').forEach(btn => btn.addEventListener('click', () => {
+                    close();
+                    openStrategyModal(mount, null, {
+                        name: `${btn.dataset.kind} ${btn.dataset.symbol}`,
+                        strategy_type: btn.dataset.kind,
+                        side_mode: 'both',
+                        timeframe: fd.get('interval') === 'day1' ? 'day1' : fd.get('interval'),
+                        entry_rules: { symbol: btn.dataset.symbol },
+                    });
+                }));
             } catch (err) {
                 out.textContent = t('common.error', { err: err.message });
             }
