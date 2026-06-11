@@ -1233,7 +1233,8 @@ async function openRevisionsModal(s) {
             <p data-i18n="view.algo.hint.revisions">Each row is the config BEFORE that save overwrote it — when drift fires, this is where "what changed" gets answered.</p>
             ${rows.map(r => `
             <details style="margin-bottom:6px">
-                <summary>${new Date(r.replaced_at).toLocaleString()} \u00b7 ${esc(r.strategy_type)} \u00b7 ${esc(r.timeframe)} \u00b7 ${esc(r.side_mode)} \u00b7 ${esc(r.broker_mode)}</summary>
+                <summary>${new Date(r.replaced_at).toLocaleString()} \u00b7 ${esc(r.strategy_type)} \u00b7 ${esc(r.timeframe)} \u00b7 ${esc(r.side_mode)} \u00b7 ${esc(r.broker_mode)}
+                    <button class="link rev-restore" data-rev="${r.id}" data-i18n="view.algo.btn.restore">restore</button></summary>
                 <pre class="small" style="overflow:auto;max-height:240px">${esc(JSON.stringify({
                     name: r.name,
                     entry_rules: r.entry_rules,
@@ -1242,6 +1243,17 @@ async function openRevisionsModal(s) {
                     risk_gates: r.risk_gates,
                 }, null, 2))}</pre>
             </details>`).join('')}`;
+        out.querySelectorAll('.rev-restore').forEach(btn => btn.addEventListener('click', async (e) => {
+            e.preventDefault();
+            if (!await tConfirm('view.algo.confirm.restore_revision', {}, { level: 'danger' })) return;
+            try {
+                await api.algoRestoreRevision(s.id, btn.dataset.rev);
+                showToast(t('view.algo.toast.restored'), { level: 'success' });
+                close();
+            } catch (err) {
+                showToast(t('common.error', { err: err.message }), { level: 'error' });
+            }
+        }));
     } catch (err) {
         wrap.querySelector('#revs-result').textContent = t('common.error', { err: err.message });
     }

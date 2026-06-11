@@ -48,6 +48,10 @@ pub fn router() -> Router<AppState> {
         .route("/algo/strategies/:id/live-vs-backtest", get(get_live_vs_backtest))
         .route("/algo/strategies/:id/gate-fires", get(get_gate_fires))
         .route("/algo/strategies/:id/revisions", get(get_revisions))
+        .route(
+            "/algo/strategies/:id/revisions/:rev_id/restore",
+            post(post_restore_revision),
+        )
         .route("/algo/strategies/:id/backtests", get(list_backtest_history))
         .route(
             "/algo/backtests/:id",
@@ -1355,6 +1359,57 @@ async fn get_revisions(
     Path(id): Path<Uuid>,
 ) -> Result<Json<Vec<traderview_db::algo::StrategyRevision>>, ApiError> {
     traderview_db::algo::list_revisions(&s.pool, u.id, id, 50)
+        .await
+        .map_err(ApiError::Internal)?
+        .map(Json)
+        .ok_or_else(|| ApiError::BadRequest("strategy not found".into()))
+}
+
+/// POST /algo/strategies/:id/revisions/:rev_id/restore — write the
+/// revision's config back through update_strategy, which snapshots the
+/// CURRENT config first: a restore is itself reversible. Fields the
+/// revision doesn't capture (enabled, universe, watchlist, account)
+/// keep their current values. Restoring to live broker_mode is
+/// downgraded to paper — the paper-lock rationale applies to restores
+/// exactly as it does to fresh saves.
+async fn post_restore_revision(
+    State(s): State<AppState>,
+    u: AuthUser,
+    Path((id, rev_id)): Path<(Uuid, i64)>,
+) -> Result<Json<AlgoStrategy>, ApiError> {
+    let current = traderview_db::algo::get_strategy(&s.pool, u.id, id)
+        .await
+        .map_err(ApiError::Internal)?
+        .ok_or_else(|| ApiError::BadRequest("strategy not found".into()))?;
+    let rev = traderview_db::algo::get_revision(&s.pool, u.id, id, rev_id)
+        .await
+        .map_err(ApiError::Internal)?
+        .ok_or_else(|| ApiError::BadRequest("revision not found".into()))?;
+    // The registry could have dropped a kind since the revision was
+    // taken — the same validation fresh saves get.
+    validate_strategy_type(&rev.strategy_type)?;
+    let broker_mode = if rev.broker_mode == "live" {
+        "paper".to_string()
+    } else {
+        rev.broker_mode.clone()
+    };
+    let input = AlgoStrategyInput {
+        name: rev.name.clone(),
+        enabled: current.enabled,
+        timeframe: rev.timeframe.clone(),
+        universe_mode: current.universe_mode.clone(),
+        watchlist_id: current.watchlist_id,
+        autoscan_top_n: current.autoscan_top_n,
+        side_mode: rev.side_mode.clone(),
+        strategy_type: rev.strategy_type.clone(),
+        account_id: Some(current.account_id),
+        entry_rules: rev.entry_rules.clone(),
+        exit_rules: rev.exit_rules.clone(),
+        sizing: rev.sizing.clone(),
+        risk_gates: rev.risk_gates.clone(),
+        broker_mode,
+    };
+    traderview_db::algo::update_strategy(&s.pool, u.id, id, input)
         .await
         .map_err(ApiError::Internal)?
         .map(Json)

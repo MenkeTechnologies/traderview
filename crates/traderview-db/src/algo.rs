@@ -1054,6 +1054,27 @@ pub async fn list_revisions(
     ))
 }
 
+/// Single revision row, ownership-checked through the strategy join.
+pub async fn get_revision(
+    pool: &PgPool,
+    user_id: Uuid,
+    strategy_id: Uuid,
+    revision_id: i64,
+) -> anyhow::Result<Option<StrategyRevision>> {
+    Ok(sqlx::query_as::<_, StrategyRevision>(
+        "SELECT r.id, r.name, r.timeframe, r.side_mode, r.strategy_type,
+                r.entry_rules, r.exit_rules, r.sizing, r.risk_gates, r.broker_mode, r.replaced_at
+           FROM algo_strategy_revisions r
+           JOIN algo_strategies s ON s.id = r.strategy_id
+          WHERE r.id = $1 AND r.strategy_id = $2 AND s.user_id = $3",
+    )
+    .bind(revision_id)
+    .bind(strategy_id)
+    .bind(user_id)
+    .fetch_optional(pool)
+    .await?)
+}
+
 /// One audit row per risk-gate fire. Non-fatal at call sites: the
 /// audit must never break the tick loop.
 pub async fn record_gate_fire(
