@@ -348,22 +348,23 @@ pub async fn submit(
         anyhow::bail!("forbidden");
     }
 
-    // Options route through their own fill path: chain-quoted mid,
-    // contract multiplier, per-contract commission.
-    if traderview_core::occ_symbol::is_occ(&req.symbol) {
-        return submit_option(pool, account_id, req).await;
-    }
-
-    let quote = crate::market_data::quote(pool, &req.symbol).await?;
-    let last = Decimal::try_from(quote.price)?;
+    // One quote resolver for equities AND OCC options — every order
+    // type (market/limit/stop/trailing, TIF, brackets) flows through
+    // the same path; only the quote source, multiplier, and fee model
+    // differ. Expired contracts reject at submit.
+    let rq = resolve_quote(pool, &req.symbol).await?;
+    let last = rq.last;
 
     let triggered = trigger_price(&req.order_type, req.side, last, req.limit_price, req.stop_price);
 
-    // Apply friction to the trigger price so paper fills track live
-    // execution: buyer pays slippage up, seller receives slippage down,
-    // commission + SEC fee charged separately.
+    // Equities get the friction model (slippage + commission + SEC
+    // fee); options fill at the chain mid with a flat per-contract
+    // commission — bid/ask mid IS the slippage model for options.
     let (fill_price, total_fee_usd) = match triggered {
         None => (None, 0.0),
+        Some(p) if rq.is_option => {
+            (Some(p), OPTION_COMMISSION_PER_CONTRACT * req.qty.to_string().parse::<f64>().unwrap_or(0.0))
+        }
         Some(p) => {
             let (adjusted, fee) = frictioned_fill(p, req.qty, req.side);
             (Some(adjusted), fee)
@@ -445,7 +446,7 @@ pub async fn submit(
             req.side,
             req.qty,
             price,
-            Decimal::ONE,
+            rq.multiplier,
         )
         .await?;
         // Commission + SEC fee deducted from cash on top of the
@@ -547,12 +548,35 @@ pub async fn check_pending(pool: &PgPool) -> anyhow::Result<Vec<BackgroundFill>>
             continue;
         };
         // Quote failures are transient (rate limit, network) — the
-        // order keeps resting and the next pass retries.
-        let Ok(quote) = crate::market_data::quote(pool, &o.symbol).await else {
-            continue;
-        };
-        let Ok(last) = Decimal::try_from(quote.price) else {
-            continue;
+        // order keeps resting and the next pass retries. EXPIRED option
+        // contracts are not transient: cancel them with the reason.
+        let occ = traderview_core::occ_symbol::parse(&o.symbol);
+        let (last, multiplier, is_option) = if let Some(occ) = &occ {
+            if occ.expiry < Utc::now().date_naive() {
+                sqlx::query(
+                    "UPDATE paper_orders
+                        SET status = 'cancelled', reject_reason = 'contract expired'
+                      WHERE id = $1 AND status = 'pending'",
+                )
+                .bind(o.id)
+                .execute(pool)
+                .await
+                .ok();
+                continue;
+            }
+            let Ok(Some(p)) = option_quote(occ).await else {
+                continue; // no usable chain quote — keep resting
+            };
+            let Ok(p) = Decimal::try_from(p) else { continue };
+            (p, Decimal::from(100), true)
+        } else {
+            let Ok(quote) = crate::market_data::quote(pool, &o.symbol).await else {
+                continue;
+            };
+            let Ok(last) = Decimal::try_from(quote.price) else {
+                continue;
+            };
+            (last, Decimal::ONE, false)
         };
         let p = if o.order_type == "trailing" {
             let (Some(tv), Some(extreme)) = (o.trail_value, o.trail_extreme) else {
@@ -579,7 +603,11 @@ pub async fn check_pending(pool: &PgPool) -> anyhow::Result<Vec<BackgroundFill>>
             };
             p
         };
-        let (adjusted, fee) = frictioned_fill(p, o.qty, side);
+        let (adjusted, fee) = if is_option {
+            (p, OPTION_COMMISSION_PER_CONTRACT * o.qty.to_string().parse::<f64>().unwrap_or(0.0))
+        } else {
+            frictioned_fill(p, o.qty, side)
+        };
         let mut tx = pool.begin().await?;
         let claimed = sqlx::query(
             "UPDATE paper_orders
@@ -595,7 +623,7 @@ pub async fn check_pending(pool: &PgPool) -> anyhow::Result<Vec<BackgroundFill>>
             tx.rollback().await?;
             continue;
         }
-        apply_fill(&mut tx, o.paper_account_id, &o.symbol, side, o.qty, adjusted, Decimal::ONE).await?;
+        apply_fill(&mut tx, o.paper_account_id, &o.symbol, side, o.qty, adjusted, multiplier).await?;
         deduct_fee(&mut tx, o.paper_account_id, fee).await?;
         // OCO: the first leg to fill kills its siblings — atomically
         // with the fill so a crash can't leave both legs live.
@@ -796,66 +824,37 @@ pub(crate) async fn option_quote(
 /// Per-contract commission for paper option fills (retail standard).
 const OPTION_COMMISSION_PER_CONTRACT: f64 = 0.65;
 
-/// Option fills: MARKET only this pass (resting option orders would
-/// need the ticker to quote chains per pending row), at the chain mid
-/// with the 100x contract multiplier and per-contract commission.
-async fn submit_option(
-    pool: &PgPool,
-    account_id: Uuid,
-    req: OrderRequest,
-) -> anyhow::Result<PaperOrder> {
-    if req.order_type != "market" {
-        anyhow::bail!("options support market orders only (limit/stop/trailing not yet)");
+struct ResolvedQuote {
+    last: Decimal,
+    multiplier: Decimal,
+    is_option: bool,
+}
+
+/// Quote + contract economics for any tradeable symbol: equities from
+/// the cached quote at 1x; OCC options from the chain mid at 100x.
+/// Expired contracts and quoteless options are hard errors here (the
+/// SUBMIT path); the ticker treats those cases as cancel/keep-resting.
+async fn resolve_quote(pool: &PgPool, symbol: &str) -> anyhow::Result<ResolvedQuote> {
+    if let Some(occ) = traderview_core::occ_symbol::parse(symbol) {
+        if occ.expiry < Utc::now().date_naive() {
+            anyhow::bail!("contract expired {}", occ.expiry);
+        }
+        let p = option_quote(&occ)
+            .await?
+            .ok_or_else(|| anyhow::anyhow!("no usable quote for {symbol} (zero bid/ask and no last)"))?;
+        Ok(ResolvedQuote {
+            last: Decimal::try_from(p)?,
+            multiplier: Decimal::from(100),
+            is_option: true,
+        })
+    } else {
+        let q = crate::market_data::quote(pool, symbol).await?;
+        Ok(ResolvedQuote {
+            last: Decimal::try_from(q.price)?,
+            multiplier: Decimal::ONE,
+            is_option: false,
+        })
     }
-    if req.qty <= Decimal::ZERO {
-        anyhow::bail!("qty must be positive");
-    }
-    let symbol = req.symbol.trim().to_uppercase();
-    let occ = traderview_core::occ_symbol::parse(&symbol)
-        .ok_or_else(|| anyhow::anyhow!("unparseable OCC symbol"))?;
-    if occ.expiry < Utc::now().date_naive() {
-        anyhow::bail!("contract expired {}", occ.expiry);
-    }
-    let price = option_quote(&occ)
-        .await?
-        .ok_or_else(|| anyhow::anyhow!("no usable quote for {symbol} (zero bid/ask and no last)"))?;
-    let price = Decimal::try_from(price)?;
-    let multiplier = Decimal::from(100);
-    let fee = Decimal::try_from(OPTION_COMMISSION_PER_CONTRACT)? * req.qty;
-    let side_str = match req.side {
-        Side::Buy => "buy",
-        Side::Sell => "sell",
-        Side::Short => "short",
-        Side::Cover => "cover",
-    };
-    let mut tx = pool.begin().await?;
-    let order: PaperOrder = sqlx::query_as(
-        "INSERT INTO paper_orders
-            (paper_account_id, symbol, side, qty, order_type,
-             status, filled_price, filled_qty, filled_at, fee)
-         VALUES ($1, $2, $3::side_t, $4, 'market',
-                 'filled', $5, $4, now(), $6)
-         RETURNING id, paper_account_id, symbol, side::text, qty, order_type::text,
-                   limit_price, stop_price, status::text,
-                   trail_value, trail_is_pct, trail_extreme, oco_group, parent_order_id,
-                   filled_price, filled_qty, fee, submitted_at, filled_at, cancel_at, reject_reason",
-    )
-    .bind(account_id)
-    .bind(&symbol)
-    .bind(side_str)
-    .bind(req.qty)
-    .bind(price)
-    .bind(fee)
-    .fetch_one(&mut *tx)
-    .await?;
-    apply_fill(&mut tx, account_id, &symbol, req.side, req.qty, price, multiplier).await?;
-    sqlx::query("UPDATE paper_accounts SET cash = cash - $2 WHERE id = $1")
-        .bind(account_id)
-        .bind(fee)
-        .execute(&mut *tx)
-        .await?;
-    tx.commit().await?;
-    Ok(order)
 }
 
 async fn apply_fill(

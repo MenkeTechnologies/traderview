@@ -17341,7 +17341,7 @@
   "view.paper.tip.side": "BUY opens long; SELL closes long; SHORT opens short; COVER closes short",
   "view.paper.tip.stop": "Stop trigger price; required only when order type = stop",
   "view.paper.tip.submit": "Send the order to the paper account; fills immediately if marketable",
-  "view.paper.tip.symbol": "Equity ticker, or an OCC option symbol like AAPL260117C00190000 (options: market orders only, filled at the chain mid with the 100x multiplier and $0.65/contract)",
+  "view.paper.tip.symbol": "Equity ticker, or an OCC option symbol like AAPL260117C00190000 — every order type works for options too (limit/stop/trailing rest and fill from the chain mid; $0.65/contract; expired resting contracts auto-cancel)",
   "view.paper.tip.tif": "Time in force for resting orders: GTC never expires, DAY expires at the 16:00 US Eastern close, GTD expires at the chosen time",
   "view.paper.tip.trail": "Trailing distance ($ or %); required only when order type = trailing. The stop ratchets with the best price and fires on a retrace of this size.",
   "view.paper.tip.trail_unit": "Trail unit: absolute dollars or percent of the ratcheting extreme",
