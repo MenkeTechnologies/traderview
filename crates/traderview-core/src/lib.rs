@@ -917,5 +917,7 @@ pub mod impermanent_loss;
 pub mod average_down;
 pub mod leveraged_etf_decay;
 pub mod short_economics;
+pub mod asset_location;
+pub mod alpha_horizon;
 
 pub use models::*;

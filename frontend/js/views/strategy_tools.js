@@ -148,6 +148,54 @@ const TOOLS = {
             skipped trades accrue on paper. Shortens decaying-edge losing streaks, pays whipsaw tax on
             choppy ones — the verdict tells you which system you have.</p>`,
     },
+    'asset-location': {
+        label: 'Asset Location',
+        call: (b) => api.calcAssetLocation(b),
+        fields: [
+            { key: 'growth_pct', label: 'Price growth (%/yr)', def: 6 },
+            { key: 'yield_pct', label: 'Income yield (%/yr)', def: 0 },
+            { key: 'ordinary_rate_pct', label: 'Ordinary tax rate (%)', def: 35 },
+            { key: 'cap_gains_rate_pct', label: 'Cap-gains rate (%)', def: 15 },
+            { key: 'years', label: 'Holding years', def: 20, int: true },
+        ],
+        render: (r) => `
+            <div class="cards">
+                <div class="card"><div class="label">Tax drag in taxable</div>
+                    <div class="value neg">−${r.tax_drag_pp.toFixed(2)}pp/yr</div>
+                    <div class="small muted">rank assets by this to fill the IRA</div></div>
+                <div class="card"><div class="label">CAGR</div>
+                    <div class="value">${r.taxable_after_tax_cagr_pct.toFixed(2)}%</div>
+                    <div class="small muted">vs ${r.pre_tax_cagr_pct.toFixed(2)}% sheltered</div></div>
+                <div class="card"><div class="label">Per $1 at horizon</div>
+                    <div class="value">$${r.final_value_taxable.toFixed(3)}</div>
+                    <div class="small muted">vs $${r.final_value_pre_tax.toFixed(3)} pre-tax</div></div>
+            </div>
+            <p class="muted small">Annual ordinary tax on the yield, terminal cap-gains on the growth (basis
+            tracked). High-yield assets drag multiples of what deferred growth drags — bonds go in the IRA.</p>`,
+    },
+    'alpha-horizon': {
+        label: 'Alpha vs Cost',
+        call: (b) => api.calcAlphaHorizon(b),
+        fields: [
+            { key: 'alpha_bp_per_day', label: 'Alpha (bp/day on)', def: 2 },
+            { key: 'round_trip_cost_bp', label: 'Round-trip cost (bp)', def: 10 },
+            { key: 'holding_days', label: 'Intended holding (days)', def: 10 },
+            { key: 'days_per_year', label: 'Trading days/yr', def: 252 },
+        ],
+        render: (r) => `
+            <div class="cards">
+                <div class="card"><div class="label">Breakeven holding</div>
+                    <div class="value">${r.breakeven_days.toFixed(1)} days</div>
+                    <div class="small ${r.viable ? 'pos' : 'neg'}">${r.viable ? 'viable at your horizon' : 'NOT VIABLE — costs exceed alpha'}</div></div>
+                <div class="card"><div class="label">Net per trade</div>
+                    <div class="value ${r.net_alpha_per_trade_bp >= 0 ? 'pos' : 'neg'}">${r.net_alpha_per_trade_bp.toFixed(1)}bp</div>
+                    <div class="small muted">costs eat ${r.cost_share_pct.toFixed(0)}% of gross</div></div>
+                <div class="card"><div class="label">Net annualized</div>
+                    <div class="value ${r.net_alpha_annual_bp >= 0 ? 'pos' : 'neg'}">${r.net_alpha_annual_bp.toFixed(0)}bp/yr</div></div>
+            </div>
+            <p class="muted small">Cost says nothing until divided by alpha velocity — the same signal is
+            profitable at a 10-day hold and a donation to market makers at a 1-day hold.</p>`,
+    },
     'leveraged-etf-decay': {
         label: 'Leveraged ETF Decay',
         call: (b) => api.calcLeveragedEtfDecay(b),

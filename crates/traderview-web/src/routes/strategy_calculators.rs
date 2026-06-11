@@ -38,6 +38,8 @@
 //!   POST /calc/average-down              — position blend + bounce math
 //!   POST /calc/leveraged-etf-decay       — k× daily-reset vol drag
 //!   POST /calc/short-carry               — borrow/rebate/dividend carry
+//!   POST /calc/asset-location            — taxable-account tax drag rank
+//!   POST /calc/alpha-horizon             — signal-vs-cost breakeven days
 
 use crate::auth::AuthUser;
 use crate::error::ApiError;
@@ -93,6 +95,8 @@ pub fn router() -> Router<AppState> {
         .route("/calc/average-down", post(post_average_down))
         .route("/calc/leveraged-etf-decay", post(post_letf_decay))
         .route("/calc/short-carry", post(post_short_carry))
+        .route("/calc/asset-location", post(post_asset_location))
+        .route("/calc/alpha-horizon", post(post_alpha_horizon))
 }
 
 async fn post_grid_trading(
@@ -519,6 +523,26 @@ async fn post_short_carry(
     traderview_core::short_economics::compute(&b)
         .map(Json)
         .ok_or_else(|| ApiError::BadRequest("invalid short-carry inputs".into()))
+}
+
+async fn post_asset_location(
+    State(_s): State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<traderview_core::asset_location::AssetLocationInput>,
+) -> Result<Json<traderview_core::asset_location::AssetLocationReport>, ApiError> {
+    traderview_core::asset_location::compute(&b)
+        .map(Json)
+        .ok_or_else(|| ApiError::BadRequest("invalid asset-location inputs".into()))
+}
+
+async fn post_alpha_horizon(
+    State(_s): State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<traderview_core::alpha_horizon::AlphaHorizonInput>,
+) -> Result<Json<traderview_core::alpha_horizon::AlphaHorizonReport>, ApiError> {
+    traderview_core::alpha_horizon::compute(&b)
+        .map(Json)
+        .ok_or_else(|| ApiError::BadRequest("invalid alpha-horizon inputs".into()))
 }
 
 async fn post_dual_momentum(
