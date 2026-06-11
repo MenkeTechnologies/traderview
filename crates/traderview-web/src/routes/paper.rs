@@ -32,9 +32,21 @@ pub fn router() -> Router<AppState> {
         .route("/paper/orders/:id/cancel", post(cancel_order))
         .route("/paper/accounts/:id/brackets", post(submit_bracket))
         .route("/paper/accounts/:id/equity-history", get(equity_history))
+        .route("/paper/accounts/comparison", get(account_comparison))
         .route("/paper/accounts/create", post(create_account))
         .route("/paper/accounts/:id/rename", post(rename_account))
         .route("/paper/accounts/:id/delete", post(delete_account))
+}
+
+/// Strategy leaderboard across the user's paper accounts.
+async fn account_comparison(
+    State(s): State<AppState>,
+    user: AuthUser,
+) -> Result<Json<Vec<traderview_db::paper_equity::AccountComparison>>, ApiError> {
+    traderview_db::paper_equity::compare(&s.pool, user.id)
+        .await
+        .map(Json)
+        .map_err(ApiError::Internal)
 }
 
 #[derive(Deserialize)]

@@ -149,6 +149,12 @@ export async function renderPaper(mount) {
             </div>
         </div>
 
+        ${accounts.length > 1 ? `
+        <div class="chart-panel">
+            <h2 data-i18n="view.paper.h2.leaderboard">Strategy leaderboard</h2>
+            <div id="paper-leaderboard"></div>
+        </div>` : ''}
+
         <div class="chart-panel">
             <h2 data-i18n="view.paper.h2.equity_curve">Equity curve</h2>
             <div id="paper-equity-summary" class="muted small"></div>
@@ -191,6 +197,11 @@ export async function renderPaper(mount) {
     api.paperEquityHistory(acct.id)
         .then(h => { if (viewIsCurrent(tok)) renderEquityCurve(h); })
         .catch(() => {});
+    if (accounts.length > 1) {
+        api.paperAccountComparison()
+            .then(rows => { if (viewIsCurrent(tok)) renderLeaderboard(rows, acct.id); })
+            .catch(() => {});
+    }
 
     mount.querySelector('#ord-form').addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -296,6 +307,23 @@ export async function renderPaper(mount) {
             renderPaper(mount);
         } catch (err) { showToast(t('toast.error.api', { err: err.message }), { level: 'error' }); }
     });
+}
+
+function renderLeaderboard(rows, currentId) {
+    const el = document.getElementById('paper-leaderboard');
+    if (!el || !rows || !rows.length) return;
+    el.innerHTML = `<table class="trades">
+        <thead><tr><th>#</th><th data-i18n="view.paper.th.account">Account</th><th data-i18n="view.paper.th.equity">Equity</th><th data-i18n="view.paper.th.return">Return</th><th data-i18n="view.paper.th.max_dd">Max DD</th></tr></thead>
+        <tbody>${rows.map((r, i) => `
+            <tr${r.account_id === currentId ? ' class="lf-current"' : ''}>
+                <td>${i + 1}</td>
+                <td>${esc(r.name)}${r.currently_underwater ? ' <span class="neg small">↓</span>' : ''}</td>
+                <td>$${fmt(r.equity)}</td>
+                <td class="${(r.return_pct ?? 0) >= 0 ? 'pos' : 'neg'}">${r.return_pct != null ? (r.return_pct >= 0 ? '+' : '') + r.return_pct.toFixed(2) + '%' : '—'}</td>
+                <td>${r.max_drawdown_pct != null ? r.max_drawdown_pct.toFixed(2) + '%' : '—'}</td>
+            </tr>`).join('')}
+        </tbody></table>
+        <p class="muted small" data-i18n="view.paper.hint.leaderboard">Return is measured against each account's starting cash — comparable across accounts created at different times. ↓ = currently below its high-water mark.</p>`;
 }
 
 function renderEquityCurve(hist) {

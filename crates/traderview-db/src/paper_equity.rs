@@ -111,6 +111,76 @@ pub async fn snapshot_all(pool: &PgPool) -> anyhow::Result<usize> {
     Ok(written)
 }
 
+/// Return vs the account's starting cash — the honest cross-account
+/// comparison base (snapshot-series-relative return would flatter an
+/// account that lost money before its first sample). None when
+/// starting cash is degenerate.
+pub fn account_return_pct(starting_cash: Decimal, equity: Decimal) -> Option<f64> {
+    if starting_cash <= Decimal::ZERO {
+        return None;
+    }
+    let s: f64 = starting_cash.to_string().parse().ok()?;
+    let e: f64 = equity.to_string().parse().ok()?;
+    Some((e / s - 1.0) * 100.0)
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct AccountComparison {
+    pub account_id: Uuid,
+    pub name: String,
+    pub starting_cash: Decimal,
+    pub equity: Decimal,
+    pub return_pct: Option<f64>,
+    pub max_drawdown_pct: Option<f64>,
+    pub currently_underwater: bool,
+    pub snapshots: i64,
+}
+
+/// Strategy leaderboard: one row per account, ranked by return vs
+/// starting cash (descending; unranked accounts last). Equity = latest
+/// snapshot when one exists, else cash (fresh account, nothing held).
+pub async fn compare(pool: &PgPool, user_id: Uuid) -> anyhow::Result<Vec<AccountComparison>> {
+    let accounts: Vec<(Uuid, String, Decimal, Decimal)> = sqlx::query_as(
+        "SELECT id, name, starting_cash, cash FROM paper_accounts
+          WHERE user_id = $1 ORDER BY created_at",
+    )
+    .bind(user_id)
+    .fetch_all(pool)
+    .await?;
+    let mut rows = Vec::with_capacity(accounts.len());
+    for (account_id, name, starting_cash, cash) in accounts {
+        let snaps: Vec<(Decimal,)> = sqlx::query_as(
+            "SELECT equity FROM paper_equity_snapshots
+              WHERE paper_account_id = $1 ORDER BY taken_at",
+        )
+        .bind(account_id)
+        .fetch_all(pool)
+        .await?;
+        let equity = snaps.last().map(|(e,)| *e).unwrap_or(cash);
+        let series: Vec<f64> = snaps
+            .iter()
+            .filter_map(|(e,)| e.to_string().parse().ok())
+            .collect();
+        let summary = summarize(&series);
+        rows.push(AccountComparison {
+            account_id,
+            name,
+            starting_cash,
+            equity,
+            return_pct: account_return_pct(starting_cash, equity),
+            max_drawdown_pct: summary.as_ref().map(|s| s.max_drawdown_pct),
+            currently_underwater: summary.map(|s| s.currently_underwater).unwrap_or(false),
+            snapshots: snaps.len() as i64,
+        });
+    }
+    rows.sort_by(|a, b| {
+        b.return_pct
+            .unwrap_or(f64::NEG_INFINITY)
+            .total_cmp(&a.return_pct.unwrap_or(f64::NEG_INFINITY))
+    });
+    Ok(rows)
+}
+
 /// Equity history for an owned account, oldest first, with summary.
 pub async fn history(
     pool: &PgPool,
@@ -174,5 +244,13 @@ mod tests {
         assert!(summarize(&[100.0]).is_none());
         assert!(summarize(&[]).is_none());
         assert!(summarize(&[0.0, 100.0]).is_none());
+    }
+
+    #[test]
+    fn return_vs_starting_cash_pins_sign_and_zero_guard() {
+        let d = |v: i64| Decimal::from(v);
+        assert!((account_return_pct(d(200_000), d(220_000)).unwrap() - 10.0).abs() < 1e-9);
+        assert!((account_return_pct(d(200_000), d(150_000)).unwrap() + 25.0).abs() < 1e-9);
+        assert!(account_return_pct(Decimal::ZERO, d(100)).is_none());
     }
 }
