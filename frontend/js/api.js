@@ -1134,6 +1134,7 @@ export const api = {
             method: 'POST',
             body: JSON.stringify(body || {}),
         }),
+    algoLiveVsBacktest: (id) => request(`/algo/strategies/${id}/live-vs-backtest`),
 
     // Correlation matrix (pairwise Pearson on cached daily-bar log-returns)
     corrWatchlist: (wid, days = 90) =>

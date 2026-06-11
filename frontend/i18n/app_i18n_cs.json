@@ -3857,6 +3857,7 @@
   "view.algo.btn.clear": "jasné",
   "view.algo.btn.delete": "smazat",
   "view.algo.btn.deploy": "deploy",
+  "view.algo.btn.drift": "drift",
   "view.algo.btn.edit": "editovat",
   "view.algo.btn.kill": "zabít",
   "view.algo.btn.mc": "mc",

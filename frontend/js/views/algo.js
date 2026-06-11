@@ -1019,6 +1019,7 @@ async function refreshStrategies(mount) {
                 <button class="link" data-act="walkforward" data-i18n="view.algo.btn.walkforward">walk-fwd</button>
                 <button class="link" data-act="mc" data-i18n="view.algo.btn.mc">mc</button>
                 <button class="link" data-act="regimes" data-i18n="view.algo.btn.regimes">regimes</button>
+                <button class="link" data-act="drift" data-i18n="view.algo.btn.drift">drift</button>
                 <button class="link" data-act="kill" data-i18n="view.algo.btn.kill">${s.kill_switch ? 'release' : 'kill'}</button>
                 <button class="link" data-act="edit" data-i18n="view.algo.btn.edit">edit</button>
                 <button class="link" data-act="del" data-i18n="view.algo.btn.delete">delete</button>
@@ -1041,6 +1042,7 @@ async function refreshStrategies(mount) {
             if (act === 'walkforward') return openWalkForwardModal(s);
             if (act === 'mc') return openMcModal(s);
             if (act === 'regimes') return openRegimesModal(s);
+            if (act === 'drift') return openDriftModal(s);
             if (act === 'kill') return toggleKill(mount, s);
             if (act === 'edit') return openStrategyModal(mount, s);
             if (act === 'del') return deleteStrategy(mount, s);
@@ -1199,6 +1201,47 @@ const OPTIMIZE_DEFAULT_GRIDS = {
 
 
 
+
+
+async function openDriftModal(s) {
+    const wrap = document.createElement('div');
+    wrap.className = 'modal';
+    wrap.innerHTML = `
+        <div class="modal-inner" style="max-width:760px">
+            <h2>Live vs backtest: ${esc(s.name)}</h2>
+            <div id="drift-result" class="muted small">${esc(t('common.loading'))}</div>
+            <button type="button" class="link" id="drift-close" data-i18n="common.btn.cancel">Close</button>
+        </div>`;
+    document.body.appendChild(wrap);
+    const close = () => wrap.remove();
+    wrap.querySelector('#drift-close').addEventListener('click', close);
+    wrap.addEventListener('click', (e) => { if (e.target === wrap) close(); });
+    try {
+        const r = await api.algoLiveVsBacktest(s.id);
+        const rep = r.report;
+        const v = rep.verdict;
+        const cls = v === 'degraded' ? 'neg' : (v === 'outperforming' ? 'pos' : (v === 'watch' ? 'neg' : ''));
+        wrap.querySelector('#drift-result').innerHTML = `
+            <p><strong class="${cls}">${esc(v.replace(/_/g, ' '))}</strong>
+            ${rep.win_rate_z != null ? `\u00b7 win-rate z = ${rep.win_rate_z.toFixed(2)}` : ''}</p>
+            <table class="trades">
+                <thead><tr><th></th><th>Live</th><th>Backtest expectation</th></tr></thead>
+                <tbody>
+                    <tr><td>Closed trades</td><td>${rep.live_trades}</td><td>\u2014</td></tr>
+                    <tr><td>Win rate</td>
+                        <td>${rep.live_win_rate != null ? (rep.live_win_rate * 100).toFixed(0) + '%' : '\u2014'}</td>
+                        <td>${(rep.expected.win_rate * 100).toFixed(0)}%</td></tr>
+                    <tr><td>Profit factor</td>
+                        <td>${rep.live_profit_factor != null ? rep.live_profit_factor.toFixed(2) : '\u2014'}</td>
+                        <td>${rep.expected.profit_factor.toFixed(2)}</td></tr>
+                </tbody>
+            </table>
+            <p class="muted small">Expectation from the backtest of ${esc(r.expectation_symbol)} persisted ${new Date(r.expectation_backtest_at).toLocaleString()}.
+            Live round trips are reconstructed FIFO from fills; open positions don\u2019t count. Verdicts need \u2265 10 closed trades \u2014 a verdict on 3 trades is astrology.</p>`;
+    } catch (err) {
+        wrap.querySelector('#drift-result').textContent = t('common.error', { err: err.message });
+    }
+}
 
 async function openRegimesModal(s) {
     const symbol = (s.entry_rules && s.entry_rules.symbol_a) || s.entry_rules?.symbol || 'SPY';

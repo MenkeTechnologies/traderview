@@ -863,6 +863,37 @@ pub async fn save_backtest(
     .await?)
 }
 
+#[derive(Debug, Clone, sqlx::FromRow)]
+pub struct StrategyFill {
+    pub symbol: String,
+    pub side: String,
+    pub fill_qty: Decimal,
+    pub fill_price: Decimal,
+    pub commission: Decimal,
+    pub filled_at: chrono::DateTime<chrono::Utc>,
+}
+
+/// Every fill the strategy has received, chronological — the raw
+/// material for live round-trip reconstruction.
+pub async fn fills_for_strategy(
+    pool: &PgPool,
+    user_id: Uuid,
+    strategy_id: Uuid,
+) -> anyhow::Result<Vec<StrategyFill>> {
+    Ok(sqlx::query_as::<_, StrategyFill>(
+        "SELECT o.symbol, o.side, f.fill_qty, f.fill_price, f.commission, f.filled_at
+           FROM algo_fills f
+           JOIN algo_orders o ON o.id = f.order_id
+           JOIN algo_strategies s ON s.id = o.strategy_id
+          WHERE o.strategy_id = $1 AND s.user_id = $2
+          ORDER BY f.filled_at",
+    )
+    .bind(strategy_id)
+    .bind(user_id)
+    .fetch_all(pool)
+    .await?)
+}
+
 pub async fn list_backtests(
     pool: &PgPool,
     user_id: Uuid,

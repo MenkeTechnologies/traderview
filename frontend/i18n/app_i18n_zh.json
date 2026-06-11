@@ -3857,6 +3857,7 @@
   "view.algo.btn.clear": "清除",
   "view.algo.btn.delete": "删除",
   "view.algo.btn.deploy": "deploy",
+  "view.algo.btn.drift": "drift",
   "view.algo.btn.edit": "编辑",
   "view.algo.btn.kill": "杀死",
   "view.algo.btn.mc": "mc",

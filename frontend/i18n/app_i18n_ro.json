@@ -3857,6 +3857,7 @@
   "view.algo.btn.clear": "clar",
   "view.algo.btn.delete": "șterge",
   "view.algo.btn.deploy": "deploy",
+  "view.algo.btn.drift": "drift",
   "view.algo.btn.edit": "editează",
   "view.algo.btn.kill": "ucide",
   "view.algo.btn.mc": "mc",

@@ -171,6 +171,7 @@ pub mod stop_loss_backtest;
 pub mod stops;
 pub mod strategy_alert;
 pub mod strategy_correlation;
+pub mod live_vs_backtest;
 pub mod strategy_decay;
 pub mod streaks;
 pub mod stress_test;

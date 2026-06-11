@@ -3857,6 +3857,7 @@
   "view.algo.btn.clear": "duidelijk",
   "view.algo.btn.delete": "verwijderen",
   "view.algo.btn.deploy": "deploy",
+  "view.algo.btn.drift": "drift",
   "view.algo.btn.edit": "bewerken",
   "view.algo.btn.kill": "doden",
   "view.algo.btn.mc": "mc",

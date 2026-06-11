@@ -45,6 +45,7 @@ pub fn router() -> Router<AppState> {
         .route("/algo/strategies/:id/walk-forward", post(post_walk_forward))
         .route("/algo/strategies/:id/backtest-mc", post(post_backtest_mc))
         .route("/algo/strategies/:id/backtest-regimes", post(post_backtest_regimes))
+        .route("/algo/strategies/:id/live-vs-backtest", get(get_live_vs_backtest))
         .route("/algo/strategies/:id/backtests", get(list_backtest_history))
         .route(
             "/algo/backtests/:id",
@@ -1256,6 +1257,65 @@ async fn post_backtest_regimes(
     Ok(Json(BacktestRegimesResult {
         backtest_summary: bt.summary,
         attribution,
+    }))
+}
+
+#[derive(serde::Serialize)]
+struct LiveVsBacktestResult {
+    report: traderview_core::live_vs_backtest::DivergenceReport,
+    /// Which persisted backtest supplied the expectation.
+    expectation_backtest_at: chrono::DateTime<chrono::Utc>,
+    expectation_symbol: String,
+}
+
+/// GET /algo/strategies/:id/live-vs-backtest — reconstruct the live
+/// fill record into FIFO round trips and test the live win rate
+/// against the LATEST persisted backtest's expectation. The answer to
+/// "is the live strategy still the one I backtested".
+async fn get_live_vs_backtest(
+    State(s): State<AppState>,
+    u: AuthUser,
+    Path(id): Path<Uuid>,
+) -> Result<Json<LiveVsBacktestResult>, ApiError> {
+    use rust_decimal::prelude::ToPrimitive;
+    let backtests = traderview_db::algo::list_backtests(&s.pool, u.id, id, 1)
+        .await
+        .map_err(ApiError::Internal)?;
+    let bt = backtests.first().ok_or_else(|| {
+        ApiError::BadRequest("no persisted backtest — run a backtest first so there's an expectation to test against".into())
+    })?;
+    let fills = traderview_db::algo::fills_for_strategy(&s.pool, u.id, id)
+        .await
+        .map_err(ApiError::Internal)?;
+    // FIFO round trips per symbol, then pooled — fills are already
+    // chronological from the query.
+    let mut by_symbol: std::collections::BTreeMap<String, Vec<traderview_core::live_vs_backtest::Fill>> =
+        std::collections::BTreeMap::new();
+    for f in fills {
+        by_symbol.entry(f.symbol.clone()).or_default().push(
+            traderview_core::live_vs_backtest::Fill {
+                buy: f.side == "buy",
+                qty: f.fill_qty.to_f64().unwrap_or(0.0),
+                price: f.fill_price.to_f64().unwrap_or(0.0),
+                commission: f.commission.to_f64().unwrap_or(0.0),
+            },
+        );
+    }
+    let mut pnls = Vec::new();
+    for fills in by_symbol.values() {
+        pnls.extend(traderview_core::live_vs_backtest::round_trips(fills));
+    }
+    let report = traderview_core::live_vs_backtest::compare(
+        &pnls,
+        traderview_core::live_vs_backtest::Expectation {
+            win_rate: bt.win_rate.to_f64().unwrap_or(0.0),
+            profit_factor: bt.profit_factor.to_f64().unwrap_or(0.0),
+        },
+    );
+    Ok(Json(LiveVsBacktestResult {
+        report,
+        expectation_backtest_at: bt.created_at,
+        expectation_symbol: bt.symbol.clone(),
     }))
 }
 

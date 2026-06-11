@@ -3857,6 +3857,7 @@
   "view.algo.btn.clear": "xoá",
   "view.algo.btn.delete": "xoá",
   "view.algo.btn.deploy": "deploy",
+  "view.algo.btn.drift": "drift",
   "view.algo.btn.edit": "soạn thảo",
   "view.algo.btn.kill": "giết",
   "view.algo.btn.mc": "mc",

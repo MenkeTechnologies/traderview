@@ -3857,6 +3857,7 @@
   "view.algo.btn.clear": "tiszta",
   "view.algo.btn.delete": "törlés",
   "view.algo.btn.deploy": "deploy",
+  "view.algo.btn.drift": "drift",
   "view.algo.btn.edit": "szerkesztés",
   "view.algo.btn.kill": "halál",
   "view.algo.btn.mc": "mc",
