@@ -350,6 +350,86 @@ const TOOLS = {
             covered call" when the back leg is deep ITM). Back leg revalued by Black-Scholes at front expiry.</p>`;
         },
     },
+    'curve-trade': {
+        label: 'Curve Trade',
+        call: (b) => api.calcCurveTrade({
+            // "label,yield%,dv01_per_1M; ..." — 2 legs = spread, 3 = fly.
+            legs: String(b.legs).split(';').map(s => s.trim()).filter(Boolean).map(s => {
+                const [label, y, d] = s.split(',').map(x => x.trim());
+                return { label, yield_pct: Number(y), dv01_per_million: Number(d) };
+            }),
+            anchor_notional_mm: b.anchor_notional_mm,
+        }),
+        fields: [
+            { key: 'legs', label: 'Legs: label,yield%,DV01/$1M; … (2 = spread, 3 = fly)', def: '2y,4.6,190; 5y,4.35,440; 10y,4.2,880', text: true },
+            { key: 'anchor_notional_mm', label: 'Anchor notional ($M, first leg / belly)', def: 10 },
+        ],
+        render: (r) => {
+            if (!r) return '<span class="neg">need 2 or 3 valid legs</span>';
+            return `
+            <div class="cards">
+                <div class="card"><div class="label">${r.kind === 'butterfly' ? 'Fly level' : 'Spread'}</div>
+                    <div class="value">${r.level_bp.toFixed(1)}bp</div></div>
+                <div class="card"><div class="label">P&amp;L per bp</div>
+                    <div class="value">$${r.pl_per_bp.toFixed(0)}</div>
+                    <div class="small muted">DV01-neutral ${esc(r.kind)}</div></div>
+            </div>
+            <table class="gs-table">
+                <thead><tr><th>Leg</th><th>Notional</th><th>DV01</th></tr></thead>
+                <tbody>${r.legs.map(l => `
+                    <tr><td>${esc(l.label)}</td><td>$${l.notional_mm.toFixed(2)}M</td>
+                        <td>$${l.dv01_total.toFixed(0)}/bp</td></tr>`).join('')}
+                </tbody>
+            </table>
+            <p class="muted small">Spread legs carry equal DV01 (pure curve, no outright duration); the fly
+            puts half the belly DV01 on each wing, immunizing level and slope.</p>`;
+        },
+    },
+    'cheapest-to-deliver': {
+        label: 'Cheapest to Deliver',
+        call: (b) => api.calcCheapestToDeliver({
+            futures_price: b.futures_price,
+            days_to_delivery: b.days_to_delivery,
+            // "name,clean,CF[,accrued_now,accrued_delivery]; ..."
+            basket: String(b.basket).split(';').map(s => s.trim()).filter(Boolean).map(s => {
+                const [name, clean, cf, an, ad] = s.split(',').map(x => x.trim());
+                return {
+                    name,
+                    clean_price: Number(clean),
+                    conversion_factor: Number(cf),
+                    accrued_now: Number(an) || 0,
+                    accrued_at_delivery: Number(ad) || 0,
+                };
+            }),
+        }),
+        fields: [
+            { key: 'futures_price', label: 'Futures price', def: 110 },
+            { key: 'days_to_delivery', label: 'Days to delivery', def: 90 },
+            { key: 'basket', label: 'Basket: name,clean,CF[,accr_now,accr_dlv]; …', def: 'T 4.25 2034,99,0.9; T 3.875 2033,98,0.9', text: true },
+        ],
+        render: (r) => {
+            if (!r) return '<span class="neg">invalid basket</span>';
+            return `
+            <div class="cards">
+                <div class="card"><div class="label">CTD</div>
+                    <div class="value pos">${esc(r.ctd_name)}</div>
+                    <div class="small muted">implied repo ${r.ctd_implied_repo_pct.toFixed(2)}%</div></div>
+            </div>
+            <table class="gs-table">
+                <thead><tr><th>Bond</th><th>Gross basis</th><th>Implied repo</th><th></th></tr></thead>
+                <tbody>${r.rows.map(row => `
+                    <tr>
+                        <td>${esc(row.name)}</td>
+                        <td>${row.gross_basis.toFixed(3)}</td>
+                        <td class="${row.implied_repo_pct >= 0 ? 'pos' : 'neg'}">${row.implied_repo_pct.toFixed(2)}%</td>
+                        <td>${row.is_ctd ? '★ CTD' : ''}</td>
+                    </tr>`).join('')}
+                </tbody>
+            </table>
+            <p class="muted small">The short delivers whatever finances best — highest implied repo wins;
+            everything else in the basket trades as an option off the CTD.</p>`;
+        },
+    },
     'crack-spread': {
         label: 'Crack Spread',
         call: (b) => api.calcCrackSpread(b),

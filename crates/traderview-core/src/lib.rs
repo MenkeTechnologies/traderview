@@ -902,5 +902,7 @@ pub mod sbc_dilution;
 pub mod sum_of_parts;
 pub mod odd_lot_tender;
 pub mod processing_spreads;
+pub mod curve_trade;
+pub mod cheapest_to_deliver;
 
 pub use models::*;

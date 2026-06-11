@@ -19,6 +19,8 @@
 //!   POST /calc/crack-spread              — refiner 3-2-1 margin
 //!   POST /calc/crush-spread              — soybean board crush
 //!   POST /calc/spark-spread              — generation margin (spark/dark)
+//!   POST /calc/curve-trade               — DV01-neutral spread/butterfly
+//!   POST /calc/cheapest-to-deliver       — basket basis + implied repo
 //!   POST /sim/dual-momentum              — Antonacci GEM backtest
 //!   GET  /symbols/:sym/turn-of-month     — TOM seasonality stats
 //!   GET  /symbols/:sym/vol-cone          — realized-vol percentile cone
@@ -60,6 +62,8 @@ pub fn router() -> Router<AppState> {
         .route("/calc/crack-spread", post(post_crack_spread))
         .route("/calc/crush-spread", post(post_crush_spread))
         .route("/calc/spark-spread", post(post_spark_spread))
+        .route("/calc/curve-trade", post(post_curve_trade))
+        .route("/calc/cheapest-to-deliver", post(post_ctd))
         .route("/sim/dual-momentum", post(post_dual_momentum))
         .route("/symbols/:symbol/turn-of-month", get(get_turn_of_month))
         .route("/symbols/:symbol/vol-cone", get(get_vol_cone))
@@ -363,6 +367,26 @@ async fn post_spark_spread(
     traderview_core::processing_spreads::spark_spread(b.power, b.fuel, b.heat_rate)
         .map(Json)
         .ok_or_else(|| ApiError::BadRequest("inputs must be positive".into()))
+}
+
+async fn post_curve_trade(
+    State(_s): State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<traderview_core::curve_trade::CurveTradeInput>,
+) -> Result<Json<traderview_core::curve_trade::CurveTradeReport>, ApiError> {
+    traderview_core::curve_trade::compute(&b)
+        .map(Json)
+        .ok_or_else(|| ApiError::BadRequest("need 2 or 3 valid legs".into()))
+}
+
+async fn post_ctd(
+    State(_s): State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<traderview_core::cheapest_to_deliver::CtdInput>,
+) -> Result<Json<traderview_core::cheapest_to_deliver::CtdReport>, ApiError> {
+    traderview_core::cheapest_to_deliver::compute(&b)
+        .map(Json)
+        .ok_or_else(|| ApiError::BadRequest("invalid deliverable basket".into()))
 }
 
 async fn post_dual_momentum(
