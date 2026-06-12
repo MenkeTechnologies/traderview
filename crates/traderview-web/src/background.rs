@@ -54,6 +54,9 @@ pub const STRATEGY_DRIFT_WATCH: Duration = Duration::from_secs(12 * 60 * 60);
 pub const FUNDING_REGIME_WATCH: Duration = Duration::from_secs(60 * 60);
 /// Maintenance-margin sweep — hourly against current marks.
 pub const MARGIN_CALL_WATCH: Duration = Duration::from_secs(60 * 60);
+/// Month-end statement push — hourly check; the claim table makes
+/// the actual delivery exactly-once per (user, month).
+pub const STATEMENT_PUSH_TICK: Duration = Duration::from_secs(60 * 60);
 /// Alert floor: |APR| ≥ this AND persistence ≥ FUNDING_ALERT_PERSISTENCE.
 pub const FUNDING_ALERT_APR_PCT: f64 = 15.0;
 /// Same 0.7 regime threshold the scanner UI colors green — one convention.
@@ -139,6 +142,7 @@ pub fn spawn_refreshers(pool: PgPool, cache: TileCache, hub: crate::realtime::Hu
     spawn_strategy_drift_watch(pool.clone(), hub.clone());
     spawn_funding_regime_watch(hub.clone());
     spawn_margin_call_watch(pool.clone(), hub.clone());
+    spawn_statement_push(pool.clone(), hub.clone());
     let hub2 = hub.clone();
     spawn_rebalance_drift_watch(pool.clone(), hub);
     spawn_paper_recurring(pool.clone());
@@ -330,6 +334,38 @@ fn spawn_margin_call_watch(pool: PgPool, hub: crate::realtime::Hub) {
                 Err(e) => tracing::warn!(error = %e, "margin-call sweep failed"),
             }
             tokio::time::sleep(MARGIN_CALL_WATCH).await;
+        }
+    });
+}
+
+/// Month-end statement push: within the first 3 days of a month,
+/// last month's statement per account goes to the live feed and the
+/// user's webhooks, once.
+fn spawn_statement_push(pool: PgPool, hub: crate::realtime::Hub) {
+    tokio::spawn(async move {
+        loop {
+            match traderview_db::paper_equity::due_statement_deliveries(&pool).await {
+                Ok(due) => {
+                    for (user_id, month, summary) in due {
+                        tracing::info!(%user_id, %month, "monthly statement delivered");
+                        hub.publish(crate::realtime::Event::MonthlyStatement {
+                            month: month.clone(),
+                            summary: summary.clone(),
+                        });
+                        let payload = traderview_db::webhooks::AlertPayload {
+                            title: format!("Monthly statement — {month}"),
+                            message: summary,
+                            symbol: None,
+                            kind: "monthly_statement".into(),
+                            url: None,
+                            fired_at: chrono::Utc::now(),
+                        };
+                        traderview_db::webhooks::fan_out_all(&pool, user_id, &payload).await;
+                    }
+                }
+                Err(e) => tracing::warn!(error = %e, "statement push failed"),
+            }
+            tokio::time::sleep(STATEMENT_PUSH_TICK).await;
         }
     });
 }

@@ -136,6 +136,9 @@ pub enum Event {
         signals_emitted: i64,
         seconds_to_next_eval: i64,
     },
+    /// Month-end statement push — last month's per-account summary.
+    MonthlyStatement { month: String, summary: String },
+
     /// Maintenance margin breached at current marks — the margin
     /// call. Rare, severe, per-user: fans out to webhooks too.
     MarginCall {
@@ -307,6 +310,17 @@ mod tests {
         assert_eq!(v["type"], "sentiment");
         assert_eq!(v["wsb"], 4);
         assert_eq!(v["stocktwits"], 9);
+    }
+
+    #[test]
+    fn monthly_statement_serializes_snake_case() {
+        let v = serde_json::to_value(Event::MonthlyStatement {
+            month: "2026-05".into(),
+            summary: "SimTrader: +2.10%".into(),
+        })
+        .unwrap();
+        assert_eq!(v["type"], "monthly_statement");
+        assert_eq!(v["month"], "2026-05");
     }
 
     #[test]

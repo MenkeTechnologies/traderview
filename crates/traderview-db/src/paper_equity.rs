@@ -2144,3 +2144,96 @@ mod account_corr_tests {
         assert!(r.is_empty());
     }
 }
+
+
+/// Previous calendar month as "YYYY-MM", pure.
+pub fn previous_month(today: chrono::NaiveDate) -> String {
+    use chrono::Datelike;
+    let (y, m) = if today.month() == 1 {
+        (today.year() - 1, 12)
+    } else {
+        (today.year(), today.month() - 1)
+    };
+    format!("{y:04}-{m:02}")
+}
+
+/// Month-end statement push: within the first 3 days of a month,
+/// compose LAST month's statement for every account of every user
+/// and deliver once — the claim INSERT's primary key makes it
+/// exactly-once per (user, month) across restarts and overlapping
+/// passes. Returns delivered user count; the caller publishes.
+pub async fn due_statement_deliveries(
+    pool: &PgPool,
+) -> anyhow::Result<Vec<(Uuid, String, String)>> {
+    use chrono::Datelike;
+    let today = Utc::now().date_naive();
+    if today.day() > 3 {
+        return Ok(Vec::new()); // push window: the month's first 3 days
+    }
+    let month = previous_month(today);
+    let users: Vec<(Uuid,)> = sqlx::query_as(
+        "SELECT DISTINCT user_id FROM paper_accounts",
+    )
+    .fetch_all(pool)
+    .await?;
+    let mut out = Vec::new();
+    for (user_id,) in users {
+        // Claim first: the PK refuses a second delivery.
+        let claimed = sqlx::query(
+            "INSERT INTO statement_deliveries (user_id, month)
+             VALUES ($1, $2) ON CONFLICT DO NOTHING",
+        )
+        .bind(user_id)
+        .bind(&month)
+        .execute(pool)
+        .await?
+        .rows_affected();
+        if claimed == 0 {
+            continue;
+        }
+        let accounts: Vec<(Uuid, String)> = sqlx::query_as(
+            "SELECT id, name FROM paper_accounts WHERE user_id = $1 ORDER BY created_at",
+        )
+        .bind(user_id)
+        .fetch_all(pool)
+        .await?;
+        let mut lines = Vec::new();
+        for (account_id, name) in accounts {
+            let Ok(s) = statement(pool, user_id, account_id, &month).await else {
+                continue;
+            };
+            // An account with no activity all month says nothing.
+            if s.fills == 0 && s.net_deposits == 0.0 && s.dividends == 0.0 && s.interest == 0.0 {
+                continue;
+            }
+            let ret = s
+                .period_return_pct
+                .map(|r| format!("{}{:.2}%", if r >= 0.0 { "+" } else { "" }, r))
+                .unwrap_or_else(|| "—".into());
+            lines.push(format!(
+                "{name}: {ret} · P&L {}${:.0} ({} trips) · fees ${:.0}",
+                if s.realized_pnl >= 0.0 { "+" } else { "−" },
+                s.realized_pnl.abs(),
+                s.trips_closed,
+                s.fees
+            ));
+        }
+        if lines.is_empty() {
+            continue; // claimed but nothing to say — a silent month stays silent
+        }
+        out.push((user_id, month.clone(), lines.join(" · ")));
+    }
+    Ok(out)
+}
+
+#[cfg(test)]
+mod statement_delivery_tests {
+    use super::*;
+
+    #[test]
+    fn previous_month_wraps_january() {
+        let d = |y: i32, m: u32, day: u32| chrono::NaiveDate::from_ymd_opt(y, m, day).unwrap();
+        assert_eq!(previous_month(d(2026, 6, 1)), "2026-05");
+        assert_eq!(previous_month(d(2026, 1, 2)), "2025-12");
+    }
+}
