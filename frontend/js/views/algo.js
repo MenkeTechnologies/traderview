@@ -1915,6 +1915,7 @@ async function openMetricsModal(mount, s) {
     wrap.innerHTML = `
         <div class="modal-inner" style="max-width:960px">
             <h2>Metrics: ${esc(s.name)}</h2>
+            ${s.notes ? `<p class="muted small"><strong data-i18n="view.algo.metrics.thesis">Thesis:</strong> ${esc(s.notes)}</p>` : ''}
             <p class="muted small">Live aggregate over every algo_runs row for this strategy. Equity curve uses settled runs only (in-flight runs are excluded until stopped).</p>
             <div id="mt-pnl-summary" class="small muted"></div>
             <div id="mt-pnl-curve"></div>

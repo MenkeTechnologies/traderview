@@ -3957,6 +3957,7 @@
   "view.algo.label.universe": "Universet",
   "view.algo.load_error": "Kunne ikke laste strategier",
   "view.algo.loading": "Laster inn..",
+  "view.algo.metrics.thesis": "Thesis:",
   "view.algo.opt.asset_crypto": "Crypto (24/7, BASE/USD univers)",
   "view.algo.opt.asset_equity": "Equity (USA RTH + utvidede timer)",
   "view.algo.opt.broker_live": "Alpaca LIVE (etter papirlås)",

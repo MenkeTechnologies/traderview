@@ -3957,6 +3957,7 @@
   "view.algo.label.universe": "Universe",
   "view.algo.load_error": "Tidak dapat memuat strategi",
   "view.algo.loading": "Memuat..",
+  "view.algo.metrics.thesis": "Thesis:",
   "view.algo.opt.asset_crypto": "Crypto (24 / 7, BASE / USD universe)",
   "view.algo.opt.asset_equity": "Equity (US RTH + extended hours)",
   "view.algo.opt.broker_live": "Alpaca LIVE (setelah paper-lock)",

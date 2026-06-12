@@ -3957,6 +3957,7 @@
   "view.algo.label.universe": "Universo",
   "view.algo.load_error": "No podía cargar estrategias",
   "view.algo.loading": "Cargando..",
+  "view.algo.metrics.thesis": "Thesis:",
   "view.algo.opt.asset_crypto": "Crypto (24/7, BASE/USD universo)",
   "view.algo.opt.asset_equity": "Equidad (US RTH + horas extendidas)",
   "view.algo.opt.broker_live": "Alpaca LIVE (después del bloqueo de papel)",

@@ -3957,6 +3957,7 @@
   "view.algo.label.universe": "Vesmír",
   "view.algo.load_error": "Nelze načíst strategie",
   "view.algo.loading": "Nabíjím..",
+  "view.algo.metrics.thesis": "Thesis:",
   "view.algo.opt.asset_crypto": "Crypto (24 / 7, BASE / USD vesmír)",
   "view.algo.opt.asset_equity": "Vlastní kapitál (US RTH + prodloužené hodiny)",
   "view.algo.opt.broker_live": "Alpaca LIVE (po paper- lock)",

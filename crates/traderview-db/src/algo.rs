@@ -1056,9 +1056,9 @@ pub async fn live_divergence(
 /// list. Soft-deleted strategies excluded.
 pub async fn all_active_strategy_ids(
     pool: &PgPool,
-) -> anyhow::Result<Vec<(Uuid, Uuid, String)>> {
+) -> anyhow::Result<Vec<(Uuid, Uuid, String, Option<String>)>> {
     Ok(sqlx::query_as(
-        "SELECT id, user_id, name FROM algo_strategies WHERE deleted_at IS NULL",
+        "SELECT id, user_id, name, notes FROM algo_strategies WHERE deleted_at IS NULL",
     )
     .fetch_all(pool)
     .await?)

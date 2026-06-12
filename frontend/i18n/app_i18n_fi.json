@@ -3957,6 +3957,7 @@
   "view.algo.label.universe": "Universumi",
   "view.algo.load_error": "Strategiaa ei voitu ladata",
   "view.algo.loading": "Ladataan..",
+  "view.algo.metrics.thesis": "Thesis:",
   "view.algo.opt.asset_crypto": "Salama (24/7, BASE/USD-universumi)",
   "view.algo.opt.asset_equity": "Oma pääoma (US RTH + pidennetyt tunnit)",
   "view.algo.opt.broker_live": "Alpaca LIVE (paperilukon jälkeen)",

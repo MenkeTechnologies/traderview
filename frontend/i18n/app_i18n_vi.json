@@ -3957,6 +3957,7 @@
   "view.algo.label.universe": "Vũ trụ",
   "view.algo.load_error": "Không thể tải chiến lược",
   "view.algo.loading": "Đang nạp..",
+  "view.algo.metrics.thesis": "Thesis:",
   "view.algo.opt.asset_crypto": "Mật mã (24/7,BASE/USD)",
   "view.algo.opt.asset_equity": "Công bằng (USRTH + mở rộng giờ)",
   "view.algo.opt.broker_live": "AlpacaLIVE (sau khi khóa giấy)",

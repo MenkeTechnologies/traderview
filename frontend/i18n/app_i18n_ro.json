@@ -3957,6 +3957,7 @@
   "view.algo.label.universe": "Univers",
   "view.algo.load_error": "Strategiile nu au putut fi încărcate",
   "view.algo.loading": "Se încarcă..",
+  "view.algo.metrics.thesis": "Thesis:",
   "view.algo.opt.asset_crypto": "Crypto (24/7, BASE/USD universe)",
   "view.algo.opt.asset_equity": "Capital propriu (US RTH + ore prelungite)",
   "view.algo.opt.broker_live": "LIVE ",

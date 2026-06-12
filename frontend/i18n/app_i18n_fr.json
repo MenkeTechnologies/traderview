@@ -3957,6 +3957,7 @@
   "view.algo.label.universe": "Univers",
   "view.algo.load_error": "Impossible de charger les stratégies",
   "view.algo.loading": "Chargement..",
+  "view.algo.metrics.thesis": "Thesis:",
   "view.algo.opt.asset_crypto": "Crypto (24/7, BASE/USD univers)",
   "view.algo.opt.asset_equity": "Avoir (US RTH + heures prolongées)",
   "view.algo.opt.broker_live": "Alpaga LIVE (après la fermeture sur papier)",

@@ -3957,6 +3957,7 @@
   "view.algo.label.universe": "Wszechświat",
   "view.algo.load_error": "Nie można wczytać strategii",
   "view.algo.loading": "Ładowanie..",
+  "view.algo.metrics.thesis": "Thesis:",
   "view.algo.opt.asset_crypto": "Crypto (24 / 7, BASE / USD universe)",
   "view.algo.opt.asset_equity": "Kapitał własny (US RTH + wydłużone godziny)",
   "view.algo.opt.broker_live": "Alpaca LIVE (po zablokowaniu papieru)",

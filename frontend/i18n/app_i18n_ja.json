@@ -3957,6 +3957,7 @@
   "view.algo.label.universe": "ユニバース",
   "view.algo.load_error": "戦略をロードできない",
   "view.algo.loading": "ローディング..",
+  "view.algo.metrics.thesis": "Thesis:",
   "view.algo.opt.asset_crypto": "暗号 (24/7, BASE/USD 宇宙)",
   "view.algo.opt.asset_equity": "Equity (米国 RTH + 延長時間)",
   "view.algo.opt.broker_live": "Alpaca LIVE (ペーパー ロックの後で)",

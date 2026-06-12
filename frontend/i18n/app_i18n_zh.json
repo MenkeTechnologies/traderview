@@ -3957,6 +3957,7 @@
   "view.algo.label.universe": "宇宙",
   "view.algo.load_error": "无法装入策略",
   "view.algo.loading": "正在装入..",
+  "view.algo.metrics.thesis": "Thesis:",
   "view.algo.opt.asset_crypto": "密码( 24/7, BASE/USD 宇宙)",
   "view.algo.opt.asset_equity": "公平 (US RTH + 延长时数)",
   "view.algo.opt.broker_live": "Alpaca LIVE (在纸锁之后)",

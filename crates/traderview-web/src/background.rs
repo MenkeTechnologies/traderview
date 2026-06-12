@@ -381,7 +381,7 @@ fn spawn_strategy_drift_watch(pool: PgPool, hub: crate::realtime::Hub) {
         loop {
             match traderview_db::algo::all_active_strategy_ids(&pool).await {
                 Ok(rows) => {
-                    for (id, user_id, name) in rows {
+                    for (id, user_id, name, notes) in rows {
                         match traderview_db::algo::live_divergence(&pool, user_id, id).await {
                             Ok(Some(div))
                                 if matches!(div.report.verdict, "degraded" | "watch") =>
@@ -410,15 +410,23 @@ fn spawn_strategy_drift_watch(pool: PgPool, hub: crate::realtime::Hub) {
                                 }
                                 let payload = traderview_db::webhooks::AlertPayload {
                                     title: format!("Strategy drift: {name}"),
-                                    message: format!(
-                                        "{} — win-rate z {} over {} live trades; live record diverging from backtest",
-                                        report.verdict,
-                                        report
-                                            .win_rate_z
-                                            .map(|z| format!("{z:.2}"))
-                                            .unwrap_or_else(|| "n/a".into()),
-                                        report.live_trades
-                                    ),
+                                    message: {
+                                        let mut m = format!(
+                                            "{} — win-rate z {} over {} live trades; live record diverging from backtest",
+                                            report.verdict,
+                                            report
+                                                .win_rate_z
+                                                .map(|z| format!("{z:.2}"))
+                                                .unwrap_or_else(|| "n/a".into()),
+                                            report.live_trades
+                                        );
+                                        // The drift alert is exactly the moment
+                                        // to reread why you believed.
+                                        if let Some(t) = notes.as_deref().filter(|t| !t.is_empty()) {
+                                            m.push_str(&format!(" — thesis: {t}"));
+                                        }
+                                        m
+                                    },
                                     symbol: None,
                                     kind: "strategy_drift".into(),
                                     url: None,

@@ -3957,6 +3957,7 @@
   "view.algo.label.universe": "Univerzum",
   "view.algo.load_error": "Nem sikerült betölteni a stratégiákat",
   "view.algo.loading": "Betöltés..",
+  "view.algo.metrics.thesis": "Thesis:",
   "view.algo.opt.asset_crypto": "Crypto (24 / 7, BASE / USD univerzum)",
   "view.algo.opt.asset_equity": "Részvény (US RTH + meghosszabbított órák)",
   "view.algo.opt.broker_live": "Alpaca LIVE (papírzár után)",

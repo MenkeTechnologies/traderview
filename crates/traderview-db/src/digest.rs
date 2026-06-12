@@ -160,7 +160,7 @@ pub async fn for_user(pool: &PgPool, user_id: Uuid) -> anyhow::Result<Digest> {
 
     // Drifting strategies (same comparison the watch uses).
     if let Ok(strategies) = crate::algo::all_active_strategy_ids(pool).await {
-        for (id, uid, name) in strategies {
+        for (id, uid, name, _notes) in strategies {
             if uid != user_id {
                 continue;
             }

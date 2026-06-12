@@ -3957,6 +3957,7 @@
   "view.algo.label.universe": "Universum",
   "view.algo.load_error": "Kon strategieën niet laden",
   "view.algo.loading": "Laden..",
+  "view.algo.metrics.thesis": "Thesis:",
   "view.algo.opt.asset_crypto": "Crypto (24/7, BASE/USD universum)",
   "view.algo.opt.asset_equity": "Eigen vermogen (US RTH + langere uren)",
   "view.algo.opt.broker_live": "Alpaca LIVE (na papier-lock)",

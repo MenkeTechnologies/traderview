@@ -3957,6 +3957,7 @@
   "view.algo.label.universe": "Evren",
   "view.algo.load_error": "Stratejileri yükleyemez",
   "view.algo.loading": "Yükleniyor..",
+  "view.algo.metrics.thesis": "Thesis:",
   "view.algo.opt.asset_crypto": "Kripto (24/7, BASE/USD evreni)",
   "view.algo.opt.asset_equity": "Eşitlik (US RTH + genişletilmiş saat)",
   "view.algo.opt.broker_live": "Alpaca LIVE (pre-lock)",
