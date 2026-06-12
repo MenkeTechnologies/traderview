@@ -33,6 +33,9 @@ pub struct Digest {
     /// Sub-$25k accounts at 3+ day trades in the 5-trading-day window
     /// — one trade from the PDT flag, or already flagged.
     pub pdt_risk: Vec<String>,
+    /// Household exposure across every paper account: net/gross/
+    /// long/short at current marks. None when nothing is held.
+    pub exposure: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -59,6 +62,7 @@ impl Digest {
             && self.margin_risk.is_empty()
             && self.assignment_risk.is_empty()
             && self.pdt_risk.is_empty()
+            && self.exposure.is_none()
     }
 }
 
@@ -100,6 +104,9 @@ pub fn format_digest(d: &Digest) -> String {
     }
     if !d.pdt_risk.is_empty() {
         out.push(format!("PDT: {}", d.pdt_risk.join(", ")));
+    }
+    if let Some(e) = &d.exposure {
+        out.push(format!("exposure: {e}"));
     }
     out.join(" · ")
 }
@@ -245,6 +252,27 @@ pub async fn for_user(pool: &PgPool, user_id: Uuid) -> anyhow::Result<Digest> {
                     p.day_trades_5d
                 ));
             }
+        }
+    }
+
+    // Household exposure at current marks — the same rollup the
+    // holdings view serves, with its unmarked honesty carried into
+    // the sentence.
+    if let Ok(view) = crate::paper_equity::consolidated_holdings(pool, user_id).await {
+        let e = view.exposure;
+        if e.gross_usd > 0.0 || e.unmarked > 0 {
+            let mut line = format!(
+                "net {}${:.0} · gross ${:.0} (long ${:.0} / short ${:.0})",
+                if e.net_usd >= 0.0 { "+" } else { "−" },
+                e.net_usd.abs(),
+                e.gross_usd,
+                e.long_usd,
+                e.short_usd
+            );
+            if e.unmarked > 0 {
+                line.push_str(&format!(" — {} unmarked row(s) excluded", e.unmarked));
+            }
+            d.exposure = Some(line);
         }
     }
 
@@ -447,6 +475,14 @@ mod tests {
         assert!(!s.contains("drifting"));
         assert!(!s.contains("rebalance"));
         assert!(!s.contains("near breaker"));
+    }
+
+    #[test]
+    fn exposure_section_formats() {
+        let mut d = Digest::default();
+        d.exposure = Some("net +$30000 · gross $70000 (long $50000 / short $20000)".into());
+        assert!(!d.is_empty());
+        assert!(format_digest(&d).contains("exposure: net +$30000 · gross $70000"));
     }
 
     #[test]
