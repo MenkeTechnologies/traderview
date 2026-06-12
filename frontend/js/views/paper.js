@@ -205,6 +205,15 @@ export async function renderPaper(mount) {
             <div id="paper-attribution" class="muted small"></div>
         </div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.paper.h2.statement">Monthly statement</h2>
+            <form id="stmt-form" class="inline-form">
+                <input name="month" type="month" value="${new Date().toISOString().slice(0, 7)}">
+                <button type="submit" data-i18n="view.paper.btn.statement">VIEW</button>
+            </form>
+            <div id="paper-statement" class="muted small"></div>
+        </div>
+
         <div class="chart-panel" id="paper-wash-panel" style="display:none">
             <h2 data-i18n="view.paper.h2.wash">Wash sales</h2>
             <div id="paper-wash" class="muted small"></div>
@@ -384,6 +393,30 @@ export async function renderPaper(mount) {
                 showToast(t('common.error', { err: err.message }), { level: 'error' });
             }
         });
+    });
+    mount.querySelector('#stmt-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const month = new FormData(e.target).get('month');
+        const el = mount.querySelector('#paper-statement');
+        try {
+            const s = await api.paperStatement(acct.id, month);
+            const money = v => (v < 0 ? '-$' : '$') + Math.abs(v).toFixed(2);
+            el.innerHTML = `
+                <table class="data-table small"><tbody>
+                    <tr><td data-i18n="view.paper.stmt.opening">Opening equity</td><td>${s.opening_equity != null ? money(s.opening_equity) : '—'}</td></tr>
+                    <tr><td data-i18n="view.paper.stmt.closing">Closing equity</td><td>${s.closing_equity != null ? money(s.closing_equity) : '—'}</td></tr>
+                    <tr><td data-i18n="view.paper.stmt.return">Period return</td><td class="${(s.period_return_pct ?? 0) >= 0 ? 'pos' : 'neg'}">${s.period_return_pct != null ? s.period_return_pct.toFixed(2) + '%' : '—'}</td></tr>
+                    <tr><td data-i18n="view.paper.stmt.realized">Realized P&L (${s.trips_closed} trips)</td><td class="${s.realized_pnl >= 0 ? 'pos' : 'neg'}">${money(s.realized_pnl)}</td></tr>
+                    <tr><td data-i18n="view.paper.stmt.fills">Fills</td><td>${s.fills}</td></tr>
+                    <tr><td data-i18n="view.paper.stmt.fees">Fees & commissions</td><td class="neg">${money(s.fees)}</td></tr>
+                    <tr><td data-i18n="view.paper.stmt.dividends">Dividends</td><td class="${s.dividends >= 0 ? 'pos' : 'neg'}">${money(s.dividends)}</td></tr>
+                    <tr><td data-i18n="view.paper.stmt.interest">Cash sweep interest</td><td class="pos">${money(s.interest)}</td></tr>
+                    <tr><td data-i18n="view.paper.stmt.borrow">Short borrow fees</td><td class="neg">${money(s.borrow_fees)}</td></tr>
+                </tbody></table>
+                <p class="muted small" data-i18n="view.paper.hint.statement">Composed from the live stores — equity snapshots bound the period (a mid-month account opening shows — for opening equity, not a fake zero); realized P&L is trips CLOSED in the month from the same FIFO reconstruction as attribution, so a trip closed this month on lots bought earlier lands here.</p>`;
+        } catch (err) {
+            el.textContent = err.message || 'statement failed';
+        }
     });
     wireProtectButtons(mount, acct.id);
     mount.querySelectorAll('.roll-btn').forEach(btn => {

@@ -866,6 +866,7 @@ export const api = {
     paperSetBorrowApy: (id, apy_pct) =>
         request(`/paper/accounts/${id}/borrow-apy`, { method: 'POST', body: JSON.stringify({ apy_pct }) }),
     paperInterest: (id) => request(`/paper/accounts/${id}/interest`),
+    paperStatement: (id, month) => request(`/paper/accounts/${id}/statement?month=${encodeURIComponent(month)}`),
     paperAttribution: (id) => request(`/paper/accounts/${id}/attribution`),
     paperWashSales: (id) => request(`/paper/accounts/${id}/wash-sales`),
     paperProtect: (id, body) => request(`/paper/accounts/${id}/protect`, { method: 'POST', body }),

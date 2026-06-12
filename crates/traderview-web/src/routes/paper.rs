@@ -47,6 +47,7 @@ pub fn router() -> Router<AppState> {
         .route("/paper/accounts/:id/cash-apy", post(set_cash_apy))
         .route("/paper/accounts/:id/borrow-apy", post(set_borrow_apy))
         .route("/paper/accounts/:id/interest", get(interest))
+        .route("/paper/accounts/:id/statement", get(statement))
         .route(
             "/paper/recurring/:id",
             axum::routing::delete(delete_recurring),
@@ -792,6 +793,24 @@ async fn set_borrow_apy(
     Json(b): Json<CashApyBody>,
 ) -> Result<Json<bool>, ApiError> {
     traderview_db::paper_interest::set_borrow_apy(&s.pool, user.id, id, b.apy_pct)
+        .await
+        .map(Json)
+        .map_err(|e| ApiError::BadRequest(e.to_string()))
+}
+
+#[derive(Deserialize)]
+struct StatementQ {
+    month: String,
+}
+
+/// Monthly brokerage-style statement composed from the existing stores.
+async fn statement(
+    State(s): State<AppState>,
+    user: AuthUser,
+    Path(id): Path<Uuid>,
+    Query(q): Query<StatementQ>,
+) -> Result<Json<traderview_db::paper_equity::Statement>, ApiError> {
+    traderview_db::paper_equity::statement(&s.pool, user.id, id, &q.month)
         .await
         .map(Json)
         .map_err(|e| ApiError::BadRequest(e.to_string()))

@@ -1103,3 +1103,210 @@ mod tests {
         assert!(account_return_pct(Decimal::ZERO, d(100)).is_none());
     }
 }
+
+/// UTC bounds of a "YYYY-MM" month: [first instant, first instant of
+/// the next month). Pure; None for unparsable input.
+pub fn month_bounds(month: &str) -> Option<(chrono::DateTime<Utc>, chrono::DateTime<Utc>)> {
+    let (y, m) = month.split_once('-')?;
+    let y: i32 = y.parse().ok()?;
+    let m: u32 = m.parse().ok()?;
+    let start = chrono::NaiveDate::from_ymd_opt(y, m, 1)?;
+    let end = if m == 12 {
+        chrono::NaiveDate::from_ymd_opt(y + 1, 1, 1)?
+    } else {
+        chrono::NaiveDate::from_ymd_opt(y, m + 1, 1)?
+    };
+    let at = |d: chrono::NaiveDate| {
+        chrono::DateTime::<Utc>::from_naive_utc_and_offset(d.and_hms_opt(0, 0, 0).unwrap(), Utc)
+    };
+    Some((at(start), at(end)))
+}
+
+#[derive(Debug, serde::Serialize)]
+pub struct Statement {
+    pub month: String,
+    /// Last snapshot at-or-before the period start; None when the
+    /// account has no history that old (a mid-month account opening
+    /// shows None, not a fake zero).
+    pub opening_equity: Option<f64>,
+    /// Last snapshot inside the period.
+    pub closing_equity: Option<f64>,
+    /// closing/opening − 1, only when both ends exist.
+    pub period_return_pct: Option<f64>,
+    /// Trips CLOSED in the period (FIFO, fees netted) — same shared
+    /// reconstruction as attribution.
+    pub realized_pnl: f64,
+    pub trips_closed: usize,
+    pub fills: i64,
+    pub fees: f64,
+    pub dividends: f64,
+    pub interest: f64,
+    pub borrow_fees: f64,
+}
+
+/// Monthly brokerage-style statement, composed read-only from the
+/// stores each subsystem already maintains.
+pub async fn statement(
+    pool: &PgPool,
+    user_id: Uuid,
+    account_id: Uuid,
+    month: &str,
+) -> anyhow::Result<Statement> {
+    use rust_decimal::prelude::ToPrimitive;
+    let owner: Option<(Uuid,)> =
+        sqlx::query_as("SELECT user_id FROM paper_accounts WHERE id = $1")
+            .bind(account_id)
+            .fetch_optional(pool)
+            .await?;
+    if !matches!(owner, Some((u,)) if u == user_id) {
+        anyhow::bail!("forbidden");
+    }
+    let (start, end) =
+        month_bounds(month).ok_or_else(|| anyhow::anyhow!("month must be YYYY-MM"))?;
+
+    let snap = |at: chrono::DateTime<Utc>| async move {
+        let r: Option<(Decimal,)> = sqlx::query_as(
+            "SELECT equity FROM paper_equity_snapshots
+              WHERE paper_account_id = $1 AND taken_at < $2
+              ORDER BY taken_at DESC LIMIT 1",
+        )
+        .bind(account_id)
+        .bind(at)
+        .fetch_optional(pool)
+        .await?;
+        anyhow::Ok(r.and_then(|(e,)| e.to_f64()))
+    };
+    let opening_equity = snap(start).await?;
+    // "Closing" = last snapshot INSIDE the period — for the current
+    // month that's simply the latest snapshot so far.
+    let closing_inside: Option<(Decimal,)> = sqlx::query_as(
+        "SELECT equity FROM paper_equity_snapshots
+          WHERE paper_account_id = $1 AND taken_at >= $2 AND taken_at < $3
+          ORDER BY taken_at DESC LIMIT 1",
+    )
+    .bind(account_id)
+    .bind(start)
+    .bind(end)
+    .fetch_optional(pool)
+    .await?;
+    let closing_equity = closing_inside.and_then(|(e,)| e.to_f64());
+
+    let (fills, fees): (i64, f64) = {
+        let r: (i64, Option<Decimal>) = sqlx::query_as(
+            "SELECT count(*), COALESCE(SUM(fee), 0)
+               FROM paper_orders
+              WHERE paper_account_id = $1 AND status = 'filled'
+                AND filled_at >= $2 AND filled_at < $3",
+        )
+        .bind(account_id)
+        .bind(start)
+        .bind(end)
+        .fetch_one(pool)
+        .await?;
+        (r.0, r.1.and_then(|d| d.to_f64()).unwrap_or(0.0))
+    };
+    let dividends: Option<(Decimal,)> = sqlx::query_as(
+        "SELECT COALESCE(SUM(cash_credited), 0) FROM paper_dividends
+          WHERE paper_account_id = $1 AND ex_date >= $2::date AND ex_date < $3::date",
+    )
+    .bind(account_id)
+    .bind(start.date_naive())
+    .bind(end.date_naive())
+    .fetch_optional(pool)
+    .await?;
+    let interest_rows: Vec<(String, Decimal)> = sqlx::query_as(
+        "SELECT kind, COALESCE(SUM(amount), 0) FROM paper_interest
+          WHERE paper_account_id = $1 AND credited_on >= $2 AND credited_on < $3
+          GROUP BY kind",
+    )
+    .bind(account_id)
+    .bind(start.date_naive())
+    .bind(end.date_naive())
+    .fetch_all(pool)
+    .await?;
+    let (mut interest, mut borrow_fees) = (0.0, 0.0);
+    for (kind, amt) in &interest_rows {
+        let v = amt.to_f64().unwrap_or(0.0);
+        if kind == "short_borrow" {
+            borrow_fees += -v; // stored negative; report as a positive cost
+        } else {
+            interest += v;
+        }
+    }
+
+    // Realized P&L: trips closed inside the period, from the same
+    // full-history FIFO reconstruction attribution uses (a trip can
+    // close this month on lots bought months ago).
+    let fills_rows: Vec<(String, String, Decimal, Decimal, Decimal, chrono::DateTime<Utc>)> =
+        sqlx::query_as(
+            "SELECT symbol, side::text, filled_qty, filled_price, fee, filled_at
+               FROM paper_orders
+              WHERE paper_account_id = $1 AND status = 'filled'
+                AND filled_qty IS NOT NULL AND filled_price IS NOT NULL
+              ORDER BY filled_at",
+        )
+        .bind(account_id)
+        .fetch_all(pool)
+        .await?;
+    let mut by_symbol: std::collections::BTreeMap<String, Vec<traderview_core::live_vs_backtest::Fill>> =
+        Default::default();
+    for (symbol, side, qty, price, fee, at) in fills_rows {
+        let scale = if traderview_core::occ_symbol::is_occ(&symbol) { 100.0 } else { 1.0 };
+        by_symbol.entry(symbol).or_default().push(traderview_core::live_vs_backtest::Fill {
+            buy: side == "buy" || side == "cover",
+            qty: qty.to_f64().unwrap_or(0.0),
+            price: price.to_f64().unwrap_or(0.0) * scale,
+            commission: fee.to_f64().unwrap_or(0.0),
+            ts: at.timestamp(),
+            flag: false,
+        });
+    }
+    let (mut realized_pnl, mut trips_closed) = (0.0, 0usize);
+    for fills in by_symbol.values() {
+        for t in traderview_core::live_vs_backtest::round_trips(fills) {
+            if t.closed_ts >= start.timestamp() && t.closed_ts < end.timestamp() {
+                realized_pnl += t.pnl;
+                trips_closed += 1;
+            }
+        }
+    }
+
+    Ok(Statement {
+        month: month.to_string(),
+        opening_equity,
+        closing_equity,
+        period_return_pct: match (opening_equity, closing_equity) {
+            (Some(o), Some(c)) if o > 0.0 => Some((c / o - 1.0) * 100.0),
+            _ => None,
+        },
+        realized_pnl,
+        trips_closed,
+        fills,
+        fees,
+        dividends: dividends.and_then(|(d,)| d.to_f64()).unwrap_or(0.0),
+        interest,
+        borrow_fees,
+    })
+}
+
+#[cfg(test)]
+mod statement_tests {
+    use super::*;
+
+    #[test]
+    fn month_bounds_pins_wrap_and_garbage() {
+        let (s, e) = month_bounds("2026-05").unwrap();
+        assert_eq!(s.to_rfc3339(), "2026-05-01T00:00:00+00:00");
+        assert_eq!(e.to_rfc3339(), "2026-06-01T00:00:00+00:00");
+        // December wraps the year; February of a leap year still ends
+        // at March 1 (the bound is exclusive, day count irrelevant).
+        let (_, e) = month_bounds("2025-12").unwrap();
+        assert_eq!(e.to_rfc3339(), "2026-01-01T00:00:00+00:00");
+        let (s, e) = month_bounds("2024-02").unwrap();
+        assert_eq!(s.to_rfc3339(), "2024-02-01T00:00:00+00:00");
+        assert_eq!(e.to_rfc3339(), "2024-03-01T00:00:00+00:00");
+        assert!(month_bounds("2026-13").is_none());
+        assert!(month_bounds("garbage").is_none());
+        assert!(month_bounds("2026").is_none());
+    }
+}
