@@ -217,6 +217,7 @@ pub async fn execute(
             trail_is_pct: None,
             time_in_force: None,
             expire_at: None,
+            plan_note: None,
         };
         match crate::paper::submit(pool, user_id, account.id, req).await {
             Ok(o) => executed.push(ExecutedTrade {

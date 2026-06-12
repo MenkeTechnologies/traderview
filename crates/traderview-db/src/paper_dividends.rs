@@ -172,6 +172,7 @@ pub async fn credit_all(pool: &PgPool) -> anyhow::Result<usize> {
                                                 trail_is_pct: None,
                                                 time_in_force: None,
                                                 expire_at: None,
+                                                plan_note: None,
                                             },
                                         )
                                         .await;

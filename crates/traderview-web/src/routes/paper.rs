@@ -619,7 +619,12 @@ async fn submit(
         // stop, else zero (the % rules would just degrade gracefully).
         req.limit_price.or(req.stop_price).unwrap_or(Decimal::ZERO),
         req.stop_price,
-        false,
+        // A written plan note satisfies RequirePlanBeforeTrade — the
+        // rule was unsatisfiable at the manual ticket before this.
+        req.plan_note
+            .as_deref()
+            .map(str::trim)
+            .is_some_and(|s| !s.is_empty()),
     )
     .await?;
     Ok(Json(

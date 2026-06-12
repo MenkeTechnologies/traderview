@@ -46,6 +46,7 @@ pub struct PaperOrder {
     pub filled_at: Option<DateTime<Utc>>,
     pub cancel_at: Option<DateTime<Utc>>,
     pub reject_reason: Option<String>,
+    pub plan_note: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, sqlx::FromRow)]
@@ -236,6 +237,10 @@ pub struct OrderRequest {
     pub time_in_force: Option<String>,
     #[serde(default)]
     pub expire_at: Option<DateTime<Utc>>,
+    /// Written trade plan; a non-empty note satisfies the
+    /// RequirePlanBeforeTrade risk rule and persists with the order.
+    #[serde(default)]
+    pub plan_note: Option<String>,
 }
 
 /// Price at which an order triggers against the current quote: market
@@ -441,19 +446,20 @@ pub async fn submit(
         "INSERT INTO paper_orders
             (paper_account_id, symbol, side, qty, order_type, limit_price, stop_price,
              status, filled_price, filled_qty, filled_at, reject_reason,
-             trail_value, trail_is_pct, trail_extreme, cancel_at)
+             trail_value, trail_is_pct, trail_extreme, cancel_at, plan_note)
          VALUES ($1, $2, $3::side_t, $4, $5::paper_order_type_t, $6, $7,
-                 $8::paper_order_status_t, $9, $10, $11, $12, $13, $14, $15, $16)
+                 $8::paper_order_status_t, $9, $10, $11, $12, $13, $14, $15, $16, $17)
          RETURNING id, paper_account_id, symbol, side::text, qty, order_type::text,
                    limit_price, stop_price, status::text,
                    trail_value, trail_is_pct, trail_extreme, oco_group, parent_order_id,
-                   filled_price, filled_qty, fee, submitted_at, filled_at, cancel_at, reject_reason",
+                   filled_price, filled_qty, fee, submitted_at, filled_at, cancel_at, reject_reason, plan_note",
     )
     .bind(account_id).bind(req.symbol.to_uppercase()).bind(side_str)
     .bind(req.qty).bind(&req.order_type).bind(req.limit_price).bind(req.stop_price)
     .bind(status).bind(fill_price).bind(fill_price.map(|_| req.qty))
     .bind(filled_at).bind(reject)
     .bind(req.trail_value).bind(req.trail_is_pct).bind(trail_extreme).bind(cancel_at)
+    .bind(req.plan_note.as_deref().map(str::trim).filter(|s| !s.is_empty()))
     .fetch_one(&mut *tx)
     .await?;
 
@@ -752,6 +758,7 @@ pub async fn submit_bracket(
             trail_is_pct: None,
             time_in_force: None,
             expire_at: None,
+            plan_note: None,
         },
     )
     .await?;
@@ -811,7 +818,7 @@ async fn insert_leg(
          RETURNING id, paper_account_id, symbol, side::text, qty, order_type::text,
                    limit_price, stop_price, status::text,
                    trail_value, trail_is_pct, trail_extreme, oco_group, parent_order_id,
-                   filled_price, filled_qty, fee, submitted_at, filled_at, cancel_at, reject_reason",
+                   filled_price, filled_qty, fee, submitted_at, filled_at, cancel_at, reject_reason, plan_note",
     )
     .bind(account_id)
     .bind(symbol)
@@ -909,7 +916,7 @@ pub async fn submit_spread(
              RETURNING id, paper_account_id, symbol, side::text, qty, order_type::text,
                        limit_price, stop_price, status::text,
                        trail_value, trail_is_pct, trail_extreme, oco_group, parent_order_id,
-                       filled_price, filled_qty, fee, submitted_at, filled_at, cancel_at, reject_reason",
+                       filled_price, filled_qty, fee, submitted_at, filled_at, cancel_at, reject_reason, plan_note",
         )
         .bind(account_id)
         .bind(leg.symbol.trim().to_uppercase())
@@ -1336,7 +1343,7 @@ pub async fn list_orders(
         "SELECT id, paper_account_id, symbol, side::text, qty, order_type::text,
                 limit_price, stop_price, status::text,
                 trail_value, trail_is_pct, trail_extreme, oco_group, parent_order_id,
-                filled_price, filled_qty, fee, submitted_at, filled_at, cancel_at, reject_reason
+                filled_price, filled_qty, fee, submitted_at, filled_at, cancel_at, reject_reason, plan_note
            FROM paper_orders WHERE paper_account_id = $1
           ORDER BY submitted_at DESC LIMIT $2",
     )

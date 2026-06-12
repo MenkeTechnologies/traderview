@@ -106,6 +106,7 @@ export async function renderPaper(mount) {
                         <option value="gtd">GTD</option>
                     </select>
                     <input name="expire_at" type="datetime-local" data-tip="view.paper.tip.gtd_expiry">
+                    <input name="plan_note" placeholder="trade plan (why this trade?)" data-i18n-placeholder="view.paper.placeholder.plan" data-tip="view.paper.tip.plan" style="min-width:180px">
                     <input name="risk_pct" type="number" min="0.1" max="10" step="0.1" value="1" style="width:60px" data-tip="view.paper.tip.risk_pct">
                     <button type="button" id="ord-size" data-i18n="view.paper.btn.size" data-tip="view.paper.tip.size">SIZE</button>
                     <button data-i18n="view.paper.btn.submit" data-tip="view.paper.tip.submit" data-shortcut="paper_submit" class="primary" type="submit">SUBMIT</button>
@@ -234,9 +235,9 @@ export async function renderPaper(mount) {
                 <thead><tr><th data-i18n="view.paper.th.submitted">Submitted</th><th data-i18n="view.paper.th.symbol">Symbol</th><th data-i18n="view.paper.th.side">Side</th><th data-i18n="view.paper.th.qty_2">Qty</th><th data-i18n="view.paper.th.type">Type</th>
                 <th data-i18n="view.paper.th.status">Status</th><th data-i18n="view.paper.th.fill_price">Fill price</th><th data-i18n="view.paper.th.filled">Filled</th><th></th></tr></thead>
                 <tbody>${orders.map(o => `
-                    <tr data-context-scope="symbol-row" data-symbol="${esc(o.symbol)}">
+                    <tr data-context-scope="symbol-row" data-symbol="${esc(o.symbol)}"${o.plan_note ? ` title="${esc(o.plan_note)}"` : ''}>
                         <td>${fmtDateTime(o.submitted_at)}</td>
-                        <td>${esc(o.symbol)}</td>
+                        <td>${esc(o.symbol)}${o.plan_note ? ' \ud83d\udcdd' : ''}</td>
                         <td>${o.side}</td>
                         <td>${fmt(o.qty, 0)}</td>
                         <td>${o.order_type}${o.limit_price != null ? ' @' + fmt(o.limit_price) : ''}${o.stop_price != null ? ' stop ' + fmt(o.stop_price) : ''}${o.trail_value != null ? ' ' + (o.trail_is_pct ? (Number(o.trail_value) * 100).toFixed(1) + '%' : '$' + fmt(o.trail_value)) + (o.status === 'pending' && o.trail_extreme != null ? ' (hwm ' + fmt(o.trail_extreme) + ')' : '') : ''}</td>
@@ -357,6 +358,7 @@ export async function renderPaper(mount) {
             expire_at: fd.get('time_in_force') === 'gtd' && fd.get('expire_at')
                 ? new Date(fd.get('expire_at')).toISOString()
                 : null,
+            plan_note: (fd.get('plan_note') || '').trim() || null,
         };
         try {
             const o = await api.paperSubmit(acct.id, body);
