@@ -20,6 +20,10 @@ pub struct Digest {
     pub gate_fires_24h: i64,
     pub earnings_soon: Vec<EarningsLine>,
     pub rebalance_needed: Vec<String>,
+    /// Strategies at ≥70% of their max-drawdown circuit breaker —
+    /// the warning BEFORE the auto-pause, while there's still a cap
+    /// left to act inside.
+    pub breaker_proximity: Vec<String>,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -42,6 +46,7 @@ impl Digest {
             && self.gate_fires_24h == 0
             && self.earnings_soon.is_empty()
             && self.rebalance_needed.is_empty()
+            && self.breaker_proximity.is_empty()
     }
 }
 
@@ -71,6 +76,9 @@ pub fn format_digest(d: &Digest) -> String {
     }
     if !d.rebalance_needed.is_empty() {
         out.push(format!("rebalance: {}", d.rebalance_needed.join(", ")));
+    }
+    if !d.breaker_proximity.is_empty() {
+        out.push(format!("near breaker: {}", d.breaker_proximity.join(", ")));
     }
     out.join(" · ")
 }
@@ -126,6 +134,34 @@ pub async fn for_user(pool: &PgPool, user_id: Uuid) -> anyhow::Result<Digest> {
                     d.drifting_strategies.push(format!("{name} ({})", div.report.verdict));
                 }
             }
+        }
+    }
+
+    // Circuit-breaker proximity: enabled strategies with a drawdown
+    // cap whose CURRENT drawdown (same realized_drawdown the gate
+    // itself uses) is at ≥70% of it. The gate fires at 100% and
+    // auto-pauses; this is the morning warning while acting is still
+    // possible. Already-breached (paused) strategies aren't enabled,
+    // so they drop out naturally.
+    let capped: Vec<(Uuid, String, f64)> = sqlx::query_as(
+        "SELECT id, name, (risk_gates->>'max_drawdown_usd')::float8
+           FROM algo_strategies
+          WHERE user_id = $1 AND enabled = true AND deleted_at IS NULL
+            AND COALESCE((risk_gates->>'max_drawdown_usd')::float8, 0) > 0",
+    )
+    .bind(user_id)
+    .fetch_all(pool)
+    .await
+    .unwrap_or_default();
+    for (sid, name, cap) in capped {
+        let Ok(trips) = crate::algo::strategy_trips(pool, user_id, sid).await else {
+            continue;
+        };
+        let pnls: Vec<f64> = trips.iter().map(|t| t.pnl).collect();
+        let dd = traderview_core::live_vs_backtest::realized_drawdown(&pnls);
+        if dd >= 0.7 * cap {
+            d.breaker_proximity
+                .push(format!("{name} (${dd:.0} of ${cap:.0} drawdown cap)"));
         }
     }
 
@@ -327,5 +363,15 @@ mod tests {
         assert!(s.contains("3 gate fires in 24h"));
         assert!(!s.contains("drifting"));
         assert!(!s.contains("rebalance"));
+        assert!(!s.contains("near breaker"));
+    }
+
+    #[test]
+    fn breaker_proximity_formats_and_counts_nonempty() {
+        let mut d = Digest::default();
+        d.breaker_proximity
+            .push("momo ($82 of $100 drawdown cap)".into());
+        assert!(!d.is_empty());
+        assert!(format_digest(&d).contains("near breaker: momo ($82 of $100 drawdown cap)"));
     }
 }
