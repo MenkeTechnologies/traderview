@@ -35,6 +35,7 @@ pub fn router() -> Router<AppState> {
         .route("/paper/accounts/:id/roll", post(roll))
         .route("/paper/accounts/:id/covered-call", post(covered_call))
         .route("/paper/accounts/:id/exercise", post(exercise))
+        .route("/paper/accounts/:id/assign", post(assign))
         .route("/paper/accounts/:id/spreads", post(submit_spread))
         .route("/paper/accounts/:id/option-greeks", get(option_greeks))
         .route("/paper/spreads/preview", post(preview_spread))
@@ -988,6 +989,20 @@ async fn exercise(
     Json(b): Json<ExerciseBody>,
 ) -> Result<Json<traderview_db::paper::ExerciseResult>, ApiError> {
     traderview_db::paper::exercise(&s.pool, user.id, account_id, &b.symbol, b.contracts)
+        .await
+        .map(Json)
+        .map_err(|e| ApiError::BadRequest(e.to_string()))
+}
+
+/// Practice assignment on a short option — manual by design: the sim
+/// has no counterparty to decide it for you.
+async fn assign(
+    State(s): State<AppState>,
+    user: AuthUser,
+    Path(account_id): Path<Uuid>,
+    Json(b): Json<ExerciseBody>,
+) -> Result<Json<traderview_db::paper::ExerciseResult>, ApiError> {
+    traderview_db::paper::assign(&s.pool, user.id, account_id, &b.symbol, b.contracts)
         .await
         .map(Json)
         .map_err(|e| ApiError::BadRequest(e.to_string()))

@@ -1874,6 +1874,30 @@ pub fn validate_exercise(
     Ok(if occ.call { Side::Buy } else { Side::Sell })
 }
 
+/// Assignment sanity, pure — the mirror of validate_exercise: only
+/// SHORT positions are assigned (a long holds the right, the short
+/// carries the obligation), contracts bounded by |holding|, expired
+/// contracts belong to expiry settlement. The share leg mirrors too:
+/// an assigned CALL writer DELIVERS (sells at strike, possibly
+/// opening a short); an assigned PUT writer takes delivery (buys).
+pub fn validate_assignment(
+    occ: &traderview_core::occ_symbol::OccContract,
+    pos_qty: Decimal,
+    contracts: Decimal,
+    today: chrono::NaiveDate,
+) -> Result<Side, &'static str> {
+    if pos_qty >= Decimal::ZERO {
+        return Err("only short option positions can be assigned");
+    }
+    if contracts <= Decimal::ZERO || contracts > pos_qty.abs() {
+        return Err("contracts must be positive and within the holding");
+    }
+    if occ.expiry < today {
+        return Err("contract expired — expiry settlement handles it");
+    }
+    Ok(if occ.call { Side::Sell } else { Side::Buy })
+}
+
 #[derive(Debug, Clone, Serialize)]
 pub struct ExerciseResult {
     pub option_order: PaperOrder,
@@ -1946,6 +1970,90 @@ pub async fn exercise(
     .execute(&mut *tx)
     .await?;
     apply_fill(&mut tx, account_id, &symbol, Side::Sell, contracts, Decimal::ZERO, Decimal::from(100)).await?;
+
+    let stock_side_str = match stock_side {
+        Side::Buy => "buy",
+        _ => "sell",
+    };
+    let stock_order = insert_leg(
+        &mut tx, account_id, &occ.underlying, stock_side_str, shares,
+        "market", None, None, "filled", group, None, None, None, None,
+    )
+    .await?;
+    sqlx::query(
+        "UPDATE paper_orders SET filled_price = $2, filled_qty = qty, filled_at = now(),
+                plan_note = $3 WHERE id = $1",
+    )
+    .bind(stock_order.id)
+    .bind(strike)
+    .bind(&note)
+    .execute(&mut *tx)
+    .await?;
+    apply_fill(&mut tx, account_id, &occ.underlying, stock_side, shares, strike, Decimal::ONE).await?;
+    tx.commit().await?;
+
+    Ok(ExerciseResult { option_order, stock_order, shares, strike: occ.strike })
+}
+
+/// Practice being assigned on a short option: the obligation settles
+/// — the short option closes at $0 (the premium was collected at
+/// open and is now fully earned-and-spent through the share leg) and
+/// shares move at STRIKE per the right. Manual by design: the sim
+/// has no counterparty to decide assignment for you, and inventing
+/// one would be fabrication — the digest's assignment-risk warning
+/// says when a real one likely would.
+pub async fn assign(
+    pool: &PgPool,
+    user_id: Uuid,
+    account_id: Uuid,
+    symbol: &str,
+    contracts: Decimal,
+) -> anyhow::Result<ExerciseResult> {
+    let owner: Option<(Uuid,)> = sqlx::query_as("SELECT user_id FROM paper_accounts WHERE id = $1")
+        .bind(account_id)
+        .fetch_optional(pool)
+        .await?;
+    if !matches!(owner, Some((u,)) if u == user_id) {
+        anyhow::bail!("forbidden");
+    }
+    let symbol = symbol.trim().to_uppercase();
+    let occ = traderview_core::occ_symbol::parse(&symbol)
+        .ok_or_else(|| anyhow::anyhow!("not an OCC option symbol"))?;
+    let pos: Option<(Decimal,)> = sqlx::query_as(
+        "SELECT qty FROM paper_positions WHERE paper_account_id = $1 AND symbol = $2",
+    )
+    .bind(account_id)
+    .bind(&symbol)
+    .fetch_optional(pool)
+    .await?;
+    let pos_qty = pos.map(|(q,)| q).unwrap_or(Decimal::ZERO);
+    let today = Utc::now().date_naive();
+    let stock_side = validate_assignment(&occ, pos_qty, contracts, today)
+        .map_err(|e| anyhow::anyhow!(e))?;
+    let intrinsic = match crate::market_data::quote(pool, &occ.underlying).await {
+        Ok(q) => traderview_core::occ_symbol::intrinsic(occ.call, occ.strike, q.price),
+        Err(_) => 0.0,
+    };
+    let shares = contracts * Decimal::from(100);
+    let strike = Decimal::try_from(occ.strike)?;
+    let note = format!("assignment (intrinsic ${intrinsic:.2}/sh)");
+
+    let mut tx = pool.begin().await?;
+    let group = Uuid::new_v4();
+    let option_order = insert_leg(
+        &mut tx, account_id, &symbol, "cover", contracts,
+        "market", None, None, "filled", group, None, None, None, None,
+    )
+    .await?;
+    sqlx::query(
+        "UPDATE paper_orders SET filled_price = 0, filled_qty = qty, filled_at = now(),
+                plan_note = $2 WHERE id = $1",
+    )
+    .bind(option_order.id)
+    .bind(&note)
+    .execute(&mut *tx)
+    .await?;
+    apply_fill(&mut tx, account_id, &symbol, Side::Cover, contracts, Decimal::ZERO, Decimal::from(100)).await?;
 
     let stock_side_str = match stock_side {
         Side::Buy => "buy",
@@ -2437,6 +2545,31 @@ mod tests {
         // through the close).
         let on_expiry = chrono::NaiveDate::from_ymd_opt(2027, 1, 15).unwrap();
         assert_eq!(validate_exercise(&occ, d(5), d(1), on_expiry), Ok(Side::Buy));
+    }
+
+    #[test]
+    fn assignment_validation_mirrors_exercise() {
+        let call = traderview_core::occ_symbol::parse("AAPL270115C00190000").unwrap();
+        let put = traderview_core::occ_symbol::parse("AAPL270115P00190000").unwrap();
+        let today = chrono::NaiveDate::from_ymd_opt(2026, 6, 12).unwrap();
+        // Assigned call writer DELIVERS (sells); assigned put writer
+        // takes delivery (buys) — the exact mirror of exercise sides.
+        assert_eq!(validate_assignment(&call, d(-5), d(2), today), Ok(Side::Sell));
+        assert_eq!(validate_assignment(&put, d(-5), d(5), today), Ok(Side::Buy));
+        // Longs hold the right; they are never assigned.
+        assert_eq!(
+            validate_assignment(&call, d(5), d(1), today),
+            Err("only short option positions can be assigned")
+        );
+        assert_eq!(
+            validate_assignment(&call, d(-5), d(6), today),
+            Err("contracts must be positive and within the holding")
+        );
+        let late = chrono::NaiveDate::from_ymd_opt(2027, 1, 16).unwrap();
+        assert_eq!(
+            validate_assignment(&call, d(-5), d(1), late),
+            Err("contract expired — expiry settlement handles it")
+        );
     }
 
     #[test]

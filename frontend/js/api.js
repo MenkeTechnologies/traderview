@@ -885,6 +885,7 @@ export const api = {
     paperRoll: (id, body) => request(`/paper/accounts/${id}/roll`, { method: 'POST', body }),
     paperCoveredCall: (id, body) => request(`/paper/accounts/${id}/covered-call`, { method: 'POST', body }),
     paperExercise: (id, body) => request(`/paper/accounts/${id}/exercise`, { method: 'POST', body }),
+    paperAssign: (id, body) => request(`/paper/accounts/${id}/assign`, { method: 'POST', body }),
     paperCorrelations: (id, lookback = 90) => request(`/paper/accounts/${id}/correlations?lookback_days=${lookback}`),
     paperVar: (id, lookback = 365) => request(`/paper/accounts/${id}/var?lookback_days=${lookback}`),
     paperStress: (id, lookback = 365) => request(`/paper/accounts/${id}/stress?lookback_days=${lookback}`),
