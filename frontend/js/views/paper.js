@@ -598,23 +598,32 @@ function renderEquityCurve(hist) {
     }
     if (sumEl && hist.summary) {
         const s = hist.summary;
+        const b = hist.benchmark;
+        const alpha = b && b.summary ? s.return_pct - b.summary.return_pct : null;
         sumEl.innerHTML = `<span class="${s.return_pct >= 0 ? 'pos' : 'neg'}">${s.return_pct >= 0 ? '+' : ''}${s.return_pct.toFixed(2)}%</span>
-            · max DD ${s.max_drawdown_pct.toFixed(2)}%${s.currently_underwater ? ' · ' + esc(t('view.paper.label.underwater')) : ''}`;
+            · max DD ${s.max_drawdown_pct.toFixed(2)}%${s.currently_underwater ? ' · ' + esc(t('view.paper.label.underwater')) : ''}${
+            b && b.summary ? ` · ${esc(b.symbol)} ${b.summary.return_pct >= 0 ? '+' : ''}${b.summary.return_pct.toFixed(2)}% · <strong class="${alpha >= 0 ? 'pos' : 'neg'}">${alpha >= 0 ? '+' : ''}${alpha.toFixed(2)}% vs ${esc(b.symbol)}</strong>` : ''}`;
     }
     const xs = snaps.map(p => Math.floor(new Date(p.taken_at).getTime() / 1000));
     const ys = snaps.map(p => Number(p.equity));
+    const series = [
+        {},
+        { label: t('view.paper.chart.equity'), stroke: '#00e5ff', width: 1.5, points: { show: false } },
+    ];
+    const data = [xs, ys];
+    if (hist.benchmark && hist.benchmark.values.some(v => v != null)) {
+        series.push({ label: hist.benchmark.symbol, stroke: '#888', width: 1, dash: [4, 4], points: { show: false } });
+        data.push(hist.benchmark.values.map(v => v != null ? v : null));
+    }
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 220,
-        series: [
-            {},
-            { label: t('view.paper.chart.equity'), stroke: '#00e5ff', width: 1.5, points: { show: false } },
-        ],
+        series,
         axes: [
             { stroke: '#aab' },
             { stroke: '#aab', size: 70 },
         ],
         legend: { show: false },
-    }, [xs, ys], el);
+    }, data, el);
 }
 
 function renderUnrealizedChart(positions, quotes) {

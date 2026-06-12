@@ -26,9 +26,45 @@ pub struct EquitySummary {
 }
 
 #[derive(Debug, Clone, Serialize)]
+pub struct BenchmarkOverlay {
+    pub symbol: String,
+    /// Benchmark "equity" aligned to each snapshot's timestamp —
+    /// normalized so both series start at the first snapshot's equity.
+    /// None where the benchmark has no bar yet.
+    pub values: Vec<Option<f64>>,
+    pub summary: Option<EquitySummary>,
+}
+
+#[derive(Debug, Clone, Serialize)]
 pub struct EquityHistory {
     pub snapshots: Vec<EquitySnapshot>,
     pub summary: Option<EquitySummary>,
+    pub benchmark: Option<BenchmarkOverlay>,
+}
+
+/// Align benchmark closes to snapshot timestamps: for each snapshot
+/// time, the latest bar close at-or-before it (two-pointer, both
+/// inputs chronological). None before the first bar — leading
+/// snapshots predate the benchmark window rather than borrowing a
+/// future price.
+pub fn align_benchmark(
+    snap_times: &[i64],
+    bar_times: &[i64],
+    closes: &[f64],
+) -> Vec<Option<f64>> {
+    let mut out = Vec::with_capacity(snap_times.len());
+    let mut j = 0usize;
+    for &t in snap_times {
+        while j + 1 < bar_times.len() && bar_times[j + 1] <= t {
+            j += 1;
+        }
+        if bar_times.is_empty() || bar_times[j] > t {
+            out.push(None);
+        } else {
+            out.push(closes.get(j).copied());
+        }
+    }
+    out
 }
 
 /// Summary over an equity series: total return plus worst drawdown via
@@ -324,6 +360,7 @@ pub async fn history(
     user_id: Uuid,
     account_id: Uuid,
     limit: i64,
+    benchmark_symbol: &str,
 ) -> anyhow::Result<EquityHistory> {
     let owner: Option<(Uuid,)> =
         sqlx::query_as("SELECT user_id FROM paper_accounts WHERE id = $1")
@@ -350,7 +387,57 @@ pub async fn history(
         .filter_map(|s| s.equity.to_string().parse().ok())
         .collect();
     let summary = summarize(&series);
-    Ok(EquityHistory { snapshots, summary })
+    // Benchmark overlay: SPY (or caller's symbol) normalized so both
+    // series start at the FIRST SNAPSHOT's equity — same start, same
+    // scale, honest comparison.
+    let benchmark = if snapshots.len() >= 2 {
+        build_benchmark(pool, &snapshots, &series, benchmark_symbol).await
+    } else {
+        None
+    };
+    Ok(EquityHistory {
+        snapshots,
+        summary,
+        benchmark,
+    })
+}
+
+async fn build_benchmark(
+    pool: &PgPool,
+    snapshots: &[EquitySnapshot],
+    equity_series: &[f64],
+    symbol: &str,
+) -> Option<BenchmarkOverlay> {
+    use rust_decimal::prelude::ToPrimitive;
+    let from = snapshots.first()?.taken_at - chrono::Duration::days(5);
+    let to = snapshots.last()?.taken_at;
+    let bars = crate::prices::get_bars(pool, symbol, traderview_core::BarInterval::D1, from, to)
+        .await
+        .ok()?;
+    if bars.is_empty() {
+        return None;
+    }
+    let bar_times: Vec<i64> = bars.iter().map(|b| b.bar_time.timestamp()).collect();
+    let closes: Vec<f64> = bars
+        .iter()
+        .map(|b| b.close.to_f64().unwrap_or(0.0))
+        .collect();
+    let snap_times: Vec<i64> = snapshots.iter().map(|s| s.taken_at.timestamp()).collect();
+    let aligned = align_benchmark(&snap_times, &bar_times, &closes);
+    // Normalize to the first snapshot's equity at the first ALIGNED
+    // benchmark price.
+    let first_equity = *equity_series.first()?;
+    let base = aligned.iter().flatten().copied().find(|v| *v > 0.0)?;
+    let values: Vec<Option<f64>> = aligned
+        .iter()
+        .map(|v| v.map(|p| first_equity * p / base))
+        .collect();
+    let bench_series: Vec<f64> = values.iter().flatten().copied().collect();
+    Some(BenchmarkOverlay {
+        symbol: symbol.to_string(),
+        values,
+        summary: summarize(&bench_series),
+    })
 }
 
 #[cfg(test)]
@@ -381,6 +468,20 @@ mod tests {
         assert!(summarize(&[100.0]).is_none());
         assert!(summarize(&[]).is_none());
         assert!(summarize(&[0.0, 100.0]).is_none());
+    }
+
+    #[test]
+    fn benchmark_alignment_pins_two_pointer_and_leading_none() {
+        // Bars at t=100, 200, 300; snapshots before/at/between/after.
+        let bars = [100i64, 200, 300];
+        let closes = [10.0, 11.0, 12.0];
+        let snaps = [50i64, 100, 250, 999];
+        assert_eq!(
+            align_benchmark(&snaps, &bars, &closes),
+            vec![None, Some(10.0), Some(11.0), Some(12.0)]
+        );
+        // No bars at all: all None, no panic.
+        assert_eq!(align_benchmark(&snaps, &[], &[]), vec![None; 4]);
     }
 
     #[test]

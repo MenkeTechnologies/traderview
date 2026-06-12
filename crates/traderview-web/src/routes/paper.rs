@@ -150,16 +150,33 @@ async fn attribution(
         .map_err(|e| ApiError::BadRequest(e.to_string()))
 }
 
-/// Background-sampled equity curve with return/drawdown summary.
+#[derive(Deserialize)]
+struct EquityHistoryQ {
+    #[serde(default = "default_benchmark")]
+    benchmark: String,
+}
+fn default_benchmark() -> String {
+    "SPY".into()
+}
+
+/// Background-sampled equity curve with return/drawdown summary and a
+/// benchmark overlay normalized to the first snapshot's equity.
 async fn equity_history(
     State(s): State<AppState>,
     user: AuthUser,
     Path(account_id): Path<Uuid>,
+    Query(q): Query<EquityHistoryQ>,
 ) -> Result<Json<traderview_db::paper_equity::EquityHistory>, ApiError> {
-    traderview_db::paper_equity::history(&s.pool, user.id, account_id, 2000)
-        .await
-        .map(Json)
-        .map_err(ApiError::Internal)
+    traderview_db::paper_equity::history(
+        &s.pool,
+        user.id,
+        account_id,
+        2000,
+        &q.benchmark.trim().to_uppercase(),
+    )
+    .await
+    .map(Json)
+    .map_err(ApiError::Internal)
 }
 
 /// BS greeks for every OCC position, qty-and-multiplier scaled, with
