@@ -217,7 +217,7 @@ export async function renderPaper(mount) {
                             <td>${last != null ? fmt(last) : '—'}</td>
                             <td class="${cls}">${u != null ? (u >= 0 ? '+' : '') + '$' + fmt(u) : '—'}</td>
                             <td class="${Number(p.realized_pnl) >= 0 ? 'pos' : 'neg'}">$${fmt(p.realized_pnl)}</td>
-                            <td>${accounts.length > 1 ? `<button class="small move-btn" data-symbol="${esc(p.symbol)}" data-qty="${esc(p.qty)}" data-i18n="view.paper.btn.move" data-tip="view.paper.tip.move">MOVE</button> ` : ''}<button class="small flat-btn" data-symbol="${esc(p.symbol)}" data-qty="${esc(p.qty)}" data-i18n="view.paper.btn.flatten" data-tip="view.paper.tip.flatten">FLAT</button> <button class="small protect-btn" data-symbol="${esc(p.symbol)}" data-qty="${esc(p.qty)}" data-i18n="view.paper.btn.protect" data-tip="view.paper.tip.protect">OCO</button>${p.symbol.length > 15 ? ` <button class="small roll-btn" data-symbol="${esc(p.symbol)}" data-qty="${esc(p.qty)}" data-i18n="view.paper.btn.roll" data-tip="view.paper.tip.roll">ROLL</button>${Number(p.qty) > 0 ? ` <button class="small exercise-btn" data-symbol="${esc(p.symbol)}" data-qty="${esc(p.qty)}" data-i18n="view.paper.btn.exercise" data-tip="view.paper.tip.exercise">EXER</button>` : ` <button class="small assign-btn" data-symbol="${esc(p.symbol)}" data-qty="${esc(p.qty)}" data-i18n="view.paper.btn.assign" data-tip="view.paper.tip.assign">ASGN</button>`}` : ''}</td>
+                            <td>${accounts.length > 1 ? `<button class="small move-btn" data-symbol="${esc(p.symbol)}" data-qty="${esc(p.qty)}" data-i18n="view.paper.btn.move" data-tip="view.paper.tip.move">MOVE</button> ` : ''}<button class="small flat-btn" data-symbol="${esc(p.symbol)}" data-qty="${esc(p.qty)}" data-i18n="view.paper.btn.flatten" data-tip="view.paper.tip.flatten">FLAT</button> <button class="small protect-btn" data-symbol="${esc(p.symbol)}" data-qty="${esc(p.qty)}" data-i18n="view.paper.btn.protect" data-tip="view.paper.tip.protect">OCO</button> <button class="small trail-btn" data-symbol="${esc(p.symbol)}" data-qty="${esc(p.qty)}" data-i18n="view.paper.btn.trail" data-tip="view.paper.tip.trail">TRAIL</button>${p.symbol.length > 15 ? ` <button class="small roll-btn" data-symbol="${esc(p.symbol)}" data-qty="${esc(p.qty)}" data-i18n="view.paper.btn.roll" data-tip="view.paper.tip.roll">ROLL</button>${Number(p.qty) > 0 ? ` <button class="small exercise-btn" data-symbol="${esc(p.symbol)}" data-qty="${esc(p.qty)}" data-i18n="view.paper.btn.exercise" data-tip="view.paper.tip.exercise">EXER</button>` : ` <button class="small assign-btn" data-symbol="${esc(p.symbol)}" data-qty="${esc(p.qty)}" data-i18n="view.paper.btn.assign" data-tip="view.paper.tip.assign">ASGN</button>`}` : ''}</td>
                         </tr>`;
                     }).join('')}</tbody></table>
                 <div id="paper-pos-footer" class="small muted"></div>` : '<p data-i18n="view.paper.hint.no_open_positions" class="muted">No open positions.</p>'}
@@ -534,6 +534,36 @@ export async function renderPaper(mount) {
         } catch (err) {
             showToast(t('common.error', { err: err.message }), { level: 'error' });
         }
+    });
+    mount.querySelectorAll('.trail-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+            const qty = Number(btn.dataset.qty);
+            const v = (prompt(t('view.paper.prompt.trail'), '5%') || '').trim();
+            if (!v) return;
+            const isPct = v.endsWith('%');
+            const num = Number(v.replace('%', ''));
+            if (!num || num <= 0) return;
+            try {
+                const o = await api.paperSubmit(acct.id, {
+                    symbol: btn.dataset.symbol,
+                    side: qty > 0 ? 'sell' : 'cover',
+                    qty: Math.abs(qty),
+                    order_type: 'trailing',
+                    limit_price: null,
+                    stop_price: null,
+                    trail_value: isPct ? num / 100 : num,
+                    trail_is_pct: isPct,
+                });
+                if (o.status === 'rejected') {
+                    showToast(t('view.paper.alert.order_rejected', { reason: o.reject_reason || t('common.empty.unknown') }), { level: 'error' });
+                } else {
+                    showToast(t('view.paper.toast.trail_attached', { symbol: btn.dataset.symbol, trail: v }), { level: 'success' });
+                }
+                renderPaper(mount);
+            } catch (err) {
+                showToast(t('common.error', { err: err.message }), { level: 'error' });
+            }
+        });
     });
     mount.querySelectorAll('.move-btn').forEach(btn => {
         btn.addEventListener('click', async () => {
