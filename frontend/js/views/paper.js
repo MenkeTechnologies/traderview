@@ -125,9 +125,16 @@ export async function renderPaper(mount) {
                         <option value="strangle" data-i18n="view.paper.opt.strangle">strangle</option>
                         <option value="iron_condor" data-i18n="view.paper.opt.iron_condor">iron condor</option>
                         <option value="butterfly" data-i18n="view.paper.opt.butterfly">butterfly</option>
+                        <option value="calendar" data-i18n="view.paper.opt.calendar">calendar</option>
+                        <option value="diagonal" data-i18n="view.paper.opt.diagonal">diagonal</option>
                     </select>
                     <input name="root" placeholder="underlying" data-i18n-placeholder="view.paper.placeholder.preset_root" required style="text-transform:uppercase;width:90px">
-                    <input name="expiry" type="date" required>
+                    <input name="expiry" type="date" required data-tip="view.paper.tip.preset_expiry">
+                    <input name="expiry2" type="date" data-tip="view.paper.tip.preset_expiry2">
+                    <select name="cp" data-tip="view.paper.tip.preset_cp">
+                        <option value="C">C</option>
+                        <option value="P">P</option>
+                    </select>
                     <input name="k1" type="number" step="0.5" placeholder="K1" style="width:70px" required>
                     <input name="k2" type="number" step="0.5" placeholder="K2" style="width:70px">
                     <input name="k3" type="number" step="0.5" placeholder="K3" style="width:70px">
@@ -613,12 +620,33 @@ export async function renderPaper(mount) {
         const fd = new FormData(mount.querySelector('#preset-form'));
         const root = (fd.get('root') || '').trim().toUpperCase();
         const expiry = fd.get('expiry');
+        const expiry2 = fd.get('expiry2');
+        const isCall = fd.get('cp') !== 'P';
         const ks = ['k1', 'k2', 'k3', 'k4'].map(k => Number(fd.get(k)) || 0);
         const long = fd.get('direction') === 'long';
         const flip = legs => long ? legs : legs.map(l => ({ ...l, buy: !l.buy }));
         if (!root || !expiry || ks[0] <= 0) throw new Error(t('view.paper.err.preset_fields'));
         const sym = (call, k) => occSym(root, expiry, call, k);
         switch (fd.get('preset')) {
+            case 'calendar': {
+                // Long calendar: sell the NEAR expiry, buy the FAR —
+                // same strike, same right; time decay differential is
+                // the trade. expiry < expiry2 enforced.
+                if (!expiry2 || expiry2 <= expiry) throw new Error(t('view.paper.err.preset_expiries'));
+                return { legs: flip([
+                    { symbol: occSym(root, expiry, isCall, ks[0]), buy: false, ratio: 1 },
+                    { symbol: occSym(root, expiry2, isCall, ks[0]), buy: true, ratio: 1 },
+                ]), qty: Number(fd.get('qty')) || 1 };
+            }
+            case 'diagonal': {
+                // Calendar with a strike shift: near K1, far K2.
+                if (!expiry2 || expiry2 <= expiry) throw new Error(t('view.paper.err.preset_expiries'));
+                if (ks[1] <= 0) throw new Error(t('view.paper.err.preset_fields'));
+                return { legs: flip([
+                    { symbol: occSym(root, expiry, isCall, ks[0]), buy: false, ratio: 1 },
+                    { symbol: occSym(root, expiry2, isCall, ks[1]), buy: true, ratio: 1 },
+                ]), qty: Number(fd.get('qty')) || 1 };
+            }
             case 'straddle':
                 return { legs: flip([
                     { symbol: sym(true, ks[0]), buy: true, ratio: 1 },
@@ -662,7 +690,8 @@ export async function renderPaper(mount) {
                 <strong>${r.net_premium_usd >= 0 ? 'Credit' : 'Debit'} $${Math.abs(r.net_premium_usd).toFixed(2)}</strong>
                 · max profit $${p.max_profit.toFixed(0)} · max loss $${p.max_loss.toFixed(0)}
                 · breakeven${p.breakevens.length === 1 ? '' : 's'} ${p.breakevens.length ? p.breakevens.map(b => b.toFixed(2)).join(', ') : '—'}
-                · ${req.legs.map(l => `${l.buy ? '+' : '−'}${l.ratio > 1 ? l.ratio + '×' : ''}${l.symbol}`).join(' ')}`;
+                · ${req.legs.map(l => `${l.buy ? '+' : '−'}${l.ratio > 1 ? l.ratio + '×' : ''}${l.symbol}`).join(' ')}
+                ${['calendar', 'diagonal'].includes(new FormData(mount.querySelector('#preset-form')).get('preset')) ? `<br><span class="neg">${esc(t('view.paper.warn.calendar_payoff'))}</span>` : ''}`;
         } catch (err) {
             out.textContent = err.message || String(err);
         }
