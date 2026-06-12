@@ -17321,6 +17321,7 @@
   "view.paper.opt.sell": "SELL",
   "view.paper.opt.short": "SHORT",
   "view.paper.opt.stop": "oprește-te",
+  "view.paper.opt.stop_limit": "stop limit",
   "view.paper.opt.trailing": "trailing",
   "view.paper.placeholder.account_name": "account name",
   "view.paper.placeholder.plan": "trade plan (why this trade?)",

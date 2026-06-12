@@ -270,6 +270,31 @@ pub fn trigger_price(
     }
 }
 
+/// Stop-limit state machine. Untriggered: the stop must cross first
+/// (buy: last >= stop, sell: last <= stop). Once crossed the order is
+/// PERMANENTLY a plain limit — a gap through the stop does NOT fill
+/// at the gapped price (that protection is the entire point of the
+/// type), but a later recovery to limit-or-better does fill, which is
+/// why the triggered state must persist rather than re-checking the
+/// stop on every tick.
+pub fn stop_limit_action(
+    side: Side,
+    last: Decimal,
+    stop: Decimal,
+    limit: Decimal,
+    already_triggered: bool,
+) -> (bool, Option<Decimal>) {
+    let crossed = already_triggered
+        || match side {
+            Side::Buy | Side::Cover => last >= stop,
+            Side::Sell | Side::Short => last <= stop,
+        };
+    if !crossed {
+        return (false, None);
+    }
+    (true, trigger_price("limit", side, last, Some(limit), None))
+}
+
 /// Bracket sanity: exits must sit on the correct sides of each other,
 /// and a known entry price must sit between them. Long brackets need
 /// stop below target; short brackets are the mirror.
@@ -379,7 +404,21 @@ pub async fn submit(
     let rq = resolve_quote(pool, &req.symbol).await?;
     let last = rq.last;
 
-    let triggered = trigger_price(&req.order_type, req.side, last, req.limit_price, req.stop_price);
+    let triggered = if req.order_type == "stop_limit" {
+        match (req.stop_price, req.limit_price) {
+            (Some(sp), Some(lp)) => stop_limit_action(req.side, last, sp, lp, false).1,
+            _ => None,
+        }
+    } else {
+        trigger_price(&req.order_type, req.side, last, req.limit_price, req.stop_price)
+    };
+    // A stop-limit submitted with the stop already crossed but the
+    // limit not satisfiable rests ALREADY TRIGGERED — it's a limit
+    // order from birth.
+    let stop_triggered = req.order_type == "stop_limit"
+        && triggered.is_none()
+        && matches!((req.stop_price, req.limit_price),
+            (Some(sp), Some(lp)) if stop_limit_action(req.side, last, sp, lp, false).0);
 
     // Equities get the friction model (slippage + commission + SEC
     // fee); options fill at the chain mid with a flat per-contract
@@ -411,7 +450,7 @@ pub async fn submit(
     });
     let well_formed = matches!(
         (req.order_type.as_str(), req.limit_price, req.stop_price),
-        ("limit", Some(_), _) | ("stop", _, Some(_))
+        ("limit", Some(_), _) | ("stop", _, Some(_)) | ("stop_limit", Some(_), Some(_))
     ) || (req.order_type == "trailing" && trail_ok);
     // A resting trailing stop starts its ratchet at the current price.
     let trail_extreme = (req.order_type == "trailing" && trail_ok).then_some(last);
@@ -446,9 +485,9 @@ pub async fn submit(
         "INSERT INTO paper_orders
             (paper_account_id, symbol, side, qty, order_type, limit_price, stop_price,
              status, filled_price, filled_qty, filled_at, reject_reason,
-             trail_value, trail_is_pct, trail_extreme, cancel_at, plan_note)
+             trail_value, trail_is_pct, trail_extreme, cancel_at, plan_note, stop_triggered)
          VALUES ($1, $2, $3::side_t, $4, $5::paper_order_type_t, $6, $7,
-                 $8::paper_order_status_t, $9, $10, $11, $12, $13, $14, $15, $16, $17)
+                 $8::paper_order_status_t, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
          RETURNING id, paper_account_id, symbol, side::text, qty, order_type::text,
                    limit_price, stop_price, status::text,
                    trail_value, trail_is_pct, trail_extreme, oco_group, parent_order_id,
@@ -460,6 +499,7 @@ pub async fn submit(
     .bind(filled_at).bind(reject)
     .bind(req.trail_value).bind(req.trail_is_pct).bind(trail_extreme).bind(cancel_at)
     .bind(req.plan_note.as_deref().map(str::trim).filter(|s| !s.is_empty()))
+    .bind(stop_triggered)
     .fetch_one(&mut *tx)
     .await?;
 
@@ -530,6 +570,7 @@ pub async fn check_pending(pool: &PgPool) -> anyhow::Result<Vec<BackgroundFill>>
         trail_is_pct: Option<bool>,
         trail_extreme: Option<Decimal>,
         oco_group: Option<Uuid>,
+        stop_triggered: bool,
     }
     // Expire resting orders whose time in force has lapsed, then any
     // held legs orphaned by a cancelled/expired entry.
@@ -558,7 +599,8 @@ pub async fn check_pending(pool: &PgPool) -> anyhow::Result<Vec<BackgroundFill>>
     .await?;
     let rows: Vec<Pending> = sqlx::query_as(
         "SELECT id, paper_account_id, symbol, side::text, qty, order_type::text,
-                limit_price, stop_price, trail_value, trail_is_pct, trail_extreme, oco_group
+                limit_price, stop_price, trail_value, trail_is_pct, trail_extreme, oco_group,
+                stop_triggered
            FROM paper_orders
           WHERE status = 'pending'
           ORDER BY submitted_at
@@ -621,6 +663,25 @@ pub async fn check_pending(pool: &PgPool) -> anyhow::Result<Vec<BackgroundFill>>
                 continue;
             }
             last
+        } else if o.order_type == "stop_limit" {
+            let (Some(sp), Some(lp)) = (o.stop_price, o.limit_price) else {
+                continue;
+            };
+            let (now_triggered, fill) = stop_limit_action(side, last, sp, lp, o.stop_triggered);
+            let Some(p) = fill else {
+                // Persist the stop→limit transition so a gap through
+                // the stop arms the order even if the process restarts
+                // before the limit is ever satisfied.
+                if now_triggered && !o.stop_triggered {
+                    sqlx::query("UPDATE paper_orders SET stop_triggered = TRUE WHERE id = $1")
+                        .bind(o.id)
+                        .execute(pool)
+                        .await
+                        .ok();
+                }
+                continue;
+            };
+            p
         } else {
             let Some(p) = trigger_price(&o.order_type, side, last, o.limit_price, o.stop_price)
             else {
@@ -1409,6 +1470,35 @@ mod tests {
         // Short = sell-side trigger, cover = buy-side trigger.
         assert_eq!(trigger_price("limit", Side::Short, d(101), Some(d(100)), None), Some(d(101)));
         assert_eq!(trigger_price("stop", Side::Cover, d(106), None, Some(d(105))), Some(d(106)));
+    }
+
+    #[test]
+    fn stop_limit_protects_against_gap_through() {
+        // Sell stop 95 / limit 93. At 96: stop not crossed, nothing.
+        assert_eq!(stop_limit_action(Side::Sell, d(96), d(95), d(93), false), (false, None));
+        // At 94: stop crossed AND 94 >= limit 93 — fills at 94.
+        assert_eq!(stop_limit_action(Side::Sell, d(94), d(95), d(93), false), (true, Some(d(94))));
+        // Gap to 80: triggered but 80 < 93 — does NOT fill at the
+        // gapped price. This refusal is the entire point of the type.
+        assert_eq!(stop_limit_action(Side::Sell, d(80), d(95), d(93), false), (true, None));
+        // Recovery to 96 with triggered state persisted: now a plain
+        // limit, 96 >= 93 fills — even though 96 is back above the
+        // stop. Re-checking the stop here would be the bug.
+        assert_eq!(stop_limit_action(Side::Sell, d(96), d(95), d(93), true), (true, Some(d(96))));
+    }
+
+    #[test]
+    fn stop_limit_buy_mirror() {
+        // Buy stop 105 / limit 107 (breakout entry with a price cap).
+        assert_eq!(stop_limit_action(Side::Buy, d(104), d(105), d(107), false), (false, None));
+        assert_eq!(stop_limit_action(Side::Buy, d(106), d(105), d(107), false), (true, Some(d(106))));
+        // Gap to 110: triggered, capped — no fill above 107.
+        assert_eq!(stop_limit_action(Side::Buy, d(110), d(105), d(107), false), (true, None));
+        // Pullback to 106.5 after trigger: fills.
+        assert_eq!(stop_limit_action(Side::Buy, d(106) + d(1) / d(2), d(105), d(107), true), (true, Some(d(106) + d(1) / d(2))));
+        // Short/Cover route through the same sell/buy arms.
+        assert_eq!(stop_limit_action(Side::Short, d(94), d(95), d(93), false), (true, Some(d(94))));
+        assert_eq!(stop_limit_action(Side::Cover, d(106), d(105), d(107), false), (true, Some(d(106))));
     }
 
     #[test]

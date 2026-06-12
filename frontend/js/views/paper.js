@@ -91,6 +91,7 @@ export async function renderPaper(mount) {
                         <option data-i18n="view.paper.opt.market" value="market">market</option>
                         <option data-i18n="view.paper.opt.limit" value="limit">limit</option>
                         <option data-i18n="view.paper.opt.stop" value="stop">stop</option>
+                        <option data-i18n="view.paper.opt.stop_limit" value="stop_limit">stop limit</option>
                         <option data-i18n="view.paper.opt.trailing" value="trailing">trailing</option>
                     </select>
                     <input name="limit_price" type="number" step="0.01" placeholder="limit" data-i18n-placeholder="common.placeholder.limit" data-tip="view.paper.tip.limit">
