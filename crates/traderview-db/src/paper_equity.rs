@@ -1624,12 +1624,54 @@ pub fn consolidate(rows: &[(String, String, f64, f64)]) -> Vec<ConsolidatedHoldi
         .collect()
 }
 
+#[derive(Debug, Default, serde::Serialize)]
+pub struct ExposureSummary {
+    /// Σ marked value (signed) — what direction the household leans.
+    pub net_usd: f64,
+    /// Σ |marked value| — what's actually at risk gross.
+    pub gross_usd: f64,
+    pub long_usd: f64,
+    pub short_usd: f64,
+    pub total_unrealized: f64,
+    /// Rows that couldn't be marked and are NOT in these sums —
+    /// stated so a partial total doesn't read as a full one.
+    pub unmarked: usize,
+}
+
+/// Aggregate exposure from marked holdings, pure. Unmarked rows are
+/// counted out loud rather than silently treated as zero.
+pub fn exposure_summary(holdings: &[ConsolidatedHolding]) -> ExposureSummary {
+    let mut s = ExposureSummary::default();
+    for h in holdings {
+        match (h.market_value, h.unrealized) {
+            (Some(v), u) => {
+                s.net_usd += v;
+                s.gross_usd += v.abs();
+                if v >= 0.0 {
+                    s.long_usd += v;
+                } else {
+                    s.short_usd += v.abs();
+                }
+                s.total_unrealized += u.unwrap_or(0.0);
+            }
+            (None, _) => s.unmarked += 1,
+        }
+    }
+    s
+}
+
+#[derive(Debug, serde::Serialize)]
+pub struct HoldingsView {
+    pub holdings: Vec<ConsolidatedHolding>,
+    pub exposure: ExposureSummary,
+}
+
 /// Every symbol across ALL the user's paper accounts — the household
 /// view the one-account-per-strategy layout otherwise hides.
 pub async fn consolidated_holdings(
     pool: &PgPool,
     user_id: Uuid,
-) -> anyhow::Result<Vec<ConsolidatedHolding>> {
+) -> anyhow::Result<HoldingsView> {
     use rust_decimal::prelude::ToPrimitive;
     let rows: Vec<(String, String, Decimal, Decimal)> = sqlx::query_as(
         "SELECT p.symbol, a.name, p.qty, p.avg_price
@@ -1663,7 +1705,8 @@ pub async fn consolidated_holdings(
             );
         }
     }
-    Ok(out)
+    let exposure = exposure_summary(&out);
+    Ok(HoldingsView { holdings: out, exposure })
 }
 
 #[cfg(test)]
@@ -1702,6 +1745,33 @@ mod holdings_tests {
         let mark = 220.0;
         let u: f64 = tsla.legs.iter().map(|l| l.qty * (mark - l.avg_price)).sum();
         assert!((u - 1_600.0).abs() < 1e-9);
+    }
+
+    #[test]
+    fn exposure_counts_unmarked_out_loud() {
+        let h = |v: Option<f64>, u: Option<f64>| ConsolidatedHolding {
+            symbol: "X".into(),
+            net_qty: 1.0,
+            weighted_avg_price: None,
+            mark: v.map(|_| 1.0),
+            market_value: v,
+            unrealized: u,
+            legs: vec![],
+        };
+        let rows = vec![
+            h(Some(50_000.0), Some(2_000.0)),  // long
+            h(Some(-20_000.0), Some(-500.0)),  // short
+            h(None, None),                     // unquotable
+        ];
+        let s = exposure_summary(&rows);
+        assert!((s.net_usd - 30_000.0).abs() < 1e-9);
+        assert!((s.gross_usd - 70_000.0).abs() < 1e-9);
+        assert!((s.long_usd - 50_000.0).abs() < 1e-9);
+        assert!((s.short_usd - 20_000.0).abs() < 1e-9);
+        assert!((s.total_unrealized - 1_500.0).abs() < 1e-9);
+        // The unquotable row is OUT of the sums and counted, so the
+        // partial total can't masquerade as a full one.
+        assert_eq!(s.unmarked, 1);
     }
 }
 

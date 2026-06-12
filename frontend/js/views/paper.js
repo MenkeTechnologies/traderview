@@ -1088,10 +1088,12 @@ function renderLedger(interest, flows) {
         <p class="muted small" data-i18n="view.paper.hint.ledger">Every non-trading cash movement, newest first (last 30): sweep interest, short borrow fees, margin loan interest, deposits, withdrawals. Trading cash flows live in the order history; dividends in their own panel.</p>`;
 }
 
-function renderHoldings(rows) {
+function renderHoldings(view) {
     const el = document.getElementById('paper-holdings');
     if (!el) return;
-    if (!Array.isArray(rows) || !rows.length) {
+    const rows = view && Array.isArray(view.holdings) ? view.holdings : [];
+    const ex = view && view.exposure;
+    if (!rows.length) {
         el.innerHTML = `<p class="muted" data-i18n="view.paper.empty.holdings">${esc(t('view.paper.empty.holdings'))}</p>`;
         return;
     }
@@ -1115,6 +1117,11 @@ function renderHoldings(rows) {
             <td class="muted">${h.legs.map(l => `${esc(l.account)}: ${fmt(l.qty, 0)} @ ${fmt(l.avg_price)}`).join(' · ')}</td>
         </tr>`).join('')}
         </tbody></table>
+        ${ex ? `<p class="small"><strong data-i18n="view.paper.holdings.exposure">Exposure:</strong>
+            net ${ex.net_usd >= 0 ? '+' : '−'}$${Math.abs(ex.net_usd).toFixed(0)} ·
+            gross $${ex.gross_usd.toFixed(0)} ·
+            long $${ex.long_usd.toFixed(0)} / short $${ex.short_usd.toFixed(0)} ·
+            unrealized <span class="${ex.total_unrealized >= 0 ? 'pos' : 'neg'}">${ex.total_unrealized >= 0 ? '+' : '−'}$${Math.abs(ex.total_unrealized).toFixed(0)}</span>${ex.unmarked ? ` · <span class="neg">${ex.unmarked} unmarked row${ex.unmarked > 1 ? 's' : ''} NOT in these sums</span>` : ''}</p>` : ''}
         <p class="muted small" data-i18n="view.paper.hint.holdings">Every symbol across all paper accounts. Wtd avg is — when account legs have mixed signs: averaging a long’s basis with a short’s is meaningless, and the net is a synthetic position nobody entered at any price — the per-account legs carry the real numbers.</p>`;
 }
 

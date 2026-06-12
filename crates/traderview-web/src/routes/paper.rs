@@ -885,7 +885,7 @@ async fn cash_flows(
 async fn holdings(
     State(s): State<AppState>,
     user: AuthUser,
-) -> Result<Json<Vec<traderview_db::paper_equity::ConsolidatedHolding>>, ApiError> {
+) -> Result<Json<traderview_db::paper_equity::HoldingsView>, ApiError> {
     traderview_db::paper_equity::consolidated_holdings(&s.pool, user.id)
         .await
         .map(Json)

@@ -17362,6 +17362,7 @@
   "view.paper.hint.statement": "Composed from the live stores — equity snapshots bound the period (a mid-month account opening shows — for opening equity, not a fake zero); realized P&L is trips CLOSED in the month from the same FIFO reconstruction as attribution, so a trip closed this month on lots bought earlier lands here.",
   "view.paper.hint.wash": "Realized losses with a repurchase of the same symbol within ±30 days (IRS §1091) — the disallowed portion is prorated by replacement÷sold. Flagging tool, not a filing engine: each loss is judged against its own window, and only exact-symbol matches are detected.",
   "view.paper.holdings.avg": "Wtd avg",
+  "view.paper.holdings.exposure": "Exposure:",
   "view.paper.holdings.legs": "Accounts",
   "view.paper.holdings.mark": "Mark",
   "view.paper.holdings.net": "Net qty",
