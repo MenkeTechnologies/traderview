@@ -261,8 +261,47 @@ pub fn order_well_formed(
     });
     matches!(
         (order_type, limit_price, stop_price),
-        ("limit", Some(_), _) | ("stop", _, Some(_)) | ("stop_limit", Some(_), Some(_))
+        ("limit", Some(_), _)
+            | ("stop", _, Some(_))
+            | ("stop_limit", Some(_), Some(_))
+            | ("moc", _, _)
+            | ("loc", Some(_), _)
     ) || (order_type == "trailing" && trail_ok)
+}
+
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum OnCloseAction {
+    /// Before the stamped close — keep resting.
+    Wait,
+    Fill(Decimal),
+    /// LOC whose limit wasn't met at the close — an on-close order
+    /// does not survive into the next session.
+    Cancel,
+}
+
+/// MOC/LOC evaluation at a tick. The close itself is stamped into the
+/// order at submit (day_order_expiry — holiday/DST aware), so this is
+/// pure: before it, Wait; at/after it, MOC fills at last, LOC fills
+/// at limit-or-better and cancels otherwise.
+pub fn on_close_action(
+    order_type: &str,
+    side: Side,
+    last: Decimal,
+    limit_price: Option<Decimal>,
+    now: DateTime<Utc>,
+    trigger_at: DateTime<Utc>,
+) -> OnCloseAction {
+    if now < trigger_at {
+        return OnCloseAction::Wait;
+    }
+    match order_type {
+        "moc" => OnCloseAction::Fill(last),
+        "loc" => match trigger_price("limit", side, last, limit_price, None) {
+            Some(p) => OnCloseAction::Fill(p),
+            None => OnCloseAction::Cancel,
+        },
+        _ => OnCloseAction::Wait,
+    }
 }
 
 /// Price at which an order triggers against the current quote: market
@@ -475,6 +514,9 @@ pub async fn submit(
     );
     // A resting trailing stop starts its ratchet at the current price.
     let trail_extreme = (req.order_type == "trailing" && well_formed).then_some(last);
+    // On-close orders carry their fill time, stamped at submit.
+    let trigger_at = matches!(req.order_type.as_str(), "moc" | "loc")
+        .then(|| traderview_core::holiday_calendar::day_order_expiry(Utc::now()));
     // Time in force → cancel_at. Only meaningful on orders that rest.
     let cancel_at = match req.time_in_force.as_deref().unwrap_or("gtc") {
         "gtc" => None,
@@ -492,6 +534,10 @@ pub async fn submit(
         }
         other => anyhow::bail!("unknown time_in_force '{other}'"),
     };
+    // MOC/LOC manage their own lifecycle: a DAY cancel_at lands at
+    // exactly 16:00 — the expire sweep runs BEFORE the fill pass and
+    // would cancel the order at its own trigger instant.
+    let cancel_at = if trigger_at.is_some() { None } else { cancel_at };
     let mut tx = pool.begin().await?;
     let (status, filled_at, reject) = match (fill_price, well_formed) {
         (Some(_), _) => ("filled", Some(Utc::now()), None),
@@ -506,9 +552,9 @@ pub async fn submit(
         "INSERT INTO paper_orders
             (paper_account_id, symbol, side, qty, order_type, limit_price, stop_price,
              status, filled_price, filled_qty, filled_at, reject_reason,
-             trail_value, trail_is_pct, trail_extreme, cancel_at, plan_note, stop_triggered)
+             trail_value, trail_is_pct, trail_extreme, cancel_at, plan_note, stop_triggered, trigger_at)
          VALUES ($1, $2, $3::side_t, $4, $5::paper_order_type_t, $6, $7,
-                 $8::paper_order_status_t, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
+                 $8::paper_order_status_t, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)
          RETURNING id, paper_account_id, symbol, side::text, qty, order_type::text,
                    limit_price, stop_price, status::text,
                    trail_value, trail_is_pct, trail_extreme, oco_group, parent_order_id,
@@ -521,6 +567,7 @@ pub async fn submit(
     .bind(req.trail_value).bind(req.trail_is_pct).bind(trail_extreme).bind(cancel_at)
     .bind(req.plan_note.as_deref().map(str::trim).filter(|s| !s.is_empty()))
     .bind(stop_triggered)
+    .bind(trigger_at)
     .fetch_one(&mut *tx)
     .await?;
 
@@ -592,6 +639,7 @@ pub async fn check_pending(pool: &PgPool) -> anyhow::Result<Vec<BackgroundFill>>
         trail_extreme: Option<Decimal>,
         oco_group: Option<Uuid>,
         stop_triggered: bool,
+        trigger_at: Option<DateTime<Utc>>,
     }
     // Expire resting orders whose time in force has lapsed, then any
     // held legs orphaned by a cancelled/expired entry.
@@ -621,7 +669,7 @@ pub async fn check_pending(pool: &PgPool) -> anyhow::Result<Vec<BackgroundFill>>
     let rows: Vec<Pending> = sqlx::query_as(
         "SELECT id, paper_account_id, symbol, side::text, qty, order_type::text,
                 limit_price, stop_price, trail_value, trail_is_pct, trail_extreme, oco_group,
-                stop_triggered
+                stop_triggered, trigger_at
            FROM paper_orders
           WHERE status = 'pending'
           ORDER BY submitted_at
@@ -684,6 +732,27 @@ pub async fn check_pending(pool: &PgPool) -> anyhow::Result<Vec<BackgroundFill>>
                 continue;
             }
             last
+        } else if o.order_type == "moc" || o.order_type == "loc" {
+            let Some(trigger_at) = o.trigger_at else {
+                continue; // malformed row — leave it for inspection
+            };
+            match on_close_action(&o.order_type, side, last, o.limit_price, Utc::now(), trigger_at)
+            {
+                OnCloseAction::Wait => continue,
+                OnCloseAction::Fill(p) => p,
+                OnCloseAction::Cancel => {
+                    sqlx::query(
+                        "UPDATE paper_orders
+                            SET status = 'cancelled', reject_reason = 'limit not met at close'
+                          WHERE id = $1 AND status = 'pending'",
+                    )
+                    .bind(o.id)
+                    .execute(pool)
+                    .await
+                    .ok();
+                    continue;
+                }
+            }
         } else if o.order_type == "stop_limit" {
             let (Some(sp), Some(lp)) = (o.stop_price, o.limit_price) else {
                 continue;
@@ -1824,6 +1893,28 @@ mod tests {
         assert_eq!(validate_roll(from, to_strike, d(0), d(1)), Err("no position in the source contract"));
         assert_eq!(validate_roll(from, to_strike, d(5), d(6)), Err("qty exceeds position size"));
         assert_eq!(validate_roll("AAPL", to_strike, d(5), d(5)), Err("from is not an OCC contract"));
+    }
+
+    #[test]
+    fn on_close_waits_fills_and_cancels() {
+        use chrono::TimeZone;
+        let close = Utc.with_ymd_and_hms(2026, 6, 12, 20, 0, 0).unwrap();
+        let before = close - chrono::Duration::minutes(1);
+        // Before the stamped close: both types rest.
+        assert_eq!(on_close_action("moc", Side::Buy, d(100), None, before, close), OnCloseAction::Wait);
+        assert_eq!(on_close_action("loc", Side::Buy, d(100), Some(d(99)), before, close), OnCloseAction::Wait);
+        // At the close: MOC takes last unconditionally.
+        assert_eq!(on_close_action("moc", Side::Sell, d(100), None, close, close), OnCloseAction::Fill(d(100)));
+        // LOC buy fills at limit-or-better, CANCELS when through it —
+        // an on-close order does not survive to the next session.
+        assert_eq!(on_close_action("loc", Side::Buy, d(98), Some(d(99)), close, close), OnCloseAction::Fill(d(98)));
+        assert_eq!(on_close_action("loc", Side::Buy, d(100), Some(d(99)), close, close), OnCloseAction::Cancel);
+        // Sell mirror.
+        assert_eq!(on_close_action("loc", Side::Sell, d(100), Some(d(99)), close, close), OnCloseAction::Fill(d(100)));
+        assert_eq!(on_close_action("loc", Side::Sell, d(98), Some(d(99)), close, close), OnCloseAction::Cancel);
+        // LOC with no limit price is malformed — cancels at the close
+        // rather than filling at an unintended price.
+        assert_eq!(on_close_action("loc", Side::Buy, d(98), None, close, close), OnCloseAction::Cancel);
     }
 
     #[test]
