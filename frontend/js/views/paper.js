@@ -438,6 +438,12 @@ export async function renderPaper(mount) {
     });
 }
 
+function holdFmt(secs) {
+    if (secs >= 86400) return (secs / 86400).toFixed(1) + 'd';
+    if (secs >= 3600) return (secs / 3600).toFixed(1) + 'h';
+    return Math.round(secs / 60) + 'm';
+}
+
 function renderAttribution(a) {
     const el = document.getElementById('paper-attribution');
     if (!el) return;
@@ -459,6 +465,9 @@ function renderAttribution(a) {
             <div class="card"><div class="label">Profit factor</div>
                 <div class="value">${st.profit_factor != null ? st.profit_factor.toFixed(2) : '\u2014'}</div>
                 <div class="small muted">best ${money(st.largest_win)} \u00b7 worst ${money(st.largest_loss)}</div></div>
+            ${a.hold ? `<div class="card"><div class="label">Avg hold (win / loss)</div>
+                <div class="value">${holdFmt(a.hold.avg_hold_secs_winners)} / ${holdFmt(a.hold.avg_hold_secs_losers)}</div>
+                ${a.hold.behavioral_flag ? `<div class="small neg" data-i18n="view.paper.flag.riding_losers">${esc(t('view.paper.flag.riding_losers'))}</div>` : ''}</div>` : ''}
         </div>` : ''}
         <table class="trades">
             <thead><tr><th>Symbol</th><th>Trading P&L</th><th>Closed trips</th><th>Dividends</th><th>Fees</th></tr></thead>

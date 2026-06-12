@@ -301,6 +301,37 @@ pub struct TripStats {
     pub largest_loss: f64,
 }
 
+#[derive(Debug, Clone, Serialize)]
+pub struct HoldStats {
+    pub avg_hold_secs_winners: f64,
+    pub avg_hold_secs_losers: f64,
+    /// Set when losers are held ≥ 1.5× longer than winners — the
+    /// classic "cutting winners, riding losers" asymmetry. None when
+    /// either side is empty (no asymmetry to measure).
+    pub behavioral_flag: Option<&'static str>,
+}
+
+/// Hold-duration discipline check over (pnl, hold_secs) pairs.
+pub fn hold_stats(trips: &[(f64, i64)]) -> Option<HoldStats> {
+    let winners: Vec<i64> = trips.iter().filter(|(p, _)| *p > 0.0).map(|(_, h)| *h).collect();
+    let losers: Vec<i64> = trips.iter().filter(|(p, _)| *p <= 0.0).map(|(_, h)| *h).collect();
+    if winners.is_empty() && losers.is_empty() {
+        return None;
+    }
+    let avg = |v: &[i64]| {
+        if v.is_empty() { 0.0 } else { v.iter().sum::<i64>() as f64 / v.len() as f64 }
+    };
+    let aw = avg(&winners);
+    let al = avg(&losers);
+    let behavioral_flag = (!winners.is_empty() && !losers.is_empty() && al >= aw * 1.5)
+        .then_some("cutting_winners_riding_losers");
+    Some(HoldStats {
+        avg_hold_secs_winners: aw,
+        avg_hold_secs_losers: al,
+        behavioral_flag,
+    })
+}
+
 /// Trade-quality stats over closed-trip PnLs. None for an empty set.
 /// Zero-PnL trips count as losses (they paid fees for nothing).
 pub fn trip_stats(pnls: &[f64]) -> Option<TripStats> {
@@ -333,6 +364,8 @@ pub struct Attribution {
     pub months: Vec<MonthRow>,
     /// Trade-quality metrics over all closed trips. None until trips exist.
     pub stats: Option<TripStats>,
+    /// Hold-duration discipline check (winners vs losers).
+    pub hold: Option<HoldStats>,
     pub total_trading_pnl: f64,
     pub total_dividends: f64,
     pub total_fees: f64,
@@ -401,9 +434,11 @@ pub async fn attribution(
     let (mut tt, mut td, mut tf) = (0.0, 0.0, 0.0);
     let mut seen: std::collections::BTreeSet<String> = Default::default();
     let mut all_trips: Vec<(f64, i64)> = Vec::new();
+    let mut all_holds: Vec<(f64, i64)> = Vec::new();
     for (symbol, (fills, fees)) in &by_symbol {
         let trips = traderview_core::live_vs_backtest::round_trips(fills);
         all_trips.extend(trips.iter().map(|t| (t.pnl, t.closed_ts)));
+        all_holds.extend(trips.iter().map(|t| (t.pnl, t.closed_ts - t.opened_ts)));
         let trading_pnl: f64 = trips.iter().map(|t| t.pnl).sum();
         let dividends = div_map.get(symbol).copied().unwrap_or(0.0);
         seen.insert(symbol.clone());
@@ -450,10 +485,12 @@ pub async fn attribution(
     let months = monthly_rollup(&all_trips, &div_dated);
     let pnls: Vec<f64> = all_trips.iter().map(|(p, _)| *p).collect();
     let stats = trip_stats(&pnls);
+    let hold = hold_stats(&all_holds);
     Ok(Attribution {
         symbols,
         months,
         stats,
+        hold,
         total_trading_pnl: tt,
         total_dividends: td,
         total_fees: tf,
@@ -574,6 +611,28 @@ mod tests {
         assert!(summarize(&[100.0]).is_none());
         assert!(summarize(&[]).is_none());
         assert!(summarize(&[0.0, 100.0]).is_none());
+    }
+
+    #[test]
+    fn hold_stats_pin_the_asymmetry_flag() {
+        // Winners held ~1h, losers held ~4h: flagged.
+        let t = vec![(100.0, 3600), (50.0, 3000), (-80.0, 14000), (-20.0, 15000)];
+        let h = hold_stats(&t).unwrap();
+        assert!((h.avg_hold_secs_winners - 3300.0).abs() < 1e-9);
+        assert!((h.avg_hold_secs_losers - 14500.0).abs() < 1e-9);
+        assert_eq!(h.behavioral_flag, Some("cutting_winners_riding_losers"));
+        // Symmetric holds: no flag.
+        let t = vec![(100.0, 3600), (-80.0, 3600)];
+        assert_eq!(hold_stats(&t).unwrap().behavioral_flag, None);
+        // Exactly at 1.5x: flagged (>= boundary).
+        let t = vec![(100.0, 1000), (-80.0, 1500)];
+        assert_eq!(
+            hold_stats(&t).unwrap().behavioral_flag,
+            Some("cutting_winners_riding_losers")
+        );
+        // One-sided records can't measure asymmetry.
+        assert_eq!(hold_stats(&[(100.0, 3600)]).unwrap().behavioral_flag, None);
+        assert!(hold_stats(&[]).is_none());
     }
 
     #[test]

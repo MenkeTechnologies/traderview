@@ -17281,6 +17281,7 @@
   "view.paper.empty_equity_curve": "No equity history yet — the background sampler records a point every 15 minutes when equity changes.",
   "view.paper.empty_notional_chart": "Brak dostępnych notowań dla wykresu referencyjnego.",
   "view.paper.err.spread_legs": "Enter both legs first",
+  "view.paper.flag.riding_losers": "losers held ≥1.5× longer than winners — the classic cut-winners-ride-losers pattern",
   "view.paper.h2.attribution": "P&L attribution",
   "view.paper.h2.auto_invest": "Auto-invest",
   "view.paper.h2.bracket_ticket": "Bracket (OCO) ticket",

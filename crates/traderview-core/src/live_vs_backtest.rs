@@ -33,6 +33,9 @@ pub struct Fill {
 #[derive(Debug, Clone, Copy)]
 pub struct Trip {
     pub pnl: f64,
+    /// Epoch seconds of the fill that OPENED the trip (the flip fill
+    /// for a flip-opened remainder).
+    pub opened_ts: i64,
     /// Epoch seconds of the fill that closed the trip.
     pub closed_ts: i64,
 }
@@ -45,6 +48,7 @@ pub fn round_trips(fills: &[Fill]) -> Vec<Trip> {
     let mut avg = 0.0_f64;
     let mut trip_pnl = 0.0_f64; // realized gross within the open trip
     let mut trip_comm = 0.0_f64;
+    let mut trip_open_ts = 0_i64;
     for f in fills {
         if f.qty <= 0.0 || f.price <= 0.0 {
             continue;
@@ -53,6 +57,9 @@ pub fn round_trips(fills: &[Fill]) -> Vec<Trip> {
         trip_comm += f.commission;
         if pos == 0.0 || (pos > 0.0) == (signed > 0.0) {
             // Opening / adding — weighted average cost.
+            if pos == 0.0 {
+                trip_open_ts = f.ts;
+            }
             let new_pos = pos + signed;
             avg = (avg * pos.abs() + f.price * f.qty) / new_pos.abs();
             pos = new_pos;
@@ -64,13 +71,19 @@ pub fn round_trips(fills: &[Fill]) -> Vec<Trip> {
             let remaining = f.qty - close_qty;
             pos += if f.buy { close_qty } else { -close_qty };
             if pos == 0.0 {
-                out.push(Trip { pnl: trip_pnl - trip_comm, closed_ts: f.ts });
+                out.push(Trip {
+                    pnl: trip_pnl - trip_comm,
+                    opened_ts: trip_open_ts,
+                    closed_ts: f.ts,
+                });
                 trip_pnl = 0.0;
                 trip_comm = 0.0;
                 if remaining > 0.0 {
-                    // Flip: the excess opens a fresh trip at this price.
+                    // Flip: the excess opens a fresh trip at this price
+                    // AND this time.
                     pos = if f.buy { remaining } else { -remaining };
                     avg = f.price;
+                    trip_open_ts = f.ts;
                 }
             }
         }
@@ -151,8 +164,11 @@ mod tests {
         assert_eq!(pnls.len(), 2);
         assert!((pnls[0].pnl - 198.0).abs() < 1e-9);
         assert!((pnls[1].pnl - 98.0).abs() < 1e-9);
-        // The trip closes at the CLOSING fill's timestamp.
+        // The trip closes at the CLOSING fill's timestamp and opens at
+        // the OPENING fill's — hold time is their difference.
         assert!(pnls[0].closed_ts < pnls[1].closed_ts);
+        assert!(pnls[0].opened_ts < pnls[0].closed_ts);
+        assert_eq!(pnls[0].closed_ts - pnls[0].opened_ts, 60);
     }
 
     #[test]
