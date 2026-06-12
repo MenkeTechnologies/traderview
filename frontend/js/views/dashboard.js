@@ -1,6 +1,6 @@
 import { api } from '../api.js';
 import { fmtMoney, fmtSecs, pnlClass, applyBarWidths } from '../util.js';
-import { equityChart } from '../charts.js';
+import { equityChart, barChart, zoomPlugin } from '../charts.js';
 import { renderWorldMarkets } from './world_map.js';
 import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
@@ -425,6 +425,7 @@ function drawdownChart(elId, equity) {
                   }) },
             ],
             legend: { show: false },
+            plugins: [zoomPlugin()],
         }, [xs, ys], el);
     }, 0);
     return true;
@@ -457,50 +458,20 @@ function shortDay(iso) {
     return parts.length >= 3 ? `${parts[1]}/${parts[2]}` : iso.slice(5, 10);
 }
 
+// Shared barChart, not a local uPlot build: the old hand-rolled version
+// sized bars as width/n with no cap, so a 1-day window drew one bar 70%
+// of the panel wide, spilling left across the y-axis. barChart caps bar
+// width at 18% and insets the x range half a slot, so the single bar
+// stays inside the axes.
 function dailyVolumeChart(elId, daily) {
     if (!daily || !daily.length) return false;
     setTimeout(() => {
         const el = document.getElementById(elId);
-        if (!el || !window.uPlot) return;
-        const xs = daily.map((_, i) => i);
-        const ys = daily.map(d => Number(d.volume) || 0);
-        const labels = daily.map(d => shortDay(d.day));
-        const barsPath = (u) => {
-            const ctx = u.ctx;
-            ctx.save();
-            const bw = Math.max(2, (u.bbox.width / xs.length) * 0.7);
-            const yZero = u.valToPos(0, 'y', true);
-            for (let i = 0; i < xs.length; i++) {
-                const x = u.valToPos(xs[i], 'x', true);
-                const y = u.valToPos(ys[i], 'y', true);
-                ctx.fillStyle = '#39ff14';
-                ctx.fillRect(x - bw / 2, Math.min(yZero, y), bw, Math.abs(y - yZero));
-            }
-            ctx.restore();
-            return null;
-        };
-        new window.uPlot({
-            title: '', width: el.clientWidth || 600, height: 260,
-            scales: { x: { time: false,}, y: {} },
-            series: [
-                { label: 'day' },
-                { label: 'volume', stroke: 'transparent', paths: barsPath },
-            ],
-            axes: [
-                // size:60 reserves enough vertical room for the rotated date
-                // labels — at size:28 they get clipped to "20-" in release.
-                { stroke: '#aab', size: 60, rotate: -45,
-                  values: (_u, splits) => splits.map(v => labels[Math.round(v)] || '') },
-                { stroke: '#aab', size: 64,
-                  values: (_u, ticks) => ticks.map(v => {
-                      const a = Math.abs(v);
-                      if (a >= 1e6) return `${(v/1e6).toFixed(1)}M`;
-                      if (a >= 1e3) return `${(v/1e3).toFixed(0)}K`;
-                      return v.toFixed(0);
-                  }) },
-            ],
-            legend: { show: false },
-        }, [xs, ys], el);
+        if (!el) return;
+        barChart(el,
+            daily.map(d => shortDay(d.day)),
+            daily.map(d => Number(d.volume) || 0),
+            { color: '#39ff14', yKind: 'count', height: 260 });
     }, 0);
     return true;
 }
@@ -533,6 +504,7 @@ function lineChart(elId, daily, valueKey, color) {
                   }) },
             ],
             legend: { show: false },
+            plugins: [zoomPlugin()],
         }, [xs, ys], el);
     }, 0);
     return true;

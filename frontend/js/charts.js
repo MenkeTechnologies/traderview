@@ -3,6 +3,126 @@
 import { t } from './i18n.js';
 import { esc } from './util.js';
 
+// Wheel-zoom / drag-pan / button-zoom for uPlot charts, matching the
+// LightweightCharts interaction model in trading_chart.js: wheel zooms at
+// the cursor, drag pans, dblclick or ⟳ resets. Replaces uPlot's native
+// drag-select-zoom so drag can pan instead.
+//
+// `getBounds(u)` returns the full [min, max] x range used for clamping and
+// reset — defaults to the data extremes; barChart passes its half-slot
+// inset. Charts whose x scale has a custom `range` fn must read
+// `u._zoomRange` from it (null = not zoomed) since a range fn overrides
+// setScale values.
+export function zoomPlugin({ getBounds } = {}) {
+    const bounds = (u) => {
+        if (getBounds) return getBounds(u);
+        const xs = u.data[0];
+        let min = xs[0], max = xs[xs.length - 1];
+        if (!(max > min)) { min -= 0.5; max += 0.5; }
+        return [min, max];
+    };
+
+    return {
+        opts: (_u, opts) => {
+            opts.cursor = opts.cursor || {};
+            opts.cursor.drag = { x: false, y: false };
+            return opts;
+        },
+        hooks: {
+            init: (u) => {
+                const over = u.over;
+                const wrap = over.parentNode;
+
+                const apply = (min, max) => {
+                    u._zoomRange = [min, max];
+                    u.setScale('x', { min, max });
+                };
+                const reset = () => {
+                    const [min, max] = bounds(u);
+                    u._zoomRange = null;
+                    u.setScale('x', { min, max });
+                };
+                // Shrink (factor < 1) or grow the span around `center`,
+                // clamped to the full range. Never zoom in past 1/200 of
+                // the full span — beyond that the view is a single point.
+                const zoomAt = (center, factor) => {
+                    const sx = u.scales.x;
+                    if (sx.min == null || sx.max == null) return;
+                    const [bMin, bMax] = bounds(u);
+                    const fullSpan = bMax - bMin;
+                    const curSpan = sx.max - sx.min;
+                    if (!(curSpan > 0) || !(fullSpan > 0)) return;
+                    let span = curSpan * factor;
+                    if (factor < 1 && span < fullSpan / 200) return;
+                    if (span >= fullSpan) { reset(); return; }
+                    const frac = (center - sx.min) / curSpan;
+                    let min = center - frac * span;
+                    if (min < bMin) min = bMin;
+                    if (min + span > bMax) min = bMax - span;
+                    apply(min, min + span);
+                };
+
+                over.addEventListener('wheel', (e) => {
+                    e.preventDefault();
+                    const left = e.clientX - over.getBoundingClientRect().left;
+                    zoomAt(u.posToVal(left, 'x'), e.deltaY < 0 ? 0.75 : 1 / 0.75);
+                }, { passive: false });
+
+                let pan = null;
+                const onMove = (e) => {
+                    if (!pan) return;
+                    const sx = u.scales.x;
+                    const span = pan.max - pan.min;
+                    const [bMin, bMax] = bounds(u);
+                    if (span >= bMax - bMin) return;
+                    let min = pan.min
+                        + ((pan.x - e.clientX) / over.clientWidth) * span;
+                    if (min < bMin) min = bMin;
+                    if (min + span > bMax) min = bMax - span;
+                    if (min !== sx.min) apply(min, min + span);
+                };
+                const onUp = () => { pan = null; };
+                over.addEventListener('mousedown', (e) => {
+                    if (e.button !== 0) return;
+                    const sx = u.scales.x;
+                    if (sx.min == null) return;
+                    pan = { x: e.clientX, min: sx.min, max: sx.max };
+                });
+                window.addEventListener('mousemove', onMove);
+                window.addEventListener('mouseup', onUp);
+                over.addEventListener('dblclick', reset);
+
+                const center = () => {
+                    const sx = u.scales.x;
+                    return (sx.min + sx.max) / 2;
+                };
+                const bar = document.createElement('div');
+                bar.className = 'u-zoom-actions';
+                for (const [txt, key, fn] of [
+                    ['+', 'component.chart.zoom_in',  () => zoomAt(center(), 0.6)],
+                    ['−', 'component.chart.zoom_out', () => zoomAt(center(), 1.6)],
+                    ['⟳', 'component.chart.reset',    reset],
+                ]) {
+                    const b = document.createElement('button');
+                    b.type = 'button';
+                    b.className = 'tv-chart-icon';
+                    b.title = t(key);
+                    b.textContent = txt;
+                    b.addEventListener('click', fn);
+                    bar.appendChild(b);
+                }
+                wrap.appendChild(bar);
+
+                u._zoomCleanup = () => {
+                    window.removeEventListener('mousemove', onMove);
+                    window.removeEventListener('mouseup', onUp);
+                };
+            },
+            destroy: (u) => { if (u._zoomCleanup) u._zoomCleanup(); },
+        },
+    };
+}
+
 export function equityChart(el, points, opts = {}) {
     if (!window.uPlot) { el.textContent = t('chart.error.uplot_missing'); return; }
     if (!points || !points.length) {
@@ -30,6 +150,7 @@ export function equityChart(el, points, opts = {}) {
             { stroke: '#aab' },
             { stroke: '#aab' },
         ],
+        plugins: [zoomPlugin()],
     }, [xs, ys, dd], el);
 }
 
@@ -51,9 +172,20 @@ export function ohlcChart(el, bars, marks = [], opts = {}) {
     const candlePath = (u) => {
         const ctx = u.ctx;
         ctx.save();
+        // Clip to the plot area — when zoomed/panned, edge candles would
+        // otherwise paint over the axes.
+        ctx.beginPath();
+        ctx.rect(u.bbox.left, u.bbox.top, u.bbox.width, u.bbox.height);
+        ctx.clip();
         const colorUp = '#23d160';
         const colorDown = '#ff3860';
-        const barWidth = Math.max(1, (u.bbox.width / xs.length) * 0.6);
+        // Size candles by the visible window, not the full series, so
+        // zooming in widens them like every charting tool does.
+        const sx = u.scales.x;
+        const visible = sx.min != null && sx.max > sx.min
+            ? Math.max(1, xs.filter(v => v >= sx.min && v <= sx.max).length)
+            : xs.length;
+        const barWidth = Math.max(1, (u.bbox.width / visible) * 0.6);
         for (let i = 0; i < xs.length; i++) {
             const x = u.valToPos(xs[i], 'x', true);
             const yOpen = u.valToPos(o[i], 'y', true);
@@ -121,6 +253,7 @@ export function ohlcChart(el, bars, marks = [], opts = {}) {
             { label: t('chart.series.price'), stroke: 'transparent', paths: candlePath },
         ],
         axes: [{ stroke: '#aab' }, { stroke: '#aab' }],
+        plugins: [zoomPlugin()],
         ...(setScaleHook ? { hooks: { setScale: [setScaleHook] } } : {}),
     }, [xs, c], el);
 
@@ -145,9 +278,18 @@ export function barChart(el, labels, values, opts = {}) {
     const barsPath = (u) => {
         const ctx = u.ctx;
         ctx.save();
+        // Clip to the plot area — when zoomed/panned, edge bars would
+        // otherwise paint over the axes.
+        ctx.beginPath();
+        ctx.rect(u.bbox.left, u.bbox.top, u.bbox.width, u.bbox.height);
+        ctx.clip();
+        // Size bars by the visible slot count so zooming in widens them;
+        // the 18% cap keeps a 1-2 bar chart from becoming a green wall.
+        const sx = u.scales.x;
+        const slots = sx.min != null && sx.max > sx.min ? sx.max - sx.min : n;
         const bw = Math.max(
             2,
-            Math.min((u.bbox.width / Math.max(1, n)) * 0.6, u.bbox.width * 0.18),
+            Math.min((u.bbox.width / Math.max(1, slots)) * 0.6, u.bbox.width * 0.18),
         );
         const yZero = u.valToPos(0, 'y', true);
         for (let i = 0; i < n; i++) {
@@ -191,9 +333,13 @@ export function barChart(el, labels, values, opts = {}) {
         // don't hug the panel edges. Without an explicit range, uPlot's
         // auto-fit puts bar 0 at the left edge and bar n-1 at the right
         // edge — on the 4-point VIX/Treasury curves this read as bars
-        // jammed against the panel walls.
+        // jammed against the panel walls. A range fn overrides setScale,
+        // so honor the zoomPlugin's requested range when one is active.
         scales: {
-            x: { time: false, range: () => [-0.5, Math.max(0.5, n - 0.5)] },
+            x: {
+                time: false,
+                range: (u) => u._zoomRange || [-0.5, Math.max(0.5, n - 0.5)],
+            },
             y: {},
         },
         series: [
@@ -223,6 +369,9 @@ export function barChart(el, labels, values, opts = {}) {
             values: (_u, ticks) => ticks.map(fmtY),
         }],
         legend: { show: false },
+        plugins: [zoomPlugin({
+            getBounds: () => [-0.5, Math.max(0.5, n - 0.5)],
+        })],
     }, [xs, vs], el);
 
     // Defer one rAF tick so the panel has its final width before measuring.
