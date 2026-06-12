@@ -20,6 +20,7 @@ pub fn router() -> Router<AppState> {
         .route("/crypto/calc/funding-arb-live", post(funding_arb_live))
         .route("/crypto/funding-scan", get(funding_scan))
         .route("/crypto/positioning", post(positioning))
+        .route("/crypto/carry-basis", post(carry_basis))
 }
 
 #[derive(Deserialize)]
@@ -188,6 +189,16 @@ async fn positioning(
     Json(b): Json<PositioningBody>,
 ) -> Result<Json<traderview_db::crypto::Positioning>, ApiError> {
     traderview_db::crypto::positioning(&b.base)
+        .await
+        .map(Json)
+        .map_err(|e| ApiError::BadRequest(e.to_string()))
+}
+
+/// Live cash-and-carry: spot vs every dated future on the underlying.
+async fn carry_basis(
+    Json(b): Json<PositioningBody>,
+) -> Result<Json<traderview_db::crypto::CarryBasis>, ApiError> {
+    traderview_db::crypto::carry_basis(&b.base)
         .await
         .map(Json)
         .map_err(|e| ApiError::BadRequest(e.to_string()))

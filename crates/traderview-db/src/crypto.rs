@@ -533,3 +533,117 @@ mod positioning_tests {
         assert_eq!(oi_price_quadrant(5.0, -0.01), "flat");
     }
 }
+
+
+/// Expiry date from an OKX dated-futures instId tail ("BTC-USDT-260626"
+/// → 2026-06-26). The tail is YYMMDD; anything else is None.
+pub fn parse_okx_expiry(inst_id: &str) -> Option<chrono::NaiveDate> {
+    let tail = inst_id.rsplit('-').next()?;
+    if tail.len() != 6 || !tail.bytes().all(|b| b.is_ascii_digit()) {
+        return None;
+    }
+    let yy: i32 = tail[..2].parse().ok()?;
+    let mm: u32 = tail[2..4].parse().ok()?;
+    let dd: u32 = tail[4..6].parse().ok()?;
+    chrono::NaiveDate::from_ymd_opt(2000 + yy, mm, dd)
+}
+
+/// Simple (non-compounded) annualized basis: (fut/spot − 1) × 365/days,
+/// in percent. None when inputs can't produce a meaningful number —
+/// non-positive prices, or zero/negative days (an expiring-today
+/// contract's basis annualizes to noise, not signal).
+pub fn annualized_basis_pct(spot: f64, fut: f64, days_to_expiry: i64) -> Option<f64> {
+    if spot <= 0.0 || fut <= 0.0 || days_to_expiry <= 0 {
+        return None;
+    }
+    Some((fut / spot - 1.0) * 365.0 / days_to_expiry as f64 * 100.0)
+}
+
+#[derive(Debug, Clone, serde::Serialize)]
+pub struct CarryLeg {
+    pub inst_id: String,
+    pub expiry: chrono::NaiveDate,
+    pub days_to_expiry: i64,
+    pub fut_price: f64,
+    /// Raw basis to expiry, percent.
+    pub basis_pct: f64,
+    /// Simple annualization — the comparable carry number.
+    pub annualized_pct: f64,
+}
+
+#[derive(Debug, Clone, serde::Serialize)]
+pub struct CarryBasis {
+    pub spot: f64,
+    pub legs: Vec<CarryLeg>,
+    /// Dated contracts listed but unusable (no parsable expiry,
+    /// expiring today, bad price) — listed, not silently dropped.
+    pub skipped: Vec<String>,
+}
+
+/// Live cash-and-carry sheet: spot vs every dated future on the
+/// underlying. Positive annualized basis = contango — buy spot,
+/// short the future, capture the convergence; the perp version of
+/// this trade is the funding-arb tool, this is the locked-term one.
+pub async fn carry_basis(base: &str) -> anyhow::Result<CarryBasis> {
+    let base = base.trim().to_uppercase();
+    if base.is_empty() || base.len() > 10 || !base.bytes().all(|b| b.is_ascii_alphanumeric()) {
+        anyhow::bail!("invalid base asset");
+    }
+    let u_spot = format!("https://www.okx.com/api/v5/market/ticker?instId={base}-USDT");
+    let u_futs = format!("https://www.okx.com/api/v5/market/tickers?instType=FUTURES&uly={base}-USDT");
+    let (spot_v, futs_v) = futures_util::join!(okx_json(&u_spot), okx_json(&u_futs));
+    let spot = okx_f64(&spot_v?, &["data", "0", "last"])
+        .filter(|p| *p > 0.0)
+        .ok_or_else(|| anyhow::anyhow!("no spot price"))?;
+    let futs = futs_v?;
+    let today = chrono::Utc::now().date_naive();
+    let (mut legs, mut skipped) = (Vec::new(), Vec::new());
+    for row in futs.get("data").and_then(|d| d.as_array()).into_iter().flatten() {
+        let inst_id = row.get("instId").and_then(|v| v.as_str()).unwrap_or_default().to_string();
+        let last = row.get("last").and_then(|v| v.as_str()).and_then(|s| s.parse::<f64>().ok());
+        let leg = parse_okx_expiry(&inst_id).and_then(|expiry| {
+            let days = (expiry - today).num_days();
+            let fut = last?;
+            let annualized = annualized_basis_pct(spot, fut, days)?;
+            Some(CarryLeg {
+                inst_id: inst_id.clone(),
+                expiry,
+                days_to_expiry: days,
+                fut_price: fut,
+                basis_pct: (fut / spot - 1.0) * 100.0,
+                annualized_pct: annualized,
+            })
+        });
+        match leg {
+            Some(l) => legs.push(l),
+            None => skipped.push(inst_id),
+        }
+    }
+    legs.sort_by_key(|l| l.days_to_expiry);
+    Ok(CarryBasis { spot, legs, skipped })
+}
+
+#[cfg(test)]
+mod carry_tests {
+    use super::*;
+
+    #[test]
+    fn expiry_parse_and_basis_annualization() {
+        // Live-observed shape: BTC-USDT-260626 → 2026-06-26.
+        assert_eq!(
+            parse_okx_expiry("BTC-USDT-260626"),
+            chrono::NaiveDate::from_ymd_opt(2026, 6, 26)
+        );
+        // Perps and spot ids have no date tail.
+        assert_eq!(parse_okx_expiry("BTC-USDT-SWAP"), None);
+        assert_eq!(parse_okx_expiry("BTC-USDT"), None);
+        // 1% basis over 73 days = 5% annualized, exactly 365/73 = 5.
+        let a = annualized_basis_pct(100.0, 101.0, 73).unwrap();
+        assert!((a - 5.0).abs() < 1e-9);
+        // Backwardation annualizes negative.
+        assert!(annualized_basis_pct(100.0, 99.0, 73).unwrap() < 0.0);
+        // Expiring today / bad prices: None, not infinity or noise.
+        assert_eq!(annualized_basis_pct(100.0, 101.0, 0), None);
+        assert_eq!(annualized_basis_pct(0.0, 101.0, 30), None);
+    }
+}

@@ -491,6 +491,33 @@ const TOOLS = {
             5-minute cache; rates settle per interval, not per second. Feed a candidate into
             Funding Arb (live) for the full fee/breakeven ledger.</p>`,
     },
+    'carry-basis': {
+        label: 'Cash & Carry (live)',
+        call: (b) => api.cryptoCarryBasis({ base: String(b.base).trim().toUpperCase() }),
+        fields: [
+            { key: 'base', label: 'Base asset (BTC, ETH…)', def: 'BTC', text: true },
+        ],
+        render: (r) => `
+            <p class="small">spot <strong>$${r.spot}</strong></p>
+            ${r.legs.length ? `<table class="gs-table">
+                <thead><tr><th>Contract</th><th>Expiry</th><th>Days</th><th>Future</th><th>Basis</th><th>Annualized</th></tr></thead>
+                <tbody>${r.legs.map(l => `
+                    <tr>
+                        <td>${esc(l.inst_id)}</td>
+                        <td>${esc(l.expiry)}</td>
+                        <td>${l.days_to_expiry}</td>
+                        <td>$${l.fut_price}</td>
+                        <td class="${l.basis_pct >= 0 ? 'pos' : 'neg'}">${l.basis_pct.toFixed(3)}%</td>
+                        <td class="${l.annualized_pct >= 0 ? 'pos' : 'neg'}"><strong>${l.annualized_pct.toFixed(2)}%</strong></td>
+                    </tr>`).join('')}
+                </tbody>
+            </table>` : '<p class="muted">No dated futures listed for this underlying.</p>'}
+            ${r.skipped.length ? `<p class="muted small">skipped: ${r.skipped.map(esc).join(' · ')}</p>` : ''}
+            <p class="muted small">Live OKX dated futures vs spot. Positive annualized basis = contango: buy spot,
+            short the future, and the convergence at expiry is the locked-in carry — the term-structure version of
+            the funding-arb trade (which is the perp leg of the same idea). Simple annualization, not compounded;
+            contracts expiring today are skipped because their basis annualizes to noise.</p>`,
+    },
     'positioning': {
         label: 'Crypto Positioning',
         call: (b) => api.cryptoPositioning({ base: String(b.base).trim().toUpperCase() }),
