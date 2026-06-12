@@ -106,6 +106,8 @@ export async function renderPaper(mount) {
                         <option value="gtd">GTD</option>
                     </select>
                     <input name="expire_at" type="datetime-local" data-tip="view.paper.tip.gtd_expiry">
+                    <input name="risk_pct" type="number" min="0.1" max="10" step="0.1" value="1" style="width:60px" data-tip="view.paper.tip.risk_pct">
+                    <button type="button" id="ord-size" data-i18n="view.paper.btn.size" data-tip="view.paper.tip.size">SIZE</button>
                     <button data-i18n="view.paper.btn.submit" data-tip="view.paper.tip.submit" data-shortcut="paper_submit" class="primary" type="submit">SUBMIT</button>
                 </form>
                 <h2 data-i18n="view.paper.h2.spread_ticket">Option spread ticket</h2>
@@ -300,6 +302,40 @@ export async function renderPaper(mount) {
         .then(s => { if (viewIsCurrent(tok)) renderSplits(s); })
         .catch(() => {});
 
+    mount.querySelector('#ord-size').addEventListener('click', async () => {
+        const form = mount.querySelector('#ord-form');
+        const fd = new FormData(form);
+        const symbol = (fd.get('symbol') || '').trim().toUpperCase();
+        const stop = Number(fd.get('stop_price'));
+        const riskPct = Number(fd.get('risk_pct')) || 1;
+        if (!symbol || !stop) {
+            showToast(t('view.paper.err.size_inputs'), { level: 'error' });
+            return;
+        }
+        try {
+            const q = await api.quote(symbol);
+            const price = Number(q.price);
+            const dist = Math.abs(price - stop);
+            if (!(dist > 0)) {
+                showToast(t('view.paper.err.size_stop'), { level: 'error' });
+                return;
+            }
+            const riskUsd = equity * riskPct / 100;
+            const qty = Math.floor((riskUsd / dist) * 10000) / 10000;
+            if (!(qty > 0)) {
+                showToast(t('view.paper.err.size_zero'), { level: 'error' });
+                return;
+            }
+            form.querySelector('[name="qty"]').value = qty;
+            showToast(t('view.paper.toast.sized', {
+                qty, symbol,
+                risk: riskUsd.toFixed(0),
+                dist: dist.toFixed(2),
+            }), { level: 'info' });
+        } catch (err) {
+            showToast(t('common.error', { err: err.message }), { level: 'error' });
+        }
+    });
     mount.querySelector('#ord-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         const fd = new FormData(e.target);
