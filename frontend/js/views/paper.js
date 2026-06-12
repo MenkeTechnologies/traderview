@@ -163,7 +163,7 @@ export async function renderPaper(mount) {
                             <td>${last != null ? fmt(last) : '—'}</td>
                             <td class="${cls}">${u != null ? (u >= 0 ? '+' : '') + '$' + fmt(u) : '—'}</td>
                             <td class="${Number(p.realized_pnl) >= 0 ? 'pos' : 'neg'}">$${fmt(p.realized_pnl)}</td>
-                            <td><button class="small protect-btn" data-symbol="${esc(p.symbol)}" data-qty="${esc(p.qty)}" data-i18n="view.paper.btn.protect" data-tip="view.paper.tip.protect">OCO</button>${p.symbol.length > 15 ? ` <button class="small roll-btn" data-symbol="${esc(p.symbol)}" data-qty="${esc(p.qty)}" data-i18n="view.paper.btn.roll" data-tip="view.paper.tip.roll">ROLL</button>` : ''}</td>
+                            <td><button class="small flat-btn" data-symbol="${esc(p.symbol)}" data-qty="${esc(p.qty)}" data-i18n="view.paper.btn.flatten" data-tip="view.paper.tip.flatten">FLAT</button> <button class="small protect-btn" data-symbol="${esc(p.symbol)}" data-qty="${esc(p.qty)}" data-i18n="view.paper.btn.protect" data-tip="view.paper.tip.protect">OCO</button>${p.symbol.length > 15 ? ` <button class="small roll-btn" data-symbol="${esc(p.symbol)}" data-qty="${esc(p.qty)}" data-i18n="view.paper.btn.roll" data-tip="view.paper.tip.roll">ROLL</button>` : ''}</td>
                         </tr>`;
                     }).join('')}</tbody></table>` : '<p data-i18n="view.paper.hint.no_open_positions" class="muted">No open positions.</p>'}
             </div>
@@ -350,6 +350,32 @@ export async function renderPaper(mount) {
         } catch (err) {
             showToast(t('common.error', { err: err.message }), { level: 'error' });
         }
+    });
+    mount.querySelectorAll('.flat-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+            const qty = Number(btn.dataset.qty);
+            // Exit side from the position's sign — same derivation the
+            // protect path pins server-side (long → sell, short → cover).
+            const side = qty > 0 ? 'sell' : 'cover';
+            try {
+                const o = await api.paperSubmit(acct.id, {
+                    symbol: btn.dataset.symbol,
+                    side,
+                    qty: Math.abs(qty),
+                    order_type: 'market',
+                    limit_price: null,
+                    stop_price: null,
+                });
+                if (o.status === 'rejected') {
+                    showToast(t('view.paper.alert.order_rejected', { reason: o.reject_reason || t('common.empty.unknown') }), { level: 'error' });
+                } else {
+                    showToast(t('view.paper.toast.flattened', { symbol: btn.dataset.symbol }), { level: 'success' });
+                }
+                renderPaper(mount);
+            } catch (err) {
+                showToast(t('common.error', { err: err.message }), { level: 'error' });
+            }
+        });
     });
     wireProtectButtons(mount, acct.id);
     mount.querySelectorAll('.roll-btn').forEach(btn => {
