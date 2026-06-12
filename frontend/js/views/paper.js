@@ -289,6 +289,7 @@ export async function renderPaper(mount) {
             <h2 data-i18n="view.paper.h2.equity_curve">Equity curve</h2>
             <div id="paper-equity-summary" class="muted small"></div>
             <div id="paper-equity-chart" style="width:100%;height:240px"></div>
+            <div id="paper-underwater-chart" style="width:100%;height:90px" data-tip="view.paper.tip.underwater"></div>
         </div>
 
         <div class="chart-panel">
@@ -1357,6 +1358,34 @@ function renderEquityCurve(hist) {
         ],
         legend: { show: false },
     }, data, el);
+
+    // Underwater curve: drawdown-from-peak %, the time dimension of
+    // the summary's single max-DD number. RAW equity series — the
+    // same convention summarize() uses server-side, so this chart
+    // can never disagree with the stated max drawdown (a deposit
+    // therefore shrinks the drawdown here exactly as it does there).
+    const uw = document.getElementById('paper-underwater-chart');
+    if (uw) {
+        uw.innerHTML = '';
+        let peak = -Infinity;
+        const dd = ys.map(v => {
+            peak = Math.max(peak, v);
+            return peak > 0 ? (v / peak - 1) * 100 : 0;
+        });
+        new window.uPlot({
+            title: '', width: uw.clientWidth || 600, height: 88,
+            series: [
+                {},
+                { label: 'drawdown %', stroke: '#ff5566', width: 1, fill: 'rgba(255,85,102,0.18)', points: { show: false } },
+            ],
+            scales: { y: { range: (u, min) => [Math.min(min, -0.5), 0] } },
+            axes: [
+                { stroke: '#aab', show: false },
+                { stroke: '#aab', size: 70 },
+            ],
+            legend: { show: false },
+        }, [xs, dd], uw);
+    }
 }
 
 function renderUnrealizedChart(positions, quotes) {

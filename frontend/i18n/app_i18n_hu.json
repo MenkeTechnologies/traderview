@@ -17506,6 +17506,7 @@
   "view.paper.tip.tif": "Time in force for resting orders: GTC never expires, DAY expires at the 16:00 US Eastern close, GTD expires at the chosen time",
   "view.paper.tip.trail": "Trailing distance ($ or %); required only when order type = trailing. The stop ratchets with the best price and fires on a retrace of this size.",
   "view.paper.tip.trail_unit": "Trail unit: absolute dollars or percent of the ratcheting extreme",
+  "view.paper.tip.underwater": "Underwater curve: drawdown from the running equity peak, % — the time dimension of the max-drawdown number above. Raw equity, same convention as the summary, so the two can never disagree.",
   "view.paper.tip.withdraw": "Wire cash out — capped by CASH, not equity (money that is currently stock cannot leave)",
   "view.paper.toast.apy_set": "Cash sweep APY set to {apy}%",
   "view.paper.toast.assigned": "Assigned — {shares} shares at ${strike}",
