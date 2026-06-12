@@ -471,7 +471,7 @@ const TOOLS = {
         fields: [],
         render: (r) => `
             <table class="gs-table">
-                <thead><tr><th>Asset</th><th>Funding /8h</th><th>APR</th><th>Collect via</th><th>Basis</th><th>Interval</th></tr></thead>
+                <thead><tr><th>Asset</th><th>Funding /8h</th><th>APR</th><th>Collect via</th><th>Basis</th><th>Regime</th><th>Interval</th></tr></thead>
                 <tbody>${r.rows.map(x => `
                     <tr>
                         <td><strong>${esc(x.base)}</strong></td>
@@ -479,13 +479,16 @@ const TOOLS = {
                         <td class="${Math.abs(x.funding_apr_pct) > 10 ? 'pos' : ''}">${x.funding_apr_pct.toFixed(2)}%</td>
                         <td class="small">${x.funding_rate_8h > 0 ? 'long spot + short perp' : x.funding_rate_8h < 0 ? 'short spot + long perp' : '—'}</td>
                         <td>${x.basis_pct.toFixed(3)}%</td>
+                        <td class="small ${x.persistence && x.persistence.same_sign_as_latest_pct >= 0.7 ? 'pos' : 'muted'}">${x.persistence ? `${(x.persistence.same_sign_as_latest_pct * 100).toFixed(0)}% × ${x.persistence.intervals}` : '—'}</td>
                         <td class="muted small">${x.interval_hours.toFixed(0)}h</td>
                     </tr>`).join('')}
                 </tbody>
             </table>
             ${r.failed.length ? `<p class="neg small">failed: ${r.failed.map(esc).join(' \u00b7 ')}</p>` : ''}
             <p class="muted small">Live OKX funding across the major-perp universe, ranked by |APR| — negative funding
-            pays the LONG side. 5-minute cache; rates settle per interval, not per second. Feed a candidate into
+            pays the LONG side. Regime = share of the last N realized intervals matching the current sign: 70%+
+            (green) is a persistent regime, lower is closer to a coin-flip and an equally-rich spike is a trap.
+            5-minute cache; rates settle per interval, not per second. Feed a candidate into
             Funding Arb (live) for the full fee/breakeven ledger.</p>`,
     },
     'funding-arb-live': {

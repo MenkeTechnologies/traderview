@@ -258,6 +258,10 @@ pub struct FundingScanRow {
     pub spot: f64,
     pub perp: f64,
     pub interval_hours: f64,
+    /// Realized-funding regime over the last ~30 intervals — ranks a
+    /// steady carry above an equally-rich one-interval spike. None
+    /// when the history fetch failed (the row still lists).
+    pub persistence: Option<FundingPersistence>,
 }
 
 #[derive(Debug, Clone, serde::Serialize)]
@@ -269,15 +273,20 @@ pub struct FundingScan {
     pub failed: Vec<String>,
 }
 
-/// Concurrent sweep of the funding universe.
+/// Concurrent sweep of the funding universe. The snapshot and the
+/// ~30-interval history fetch run concurrently per base (one join_all
+/// over both, not a second sequential sweep); a failed history
+/// degrades that row's persistence to None rather than failing it.
 pub async fn funding_scan() -> FundingScan {
     let futs = FUNDING_UNIVERSE.iter().map(|base| async move {
-        (base.to_string(), funding_snapshot(base).await)
+        let (snap, hist) =
+            futures_util::future::join(funding_snapshot(base), funding_history(base, 30)).await;
+        (base.to_string(), snap, hist)
     });
     let results = futures_util::future::join_all(futs).await;
     let mut rows = Vec::new();
     let mut failed = Vec::new();
-    for (base, res) in results {
+    for (base, res, hist) in results {
         match res {
             Ok(s) => rows.push(FundingScanRow {
                 base,
@@ -287,6 +296,7 @@ pub async fn funding_scan() -> FundingScan {
                 spot: s.spot,
                 perp: s.perp,
                 interval_hours: s.interval_hours,
+                persistence: hist.ok().as_deref().and_then(funding_persistence),
             }),
             Err(e) => failed.push(format!("{base}: {e}")),
         }
