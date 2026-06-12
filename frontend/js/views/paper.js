@@ -218,7 +218,8 @@ export async function renderPaper(mount) {
                             <td class="${Number(p.realized_pnl) >= 0 ? 'pos' : 'neg'}">$${fmt(p.realized_pnl)}</td>
                             <td><button class="small flat-btn" data-symbol="${esc(p.symbol)}" data-qty="${esc(p.qty)}" data-i18n="view.paper.btn.flatten" data-tip="view.paper.tip.flatten">FLAT</button> <button class="small protect-btn" data-symbol="${esc(p.symbol)}" data-qty="${esc(p.qty)}" data-i18n="view.paper.btn.protect" data-tip="view.paper.tip.protect">OCO</button>${p.symbol.length > 15 ? ` <button class="small roll-btn" data-symbol="${esc(p.symbol)}" data-qty="${esc(p.qty)}" data-i18n="view.paper.btn.roll" data-tip="view.paper.tip.roll">ROLL</button>${Number(p.qty) > 0 ? ` <button class="small exercise-btn" data-symbol="${esc(p.symbol)}" data-qty="${esc(p.qty)}" data-i18n="view.paper.btn.exercise" data-tip="view.paper.tip.exercise">EXER</button>` : ` <button class="small assign-btn" data-symbol="${esc(p.symbol)}" data-qty="${esc(p.qty)}" data-i18n="view.paper.btn.assign" data-tip="view.paper.tip.assign">ASGN</button>`}` : ''}</td>
                         </tr>`;
-                    }).join('')}</tbody></table>` : '<p data-i18n="view.paper.hint.no_open_positions" class="muted">No open positions.</p>'}
+                    }).join('')}</tbody></table>
+                <div id="paper-pos-footer" class="small muted"></div>` : '<p data-i18n="view.paper.hint.no_open_positions" class="muted">No open positions.</p>'}
             </div>
         </div>
 
@@ -346,6 +347,34 @@ export async function renderPaper(mount) {
         </div>
     `;
 
+    // Positions footer: marked totals + class split from the data
+    // already in hand. Same class rules as the server's
+    // asset_class_of; unquotable rows are counted out loud and kept
+    // OUT of the sums (the exposure-line convention).
+    {
+        const footer = mount.querySelector('#paper-pos-footer');
+        if (footer && positions.length) {
+            const classOf = (sym) =>
+                sym.length > 15 ? 'options' : /-(USDT|USD)$/.test(sym) ? 'crypto' : 'equity';
+            const byClass = {};
+            let total = 0, unreal = 0, unmarked = 0;
+            for (const p of positions) {
+                const q = quotes[p.symbol];
+                if (!q || !Number.isFinite(Number(q.price))) { unmarked++; continue; }
+                const mult = p.symbol.length > 15 ? 100 : 1;
+                const v = Number(q.price) * Number(p.qty) * mult;
+                total += v;
+                unreal += (Number(q.price) - Number(p.avg_price)) * Number(p.qty) * mult;
+                byClass[classOf(p.symbol)] = (byClass[classOf(p.symbol)] || 0) + v;
+            }
+            const classes = Object.entries(byClass);
+            footer.innerHTML = `<strong data-i18n="view.paper.pos.total">Marked:</strong>
+                ${total >= 0 ? '+' : '−'}$${fmt(Math.abs(total))} ·
+                unreal <span class="${unreal >= 0 ? 'pos' : 'neg'}">${unreal >= 0 ? '+' : '−'}$${fmt(Math.abs(unreal))}</span>${
+                classes.length > 1 ? ' · ' + classes.map(([c, v]) => `${esc(c)} ${v >= 0 ? '' : '−'}$${fmt(Math.abs(v))}`).join(' / ') : ''}${
+                unmarked ? ` · <span class="neg">${unmarked} unquoted NOT in totals</span>` : ''}`;
+        }
+    }
     renderUnrealizedChart(positions, quotes);
     renderNotionalChart(positions, quotes);
     // Order-history filter: display-toggle over the rendered rows
