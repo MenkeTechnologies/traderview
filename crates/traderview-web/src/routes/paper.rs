@@ -33,6 +33,7 @@ pub fn router() -> Router<AppState> {
         .route("/paper/orders/:id/replace", post(replace_order))
         .route("/paper/accounts/:id/brackets", post(submit_bracket))
         .route("/paper/accounts/:id/protect", post(protect))
+        .route("/paper/accounts/:id/roll", post(roll))
         .route("/paper/accounts/:id/spreads", post(submit_spread))
         .route("/paper/accounts/:id/option-greeks", get(option_greeks))
         .route("/paper/spreads/preview", post(preview_spread))
@@ -726,4 +727,25 @@ async fn positions(
             .await
             .map_err(ApiError::Internal)?,
     ))
+}
+
+#[derive(Deserialize)]
+struct RollBody {
+    from: String,
+    to: String,
+    qty: Decimal,
+}
+
+/// Roll an option position atomically (close old + open new through
+/// the spread path — both legs quote before the book is touched).
+async fn roll(
+    State(s): State<AppState>,
+    user: AuthUser,
+    Path(account_id): Path<Uuid>,
+    Json(b): Json<RollBody>,
+) -> Result<Json<traderview_db::paper::SpreadResult>, ApiError> {
+    traderview_db::paper::roll_position(&s.pool, user.id, account_id, &b.from, &b.to, b.qty)
+        .await
+        .map(Json)
+        .map_err(|e| ApiError::BadRequest(e.to_string()))
 }

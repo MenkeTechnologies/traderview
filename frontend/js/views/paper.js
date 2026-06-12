@@ -159,7 +159,7 @@ export async function renderPaper(mount) {
                             <td>${last != null ? fmt(last) : '—'}</td>
                             <td class="${cls}">${u != null ? (u >= 0 ? '+' : '') + '$' + fmt(u) : '—'}</td>
                             <td class="${Number(p.realized_pnl) >= 0 ? 'pos' : 'neg'}">$${fmt(p.realized_pnl)}</td>
-                            <td><button class="small protect-btn" data-symbol="${esc(p.symbol)}" data-qty="${esc(p.qty)}" data-i18n="view.paper.btn.protect" data-tip="view.paper.tip.protect">OCO</button></td>
+                            <td><button class="small protect-btn" data-symbol="${esc(p.symbol)}" data-qty="${esc(p.qty)}" data-i18n="view.paper.btn.protect" data-tip="view.paper.tip.protect">OCO</button>${p.symbol.length > 15 ? ` <button class="small roll-btn" data-symbol="${esc(p.symbol)}" data-qty="${esc(p.qty)}" data-i18n="view.paper.btn.roll" data-tip="view.paper.tip.roll">ROLL</button>` : ''}</td>
                         </tr>`;
                     }).join('')}</tbody></table>` : '<p data-i18n="view.paper.hint.no_open_positions" class="muted">No open positions.</p>'}
             </div>
@@ -348,6 +348,23 @@ export async function renderPaper(mount) {
         }
     });
     wireProtectButtons(mount, acct.id);
+    mount.querySelectorAll('.roll-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+            const from = btn.dataset.symbol;
+            const to = (prompt(`${t('view.paper.prompt.roll_to')} (${from})`) || '').trim().toUpperCase();
+            if (!to) return;
+            const qty = Math.abs(Number(btn.dataset.qty));
+            try {
+                const r = await api.paperRoll(acct.id, { from, to, qty });
+                showToast(t('view.paper.toast.rolled', {
+                    premium: (r.net_premium_usd >= 0 ? '+$' : '-$') + Math.abs(r.net_premium_usd).toFixed(2),
+                }), { level: 'success' });
+                renderPaper(mount);
+            } catch (err) {
+                showToast(t('common.error', { err: err.message }), { level: 'error' });
+            }
+        });
+    });
     mount.querySelectorAll('.ord-replace').forEach(btn => {
         btn.addEventListener('click', async () => {
             const type = btn.dataset.type;

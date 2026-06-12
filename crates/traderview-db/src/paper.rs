@@ -1103,6 +1103,89 @@ pub struct SpreadRequest {
     pub qty: Decimal,
 }
 
+/// Roll sanity, pure: both legs must be OCC contracts on the SAME
+/// underlying (rolling into a different name is two trades, not a
+/// roll), the target must differ from the source (strike, expiry, or
+/// both may change — out-rolls, up/down-rolls, and diagonals are all
+/// rolls), and qty is bounded by the held position. Returns
+/// (close_leg_is_buy, open_leg_is_buy): a LONG position closes by
+/// selling and opens the new contract by buying; a short position is
+/// the mirror.
+pub fn validate_roll(
+    from: &str,
+    to: &str,
+    pos_qty: Decimal,
+    qty: Decimal,
+) -> Result<(bool, bool), &'static str> {
+    let f = traderview_core::occ_symbol::parse(from).ok_or("from is not an OCC contract")?;
+    let t = traderview_core::occ_symbol::parse(to).ok_or("to is not an OCC contract")?;
+    if f.underlying != t.underlying {
+        return Err("roll must stay on the same underlying");
+    }
+    if from == to {
+        return Err("target contract is the same as the source");
+    }
+    if qty <= Decimal::ZERO {
+        return Err("qty must be positive");
+    }
+    if pos_qty == Decimal::ZERO {
+        return Err("no position in the source contract");
+    }
+    if qty > pos_qty.abs() {
+        return Err("qty exceeds position size");
+    }
+    // Long: sell to close, buy to open. Short: buy to close, sell to open.
+    Ok(if pos_qty > Decimal::ZERO { (false, true) } else { (true, false) })
+}
+
+/// Roll an option position: close (part of) the held contract and
+/// open another on the same underlying ATOMICALLY through the spread
+/// path — every leg quotes before the book is touched, so a roll can
+/// never close the old contract and then fail to open the new one.
+/// Returns the spread result; net_premium_usd > 0 means the roll
+/// collected a credit.
+pub async fn roll_position(
+    pool: &PgPool,
+    user_id: Uuid,
+    account_id: Uuid,
+    from: &str,
+    to: &str,
+    qty: Decimal,
+) -> anyhow::Result<SpreadResult> {
+    let owner: Option<(Uuid,)> = sqlx::query_as("SELECT user_id FROM paper_accounts WHERE id = $1")
+        .bind(account_id)
+        .fetch_optional(pool)
+        .await?;
+    if !matches!(owner, Some((u,)) if u == user_id) {
+        anyhow::bail!("forbidden");
+    }
+    let from = from.trim().to_uppercase();
+    let to = to.trim().to_uppercase();
+    let pos: Option<(Decimal,)> = sqlx::query_as(
+        "SELECT qty FROM paper_positions WHERE paper_account_id = $1 AND symbol = $2",
+    )
+    .bind(account_id)
+    .bind(&from)
+    .fetch_optional(pool)
+    .await?;
+    let pos_qty = pos.map(|(q,)| q).unwrap_or(Decimal::ZERO);
+    let (close_buy, open_buy) =
+        validate_roll(&from, &to, pos_qty, qty).map_err(|e| anyhow::anyhow!(e))?;
+    submit_spread(
+        pool,
+        user_id,
+        account_id,
+        SpreadRequest {
+            legs: vec![
+                traderview_core::option_spread::SpreadLeg { symbol: from, buy: close_buy, ratio: 1 },
+                traderview_core::option_spread::SpreadLeg { symbol: to, buy: open_buy, ratio: 1 },
+            ],
+            qty,
+        },
+    )
+    .await
+}
+
 #[derive(Debug, Clone, Serialize)]
 pub struct SpreadResult {
     pub orders: Vec<PaperOrder>,
@@ -1717,6 +1800,30 @@ mod tests {
         // Market never rests; unknown types never pass.
         assert!(!order_well_formed("market", Some(d(1)), Some(d(1)), Some(d(1)), None));
         assert!(!order_well_formed("iceberg", Some(d(1)), Some(d(1)), None, None));
+    }
+
+    #[test]
+    fn roll_validation_pins_sides_and_bounds() {
+        let from = "AAPL260117C00190000";
+        let to_strike = "AAPL260117C00200000";
+        let to_expiry = "AAPL260618C00190000";
+        let other = "MSFT260117C00190000";
+        // Long 5: sell to close, buy to open — strike roll and
+        // calendar roll both valid.
+        assert_eq!(validate_roll(from, to_strike, d(5), d(5)), Ok((false, true)));
+        assert_eq!(validate_roll(from, to_expiry, d(5), d(2)), Ok((false, true)));
+        // Short -5: the mirror.
+        assert_eq!(validate_roll(from, to_strike, d(-5), d(5)), Ok((true, false)));
+        // Different underlying is two trades, not a roll.
+        assert_eq!(
+            validate_roll(from, other, d(5), d(5)),
+            Err("roll must stay on the same underlying")
+        );
+        // Same contract, nothing held, oversize, equity symbols.
+        assert_eq!(validate_roll(from, from, d(5), d(5)), Err("target contract is the same as the source"));
+        assert_eq!(validate_roll(from, to_strike, d(0), d(1)), Err("no position in the source contract"));
+        assert_eq!(validate_roll(from, to_strike, d(5), d(6)), Err("qty exceeds position size"));
+        assert_eq!(validate_roll("AAPL", to_strike, d(5), d(5)), Err("from is not an OCC contract"));
     }
 
     #[test]
