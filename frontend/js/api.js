@@ -892,7 +892,7 @@ export const api = {
     paperAssign: (id, body) => request(`/paper/accounts/${id}/assign`, { method: 'POST', body }),
     paperCorrelations: (id, lookback = 90) => request(`/paper/accounts/${id}/correlations?lookback_days=${lookback}`),
     paperVar: (id, lookback = 365) => request(`/paper/accounts/${id}/var?lookback_days=${lookback}`),
-    paperStress: (id, lookback = 365) => request(`/paper/accounts/${id}/stress?lookback_days=${lookback}`),
+    paperStress: (id, lookback = 365, benchmark) => request(`/paper/accounts/${id}/stress?lookback_days=${lookback}${benchmark ? `&benchmark=${encodeURIComponent(benchmark)}` : ''}`),
     paperEquityHistory: (id, benchmark) => request(`/paper/accounts/${id}/equity-history${benchmark ? `?benchmark=${encodeURIComponent(benchmark)}` : ''}`),
     paperAccountCreate: (name, starting_cash) =>
         request('/paper/accounts/create', { method: 'POST', body: JSON.stringify({ name, starting_cash }) }),

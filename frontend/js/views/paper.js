@@ -336,14 +336,24 @@ export async function renderPaper(mount) {
 
     renderUnrealizedChart(positions, quotes);
     renderNotionalChart(positions, quotes);
+    const benchmarkSym = () => (mount.querySelector('#equity-benchmark')?.value || 'SPY').trim().toUpperCase();
     const loadEquity = () => {
-        const b = (mount.querySelector('#equity-benchmark')?.value || 'SPY').trim().toUpperCase();
-        api.paperEquityHistory(acct.id, b)
+        api.paperEquityHistory(acct.id, benchmarkSym())
             .then(h => { if (viewIsCurrent(tok)) renderEquityCurve(h); })
             .catch(() => {});
     };
+    // Stress shocks scale off the same benchmark's beta — defined
+    // before its first call site in the multi-position block below.
+    const loadStress = () => {
+        api.paperStress(acct.id, 365, benchmarkSym())
+            .then(st => { if (viewIsCurrent(tok)) renderStress(st); })
+            .catch(() => {});
+    };
     loadEquity();
-    mount.querySelector('#equity-benchmark').addEventListener('change', loadEquity);
+    mount.querySelector('#equity-benchmark').addEventListener('change', () => {
+        loadEquity();
+        loadStress();
+    });
     api.paperRecurringList()
         .then(rows => { if (viewIsCurrent(tok)) renderRecurring(mount, rows); })
         .catch(() => {});
@@ -383,9 +393,7 @@ export async function renderPaper(mount) {
         api.paperVar(acct.id)
             .then(v => { if (viewIsCurrent(tok)) renderVar(v); })
             .catch(() => {});
-        api.paperStress(acct.id)
-            .then(st => { if (viewIsCurrent(tok)) renderStress(st); })
-            .catch(() => {});
+        loadStress();
     }
     mount.querySelector('#recur-form').addEventListener('submit', async (e) => {
         e.preventDefault();
