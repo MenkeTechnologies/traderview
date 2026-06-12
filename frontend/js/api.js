@@ -780,6 +780,7 @@ export const api = {
     cryptoPositioning: (body) => request('/crypto/positioning', { method: 'POST', body }),
     cryptoCarryBasis: (body) => request('/crypto/carry-basis', { method: 'POST', body }),
     cryptoVolSurface: (body) => request('/crypto/vol-surface', { method: 'POST', body }),
+    cryptoVrp: (body) => request('/crypto/vrp', { method: 'POST', body }),
     calcFxCarry:             (body) => request('/calc/fx-carry', { method: 'POST', body: JSON.stringify(body) }),
     calcAverageDown:         (body) => request('/calc/average-down', { method: 'POST', body: JSON.stringify(body) }),
     calcLeveragedEtfDecay:   (body) => request('/calc/leveraged-etf-decay', { method: 'POST', body: JSON.stringify(body) }),

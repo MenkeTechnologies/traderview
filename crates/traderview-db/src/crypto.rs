@@ -910,3 +910,103 @@ mod vol_tests {
         assert!(s[0].rr25_pct.is_none());
     }
 }
+
+
+/// Close-to-close annualized realized vol from daily closes (oldest
+/// first), √365 — crypto trades every day, not 252. Sample stdev of
+/// log returns; None under 10 returns (a week of data stated as an
+/// annualized vol is noise wearing units).
+pub fn annualized_realized_vol(closes_oldest_first: &[f64]) -> Option<f64> {
+    if closes_oldest_first.len() < 11 || closes_oldest_first.iter().any(|c| *c <= 0.0) {
+        return None;
+    }
+    let rets: Vec<f64> = closes_oldest_first
+        .windows(2)
+        .map(|w| (w[1] / w[0]).ln())
+        .collect();
+    let n = rets.len() as f64;
+    let mean = rets.iter().sum::<f64>() / n;
+    let var = rets.iter().map(|r| (r - mean).powi(2)).sum::<f64>() / (n - 1.0);
+    Some(var.sqrt() * 365.0_f64.sqrt())
+}
+
+#[derive(Debug, Clone, serde::Serialize)]
+pub struct CryptoVrp {
+    /// 30-day close-to-close realized vol, annualized √365.
+    pub realized_vol_pct: f64,
+    /// Front ATM implied (nearest expiry ≥ 7 days — sub-week ATM IV
+    /// is pin risk and event noise, not a vol level).
+    pub implied_vol_pct: f64,
+    pub implied_expiry: chrono::NaiveDate,
+    pub iv_over_rv: f64,
+    /// Volatility-points spread (IV − RV) — what the seller is paid.
+    pub premium_pct: f64,
+}
+
+/// Live variance-risk-premium read: the venue's option marks vs the
+/// asset's own recent movement. IV/RV > 1 = options rich (the
+/// documented seller edge, on average); < 1 = options cheap.
+pub async fn crypto_vrp(base: &str) -> anyhow::Result<CryptoVrp> {
+    let base_up = base.trim().to_uppercase();
+    if base_up.is_empty() || base_up.len() > 10 || !base_up.bytes().all(|b| b.is_ascii_alphanumeric()) {
+        anyhow::bail!("invalid base asset");
+    }
+    let u_candles =
+        format!("https://www.okx.com/api/v5/market/candles?instId={base_up}-USDT&bar=1D&limit=31");
+    let (candles, surface) = futures_util::join!(okx_json(&u_candles), crypto_vol_surface(&base_up));
+    // Candles arrive NEWEST first: [ts, o, h, l, c, ...].
+    let mut closes: Vec<f64> = candles?
+        .get("data")
+        .and_then(|d| d.as_array())
+        .into_iter()
+        .flatten()
+        .filter_map(|row| row.get(4).and_then(|c| c.as_str()).and_then(|s| s.parse().ok()))
+        .collect();
+    closes.reverse();
+    let realized = annualized_realized_vol(&closes)
+        .ok_or_else(|| anyhow::anyhow!("not enough daily closes for a realized vol"))?;
+    let surface = surface?;
+    let front = surface
+        .iter()
+        .filter(|e| e.days >= 7)
+        .min_by_key(|e| e.days)
+        .ok_or_else(|| anyhow::anyhow!("no option expiry ≥ 7 days out"))?;
+    let implied = front.atm_iv_pct / 100.0;
+    Ok(CryptoVrp {
+        realized_vol_pct: realized * 100.0,
+        implied_vol_pct: front.atm_iv_pct,
+        implied_expiry: front.expiry,
+        iv_over_rv: implied / realized,
+        premium_pct: front.atm_iv_pct - realized * 100.0,
+    })
+}
+
+#[cfg(test)]
+mod vrp_tests {
+    use super::*;
+
+    #[test]
+    fn realized_vol_pins_v365_and_floor() {
+        // Alternating ±1% daily moves: log returns ±ln(1.01)/ln(0.99…)
+        // — compute the expected value directly from the same series
+        // rather than asserting a magic constant.
+        let mut closes = vec![100.0_f64];
+        for i in 0..30 {
+            let last = *closes.last().unwrap();
+            closes.push(if i % 2 == 0 { last * 1.01 } else { last * 0.99 });
+        }
+        let rets: Vec<f64> = closes.windows(2).map(|w| (w[1] / w[0]).ln()).collect();
+        let n = rets.len() as f64;
+        let mean = rets.iter().sum::<f64>() / n;
+        let var = rets.iter().map(|r| (r - mean).powi(2)).sum::<f64>() / (n - 1.0);
+        let expect = var.sqrt() * 365.0_f64.sqrt();
+        let got = annualized_realized_vol(&closes).unwrap();
+        assert!((got - expect).abs() < 1e-12);
+        // ~19% annualized for ±1% dailies at √365 — sanity band, not
+        // a hand-waved constant: 0.01 × √365 ≈ 0.191.
+        assert!((got - 0.191).abs() < 0.01);
+        // Sample-size floor and bad inputs.
+        assert!(annualized_realized_vol(&closes[..10]).is_none());
+        assert!(annualized_realized_vol(&[100.0, 0.0, 100.0]).is_none());
+    }
+}

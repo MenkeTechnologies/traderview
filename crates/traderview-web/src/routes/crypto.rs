@@ -22,6 +22,7 @@ pub fn router() -> Router<AppState> {
         .route("/crypto/positioning", post(positioning))
         .route("/crypto/carry-basis", post(carry_basis))
         .route("/crypto/vol-surface", post(vol_surface))
+        .route("/crypto/vrp", post(vrp))
 }
 
 #[derive(Deserialize)]
@@ -225,6 +226,16 @@ async fn vol_surface(
     Json(b): Json<PositioningBody>,
 ) -> Result<Json<Vec<traderview_db::crypto::VolExpiry>>, ApiError> {
     traderview_db::crypto::crypto_vol_surface(&b.base)
+        .await
+        .map(Json)
+        .map_err(|e| ApiError::BadRequest(e.to_string()))
+}
+
+/// Variance risk premium: front ATM implied vs 30d realized.
+async fn vrp(
+    Json(b): Json<PositioningBody>,
+) -> Result<Json<traderview_db::crypto::CryptoVrp>, ApiError> {
+    traderview_db::crypto::crypto_vrp(&b.base)
         .await
         .map(Json)
         .map_err(|e| ApiError::BadRequest(e.to_string()))

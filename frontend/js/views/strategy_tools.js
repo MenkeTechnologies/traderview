@@ -494,6 +494,32 @@ const TOOLS = {
             5-minute cache; rates settle per interval, not per second. Feed a candidate into
             Funding Arb (live) for the full fee/breakeven ledger.</p>`,
     },
+    'crypto-vrp': {
+        label: 'Crypto VRP',
+        call: (b) => api.cryptoVrp({ base: String(b.base).trim().toUpperCase() }),
+        fields: [
+            { key: 'base', label: 'Base asset (BTC, ETH)', def: 'BTC', text: true },
+        ],
+        render: (r) => `
+            <div class="cards">
+                <div class="card"><div class="label">Implied (front ATM)</div>
+                    <div class="value">${r.implied_vol_pct.toFixed(1)}%</div>
+                    <div class="small muted">${esc(r.implied_expiry)} expiry</div></div>
+                <div class="card"><div class="label">Realized (30d)</div>
+                    <div class="value">${r.realized_vol_pct.toFixed(1)}%</div>
+                    <div class="small muted">close-to-close, √365</div></div>
+                <div class="card"><div class="label">IV / RV</div>
+                    <div class="value ${r.iv_over_rv >= 1 ? 'pos' : 'neg'}">${r.iv_over_rv.toFixed(2)}</div>
+                    <div class="small muted">${r.iv_over_rv >= 1 ? 'options rich — seller edge' : 'options cheap — buyer edge'}</div></div>
+                <div class="card"><div class="label">Premium</div>
+                    <div class="value ${r.premium_pct >= 0 ? 'pos' : 'neg'}">${r.premium_pct.toFixed(1)} pts</div>
+                    <div class="small muted">IV − RV, vol points</div></div>
+            </div>
+            <p class="muted small">The variance risk premium — what option sellers are paid for insuring vol shocks,
+            the most-documented systematic options edge. Implied = nearest expiry ≥ 7 days (sub-week ATM is pin risk
+            and event noise, not a vol level); realized = 30 daily closes annualized at √365 because crypto trades
+            every day, not 252. A ratio near 1 means options are pricing exactly what the asset has been doing.</p>`,
+    },
     'vol-surface': {
         label: 'Crypto Vol Surface',
         call: (b) => api.cryptoVolSurface({ base: String(b.base).trim().toUpperCase() }),
