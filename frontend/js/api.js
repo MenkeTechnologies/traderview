@@ -862,6 +862,8 @@ export const api = {
         request(`/paper/accounts/${id}/drip`, { method: 'POST', body: JSON.stringify({ enabled }) }),
     paperSetCashApy: (id, apy_pct) =>
         request(`/paper/accounts/${id}/cash-apy`, { method: 'POST', body: JSON.stringify({ apy_pct }) }),
+    paperSetBorrowApy: (id, apy_pct) =>
+        request(`/paper/accounts/${id}/borrow-apy`, { method: 'POST', body: JSON.stringify({ apy_pct }) }),
     paperInterest: (id) => request(`/paper/accounts/${id}/interest`),
     paperAttribution: (id) => request(`/paper/accounts/${id}/attribution`),
     paperWashSales: (id) => request(`/paper/accounts/${id}/wash-sales`),

@@ -24,6 +24,23 @@ pub fn interest_accrual(cash: f64, apy_pct: f64, days: i64) -> f64 {
     cash * (apy_pct / 100.0) / 365.0 * days as f64
 }
 
+/// Equity-short entry notional: Σ |qty| × avg_price over SHORT
+/// (negative-qty) non-OCC positions. Options shorts are margin, not
+/// stock borrow — excluded. Borrow is charged on ENTRY notional, not
+/// marked value: the daily pass is deterministic from the positions
+/// table, with no quote dependency to fail mid-sweep. Stated
+/// simplification, not a hidden one.
+pub fn short_borrow_notional(positions: &[(String, Decimal, Decimal)]) -> f64 {
+    use rust_decimal::prelude::ToPrimitive;
+    positions
+        .iter()
+        .filter(|(sym, qty, _)| *qty < Decimal::ZERO && !traderview_core::occ_symbol::is_occ(sym))
+        .map(|(_, qty, avg)| {
+            qty.abs().to_f64().unwrap_or(0.0) * avg.to_f64().unwrap_or(0.0)
+        })
+        .sum()
+}
+
 /// Set the account's sweep APY (0 disables). Bounded to a sane range
 /// — 20% is already beyond any money-market reality.
 pub async fn set_cash_apy(
@@ -46,12 +63,36 @@ pub async fn set_cash_apy(
     Ok(r.rows_affected() > 0)
 }
 
+/// Set the account's short borrow APY (0 disables). 50% covers even
+/// hard-to-borrow names.
+pub async fn set_borrow_apy(
+    pool: &PgPool,
+    user_id: Uuid,
+    account_id: Uuid,
+    apy_pct: Decimal,
+) -> anyhow::Result<bool> {
+    if apy_pct < Decimal::ZERO || apy_pct > Decimal::from(50) {
+        anyhow::bail!("apy_pct must be in 0..=50");
+    }
+    let r = sqlx::query(
+        "UPDATE paper_accounts SET borrow_apy_pct = $3 WHERE id = $1 AND user_id = $2",
+    )
+    .bind(account_id)
+    .bind(user_id)
+    .bind(apy_pct)
+    .execute(pool)
+    .await?;
+    Ok(r.rows_affected() > 0)
+}
+
 #[derive(Debug, serde::Serialize, sqlx::FromRow)]
 pub struct InterestCredit {
     pub credited_on: chrono::NaiveDate,
     pub amount: Decimal,
     pub apy_pct: Decimal,
     pub days: i32,
+    /// 'cash_sweep' (credit) or 'short_borrow' (debit).
+    pub kind: String,
 }
 
 pub async fn list(
@@ -61,7 +102,7 @@ pub async fn list(
     limit: i64,
 ) -> anyhow::Result<Vec<InterestCredit>> {
     Ok(sqlx::query_as(
-        "SELECT i.credited_on, i.amount, i.apy_pct, i.days
+        "SELECT i.credited_on, i.amount, i.apy_pct, i.days, i.kind
            FROM paper_interest i
            JOIN paper_accounts a ON a.id = i.paper_account_id
           WHERE i.paper_account_id = $1 AND a.user_id = $2
@@ -82,18 +123,18 @@ pub async fn list(
 pub async fn tick(pool: &PgPool) -> anyhow::Result<usize> {
     use rust_decimal::prelude::ToPrimitive;
     let today = Utc::now().date_naive();
-    let claimed: Vec<(Uuid, Decimal, Decimal)> = sqlx::query_as(
+    let claimed: Vec<(Uuid, Decimal, Decimal, Decimal)> = sqlx::query_as(
         "UPDATE paper_accounts
             SET last_interest_on = $1
-          WHERE cash_apy_pct > 0 AND cash > 0
+          WHERE (cash_apy_pct > 0 OR borrow_apy_pct > 0)
             AND (last_interest_on IS NULL OR last_interest_on < $1)
-        RETURNING id, cash, cash_apy_pct",
+        RETURNING id, cash, cash_apy_pct, borrow_apy_pct",
     )
     .bind(today)
     .fetch_all(pool)
     .await?;
     let mut credited = 0;
-    for (id, cash, apy) in &claimed {
+    for (id, cash, apy, borrow_apy) in &claimed {
         // Gap days come from the AUDIT trail (last credited_on), not
         // the claim stamp — RETURNING sees the new row, and the audit
         // row is what proves a credit happened. Fresh enablement (no
@@ -112,32 +153,58 @@ pub async fn tick(pool: &PgPool) -> anyhow::Result<usize> {
         if days == 0 {
             continue;
         }
-        let amount = interest_accrual(
+        // Cash sweep credit (zero for non-positive cash or rate).
+        let sweep = interest_accrual(
             cash.to_f64().unwrap_or(0.0),
             apy.to_f64().unwrap_or(0.0),
             days,
         );
-        if amount <= 0.0 {
+        // Short borrow debit on equity-short entry notional.
+        let borrow = if *borrow_apy > Decimal::ZERO {
+            let positions: Vec<(String, Decimal, Decimal)> = sqlx::query_as(
+                "SELECT symbol, qty, avg_price FROM paper_positions
+                  WHERE paper_account_id = $1 AND qty < 0",
+            )
+            .bind(id)
+            .fetch_all(pool)
+            .await?;
+            interest_accrual(
+                short_borrow_notional(&positions),
+                borrow_apy.to_f64().unwrap_or(0.0),
+                days,
+            )
+        } else {
+            0.0
+        };
+        if sweep <= 0.0 && borrow <= 0.0 {
             continue;
         }
-        let amount = Decimal::try_from(amount).unwrap_or_default().round_dp(2);
+        let sweep = Decimal::try_from(sweep).unwrap_or_default().round_dp(2);
+        let borrow = Decimal::try_from(borrow).unwrap_or_default().round_dp(2);
         let mut tx = pool.begin().await?;
         sqlx::query("UPDATE paper_accounts SET cash = cash + $2 WHERE id = $1")
             .bind(id)
-            .bind(amount)
+            .bind(sweep - borrow)
             .execute(&mut *tx)
             .await?;
-        sqlx::query(
-            "INSERT INTO paper_interest (paper_account_id, credited_on, amount, apy_pct, days)
-             VALUES ($1, $2, $3, $4, $5)",
-        )
-        .bind(id)
-        .bind(today)
-        .bind(amount)
-        .bind(apy)
-        .bind(days as i32)
-        .execute(&mut *tx)
-        .await?;
+        if sweep > Decimal::ZERO {
+            sqlx::query(
+                "INSERT INTO paper_interest (paper_account_id, credited_on, amount, apy_pct, days, kind)
+                 VALUES ($1, $2, $3, $4, $5, 'cash_sweep')",
+            )
+            .bind(id).bind(today).bind(sweep).bind(apy).bind(days as i32)
+            .execute(&mut *tx)
+            .await?;
+        }
+        if borrow > Decimal::ZERO {
+            sqlx::query(
+                "INSERT INTO paper_interest (paper_account_id, credited_on, amount, apy_pct, days, kind)
+                 VALUES ($1, $2, $3, $4, $5, 'short_borrow')",
+            )
+            .bind(id).bind(today).bind(-borrow).bind(borrow_apy).bind(days as i32)
+            .execute(&mut *tx)
+            .await?;
+        }
         tx.commit().await?;
         credited += 1;
     }
@@ -161,5 +228,18 @@ mod tests {
         assert_eq!(interest_accrual(100_000.0, 0.0, 1), 0.0);
         assert_eq!(interest_accrual(100_000.0, 5.0, 0), 0.0);
         assert!((interest_accrual(100_000.0, 5.0, 400) - 30.0 * one).abs() < 1e-9);
+    }
+
+    #[test]
+    fn borrow_notional_shorts_only_no_options() {
+        let d = |v: i64| Decimal::from(v);
+        let positions = vec![
+            ("AAPL".to_string(), d(-100), d(150)),            // equity short: 15000
+            ("TSLA".to_string(), d(50), d(200)),              // long: excluded
+            ("AAPL260117C00190000".to_string(), d(-2), d(5)), // OCC short: margin, not borrow
+            ("MSFT".to_string(), d(-10), d(300)),             // equity short: 3000
+        ];
+        assert!((short_borrow_notional(&positions) - 18_000.0).abs() < 1e-9);
+        assert_eq!(short_borrow_notional(&[]), 0.0);
     }
 }

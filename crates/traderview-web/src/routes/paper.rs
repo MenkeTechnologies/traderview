@@ -45,6 +45,7 @@ pub fn router() -> Router<AppState> {
         .route("/paper/recurring/:id/toggle", post(toggle_recurring))
         .route("/paper/accounts/:id/drip", post(set_drip))
         .route("/paper/accounts/:id/cash-apy", post(set_cash_apy))
+        .route("/paper/accounts/:id/borrow-apy", post(set_borrow_apy))
         .route("/paper/accounts/:id/interest", get(interest))
         .route(
             "/paper/recurring/:id",
@@ -777,6 +778,19 @@ async fn interest(
     Path(id): Path<Uuid>,
 ) -> Result<Json<Vec<traderview_db::paper_interest::InterestCredit>>, ApiError> {
     traderview_db::paper_interest::list(&s.pool, user.id, id, 200)
+        .await
+        .map(Json)
+        .map_err(|e| ApiError::BadRequest(e.to_string()))
+}
+
+/// Short borrow APY (0 disables the daily debit on equity shorts).
+async fn set_borrow_apy(
+    State(s): State<AppState>,
+    user: AuthUser,
+    Path(id): Path<Uuid>,
+    Json(b): Json<CashApyBody>,
+) -> Result<Json<bool>, ApiError> {
+    traderview_db::paper_interest::set_borrow_apy(&s.pool, user.id, id, b.apy_pct)
         .await
         .map(Json)
         .map_err(|e| ApiError::BadRequest(e.to_string()))
