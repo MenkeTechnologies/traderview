@@ -172,6 +172,12 @@ fn spawn_paper_twap_ticker(pool: PgPool, hub: crate::realtime::Hub) {
 /// strategies stay silent: the feed is for divergence, not status.
 fn spawn_strategy_drift_watch(pool: PgPool, hub: crate::realtime::Hub) {
     tokio::spawn(async move {
+        // Webhook dedup: notify on ENTERING a bad verdict, not on every
+        // 12h sweep while it persists (the live feed still gets every
+        // event; phones don't). In-memory — a process restart
+        // re-notifies once, which is acceptable at this cadence.
+        let mut last_verdict: std::collections::HashMap<uuid::Uuid, &'static str> =
+            Default::default();
         loop {
             match traderview_db::algo::all_active_strategy_ids(&pool).await {
                 Ok(rows) => {
@@ -193,8 +199,35 @@ fn spawn_strategy_drift_watch(pool: PgPool, hub: crate::realtime::Hub) {
                                     win_rate_z: report.win_rate_z,
                                     live_trades: report.live_trades,
                                 });
+                                // Drift is rare and actionable — worth
+                                // the user's webhooks (Slack/Discord/
+                                // ntfy), unlike chatty gate fires.
+                                let is_new =
+                                    last_verdict.insert(id, report.verdict) != Some(report.verdict);
+                                if !is_new {
+                                    continue;
+                                }
+                                let payload = traderview_db::webhooks::AlertPayload {
+                                    title: format!("Strategy drift: {name}"),
+                                    message: format!(
+                                        "{} — win-rate z {} over {} live trades; live record diverging from backtest",
+                                        report.verdict,
+                                        report
+                                            .win_rate_z
+                                            .map(|z| format!("{z:.2}"))
+                                            .unwrap_or_else(|| "n/a".into()),
+                                        report.live_trades
+                                    ),
+                                    symbol: None,
+                                    kind: "strategy_drift".into(),
+                                    url: None,
+                                    fired_at: chrono::Utc::now(),
+                                };
+                                traderview_db::webhooks::fan_out_all(&pool, user_id, &payload).await;
                             }
-                            Ok(_) => {}
+                            Ok(_) => {
+                                last_verdict.remove(&id);
+                            }
                             Err(e) => {
                                 tracing::warn!(strategy = %name, error = %e, "drift check failed")
                             }
@@ -213,6 +246,8 @@ fn spawn_strategy_drift_watch(pool: PgPool, hub: crate::realtime::Hub) {
 /// drift_threshold_pct. Within-tolerance portfolios stay silent.
 fn spawn_rebalance_drift_watch(pool: PgPool, hub: crate::realtime::Hub) {
     tokio::spawn(async move {
+        // Same transition dedup as the strategy watch.
+        let mut drifted: std::collections::HashSet<uuid::Uuid> = Default::default();
         loop {
             match traderview_db::paper_rebalance::all_target_ids(&pool).await {
                 Ok(rows) => {
@@ -231,8 +266,26 @@ fn spawn_rebalance_drift_watch(pool: PgPool, hub: crate::realtime::Hub) {
                                     max_drift_pct: p.max_drift_pct,
                                     threshold_pct: p.target.drift_threshold_pct,
                                 });
+                                let is_new = drifted.insert(id);
+                                if !is_new {
+                                    continue;
+                                }
+                                let payload = traderview_db::webhooks::AlertPayload {
+                                    title: format!("Rebalance needed: {name}"),
+                                    message: format!(
+                                        "max drift {:.1}% exceeds the {:.1}% tolerance",
+                                        p.max_drift_pct, p.target.drift_threshold_pct
+                                    ),
+                                    symbol: None,
+                                    kind: "rebalance_drift".into(),
+                                    url: None,
+                                    fired_at: chrono::Utc::now(),
+                                };
+                                traderview_db::webhooks::fan_out_all(&pool, user_id, &payload).await;
                             }
-                            Ok(_) => {}
+                            Ok(_) => {
+                                drifted.remove(&id);
+                            }
                             Err(e) => tracing::debug!(
                                 target = %name, error = %e,
                                 "rebalance drift check failed (transient quotes likely)"
