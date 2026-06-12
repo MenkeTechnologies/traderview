@@ -17418,6 +17418,7 @@
   "view.paper.prompt.roll_to": "Roll to OCC contract, e.g. AAPL260618C00200000",
   "view.paper.prompt.withdraw": "Withdraw amount ($)",
   "view.paper.stmt.borrow": "Short borrow fees",
+  "view.paper.stmt.by_class": "— by class",
   "view.paper.stmt.closing": "Closing equity",
   "view.paper.stmt.deposits": "Net deposits",
   "view.paper.stmt.dividends": "Dividends",

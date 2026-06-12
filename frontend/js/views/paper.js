@@ -494,6 +494,7 @@ export async function renderPaper(mount) {
                     <tr><td data-i18n="view.paper.stmt.return">Period return</td><td class="${(s.period_return_pct ?? 0) >= 0 ? 'pos' : 'neg'}">${s.period_return_pct != null ? s.period_return_pct.toFixed(2) + '%' : '—'}</td></tr>
                     <tr><td data-i18n="view.paper.stmt.deposits">Net deposits</td><td>${money(s.net_deposits)}</td></tr>
                     <tr><td data-i18n="view.paper.stmt.realized">Realized P&L (${s.trips_closed} trips)</td><td class="${s.realized_pnl >= 0 ? 'pos' : 'neg'}">${money(s.realized_pnl)}</td></tr>
+                    ${Array.isArray(s.by_class) && s.by_class.length ? `<tr><td class="muted" data-i18n="view.paper.stmt.by_class">— by class</td><td class="muted small">${s.by_class.map(([c, p, n]) => `${esc(c)} ${p >= 0 ? '+' : '−'}$${Math.abs(p).toFixed(2)} (${n})`).join(' · ')}</td></tr>` : ''}
                     <tr><td data-i18n="view.paper.stmt.fills">Fills</td><td>${s.fills}</td></tr>
                     <tr><td data-i18n="view.paper.stmt.fees">Fees & commissions</td><td class="neg">${money(s.fees)}</td></tr>
                     <tr><td data-i18n="view.paper.stmt.dividends">Dividends</td><td class="${s.dividends >= 0 ? 'pos' : 'neg'}">${money(s.dividends)}</td></tr>

@@ -1309,6 +1309,9 @@ pub struct Statement {
     pub interest: f64,
     pub borrow_fees: f64,
     pub margin_interest: f64,
+    /// Realized PnL per asset class within the period — same
+    /// asset_class_of classifier as attribution. Empty with one class.
+    pub by_class: Vec<(String, f64, usize)>,
 }
 
 /// Monthly brokerage-style statement, composed read-only from the
@@ -1441,14 +1444,27 @@ pub async fn statement(
         });
     }
     let (mut realized_pnl, mut trips_closed) = (0.0, 0usize);
-    for fills in by_symbol.values() {
+    let mut class_map: std::collections::BTreeMap<&'static str, (f64, usize)> = Default::default();
+    for (symbol, fills) in &by_symbol {
         for t in traderview_core::live_vs_backtest::round_trips(fills) {
             if t.closed_ts >= start.timestamp() && t.closed_ts < end.timestamp() {
                 realized_pnl += t.pnl;
                 trips_closed += 1;
+                let e = class_map.entry(asset_class_of(symbol)).or_default();
+                e.0 += t.pnl;
+                e.1 += 1;
             }
         }
     }
+    // A one-class split restates the total — omit it.
+    let by_class: Vec<(String, f64, usize)> = if class_map.len() > 1 {
+        class_map
+            .into_iter()
+            .map(|(k, (p, n))| (k.to_string(), p, n))
+            .collect()
+    } else {
+        Vec::new()
+    };
 
     Ok(Statement {
         month: month.to_string(),
@@ -1467,6 +1483,7 @@ pub async fn statement(
         interest,
         borrow_fees,
         margin_interest,
+        by_class,
     })
 }
 
