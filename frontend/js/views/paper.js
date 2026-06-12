@@ -822,6 +822,7 @@ export async function renderPaper(mount) {
                 · breakeven${p.breakevens.length === 1 ? '' : 's'} ${p.breakevens.length ? p.breakevens.map(b => b.toFixed(2)).join(', ') : '—'}
                 · ${req.legs.map(l => `${l.buy ? '+' : '−'}${l.ratio > 1 ? l.ratio + '×' : ''}${l.symbol}`).join(' ')}
                 ${['calendar', 'diagonal'].includes(new FormData(mount.querySelector('#preset-form')).get('preset')) ? `<br><span class="neg">${esc(t('view.paper.warn.calendar_payoff'))}</span>` : ''}`;
+            renderPayoffChart(out, r.payoff);
         } catch (err) {
             out.textContent = err.message || String(err);
         }
@@ -876,6 +877,7 @@ export async function renderPaper(mount) {
                 \u00b7 max profit $${p.max_profit.toFixed(0)} \u00b7 max loss $${p.max_loss.toFixed(0)}
                 \u00b7 breakeven${p.breakevens.length === 1 ? '' : 's'} ${p.breakevens.length ? p.breakevens.map(b => b.toFixed(2)).join(', ') : '\u2014'}
                 \u00b7 legs @ ${r.legs.map(l => l.mid.toFixed(2)).join(' / ')}`;
+            renderPayoffChart(out, r.payoff);
         } catch (err) {
             out.textContent = t('common.error', { err: err.message });
         }
@@ -983,6 +985,28 @@ function holdFmt(secs) {
     if (secs >= 86400) return (secs / 86400).toFixed(1) + 'd';
     if (secs >= 3600) return (secs / 3600).toFixed(1) + 'h';
     return Math.round(secs / 60) + 'm';
+}
+
+// Payoff diagram for a spread preview — the points were always in
+// the response; this just stops ignoring them. Same uPlot pattern as
+// the equity chart.
+function renderPayoffChart(host, payoff) {
+    if (!host || !window.uPlot || !payoff || !Array.isArray(payoff.points) || payoff.points.length < 2) return;
+    const div = document.createElement('div');
+    host.appendChild(div);
+    new window.uPlot({
+        title: '', width: host.clientWidth || 600, height: 160,
+        scales: { x: { time: false } },
+        series: [
+            { label: 'price' },
+            { label: 'P&L at expiry', stroke: '#00e5ff', width: 1.5, points: { show: false }, fill: 'rgba(0,229,255,0.08)' },
+        ],
+        axes: [
+            { stroke: '#aab' },
+            { stroke: '#aab', size: 60 },
+        ],
+        legend: { show: false },
+    }, [payoff.points.map(p => p.price), payoff.points.map(p => p.pnl)], div);
 }
 
 function wireProtectButtons(mount, acctId) {
