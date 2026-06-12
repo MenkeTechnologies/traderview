@@ -226,6 +226,7 @@ async fn make_strategy(pool: &PgPool, user_id: Uuid, broker_mode: &str) -> AlgoS
             sizing: serde_json::json!({"risk_pct_per_trade": 0.01, "max_pos_pct": 0.20}),
             risk_gates: serde_json::json!({"max_concurrent_positions": 5}),
             broker_mode: broker_mode.into(),
+            notes: None,
         },
     )
     .await
@@ -382,6 +383,7 @@ fn engine_refuses_when_position_size_cap_breached() {
                     "max_position_size_usd": 100.0
                 }),
                 broker_mode: "internal_sim".into(),
+                notes: None,
             },
         )
         .await
@@ -449,6 +451,7 @@ fn engine_trips_on_consecutive_losses_cap() {
                     "max_consecutive_losses": 3
                 }),
                 broker_mode: "internal_sim".into(),
+                notes: None,
             },
         )
         .await
@@ -543,6 +546,7 @@ fn engine_trips_on_daily_loss_cap() {
                     "max_daily_loss_usd": 500.0
                 }),
                 broker_mode: "internal_sim".into(),
+                notes: None,
             },
         )
         .await

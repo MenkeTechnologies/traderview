@@ -693,6 +693,7 @@ fn algo_strategy_create_defaults_paper_lock_30d_kill_off() {
                 sizing: serde_json::json!({"risk_pct_per_trade": 0.01}),
                 risk_gates: serde_json::json!({}),
                 broker_mode: "internal_sim".into(),
+                notes: None,
             },
         )
         .await
@@ -733,6 +734,7 @@ fn algo_kill_switch_toggles_and_audits() {
                 sizing: serde_json::json!({}),
                 risk_gates: serde_json::json!({}),
                 broker_mode: "internal_sim".into(),
+                notes: None,
             },
         )
         .await
@@ -798,6 +800,7 @@ fn algo_run_one_open_per_strategy_invariant() {
                 sizing: serde_json::json!({}),
                 risk_gates: serde_json::json!({}),
                 broker_mode: "internal_sim".into(),
+                notes: None,
             },
         )
         .await
@@ -844,6 +847,7 @@ fn algo_order_fill_round_trip() {
                 sizing: serde_json::json!({}),
                 risk_gates: serde_json::json!({}),
                 broker_mode: "internal_sim".into(),
+                notes: None,
             },
         )
         .await
