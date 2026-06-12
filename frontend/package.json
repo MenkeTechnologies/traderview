@@ -11,13 +11,14 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "i18n:extract": "node scripts/i18n_extract.mjs",
-    "i18n:diff":    "node scripts/i18n_extract.mjs --diff",
+    "i18n:diff": "node scripts/i18n_extract.mjs --diff",
     "i18n:migrate": "node scripts/i18n_migrate.mjs && node scripts/i18n_migrate_js.mjs",
     "i18n:migrate:dry": "node scripts/i18n_migrate.mjs --dry-run && node scripts/i18n_migrate_js.mjs --dry-run"
   },
   "devDependencies": {
+    "@vitest/coverage-v8": "^4.1.0",
+    "jsdom": "^29.1.1",
     "vite": "^6.0.0",
-    "vitest": "^4.1.0",
-    "@vitest/coverage-v8": "^4.1.0"
+    "vitest": "^4.1.0"
   }
 }

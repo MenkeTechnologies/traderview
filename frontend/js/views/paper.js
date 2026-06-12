@@ -672,7 +672,7 @@ export async function renderPaper(mount) {
         btn.addEventListener('click', async () => {
             const symbol = btn.dataset.symbol;
             const max = Math.abs(Number(btn.dataset.qty));
-            const c = Number(await tPrompt('view.paper.prompt.assign', {}, { detail: `max ${max}`, defaultValue: String(max) }));
+            const c = Number(await tPrompt('view.paper.prompt.assign', { max }, { defaultValue: String(max) }));
             if (!c || c <= 0) return;
             try {
                 const r = await api.paperAssign(acct.id, { symbol, contracts: c });
@@ -687,7 +687,7 @@ export async function renderPaper(mount) {
         btn.addEventListener('click', async () => {
             const symbol = btn.dataset.symbol;
             const max = Math.abs(Number(btn.dataset.qty));
-            const c = Number(await tPrompt('view.paper.prompt.exercise', {}, { detail: `max ${max}`, defaultValue: String(max) }));
+            const c = Number(await tPrompt('view.paper.prompt.exercise', { max }, { defaultValue: String(max) }));
             if (!c || c <= 0) return;
             try {
                 const r = await api.paperExercise(acct.id, { symbol, contracts: c });

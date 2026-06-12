@@ -37,6 +37,10 @@ describe('validateOptions', () => {
         expect(validateOptions({ defaultValue: 42 })).toMatch(/defaultValue/);
         expect(validateOptions({ placeholder: 42 })).toMatch(/placeholder/);
     });
+    test('detail must be a string', () => {
+        expect(validateOptions({ detail: '1. Main' })).toBeNull();
+        expect(validateOptions({ detail: 42 })).toMatch(/detail/);
+    });
 });
 
 describe('defaultButtons', () => {

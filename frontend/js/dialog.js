@@ -20,6 +20,13 @@ import { esc } from './util.js';
 
 let _installed = false;
 
+// Close fn of the currently-open dialog, if any. A second showDialog
+// while one is open would otherwise clobber root.innerHTML, leaving the
+// first dialog's promise unresolved and its capture-phase keydown
+// listener orphaned on document — Enter later resolves the stale promise
+// and wipes the live dialog.
+let _activeClose = null;
+
 export function installDialog() {
     if (_installed) return;
     _installed = true;
@@ -52,6 +59,9 @@ function showDialog(kind, messageKey, params, opts) {
         ensureMount();
         const root = document.getElementById('tv-dialog-root');
         if (!root) { resolve(kind === 'confirm' ? false : null); return; }
+        // Dismiss any dialog already open (resolves it as cancelled and
+        // detaches its listeners) before rendering this one.
+        if (_activeClose) _activeClose(undefined, true);
         const level = opts.level || (kind === 'confirm' ? 'info' : 'info');
         const defaults = defaultButtons(kind, level);
         const confirmKey = opts.confirmKey || defaults.confirmKey;
@@ -95,11 +105,13 @@ function showDialog(kind, messageKey, params, opts) {
         const confirmBtn = root.querySelector('.tv-dialog-confirm');
         const cancelBtn  = root.querySelector('.tv-dialog-cancel');
 
-        const close = (result) => {
+        const close = (result, displaced = false) => {
             document.removeEventListener('keydown', onKey, true);
-            root.innerHTML = '';
-            resolve(result);
+            if (_activeClose === close) _activeClose = null;
+            if (!displaced) root.innerHTML = '';
+            resolve(displaced ? (kind === 'confirm' ? false : null) : result);
         };
+        _activeClose = close;
         const confirmAction = () => {
             if (kind === 'prompt') {
                 const raw = input ? input.value : '';
