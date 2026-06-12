@@ -34,6 +34,7 @@ pub fn router() -> Router<AppState> {
         .route("/paper/accounts/:id/protect", post(protect))
         .route("/paper/accounts/:id/roll", post(roll))
         .route("/paper/accounts/:id/covered-call", post(covered_call))
+        .route("/paper/accounts/:id/exercise", post(exercise))
         .route("/paper/accounts/:id/spreads", post(submit_spread))
         .route("/paper/accounts/:id/option-greeks", get(option_greeks))
         .route("/paper/spreads/preview", post(preview_spread))
@@ -967,6 +968,26 @@ async fn covered_call(
     Json(b): Json<CoveredCallBody>,
 ) -> Result<Json<traderview_db::paper::CoveredCallResult>, ApiError> {
     traderview_db::paper::covered_call(&s.pool, user.id, account_id, &b.call, b.contracts)
+        .await
+        .map(Json)
+        .map_err(|e| ApiError::BadRequest(e.to_string()))
+}
+
+#[derive(Deserialize)]
+struct ExerciseBody {
+    symbol: String,
+    contracts: Decimal,
+}
+
+/// Early-exercise a long American option: option closes at $0
+/// (premium burn realized), shares land at strike.
+async fn exercise(
+    State(s): State<AppState>,
+    user: AuthUser,
+    Path(account_id): Path<Uuid>,
+    Json(b): Json<ExerciseBody>,
+) -> Result<Json<traderview_db::paper::ExerciseResult>, ApiError> {
+    traderview_db::paper::exercise(&s.pool, user.id, account_id, &b.symbol, b.contracts)
         .await
         .map(Json)
         .map_err(|e| ApiError::BadRequest(e.to_string()))

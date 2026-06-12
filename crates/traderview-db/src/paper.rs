@@ -1850,6 +1850,127 @@ pub async fn option_greeks(
 /// filled order row left as the audit trail. Idempotent: a settled
 /// position is gone, so the next pass finds nothing. Returns
 /// positions settled.
+/// Early-exercise sanity, pure: only LONG positions exercise (a
+/// short is assigned, not exercised — that right belongs to the
+/// other side), contracts bounded by the holding, contract not yet
+/// expired (expiry settlement owns that). Returns the share delta
+/// per the right: a call BUYS 100/contract at strike, a put SELLS
+/// (possibly opening a short — buying power judges that downstream).
+pub fn validate_exercise(
+    occ: &traderview_core::occ_symbol::OccContract,
+    pos_qty: Decimal,
+    contracts: Decimal,
+    today: chrono::NaiveDate,
+) -> Result<Side, &'static str> {
+    if pos_qty <= Decimal::ZERO {
+        return Err("only long option positions can be exercised");
+    }
+    if contracts <= Decimal::ZERO || contracts > pos_qty {
+        return Err("contracts must be positive and within the holding");
+    }
+    if occ.expiry < today {
+        return Err("contract expired — expiry settlement handles it");
+    }
+    Ok(if occ.call { Side::Buy } else { Side::Sell })
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct ExerciseResult {
+    pub option_order: PaperOrder,
+    pub stock_order: PaperOrder,
+    /// Premium realized as a LOSS on the option close (it closes at
+    /// $0 — the option is consumed; its value moves into the share
+    /// basis at strike, so total economics are exact).
+    pub shares: Decimal,
+    pub strike: f64,
+}
+
+/// Exercise a long American option early: the option closes at $0
+/// (premium burn realized — the value is delivered as shares at
+/// strike, not as option proceeds) and the shares land at STRIKE:
+/// calls buy 100/contract, puts sell 100/contract (possibly opening
+/// a short). One transaction; OTM exercise is allowed — it's the
+/// holder's right and occasionally rational around dividends — but
+/// the order note states the intrinsic so the history shows what it
+/// was worth.
+pub async fn exercise(
+    pool: &PgPool,
+    user_id: Uuid,
+    account_id: Uuid,
+    symbol: &str,
+    contracts: Decimal,
+) -> anyhow::Result<ExerciseResult> {
+    let owner: Option<(Uuid,)> = sqlx::query_as("SELECT user_id FROM paper_accounts WHERE id = $1")
+        .bind(account_id)
+        .fetch_optional(pool)
+        .await?;
+    if !matches!(owner, Some((u,)) if u == user_id) {
+        anyhow::bail!("forbidden");
+    }
+    let symbol = symbol.trim().to_uppercase();
+    let occ = traderview_core::occ_symbol::parse(&symbol)
+        .ok_or_else(|| anyhow::anyhow!("not an OCC option symbol"))?;
+    let pos: Option<(Decimal,)> = sqlx::query_as(
+        "SELECT qty FROM paper_positions WHERE paper_account_id = $1 AND symbol = $2",
+    )
+    .bind(account_id)
+    .bind(&symbol)
+    .fetch_optional(pool)
+    .await?;
+    let pos_qty = pos.map(|(q,)| q).unwrap_or(Decimal::ZERO);
+    let today = Utc::now().date_naive();
+    let stock_side = validate_exercise(&occ, pos_qty, contracts, today)
+        .map_err(|e| anyhow::anyhow!(e))?;
+    // Intrinsic for the audit note (exercise itself prices at strike).
+    let intrinsic = match crate::market_data::quote(pool, &occ.underlying).await {
+        Ok(q) => traderview_core::occ_symbol::intrinsic(occ.call, occ.strike, q.price),
+        Err(_) => 0.0,
+    };
+    let shares = contracts * Decimal::from(100);
+    let strike = Decimal::try_from(occ.strike)?;
+    let note = format!("early exercise (intrinsic ${intrinsic:.2}/sh)");
+
+    let mut tx = pool.begin().await?;
+    let group = Uuid::new_v4();
+    let option_order = insert_leg(
+        &mut tx, account_id, &symbol, "sell", contracts,
+        "market", None, None, "filled", group, None, None, None, None,
+    )
+    .await?;
+    sqlx::query(
+        "UPDATE paper_orders SET filled_price = 0, filled_qty = qty, filled_at = now(),
+                plan_note = $2 WHERE id = $1",
+    )
+    .bind(option_order.id)
+    .bind(&note)
+    .execute(&mut *tx)
+    .await?;
+    apply_fill(&mut tx, account_id, &symbol, Side::Sell, contracts, Decimal::ZERO, Decimal::from(100)).await?;
+
+    let stock_side_str = match stock_side {
+        Side::Buy => "buy",
+        _ => "sell",
+    };
+    let stock_order = insert_leg(
+        &mut tx, account_id, &occ.underlying, stock_side_str, shares,
+        "market", None, None, "filled", group, None, None, None, None,
+    )
+    .await?;
+    sqlx::query(
+        "UPDATE paper_orders SET filled_price = $2, filled_qty = qty, filled_at = now(),
+                plan_note = $3 WHERE id = $1",
+    )
+    .bind(stock_order.id)
+    .bind(strike)
+    .bind(&note)
+    .execute(&mut *tx)
+    .await?;
+    apply_fill(&mut tx, account_id, &occ.underlying, stock_side, shares, strike, Decimal::ONE).await?;
+    tx.commit().await?;
+
+    Ok(ExerciseResult { option_order, stock_order, shares, strike: occ.strike })
+}
+
 pub async fn settle_expired_options(pool: &PgPool) -> anyhow::Result<usize> {
     let positions: Vec<(Uuid, String, Decimal)> = sqlx::query_as(
         "SELECT paper_account_id, symbol, qty FROM paper_positions",
@@ -2283,6 +2404,39 @@ mod tests {
             bracket_entry_hint("trailing", None, None),
             Err("entry_type must be market, limit, stop, or stop_limit")
         );
+    }
+
+    #[test]
+    fn exercise_validation_pins() {
+        // 2027 expiries — "today" below is mid-2026 and the first
+        // version of this test used Jan-2026 contracts that were
+        // ALREADY EXPIRED relative to its own clock (the validator
+        // caught the fixture, not the reverse).
+        let occ = traderview_core::occ_symbol::parse("AAPL270115C00190000").unwrap();
+        let put = traderview_core::occ_symbol::parse("AAPL270115P00190000").unwrap();
+        let today = chrono::NaiveDate::from_ymd_opt(2026, 6, 12).unwrap();
+        // Long call exercises into a BUY at strike; long put into a SELL.
+        assert_eq!(validate_exercise(&occ, d(5), d(2), today), Ok(Side::Buy));
+        assert_eq!(validate_exercise(&put, d(5), d(5), today), Ok(Side::Sell));
+        // Shorts are assigned, not exercised; over-holding rejects.
+        assert_eq!(
+            validate_exercise(&occ, d(-5), d(1), today),
+            Err("only long option positions can be exercised")
+        );
+        assert_eq!(
+            validate_exercise(&occ, d(5), d(6), today),
+            Err("contracts must be positive and within the holding")
+        );
+        // Expired contracts belong to expiry settlement.
+        let late = chrono::NaiveDate::from_ymd_opt(2027, 1, 16).unwrap();
+        assert_eq!(
+            validate_exercise(&occ, d(5), d(1), late),
+            Err("contract expired — expiry settlement handles it")
+        );
+        // Expiry DAY itself still exercises (American right runs
+        // through the close).
+        let on_expiry = chrono::NaiveDate::from_ymd_opt(2027, 1, 15).unwrap();
+        assert_eq!(validate_exercise(&occ, d(5), d(1), on_expiry), Ok(Side::Buy));
     }
 
     #[test]

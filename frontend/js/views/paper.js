@@ -214,7 +214,7 @@ export async function renderPaper(mount) {
                             <td>${last != null ? fmt(last) : '—'}</td>
                             <td class="${cls}">${u != null ? (u >= 0 ? '+' : '') + '$' + fmt(u) : '—'}</td>
                             <td class="${Number(p.realized_pnl) >= 0 ? 'pos' : 'neg'}">$${fmt(p.realized_pnl)}</td>
-                            <td><button class="small flat-btn" data-symbol="${esc(p.symbol)}" data-qty="${esc(p.qty)}" data-i18n="view.paper.btn.flatten" data-tip="view.paper.tip.flatten">FLAT</button> <button class="small protect-btn" data-symbol="${esc(p.symbol)}" data-qty="${esc(p.qty)}" data-i18n="view.paper.btn.protect" data-tip="view.paper.tip.protect">OCO</button>${p.symbol.length > 15 ? ` <button class="small roll-btn" data-symbol="${esc(p.symbol)}" data-qty="${esc(p.qty)}" data-i18n="view.paper.btn.roll" data-tip="view.paper.tip.roll">ROLL</button>` : ''}</td>
+                            <td><button class="small flat-btn" data-symbol="${esc(p.symbol)}" data-qty="${esc(p.qty)}" data-i18n="view.paper.btn.flatten" data-tip="view.paper.tip.flatten">FLAT</button> <button class="small protect-btn" data-symbol="${esc(p.symbol)}" data-qty="${esc(p.qty)}" data-i18n="view.paper.btn.protect" data-tip="view.paper.tip.protect">OCO</button>${p.symbol.length > 15 ? ` <button class="small roll-btn" data-symbol="${esc(p.symbol)}" data-qty="${esc(p.qty)}" data-i18n="view.paper.btn.roll" data-tip="view.paper.tip.roll">ROLL</button>${Number(p.qty) > 0 ? ` <button class="small exercise-btn" data-symbol="${esc(p.symbol)}" data-qty="${esc(p.qty)}" data-i18n="view.paper.btn.exercise" data-tip="view.paper.tip.exercise">EXER</button>` : ''}` : ''}</td>
                         </tr>`;
                     }).join('')}</tbody></table>` : '<p data-i18n="view.paper.hint.no_open_positions" class="muted">No open positions.</p>'}
             </div>
@@ -496,6 +496,21 @@ export async function renderPaper(mount) {
         }
     });
     wireProtectButtons(mount, acct.id);
+    mount.querySelectorAll('.exercise-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+            const symbol = btn.dataset.symbol;
+            const max = Math.abs(Number(btn.dataset.qty));
+            const c = Number(prompt(`${t('view.paper.prompt.exercise')} (max ${max})`, String(max)));
+            if (!c || c <= 0) return;
+            try {
+                const r = await api.paperExercise(acct.id, { symbol, contracts: c });
+                showToast(t('view.paper.toast.exercised', { shares: r.shares, strike: r.strike }), { level: 'success' });
+                renderPaper(mount);
+            } catch (err) {
+                showToast(t('common.error', { err: err.message }), { level: 'error' });
+            }
+        });
+    });
     mount.querySelectorAll('.roll-btn').forEach(btn => {
         btn.addEventListener('click', async () => {
             const from = btn.dataset.symbol;
