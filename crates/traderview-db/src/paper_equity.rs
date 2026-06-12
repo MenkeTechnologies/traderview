@@ -1459,3 +1459,108 @@ mod statement_tests {
         assert!(month_bounds("2026").is_none());
     }
 }
+
+
+#[derive(Debug, serde::Serialize)]
+pub struct HoldingLeg {
+    pub account: String,
+    pub qty: f64,
+    pub avg_price: f64,
+}
+
+#[derive(Debug, serde::Serialize)]
+pub struct ConsolidatedHolding {
+    pub symbol: String,
+    /// Net across accounts — a long here and a short there offset.
+    pub net_qty: f64,
+    /// Qty-weighted average entry. None when account legs have MIXED
+    /// signs: averaging a long's basis with a short's is meaningless,
+    /// and the net is a synthetic position nobody entered at any
+    /// price. The legs are right there for the real numbers.
+    pub weighted_avg_price: Option<f64>,
+    pub legs: Vec<HoldingLeg>,
+}
+
+/// Pure consolidation of (symbol, account, qty, avg) rows.
+pub fn consolidate(rows: &[(String, String, f64, f64)]) -> Vec<ConsolidatedHolding> {
+    let mut by_symbol: std::collections::BTreeMap<&str, Vec<&(String, String, f64, f64)>> =
+        Default::default();
+    for r in rows {
+        by_symbol.entry(r.0.as_str()).or_default().push(r);
+    }
+    by_symbol
+        .into_iter()
+        .map(|(symbol, legs)| {
+            let net_qty: f64 = legs.iter().map(|l| l.2).sum();
+            let mixed = legs.iter().any(|l| l.2 > 0.0) && legs.iter().any(|l| l.2 < 0.0);
+            let weighted_avg_price = (!mixed && net_qty != 0.0).then(|| {
+                legs.iter().map(|l| l.2 * l.3).sum::<f64>() / net_qty
+            });
+            ConsolidatedHolding {
+                symbol: symbol.to_string(),
+                net_qty,
+                weighted_avg_price,
+                legs: legs
+                    .iter()
+                    .map(|l| HoldingLeg { account: l.1.clone(), qty: l.2, avg_price: l.3 })
+                    .collect(),
+            }
+        })
+        .collect()
+}
+
+/// Every symbol across ALL the user's paper accounts — the household
+/// view the one-account-per-strategy layout otherwise hides.
+pub async fn consolidated_holdings(
+    pool: &PgPool,
+    user_id: Uuid,
+) -> anyhow::Result<Vec<ConsolidatedHolding>> {
+    use rust_decimal::prelude::ToPrimitive;
+    let rows: Vec<(String, String, Decimal, Decimal)> = sqlx::query_as(
+        "SELECT p.symbol, a.name, p.qty, p.avg_price
+           FROM paper_positions p
+           JOIN paper_accounts a ON a.id = p.paper_account_id
+          WHERE a.user_id = $1
+          ORDER BY p.symbol, a.created_at",
+    )
+    .bind(user_id)
+    .fetch_all(pool)
+    .await?;
+    let plain: Vec<(String, String, f64, f64)> = rows
+        .into_iter()
+        .map(|(s, a, q, p)| (s, a, q.to_f64().unwrap_or(0.0), p.to_f64().unwrap_or(0.0)))
+        .collect();
+    Ok(consolidate(&plain))
+}
+
+#[cfg(test)]
+mod holdings_tests {
+    use super::*;
+
+    #[test]
+    fn consolidation_weights_and_mixed_sign_honesty() {
+        let rows = vec![
+            ("AAPL".into(), "momo".into(), 100.0, 150.0),
+            ("AAPL".into(), "value".into(), 50.0, 120.0),
+            ("TSLA".into(), "momo".into(), 100.0, 200.0),
+            ("TSLA".into(), "hedge".into(), -40.0, 210.0),
+            ("NVDA".into(), "a".into(), 10.0, 500.0),
+            ("NVDA".into(), "b".into(), -10.0, 480.0),
+        ];
+        let out = consolidate(&rows);
+        assert_eq!(out.len(), 3); // BTreeMap: AAPL, NVDA, TSLA
+        let aapl = &out[0];
+        assert_eq!(aapl.net_qty, 150.0);
+        // (100×150 + 50×120) / 150 = 140.
+        assert!((aapl.weighted_avg_price.unwrap() - 140.0).abs() < 1e-9);
+        assert_eq!(aapl.legs.len(), 2);
+        // Mixed signs: net stated, average refused — a long's basis
+        // averaged with a short's is meaningless.
+        let nvda = &out[1];
+        assert_eq!(nvda.net_qty, 0.0);
+        assert!(nvda.weighted_avg_price.is_none());
+        let tsla = &out[2];
+        assert_eq!(tsla.net_qty, 60.0);
+        assert!(tsla.weighted_avg_price.is_none());
+    }
+}

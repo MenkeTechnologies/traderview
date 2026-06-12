@@ -259,6 +259,10 @@ export async function renderPaper(mount) {
 
         ${accounts.length > 1 ? `
         <div class="chart-panel">
+            <h2 data-i18n="view.paper.h2.holdings">Consolidated holdings</h2>
+            <div id="paper-holdings" class="muted small"></div>
+        </div>
+        <div class="chart-panel">
             <h2 data-i18n="view.paper.h2.leaderboard">Strategy leaderboard</h2>
             <div id="paper-leaderboard"></div>
         </div>` : ''}
@@ -321,6 +325,11 @@ export async function renderPaper(mount) {
     api.paperAttribution(acct.id)
         .then(a => { if (viewIsCurrent(tok)) renderAttribution(a); })
         .catch(() => {});
+    if (accounts.length > 1) {
+        api.paperHoldings()
+            .then(h => { if (viewIsCurrent(tok)) renderHoldings(h); })
+            .catch(() => {});
+    }
     api.paperWashSales(acct.id)
         .then(w => { if (viewIsCurrent(tok)) renderWashSales(w); })
         .catch(() => {});
@@ -858,6 +867,30 @@ function wireProtectButtons(mount, acctId) {
             }
         });
     });
+}
+
+function renderHoldings(rows) {
+    const el = document.getElementById('paper-holdings');
+    if (!el) return;
+    if (!Array.isArray(rows) || !rows.length) {
+        el.innerHTML = `<p class="muted" data-i18n="view.paper.empty.holdings">${esc(t('view.paper.empty.holdings'))}</p>`;
+        return;
+    }
+    el.innerHTML = `
+        <table class="data-table small"><thead><tr>
+            <th data-i18n="view.paper.holdings.symbol">Symbol</th>
+            <th data-i18n="view.paper.holdings.net">Net qty</th>
+            <th data-i18n="view.paper.holdings.avg">Wtd avg</th>
+            <th data-i18n="view.paper.holdings.legs">Accounts</th>
+        </tr></thead><tbody>
+        ${rows.map(h => `<tr>
+            <td><a href="#research/${encodeURIComponent(h.symbol)}">${esc(h.symbol)}</a></td>
+            <td class="${h.net_qty >= 0 ? '' : 'neg'}">${fmt(h.net_qty, 0)}</td>
+            <td>${h.weighted_avg_price != null ? fmt(h.weighted_avg_price) : '—'}</td>
+            <td class="muted">${h.legs.map(l => `${esc(l.account)}: ${fmt(l.qty, 0)} @ ${fmt(l.avg_price)}`).join(' · ')}</td>
+        </tr>`).join('')}
+        </tbody></table>
+        <p class="muted small" data-i18n="view.paper.hint.holdings">Every symbol across all paper accounts. Wtd avg is — when account legs have mixed signs: averaging a long’s basis with a short’s is meaningless, and the net is a synthetic position nobody entered at any price — the per-account legs carry the real numbers.</p>`;
 }
 
 function renderWashSales(rows) {

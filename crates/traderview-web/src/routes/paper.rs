@@ -64,6 +64,7 @@ pub fn router() -> Router<AppState> {
         .route("/paper/accounts/:id/stress", get(stress))
         .route("/digest/prefs", get(get_digest_prefs).post(set_digest_prefs))
         .route("/paper/accounts/comparison", get(account_comparison))
+        .route("/paper/holdings", get(holdings))
         .route("/paper/accounts/create", post(create_account))
         .route("/paper/accounts/:id/rename", post(rename_account))
         .route("/paper/accounts/:id/delete", post(delete_account))
@@ -849,4 +850,15 @@ async fn cash_flows(
         .await
         .map(Json)
         .map_err(|e| ApiError::BadRequest(e.to_string()))
+}
+
+/// Consolidated holdings across every paper account — the household view.
+async fn holdings(
+    State(s): State<AppState>,
+    user: AuthUser,
+) -> Result<Json<Vec<traderview_db::paper_equity::ConsolidatedHolding>>, ApiError> {
+    traderview_db::paper_equity::consolidated_holdings(&s.pool, user.id)
+        .await
+        .map(Json)
+        .map_err(ApiError::Internal)
 }
