@@ -143,7 +143,18 @@ pub async fn snapshot_all(pool: &PgPool) -> anyhow::Result<usize> {
         let mut all_marked = true;
         for (symbol, qty) in &positions {
             // Option positions mark at the chain mid x 100 multiplier;
-            // equities at the cached quote.
+            // crypto pairs at the venue spot (5s cache); equities at
+            // the cached quote.
+            if crate::crypto::is_crypto_pair(symbol) {
+                match crate::crypto::spot_quote_cached(symbol).await {
+                    Ok(p) => match Decimal::try_from(p) {
+                        Ok(v) => position_value += v * qty,
+                        Err(_) => all_marked = false,
+                    },
+                    Err(_) => all_marked = false,
+                }
+                continue;
+            }
             if let Some(occ) = traderview_core::occ_symbol::parse(symbol) {
                 match crate::paper::option_quote(&occ).await {
                     Ok(Some(p)) => match Decimal::try_from(p * 100.0) {
@@ -1676,7 +1687,12 @@ pub async fn margin_calls(pool: &PgPool, headroom: f64) -> anyhow::Result<Vec<Ma
         let mut all_marked = true;
         let mut legs: Vec<(String, f64, f64)> = Vec::new();
         for (symbol, qty) in &positions {
-            let mark = if let Some(occ) = traderview_core::occ_symbol::parse(symbol) {
+            let mark = if crate::crypto::is_crypto_pair(symbol) {
+                crate::crypto::spot_quote_cached(symbol)
+                    .await
+                    .ok()
+                    .and_then(|p| Decimal::try_from(p).ok())
+            } else if let Some(occ) = traderview_core::occ_symbol::parse(symbol) {
                 match crate::paper::option_quote(&occ).await {
                     Ok(Some(p)) => Decimal::try_from(p * 100.0).ok(),
                     _ => None,

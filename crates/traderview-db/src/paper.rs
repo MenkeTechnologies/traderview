@@ -590,6 +590,12 @@ pub async fn submit(
         Some(p) if rq.is_option => {
             (Some(p), OPTION_COMMISSION_PER_CONTRACT * req.qty.to_string().parse::<f64>().unwrap_or(0.0))
         }
+        Some(p) if rq.is_crypto => {
+            // Taker fee on notional; the price itself is unadjusted —
+            // the fee IS crypto's friction model.
+            let notional = (p * req.qty).to_string().parse::<f64>().unwrap_or(0.0);
+            (Some(p), notional * CRYPTO_TAKER_FEE_PCT / 100.0)
+        }
         Some(p) => {
             let (adjusted, fee) = frictioned_fill(p, req.qty, req.side);
             (Some(adjusted), fee)
@@ -796,7 +802,13 @@ pub async fn check_pending(pool: &PgPool) -> anyhow::Result<Vec<BackgroundFill>>
         // order keeps resting and the next pass retries. EXPIRED option
         // contracts are not transient: cancel them with the reason.
         let occ = traderview_core::occ_symbol::parse(&o.symbol);
-        let (last, multiplier, is_option) = if let Some(occ) = &occ {
+        let (last, multiplier, is_option) = if crate::crypto::is_crypto_pair(&o.symbol) {
+            let Ok(p) = crate::crypto::spot_quote_cached(&o.symbol).await else {
+                continue; // transient venue failure — keep resting
+            };
+            let Ok(p) = Decimal::try_from(p) else { continue };
+            (p, Decimal::ONE, false)
+        } else if let Some(occ) = &occ {
             if occ.expiry < Utc::now().date_naive() {
                 sqlx::query(
                     "UPDATE paper_orders
@@ -890,6 +902,9 @@ pub async fn check_pending(pool: &PgPool) -> anyhow::Result<Vec<BackgroundFill>>
         };
         let (adjusted, fee) = if is_option {
             (p, OPTION_COMMISSION_PER_CONTRACT * o.qty.to_string().parse::<f64>().unwrap_or(0.0))
+        } else if crate::crypto::is_crypto_pair(&o.symbol) {
+            let notional = (p * o.qty).to_string().parse::<f64>().unwrap_or(0.0);
+            (p, notional * CRYPTO_TAKER_FEE_PCT / 100.0)
         } else {
             frictioned_fill(p, o.qty, side)
         };
@@ -2148,13 +2163,31 @@ struct ResolvedQuote {
     last: Decimal,
     multiplier: Decimal,
     is_option: bool,
+    is_crypto: bool,
 }
 
 /// Quote + contract economics for any tradeable symbol: equities from
 /// the cached quote at 1x; OCC options from the chain mid at 100x.
 /// Expired contracts and quoteless options are hard errors here (the
 /// SUBMIT path); the ticker treats those cases as cancel/keep-resting.
+/// Crypto taker fee, percent of notional — the taker fee IS the
+/// friction model for crypto (no per-share slippage tier, no SEC fee).
+pub const CRYPTO_TAKER_FEE_PCT: f64 = 0.1;
+
 async fn resolve_quote(pool: &PgPool, symbol: &str) -> anyhow::Result<ResolvedQuote> {
+    if traderview_core::occ_symbol::is_occ(symbol) {
+        // handled below
+    } else if crate::crypto::is_crypto_pair(symbol) {
+        // Crypto spot: live venue last with the 5s cache; fractional
+        // qty is native here.
+        let p = crate::crypto::spot_quote_cached(symbol).await?;
+        return Ok(ResolvedQuote {
+            last: Decimal::try_from(p)?,
+            multiplier: Decimal::ONE,
+            is_option: false,
+            is_crypto: true,
+        });
+    }
     if let Some(occ) = traderview_core::occ_symbol::parse(symbol) {
         if occ.expiry < Utc::now().date_naive() {
             anyhow::bail!("contract expired {}", occ.expiry);
@@ -2166,6 +2199,7 @@ async fn resolve_quote(pool: &PgPool, symbol: &str) -> anyhow::Result<ResolvedQu
             last: Decimal::try_from(p)?,
             multiplier: Decimal::from(100),
             is_option: true,
+            is_crypto: false,
         })
     } else {
         let q = crate::market_data::quote(pool, symbol).await?;
@@ -2173,6 +2207,7 @@ async fn resolve_quote(pool: &PgPool, symbol: &str) -> anyhow::Result<ResolvedQu
             last: Decimal::try_from(q.price)?,
             multiplier: Decimal::ONE,
             is_option: false,
+            is_crypto: false,
         })
     }
 }

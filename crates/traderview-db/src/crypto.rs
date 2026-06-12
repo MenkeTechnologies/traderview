@@ -1010,3 +1010,59 @@ mod vrp_tests {
         assert!(annualized_realized_vol(&[100.0, 0.0, 100.0]).is_none());
     }
 }
+
+
+/// Is this a crypto spot pair the paper engine can quote? Strictly
+/// BASE-USDT / BASE-USD, uppercase alphanumeric base 2..=10 — narrow
+/// on purpose: equities can't collide with the dash form, and OCC
+/// symbols have no dash.
+pub fn is_crypto_pair(symbol: &str) -> bool {
+    let Some((base, quote)) = symbol.split_once('-') else {
+        return false;
+    };
+    matches!(quote, "USDT" | "USD")
+        && (2..=10).contains(&base.len())
+        && base.bytes().all(|b| b.is_ascii_uppercase() || b.is_ascii_digit())
+}
+
+/// Spot last with a 5s in-process cache — the paper engine's resting-
+/// order ticker re-quotes every 5s per order, and hammering the venue
+/// once per order per tick for the same instId is rude and slow.
+pub async fn spot_quote_cached(symbol: &str) -> anyhow::Result<f64> {
+    use std::time::{Duration, Instant};
+    static CACHE: once_cell::sync::Lazy<tokio::sync::Mutex<std::collections::HashMap<String, (Instant, f64)>>> =
+        once_cell::sync::Lazy::new(|| tokio::sync::Mutex::new(Default::default()));
+    {
+        let g = CACHE.lock().await;
+        if let Some((t, p)) = g.get(symbol) {
+            if t.elapsed() < Duration::from_secs(5) {
+                return Ok(*p);
+            }
+        }
+    }
+    let u = format!("https://www.okx.com/api/v5/market/ticker?instId={symbol}");
+    let p = okx_f64(&okx_json(&u).await?, &["data", "0", "last"])
+        .filter(|p| *p > 0.0)
+        .ok_or_else(|| anyhow::anyhow!("no spot quote for {symbol}"))?;
+    CACHE.lock().await.insert(symbol.to_string(), (Instant::now(), p));
+    Ok(p)
+}
+
+#[cfg(test)]
+mod pair_tests {
+    use super::*;
+
+    #[test]
+    fn crypto_pair_detection_is_narrow() {
+        assert!(is_crypto_pair("BTC-USDT"));
+        assert!(is_crypto_pair("ETH-USD"));
+        assert!(is_crypto_pair("1INCH-USDT"));
+        // Equities, OCC, perps, lowercase, weird quotes: all out.
+        assert!(!is_crypto_pair("AAPL"));
+        assert!(!is_crypto_pair("AAPL270115C00190000"));
+        assert!(!is_crypto_pair("BTC-USDT-SWAP"));
+        assert!(!is_crypto_pair("btc-usdt"));
+        assert!(!is_crypto_pair("BTC-EUR"));
+        assert!(!is_crypto_pair("B-USD"));
+    }
+}
