@@ -867,6 +867,7 @@ fn algo_order_fill_round_trip() {
                 limit_price: None,
                 stop_price: None,
                 raw_request: Some(serde_json::json!({"src": "test"})),
+                kind: "entry".into(),
             },
         )
         .await
