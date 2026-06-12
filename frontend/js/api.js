@@ -882,6 +882,8 @@ export const api = {
     paperCashFlows: (id) => request(`/paper/accounts/${id}/cash-flows`),
     paperTransfer: (from, to, amount) =>
         request('/paper/transfers', { method: 'POST', body: JSON.stringify({ from, to, amount }) }),
+    paperTransferPosition: (from, to, symbol, qty) =>
+        request('/paper/transfers/position', { method: 'POST', body: JSON.stringify({ from, to, symbol, qty }) }),
     paperCashFlow: (id, amount, note) =>
         request(`/paper/accounts/${id}/cash-flows`, { method: 'POST', body: JSON.stringify({ amount, note }) }),
     paperAttribution: (id) => request(`/paper/accounts/${id}/attribution`),

@@ -140,6 +140,30 @@ pub async fn cash_flow(
     Ok(row)
 }
 
+/// Merge an incoming transferred lot into a destination position,
+/// pure. Empty dest takes the incoming basis; same-sign merges
+/// weight the average; OPPOSITE signs refuse — netting a long
+/// against a short realizes PnL, and realization belongs to trades,
+/// not transfers.
+pub fn merge_position(
+    dest_qty: Decimal,
+    dest_avg: Decimal,
+    in_qty: Decimal,
+    in_avg: Decimal,
+) -> Result<(Decimal, Decimal), &'static str> {
+    if in_qty == Decimal::ZERO {
+        return Err("nothing to merge");
+    }
+    if dest_qty == Decimal::ZERO {
+        return Ok((in_qty, in_avg));
+    }
+    if (dest_qty > Decimal::ZERO) != (in_qty > Decimal::ZERO) {
+        return Err("opposite-sign merge would net positions without realization");
+    }
+    let qty = dest_qty + in_qty;
+    Ok(((qty), (dest_qty * dest_avg + in_qty * in_avg) / qty))
+}
+
 /// Move cash between two of the user's accounts atomically — the
 /// capital-reallocation op the strategy-per-account layout needs.
 /// One transaction: the source debit is overdraw-guarded by CASH
@@ -204,6 +228,163 @@ pub async fn transfer(
     .bind(format!("transfer from {from_name}"))
     .execute(&mut *tx)
     .await?;
+    tx.commit().await?;
+    Ok(())
+}
+
+/// In-kind transfer: move a position (or part) between two of the
+/// user's accounts at COST BASIS — no cash moves, no PnL realizes.
+/// Both sides get synthetic order rows at the basis so every FIFO
+/// reconstruction stays correct: the source's trip closes at exactly
+/// its basis (PnL 0 — moving a position is not a gain) and the
+/// destination opens at the same basis. The destination merge
+/// refuses opposite signs (netting realizes, and realization belongs
+/// to trades); the destination's buying power is checked post-state
+/// like any fill — an account that can't carry the exposure can't
+/// receive it.
+pub async fn transfer_position(
+    pool: &PgPool,
+    user_id: Uuid,
+    from: Uuid,
+    to: Uuid,
+    symbol: &str,
+    qty: Decimal,
+) -> anyhow::Result<()> {
+    if qty <= Decimal::ZERO {
+        anyhow::bail!("qty must be positive");
+    }
+    if from == to {
+        anyhow::bail!("from and to are the same account");
+    }
+    let symbol = symbol.trim().to_uppercase();
+    let mut tx = pool.begin().await?;
+    let names: Vec<(Uuid, String)> = sqlx::query_as(
+        "SELECT id, name FROM paper_accounts WHERE user_id = $1 AND id IN ($2, $3)",
+    )
+    .bind(user_id)
+    .bind(from)
+    .bind(to)
+    .fetch_all(&mut *tx)
+    .await?;
+    let name_of = |id: Uuid| names.iter().find(|(i, _)| *i == id).map(|(_, n)| n.clone());
+    let (Some(from_name), Some(to_name)) = (name_of(from), name_of(to)) else {
+        anyhow::bail!("account not found");
+    };
+    let src_pos: Option<(Decimal, Decimal)> = sqlx::query_as(
+        "SELECT qty, avg_price FROM paper_positions
+          WHERE paper_account_id = $1 AND symbol = $2 FOR UPDATE",
+    )
+    .bind(from)
+    .bind(&symbol)
+    .fetch_optional(&mut *tx)
+    .await?;
+    let Some((src_qty, src_avg)) = src_pos else {
+        anyhow::bail!("no position in {symbol} to transfer");
+    };
+    if qty > src_qty.abs() {
+        anyhow::bail!("qty exceeds the held position");
+    }
+    let signed_out = if src_qty > Decimal::ZERO { qty } else { -qty };
+
+    // Destination merge (refuses opposite signs).
+    let dest_pos: Option<(Decimal, Decimal)> = sqlx::query_as(
+        "SELECT qty, avg_price FROM paper_positions
+          WHERE paper_account_id = $1 AND symbol = $2 FOR UPDATE",
+    )
+    .bind(to)
+    .bind(&symbol)
+    .fetch_optional(&mut *tx)
+    .await?;
+    let (dq, da) = dest_pos.unwrap_or((Decimal::ZERO, Decimal::ZERO));
+    let (new_dq, new_da) =
+        merge_position(dq, da, signed_out, src_avg).map_err(|e| anyhow::anyhow!(e))?;
+
+    // Source decrement / delete.
+    let remaining = src_qty - signed_out;
+    if remaining.is_zero() {
+        sqlx::query("DELETE FROM paper_positions WHERE paper_account_id = $1 AND symbol = $2")
+            .bind(from)
+            .bind(&symbol)
+            .execute(&mut *tx)
+            .await?;
+    } else {
+        sqlx::query(
+            "UPDATE paper_positions SET qty = $3, updated_at = now()
+              WHERE paper_account_id = $1 AND symbol = $2",
+        )
+        .bind(from)
+        .bind(&symbol)
+        .bind(remaining)
+        .execute(&mut *tx)
+        .await?;
+    }
+    sqlx::query(
+        "INSERT INTO paper_positions (paper_account_id, symbol, qty, avg_price, realized_pnl, updated_at)
+              VALUES ($1, $2, $3, $4, 0, now())
+         ON CONFLICT (paper_account_id, symbol) DO UPDATE SET
+            qty = EXCLUDED.qty, avg_price = EXCLUDED.avg_price, updated_at = now()",
+    )
+    .bind(to)
+    .bind(&symbol)
+    .bind(new_dq)
+    .bind(new_da)
+    .execute(&mut *tx)
+    .await?;
+
+    // Synthetic order rows at BASIS so FIFO reconstructions stay
+    // correct on both sides (no cash moved — these are bookkeeping
+    // fills, like the expiry-settlement rows).
+    let (out_side, in_side) = if src_qty > Decimal::ZERO {
+        ("sell", "buy")
+    } else {
+        ("cover", "short")
+    };
+    sqlx::query(
+        "INSERT INTO paper_orders
+            (paper_account_id, symbol, side, qty, order_type,
+             status, filled_price, filled_qty, filled_at, plan_note)
+         VALUES ($1, $2, $3::side_t, $4, 'market', 'filled', $5, $4, now(), $6),
+                ($7, $2, $8::side_t, $4, 'market', 'filled', $5, $4, now(), $9)",
+    )
+    .bind(from)
+    .bind(&symbol)
+    .bind(out_side)
+    .bind(qty)
+    .bind(src_avg)
+    .bind(format!("in-kind transfer out to {to_name}"))
+    .bind(to)
+    .bind(in_side)
+    .bind(format!("in-kind transfer in from {from_name}"))
+    .execute(&mut *tx)
+    .await?;
+
+    // Destination buying power, post-state — an account that can't
+    // carry the exposure can't receive it.
+    let (cash, m): (Decimal, Decimal) = sqlx::query_as(
+        "SELECT cash, margin_multiplier FROM paper_accounts WHERE id = $1",
+    )
+    .bind(to)
+    .fetch_one(&mut *tx)
+    .await?;
+    let books: Vec<(String, Decimal, Decimal)> = sqlx::query_as(
+        "SELECT symbol, qty, avg_price FROM paper_positions WHERE paper_account_id = $1",
+    )
+    .bind(to)
+    .fetch_all(&mut *tx)
+    .await?;
+    let (mut signed_book, mut gross_book) = (Decimal::ZERO, Decimal::ZERO);
+    for (sym, q, avg) in &books {
+        let mult = if traderview_core::occ_symbol::is_occ(sym) {
+            Decimal::from(100)
+        } else {
+            Decimal::ONE
+        };
+        signed_book += *q * *avg * mult;
+        gross_book += (*q * *avg * mult).abs();
+    }
+    if !buying_power_ok(cash, signed_book, gross_book, m) {
+        anyhow::bail!("destination lacks buying power for the transferred exposure");
+    }
     tx.commit().await?;
     Ok(())
 }
@@ -2590,6 +2771,23 @@ mod tests {
         assert_eq!(validate_protection(d(100), d(101)), Err("qty exceeds position size"));
         assert_eq!(validate_protection(d(0), d(1)), Err("no position to protect"));
         assert_eq!(validate_protection(d(100), d(0)), Err("qty must be positive"));
+    }
+
+    #[test]
+    fn merge_position_weights_and_refuses_netting() {
+        // Empty dest: incoming basis carries over exactly.
+        assert_eq!(merge_position(d(0), d(0), d(100), d(50)), Ok((d(100), d(50))));
+        // Same-sign: weighted — 100@50 + 50@80 = 150@60.
+        assert_eq!(merge_position(d(100), d(50), d(50), d(80)), Ok((d(150), d(60))));
+        // Shorts merge with shorts the same way.
+        assert_eq!(merge_position(d(-100), d(50), d(-50), d(80)), Ok((d(-150), d(60))));
+        // Opposite signs refuse: netting realizes PnL, and
+        // realization belongs to trades, not transfers.
+        assert_eq!(
+            merge_position(d(100), d(50), d(-50), d(80)),
+            Err("opposite-sign merge would net positions without realization")
+        );
+        assert_eq!(merge_position(d(100), d(50), d(0), d(80)), Err("nothing to merge"));
     }
 
     #[test]

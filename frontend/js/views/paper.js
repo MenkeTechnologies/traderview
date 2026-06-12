@@ -217,7 +217,7 @@ export async function renderPaper(mount) {
                             <td>${last != null ? fmt(last) : '—'}</td>
                             <td class="${cls}">${u != null ? (u >= 0 ? '+' : '') + '$' + fmt(u) : '—'}</td>
                             <td class="${Number(p.realized_pnl) >= 0 ? 'pos' : 'neg'}">$${fmt(p.realized_pnl)}</td>
-                            <td><button class="small flat-btn" data-symbol="${esc(p.symbol)}" data-qty="${esc(p.qty)}" data-i18n="view.paper.btn.flatten" data-tip="view.paper.tip.flatten">FLAT</button> <button class="small protect-btn" data-symbol="${esc(p.symbol)}" data-qty="${esc(p.qty)}" data-i18n="view.paper.btn.protect" data-tip="view.paper.tip.protect">OCO</button>${p.symbol.length > 15 ? ` <button class="small roll-btn" data-symbol="${esc(p.symbol)}" data-qty="${esc(p.qty)}" data-i18n="view.paper.btn.roll" data-tip="view.paper.tip.roll">ROLL</button>${Number(p.qty) > 0 ? ` <button class="small exercise-btn" data-symbol="${esc(p.symbol)}" data-qty="${esc(p.qty)}" data-i18n="view.paper.btn.exercise" data-tip="view.paper.tip.exercise">EXER</button>` : ` <button class="small assign-btn" data-symbol="${esc(p.symbol)}" data-qty="${esc(p.qty)}" data-i18n="view.paper.btn.assign" data-tip="view.paper.tip.assign">ASGN</button>`}` : ''}</td>
+                            <td>${accounts.length > 1 ? `<button class="small move-btn" data-symbol="${esc(p.symbol)}" data-qty="${esc(p.qty)}" data-i18n="view.paper.btn.move" data-tip="view.paper.tip.move">MOVE</button> ` : ''}<button class="small flat-btn" data-symbol="${esc(p.symbol)}" data-qty="${esc(p.qty)}" data-i18n="view.paper.btn.flatten" data-tip="view.paper.tip.flatten">FLAT</button> <button class="small protect-btn" data-symbol="${esc(p.symbol)}" data-qty="${esc(p.qty)}" data-i18n="view.paper.btn.protect" data-tip="view.paper.tip.protect">OCO</button>${p.symbol.length > 15 ? ` <button class="small roll-btn" data-symbol="${esc(p.symbol)}" data-qty="${esc(p.qty)}" data-i18n="view.paper.btn.roll" data-tip="view.paper.tip.roll">ROLL</button>${Number(p.qty) > 0 ? ` <button class="small exercise-btn" data-symbol="${esc(p.symbol)}" data-qty="${esc(p.qty)}" data-i18n="view.paper.btn.exercise" data-tip="view.paper.tip.exercise">EXER</button>` : ` <button class="small assign-btn" data-symbol="${esc(p.symbol)}" data-qty="${esc(p.qty)}" data-i18n="view.paper.btn.assign" data-tip="view.paper.tip.assign">ASGN</button>`}` : ''}</td>
                         </tr>`;
                     }).join('')}</tbody></table>
                 <div id="paper-pos-footer" class="small muted"></div>` : '<p data-i18n="view.paper.hint.no_open_positions" class="muted">No open positions.</p>'}
@@ -529,6 +529,25 @@ export async function renderPaper(mount) {
         } catch (err) {
             showToast(t('common.error', { err: err.message }), { level: 'error' });
         }
+    });
+    mount.querySelectorAll('.move-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+            const others = accounts.filter(a => a.id !== acct.id);
+            const names = others.map((a, i) => `${i + 1}. ${a.name}`).join('\n');
+            const pick = Number(prompt(`${t('view.paper.prompt.move_to')}\n${names}`));
+            const dest = others[pick - 1];
+            if (!dest) return;
+            const max = Math.abs(Number(btn.dataset.qty));
+            const q = Number(prompt(t('view.paper.prompt.move_qty', { max }), String(max)));
+            if (!q || q <= 0) return;
+            try {
+                await api.paperTransferPosition(acct.id, dest.id, btn.dataset.symbol, q);
+                showToast(t('view.paper.toast.moved', { symbol: btn.dataset.symbol, name: dest.name }), { level: 'success' });
+                renderPaper(mount);
+            } catch (err) {
+                showToast(t('common.error', { err: err.message }), { level: 'error' });
+            }
+        });
     });
     mount.querySelectorAll('.flat-btn').forEach(btn => {
         btn.addEventListener('click', async () => {

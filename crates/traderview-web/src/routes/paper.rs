@@ -60,6 +60,7 @@ pub fn router() -> Router<AppState> {
             get(cash_flows).post(post_cash_flow),
         )
         .route("/paper/transfers", post(transfer))
+        .route("/paper/transfers/position", post(transfer_position))
         .route(
             "/paper/recurring/:id",
             axum::routing::delete(delete_recurring),
@@ -1042,6 +1043,26 @@ async fn transfer(
     Json(b): Json<TransferBody>,
 ) -> Result<Json<bool>, ApiError> {
     traderview_db::paper::transfer(&s.pool, user.id, b.from, b.to, b.amount)
+        .await
+        .map(|_| Json(true))
+        .map_err(|e| ApiError::BadRequest(e.to_string()))
+}
+
+#[derive(Deserialize)]
+struct PositionTransferBody {
+    from: Uuid,
+    to: Uuid,
+    symbol: String,
+    qty: Decimal,
+}
+
+/// In-kind transfer at cost basis — no cash moves, no PnL realizes.
+async fn transfer_position(
+    State(s): State<AppState>,
+    user: AuthUser,
+    Json(b): Json<PositionTransferBody>,
+) -> Result<Json<bool>, ApiError> {
+    traderview_db::paper::transfer_position(&s.pool, user.id, b.from, b.to, &b.symbol, b.qty)
         .await
         .map(|_| Json(true))
         .map_err(|e| ApiError::BadRequest(e.to_string()))
