@@ -25,6 +25,10 @@ pub fn router() -> Router<AppState> {
         .route("/export/executions/:account_id.csv", get(executions_csv))
         .route("/export/trades/:account_id.csv", get(trades_csv))
         .route(
+            "/export/paper-orders/:account_id.csv",
+            get(paper_orders_csv),
+        )
+        .route(
             "/export/tax-lots/:account_id/realized.csv",
             get(tax_realized_csv),
         )
@@ -610,4 +614,68 @@ async fn tax_package_html(
         open_rows = open_rows,
     );
     Ok(html_response(&format!("tax-package-{}-{}.html", year, account_id), html).into_response())
+}
+
+
+/// Paper order history as CSV — every order (filled, pending,
+/// cancelled, rejected) with its audit fields, for spreadsheets and
+/// tax records. Ownership checked against paper_accounts (these are
+/// paper accounts, not broker accounts — ensure_account_owner guards
+/// the wrong table).
+async fn paper_orders_csv(
+    State(s): State<AppState>,
+    u: AuthUser,
+    Path(account_id): Path<Uuid>,
+) -> Result<axum::response::Response, ApiError> {
+    // Paper-account ownership (paper_accounts, NOT the broker table).
+    let owner: Option<(Uuid,)> =
+        sqlx::query_as("SELECT user_id FROM paper_accounts WHERE id = $1")
+            .bind(account_id)
+            .fetch_optional(&s.pool)
+            .await?;
+    if !matches!(owner, Some((o,)) if o == u.id) {
+        return Err(ApiError::NotFound);
+    }
+    let orders = traderview_db::paper::list_orders(&s.pool, account_id, 10_000)
+        .await
+        .map_err(|e| ApiError::BadRequest(e.to_string()))?;
+    let mut body = String::new();
+    body.push_str(&csv_row(
+        &[
+            "submitted_at", "symbol", "side", "qty", "order_type", "limit_price",
+            "stop_price", "trail_value", "status", "filled_price", "filled_qty",
+            "fee", "filled_at", "cancel_at", "reject_reason", "plan_note", "id",
+        ]
+        .iter()
+        .map(|s| s.to_string())
+        .collect::<Vec<_>>(),
+    ));
+    body.push('\n');
+    let opt_dec = |d: Option<rust_decimal::Decimal>| d.map(|v| v.to_string()).unwrap_or_default();
+    let opt_ts = |t: Option<chrono::DateTime<chrono::Utc>>| {
+        t.map(|v| v.to_rfc3339()).unwrap_or_default()
+    };
+    for o in &orders {
+        body.push_str(&csv_row(&[
+            o.submitted_at.to_rfc3339(),
+            o.symbol.clone(),
+            o.side.clone(),
+            o.qty.to_string(),
+            o.order_type.clone(),
+            opt_dec(o.limit_price),
+            opt_dec(o.stop_price),
+            opt_dec(o.trail_value),
+            o.status.clone(),
+            opt_dec(o.filled_price),
+            opt_dec(o.filled_qty),
+            o.fee.to_string(),
+            opt_ts(o.filled_at),
+            opt_ts(o.cancel_at),
+            o.reject_reason.clone().unwrap_or_default(),
+            o.plan_note.clone().unwrap_or_default(),
+            o.id.to_string(),
+        ]));
+        body.push('\n');
+    }
+    Ok(csv_response(&format!("paper-orders-{account_id}.csv"), body).into_response())
 }

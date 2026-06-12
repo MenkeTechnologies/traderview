@@ -65,6 +65,7 @@ export async function renderPaper(mount) {
             <label class="small" data-tip="view.paper.tip.cash_apy"><span data-i18n="view.paper.label.cash_apy">Cash APY %</span> <input type="number" id="acct-apy" min="0" max="20" step="0.25" value="${Number(acct.cash_apy_pct || 0)}" style="width:64px"></label>
             <button class="small" id="acct-deposit" data-i18n="view.paper.btn.deposit" data-tip="view.paper.tip.deposit">DEPOSIT</button>
             <button class="small" id="acct-withdraw" data-i18n="view.paper.btn.withdraw" data-tip="view.paper.tip.withdraw">WITHDRAW</button>
+            <a class="small" id="acct-export" href="/api/export/paper-orders/${esc(acct.id)}.csv" download data-i18n="view.paper.btn.export_csv" data-tip="view.paper.tip.export_csv">CSV</a>
             <label class="small" data-tip="view.paper.tip.borrow_apy"><span data-i18n="view.paper.label.borrow_apy">Borrow APY %</span> <input type="number" id="acct-borrow-apy" min="0" max="50" step="0.25" value="${Number(acct.borrow_apy_pct || 0)}" style="width:64px"></label>
         </div>
 
