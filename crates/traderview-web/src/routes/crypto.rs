@@ -18,6 +18,7 @@ pub fn router() -> Router<AppState> {
         .route("/crypto/btc/chain", get(btc_chain))
         .route("/crypto/calc/funding-arb", post(funding_arb))
         .route("/crypto/calc/funding-arb-live", post(funding_arb_live))
+        .route("/crypto/funding-scan", get(funding_scan))
 }
 
 #[derive(Deserialize)]
@@ -66,6 +67,26 @@ async fn funding_arb_live(
     Ok(Json(FundingArbLive { snapshot, report }))
 }
 
+/// Funding sweep across the major-perp universe, 5-minute cached
+/// (funding rates move per-interval, not per-second; the sweep is
+/// ~36 venue calls).
+async fn funding_scan(
+    _s: State<AppState>,
+    _u: AuthUser,
+) -> Result<Json<traderview_db::crypto::FundingScan>, ApiError> {
+    {
+        let g = FS.lock().await;
+        if let Some((t, v)) = g.as_ref() {
+            if t.elapsed() < Duration::from_secs(5 * 60) {
+                return Ok(Json(v.clone()));
+            }
+        }
+    }
+    let scan = traderview_db::crypto::funding_scan().await;
+    *FS.lock().await = Some((Instant::now(), scan.clone()));
+    Ok(Json(scan))
+}
+
 /// Perp funding-rate arbitrage ledger — pure compute over the caller's
 /// live prices and venue rates.
 async fn funding_arb(
@@ -92,6 +113,7 @@ type TimedCache<T> = Lazy<Arc<Mutex<Option<(Instant, T)>>>>;
 static MK: TimedCache<Vec<CoinRow>> = Lazy::new(|| Arc::new(Mutex::new(None)));
 static GB: TimedCache<Global> = Lazy::new(|| Arc::new(Mutex::new(None)));
 static BC: TimedCache<OnChainBtc> = Lazy::new(|| Arc::new(Mutex::new(None)));
+static FS: TimedCache<traderview_db::crypto::FundingScan> = Lazy::new(|| Arc::new(Mutex::new(None)));
 
 async fn markets(
     _s: State<AppState>,

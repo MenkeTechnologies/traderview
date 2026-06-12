@@ -240,3 +240,57 @@ pub async fn funding_snapshot(base: &str) -> anyhow::Result<FundingSnapshot> {
         next_funding_time_ms: t1,
     })
 }
+
+
+/// The scan universe — major USDT perps on OKX. A curated list like
+/// CARRY_UNIVERSE: additions welcome, but every entry must actually
+/// list on the venue (unlisted bases just report as errors).
+pub const FUNDING_UNIVERSE: &[&str] = &[
+    "BTC", "ETH", "SOL", "XRP", "DOGE", "ADA", "AVAX", "LINK", "DOT", "LTC", "BCH", "TON",
+];
+
+#[derive(Debug, Clone, serde::Serialize)]
+pub struct FundingScanRow {
+    pub base: String,
+    pub funding_rate_8h: f64,
+    pub funding_apr_pct: f64,
+    pub basis_pct: f64,
+    pub spot: f64,
+    pub perp: f64,
+    pub interval_hours: f64,
+}
+
+#[derive(Debug, Clone, serde::Serialize)]
+pub struct FundingScan {
+    /// Ranked by |APR| descending — the richest carry first, either
+    /// direction (negative funding pays the long side).
+    pub rows: Vec<FundingScanRow>,
+    /// Bases that failed to quote — reported, never silently dropped.
+    pub failed: Vec<String>,
+}
+
+/// Concurrent sweep of the funding universe.
+pub async fn funding_scan() -> FundingScan {
+    let futs = FUNDING_UNIVERSE.iter().map(|base| async move {
+        (base.to_string(), funding_snapshot(base).await)
+    });
+    let results = futures_util::future::join_all(futs).await;
+    let mut rows = Vec::new();
+    let mut failed = Vec::new();
+    for (base, res) in results {
+        match res {
+            Ok(s) => rows.push(FundingScanRow {
+                base,
+                funding_rate_8h: s.funding_rate_8h,
+                funding_apr_pct: s.funding_rate_8h * 3.0 * 365.0 * 100.0,
+                basis_pct: (s.perp / s.spot - 1.0) * 100.0,
+                spot: s.spot,
+                perp: s.perp,
+                interval_hours: s.interval_hours,
+            }),
+            Err(e) => failed.push(format!("{base}: {e}")),
+        }
+    }
+    rows.sort_by(|a, b| b.funding_apr_pct.abs().total_cmp(&a.funding_apr_pct.abs()));
+    FundingScan { rows, failed }
+}

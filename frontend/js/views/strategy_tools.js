@@ -465,6 +465,29 @@ const TOOLS = {
             with that forward locks the QUOTE rate and nothing more. The unhedged carry is real but is
             compensation for depreciation risk; the breakeven is the spot move that erases it.</p>`,
     },
+    'funding-scan': {
+        label: 'Funding Scan',
+        call: () => api.cryptoFundingScan(),
+        fields: [],
+        render: (r) => `
+            <table class="gs-table">
+                <thead><tr><th>Asset</th><th>Funding /8h</th><th>APR</th><th>Collect via</th><th>Basis</th><th>Interval</th></tr></thead>
+                <tbody>${r.rows.map(x => `
+                    <tr>
+                        <td><strong>${esc(x.base)}</strong></td>
+                        <td class="${x.funding_rate_8h >= 0 ? 'pos' : 'neg'}">${(x.funding_rate_8h * 100).toFixed(4)}%</td>
+                        <td class="${Math.abs(x.funding_apr_pct) > 10 ? 'pos' : ''}">${x.funding_apr_pct.toFixed(2)}%</td>
+                        <td class="small">${x.funding_rate_8h > 0 ? 'long spot + short perp' : x.funding_rate_8h < 0 ? 'short spot + long perp' : '—'}</td>
+                        <td>${x.basis_pct.toFixed(3)}%</td>
+                        <td class="muted small">${x.interval_hours.toFixed(0)}h</td>
+                    </tr>`).join('')}
+                </tbody>
+            </table>
+            ${r.failed.length ? `<p class="neg small">failed: ${r.failed.map(esc).join(' \u00b7 ')}</p>` : ''}
+            <p class="muted small">Live OKX funding across the major-perp universe, ranked by |APR| — negative funding
+            pays the LONG side. 5-minute cache; rates settle per interval, not per second. Feed a candidate into
+            Funding Arb (live) for the full fee/breakeven ledger.</p>`,
+    },
     'funding-arb-live': {
         label: 'Funding Arb (live)',
         call: (b) => api.cryptoFundingArbLive({
