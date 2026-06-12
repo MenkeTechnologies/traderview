@@ -36,6 +36,9 @@ pub struct Digest {
     /// Household exposure across every paper account: net/gross/
     /// long/short at current marks. None when nothing is held.
     pub exposure: Option<String>,
+    /// Account pairs whose REALIZED daily equity returns correlate
+    /// above 0.7 — strategies that are the same bet in practice.
+    pub correlated_strategies: Vec<String>,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -63,6 +66,7 @@ impl Digest {
             && self.assignment_risk.is_empty()
             && self.pdt_risk.is_empty()
             && self.exposure.is_none()
+            && self.correlated_strategies.is_empty()
     }
 }
 
@@ -107,6 +111,9 @@ pub fn format_digest(d: &Digest) -> String {
     }
     if let Some(e) = &d.exposure {
         out.push(format!("exposure: {e}"));
+    }
+    if !d.correlated_strategies.is_empty() {
+        out.push(format!("correlated: {}", d.correlated_strategies.join(", ")));
     }
     out.join(" · ")
 }
@@ -273,6 +280,23 @@ pub async fn for_user(pool: &PgPool, user_id: Uuid) -> anyhow::Result<Digest> {
                 line.push_str(&format!(" — {} unmarked row(s) excluded", e.unmarked));
             }
             d.exposure = Some(line);
+        }
+    }
+
+    // Realized strategy correlation: pairs above 0.7 — the same
+    // matrix the holdings panel renders, so the two can't disagree.
+    if let Ok(c) = crate::paper_equity::account_correlations(pool, user_id).await {
+        for i in 0..c.accounts.len() {
+            for j in (i + 1)..c.accounts.len() {
+                if let Some(rho) = c.matrix[i][j] {
+                    if rho.abs() > 0.7 {
+                        d.correlated_strategies.push(format!(
+                            "{}↔{} ρ {:.2}",
+                            c.accounts[i], c.accounts[j], rho
+                        ));
+                    }
+                }
+            }
         }
     }
 
@@ -475,6 +499,14 @@ mod tests {
         assert!(!s.contains("drifting"));
         assert!(!s.contains("rebalance"));
         assert!(!s.contains("near breaker"));
+    }
+
+    #[test]
+    fn correlated_strategies_section_formats() {
+        let mut d = Digest::default();
+        d.correlated_strategies.push("momo↔value ρ 0.92".into());
+        assert!(!d.is_empty());
+        assert!(format_digest(&d).contains("correlated: momo↔value ρ 0.92"));
     }
 
     #[test]
