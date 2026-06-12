@@ -169,6 +169,8 @@ pub enum EngineError {
     AccountExposureCap { open_notional: Decimal, cap: Decimal },
     #[error("equity-curve filter: cum PnL below its {ma_trips}-trip MA; entry skipped")]
     EquityCurveFilter { ma_trips: usize },
+    #[error("{symbol} already has {count} open position(s) (cap {cap}); entry skipped")]
+    SymbolPositionCap { symbol: String, count: usize, cap: i64 },
     #[error("earnings blackout: {symbol} reports on {date} (within {days}d window); entry skipped")]
     EarningsBlackout {
         symbol: String,
@@ -335,6 +337,7 @@ impl EngineError {
             Self::MaxDrawdown { .. } => Some("max_drawdown"),
             Self::AccountExposureCap { .. } => Some("account_exposure"),
             Self::EquityCurveFilter { .. } => Some("equity_curve_filter"),
+            Self::SymbolPositionCap { .. } => Some("symbol_position_cap"),
             Self::ConsecutiveLossesCap { .. } => Some("consecutive_losses"),
             Self::PositionSizeCap { .. } => Some("position_size_cap"),
             Self::EarningsBlackout { .. } => Some("earnings_blackout"),
@@ -401,6 +404,13 @@ pub struct EngineConfig {
     /// bad system; shortens the losing streaks of a decaying one at
     /// the cost of whipsaw re-entries. ≥ 2 trips; None/0/1 = off.
     pub equity_curve_filter_trips: Option<usize>,
+    /// Per-symbol concurrent-position cap. The pending-order guard
+    /// only dedups while an order is in flight; once it fills, a
+    /// re-signal can stack a second trade on the same symbol with no
+    /// bound. 1 = never add to an existing position; higher allows
+    /// CONTROLLED pyramiding. None = the engine's historical
+    /// unlimited behavior (unchanged by default).
+    pub max_positions_per_symbol: Option<i64>,
     /// Skip ENTRIES when the symbol's next earnings report is within
     /// this many days (forward-looking: the risk being managed is
     /// holding INTO the print). Exits are never blocked.
@@ -455,6 +465,32 @@ async fn check_account_exposure_gate(
         .map_err(|e| EngineError::Broker(e.to_string()))?;
     if open_notional >= cap {
         return Err(EngineError::AccountExposureCap { open_notional, cap });
+    }
+    Ok(())
+}
+
+/// Per-symbol position cap, entry-side. Counts OPEN trade rows for
+/// (account, symbol) — the same store the exit pass walks, so what
+/// this counts is exactly what can be exited.
+async fn check_symbol_position_cap(
+    pool: &PgPool,
+    strategy: &AlgoStrategy,
+    symbol: &str,
+) -> Result<(), EngineError> {
+    let cfg = EngineConfig::from_strategy(strategy);
+    let Some(cap) = cfg.max_positions_per_symbol else {
+        return Ok(());
+    };
+    let count = crate::trades::open_positions_for_symbol(pool, strategy.account_id, symbol)
+        .await
+        .map_err(|e| EngineError::Broker(e.to_string()))?
+        .len();
+    if count as i64 >= cap {
+        return Err(EngineError::SymbolPositionCap {
+            symbol: symbol.to_string(),
+            count,
+            cap,
+        });
     }
     Ok(())
 }
@@ -540,6 +576,11 @@ impl EngineConfig {
             .and_then(|v| v.as_u64())
             .filter(|n| *n >= 2)
             .map(|n| n as usize);
+        let max_positions_per_symbol = s
+            .risk_gates
+            .get("max_positions_per_symbol")
+            .and_then(|v| v.as_i64())
+            .filter(|n| *n > 0);
         let max_consecutive_losses = s
             .risk_gates
             .get("max_consecutive_losses")
@@ -609,6 +650,7 @@ impl EngineConfig {
             max_drawdown_usd,
             max_account_notional_usd,
             equity_curve_filter_trips,
+            max_positions_per_symbol,
             max_consecutive_losses,
             max_position_size_usd,
             earnings_blackout_days,
@@ -936,6 +978,7 @@ pub async fn process_bar_window(
     // reduce the aggregate.
     check_account_exposure_gate(pool, strategy).await?;
     check_equity_curve_gate(pool, strategy).await?;
+    check_symbol_position_cap(pool, strategy, &symbol).await?;
     // Risk gate: earnings blackout — entries only; the exit pass above
     // already ran, so positions can always flatten into the print.
     if let Some(days) = cfg.earnings_blackout_days {
@@ -1442,6 +1485,7 @@ pub async fn process_bar_window_multi(
     // pairs can always flatten; self-clears as closes reduce the sum.
     check_account_exposure_gate(pool, strategy).await?;
     check_equity_curve_gate(pool, strategy).await?;
+    check_symbol_position_cap(pool, strategy, &primary_symbol).await?;
     let qty = algo_strategies::size_shares(equity, sig.entry_price, sig.stop_distance, &cfg.sizing);
     if qty == 0 {
         return Err(EngineError::ZeroQty);

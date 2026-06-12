@@ -2411,6 +2411,9 @@ async function openStrategyModal(mount, existing = null, prefill = null) {
                     <label><span data-i18n="view.algo.label.ecf">Equity-curve filter (trips, 0 = off)</span>
                         <input type="number" name="equity_curve_filter_trips" min="0" max="200" value="${Number(s.risk_gates?.equity_curve_filter_trips ?? 0)}" data-tip="view.algo.tip.ecf">
                     </label>
+                    <label><span data-i18n="view.algo.label.max_per_symbol">Max positions / symbol (0 = unlimited)</span>
+                        <input type="number" name="max_positions_per_symbol" min="0" max="20" value="${Number(s.risk_gates?.max_positions_per_symbol ?? 0)}" data-tip="view.algo.tip.max_per_symbol">
+                    </label>
                     <label><span data-i18n="view.algo.label.max_corr">Max entry correlation (0 = off)</span>
                         <input type="number" name="max_entry_correlation" min="0" max="0.99" step="0.05" value="${Number(s.risk_gates?.max_entry_correlation ?? 0)}" data-tip="view.algo.tip.max_corr">
                     </label>
@@ -2503,6 +2506,7 @@ async function openStrategyModal(mount, existing = null, prefill = null) {
                 max_hold_minutes: Number(f.get('max_hold_minutes')) || 0,
                 max_account_notional_usd: Number(f.get('max_account_notional_usd')) || 0,
                 equity_curve_filter_trips: Number(f.get('equity_curve_filter_trips')) || 0,
+                max_positions_per_symbol: Number(f.get('max_positions_per_symbol')) || 0,
                 max_entry_correlation: Number(f.get('max_entry_correlation')) || 0,
                 htf_interval: f.get('htf_interval') || null,
                 htf_ema_period: Number(f.get('htf_ema_period')) || 50,
