@@ -936,5 +936,6 @@ pub mod best_worst_days;
 pub mod drawdown_episodes;
 pub mod trade_report_card;
 pub mod futures_curve;
+pub mod tax;
 
 pub use models::*;

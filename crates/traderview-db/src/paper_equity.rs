@@ -310,6 +310,70 @@ pub struct Attribution {
 /// PnL of closed positions lives nowhere else. Open positions'
 /// unrealized PnL is deliberately NOT included: this is the realized
 /// record, and the positions table already shows live unrealized.
+#[derive(Debug, serde::Serialize)]
+pub struct SymbolWashSales {
+    pub symbol: String,
+    pub sales: Vec<traderview_core::tax::WashSale>,
+    pub total_disallowed: f64,
+}
+
+/// Wash-sale scan over the account's filled orders — same fill
+/// reconstruction as attribution (FIFO, fees in basis, OCC prices
+/// pre-scaled 100×). Only symbols with at least one flagged sale are
+/// returned. Exact-symbol matching only: a loss in shares followed by
+/// a repurchase via options on the same underlying is "substantially
+/// identical" to the IRS but NOT detected here.
+pub async fn wash_sales(
+    pool: &PgPool,
+    user_id: Uuid,
+    account_id: Uuid,
+) -> anyhow::Result<Vec<SymbolWashSales>> {
+    let owner: Option<(Uuid,)> =
+        sqlx::query_as("SELECT user_id FROM paper_accounts WHERE id = $1")
+            .bind(account_id)
+            .fetch_optional(pool)
+            .await?;
+    if !matches!(owner, Some((u,)) if u == user_id) {
+        anyhow::bail!("forbidden");
+    }
+    let fills: Vec<(String, String, Decimal, Decimal, Decimal, chrono::DateTime<Utc>)> =
+        sqlx::query_as(
+            "SELECT symbol, side::text, filled_qty, filled_price, fee, filled_at
+               FROM paper_orders
+              WHERE paper_account_id = $1 AND status = 'filled'
+                AND filled_qty IS NOT NULL AND filled_price IS NOT NULL
+              ORDER BY filled_at",
+        )
+        .bind(account_id)
+        .fetch_all(pool)
+        .await?;
+    use rust_decimal::prelude::ToPrimitive;
+    let mut by_symbol: std::collections::BTreeMap<String, Vec<traderview_core::live_vs_backtest::Fill>> =
+        Default::default();
+    for (symbol, side, qty, price, fee, at) in fills {
+        let scale = if traderview_core::occ_symbol::is_occ(&symbol) { 100.0 } else { 1.0 };
+        by_symbol.entry(symbol).or_default().push(traderview_core::live_vs_backtest::Fill {
+            buy: side == "buy" || side == "cover",
+            qty: qty.to_f64().unwrap_or(0.0),
+            price: price.to_f64().unwrap_or(0.0) * scale,
+            commission: fee.to_f64().unwrap_or(0.0),
+            ts: at.timestamp(),
+            flag: false,
+        });
+    }
+    Ok(by_symbol
+        .into_iter()
+        .filter_map(|(symbol, fills)| {
+            let sales = traderview_core::tax::wash_sales(&fills);
+            (!sales.is_empty()).then(|| SymbolWashSales {
+                total_disallowed: sales.iter().map(|w| w.disallowed).sum(),
+                symbol,
+                sales,
+            })
+        })
+        .collect())
+}
+
 pub async fn attribution(
     pool: &PgPool,
     user_id: Uuid,

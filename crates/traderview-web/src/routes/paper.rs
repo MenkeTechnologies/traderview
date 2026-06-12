@@ -47,6 +47,7 @@ pub fn router() -> Router<AppState> {
         )
         .route("/paper/accounts/:id/equity-history", get(equity_history))
         .route("/paper/accounts/:id/attribution", get(attribution))
+        .route("/paper/accounts/:id/wash-sales", get(wash_sales))
         .route("/paper/accounts/:id/correlations", get(correlations))
         .route("/paper/accounts/:id/var", get(portfolio_var))
         .route("/paper/accounts/:id/stress", get(stress))
@@ -254,6 +255,17 @@ async fn attribution(
     Path(account_id): Path<Uuid>,
 ) -> Result<Json<traderview_db::paper_equity::Attribution>, ApiError> {
     traderview_db::paper_equity::attribution(&s.pool, user.id, account_id)
+        .await
+        .map(Json)
+        .map_err(|e| ApiError::BadRequest(e.to_string()))
+}
+
+async fn wash_sales(
+    State(s): State<AppState>,
+    user: AuthUser,
+    Path(account_id): Path<Uuid>,
+) -> Result<Json<Vec<traderview_db::paper_equity::SymbolWashSales>>, ApiError> {
+    traderview_db::paper_equity::wash_sales(&s.pool, user.id, account_id)
         .await
         .map(Json)
         .map_err(|e| ApiError::BadRequest(e.to_string()))

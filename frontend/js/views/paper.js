@@ -191,6 +191,11 @@ export async function renderPaper(mount) {
             <div id="paper-attribution" class="muted small"></div>
         </div>
 
+        <div class="chart-panel" id="paper-wash-panel" style="display:none">
+            <h2 data-i18n="view.paper.h2.wash">Wash sales</h2>
+            <div id="paper-wash" class="muted small"></div>
+        </div>
+
         <div class="chart-panel" id="paper-greeks-panel" style="display:none">
             <h2 data-i18n="view.paper.h2.greeks">Option greeks</h2>
             <div id="paper-greeks"></div>
@@ -259,6 +264,9 @@ export async function renderPaper(mount) {
         .catch(() => {});
     api.paperAttribution(acct.id)
         .then(a => { if (viewIsCurrent(tok)) renderAttribution(a); })
+        .catch(() => {});
+    api.paperWashSales(acct.id)
+        .then(w => { if (viewIsCurrent(tok)) renderWashSales(w); })
         .catch(() => {});
     if (positions.filter(p => p.symbol.length <= 15).length >= 2) {
         api.paperCorrelations(acct.id)
@@ -538,6 +546,31 @@ function holdFmt(secs) {
     if (secs >= 86400) return (secs / 86400).toFixed(1) + 'd';
     if (secs >= 3600) return (secs / 3600).toFixed(1) + 'h';
     return Math.round(secs / 60) + 'm';
+}
+
+function renderWashSales(rows) {
+    const panel = document.getElementById('paper-wash-panel');
+    const el = document.getElementById('paper-wash');
+    if (!panel || !el || !Array.isArray(rows) || !rows.length) return;
+    panel.style.display = '';
+    const fmt = ts => new Date(ts * 1000).toISOString().slice(0, 10);
+    el.innerHTML = `
+        <table class="data-table small"><thead><tr>
+            <th data-i18n="view.paper.wash.symbol">Symbol</th>
+            <th data-i18n="view.paper.wash.sale">Loss sale</th>
+            <th data-i18n="view.paper.wash.loss">Loss</th>
+            <th data-i18n="view.paper.wash.repl">Replacement qty</th>
+            <th data-i18n="view.paper.wash.disallowed">Disallowed</th>
+        </tr></thead><tbody>
+        ${rows.map(r => r.sales.map(s => `<tr>
+            <td>${esc(r.symbol)}</td>
+            <td>${fmt(s.sale_ts)} (${s.qty_sold})</td>
+            <td class="neg">${s.loss.toFixed(2)}</td>
+            <td>${s.replacement_qty}</td>
+            <td class="neg">${s.disallowed.toFixed(2)}</td>
+        </tr>`).join('')).join('')}
+        </tbody></table>
+        <p class="muted small" data-i18n="view.paper.hint.wash">Realized losses with a repurchase of the same symbol within ±30 days (IRS §1091) — the disallowed portion is prorated by replacement÷sold. Flagging tool, not a filing engine: each loss is judged against its own window, and only exact-symbol matches are detected.</p>`;
 }
 
 function renderAttribution(a) {
