@@ -316,11 +316,23 @@ export async function renderPaper(mount) {
 
         <div class="chart-panel">
             <h2 data-i18n="view.paper.h2.order_history">Order history</h2>
+            <div class="inline-form small">
+                <input id="ord-filter-sym" placeholder="filter symbol" data-i18n-placeholder="view.paper.placeholder.filter_symbol" style="width:110px;text-transform:uppercase">
+                <select id="ord-filter-status">
+                    <option value="" data-i18n="view.paper.opt.all_statuses">all statuses</option>
+                    <option value="filled">filled</option>
+                    <option value="pending">pending</option>
+                    <option value="held">held</option>
+                    <option value="cancelled">cancelled</option>
+                    <option value="rejected">rejected</option>
+                </select>
+                <span id="ord-filter-count" class="muted"></span>
+            </div>
             ${orders.length ? `<table class="trades">
                 <thead><tr><th data-i18n="view.paper.th.submitted">Submitted</th><th data-i18n="view.paper.th.symbol">Symbol</th><th data-i18n="view.paper.th.side">Side</th><th data-i18n="view.paper.th.qty_2">Qty</th><th data-i18n="view.paper.th.type">Type</th>
                 <th data-i18n="view.paper.th.status">Status</th><th data-i18n="view.paper.th.fill_price">Fill price</th><th data-i18n="view.paper.th.filled">Filled</th><th></th></tr></thead>
                 <tbody>${orders.map(o => `
-                    <tr data-context-scope="symbol-row" data-symbol="${esc(o.symbol)}"${o.plan_note ? ` title="${esc(o.plan_note)}"` : ''}>
+                    <tr data-context-scope="symbol-row" data-symbol="${esc(o.symbol)}" data-status="${esc(o.status)}"${o.plan_note ? ` title="${esc(o.plan_note)}"` : ''}>
                         <td>${fmtDateTime(o.submitted_at)}</td>
                         <td>${esc(o.symbol)}${o.plan_note ? ' \ud83d\udcdd' : ''}</td>
                         <td>${o.side}</td>
@@ -336,6 +348,33 @@ export async function renderPaper(mount) {
 
     renderUnrealizedChart(positions, quotes);
     renderNotionalChart(positions, quotes);
+    // Order-history filter: display-toggle over the rendered rows
+    // (they carry data-symbol/data-status) — no re-render, no
+    // re-fetch, and the count states what's hidden.
+    {
+        const sym = mount.querySelector('#ord-filter-sym');
+        const st = mount.querySelector('#ord-filter-status');
+        const count = mount.querySelector('#ord-filter-count');
+        const applyOrdFilter = () => {
+            const s = (sym.value || '').trim().toUpperCase();
+            const wantStatus = st.value;
+            const rows = mount.querySelectorAll('tr[data-status]');
+            let shown = 0;
+            rows.forEach(r => {
+                const ok = (!s || r.dataset.symbol.startsWith(s))
+                    && (!wantStatus || r.dataset.status === wantStatus);
+                r.style.display = ok ? '' : 'none';
+                if (ok) shown++;
+            });
+            count.textContent = (s || wantStatus)
+                ? t('view.paper.filter.count', { shown, total: rows.length })
+                : '';
+        };
+        if (sym && st) {
+            sym.addEventListener('input', applyOrdFilter);
+            st.addEventListener('change', applyOrdFilter);
+        }
+    }
     const benchmarkSym = () => (mount.querySelector('#equity-benchmark')?.value || 'SPY').trim().toUpperCase();
     const loadEquity = () => {
         api.paperEquityHistory(acct.id, benchmarkSym())
