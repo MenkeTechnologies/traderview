@@ -15353,6 +15353,7 @@
   "view.live_positions.hint.no_open_positions": "No open positions.",
   "view.live_positions.hint.notional": "Per-symbol notional size. Reveals capital concentration independent of P/L performance — a 60% notional in one name is concentration risk even if it's green today.",
   "view.live_positions.hint.snapshot_of_every_open_trade_with_fresh_yahoo_quot": "Snapshot of every open trade with fresh Yahoo quotes (60s\n            server-cached). Unrealized P/L honors multiplier and side (long/short). Day P/L\n            uses the quote's prev_close. Refreshes every 30 seconds.",
+  "view.live_positions.status.skipped": "· {n} skipped (quote failed)",
   "view.live_positions.status.updated": "Updated {time} · {n} positions",
   "view.live_positions.th.day_p_l": "Day P/L",
   "view.live_positions.th.entry": "Entry",

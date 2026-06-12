@@ -15353,6 +15353,7 @@
   "view.live_positions.hint.no_open_positions": "没有开放位置.",
   "view.live_positions.hint.notional": "百合名义大小. 启示录资本集中独立于P/L性能——一个名字中60%的名词即使今天是绿色的也是集中风险.",
   "view.live_positions.hint.snapshot_of_every_open_trade_with_fresh_yahoo_quot": "用新鲜雅虎引号的每次公开交易的快照(60s)\n服务器标记). 未实现的P/L荣誉乘数和侧(长/短). P/L日数\n使用引文的 prev close。 刷新每30秒.",
+  "view.live_positions.status.skipped": "· {n} skipped (quote failed)",
   "view.live_positions.status.updated": "Updated {time} · {n} positions",
   "view.live_positions.th.day_p_l": "P/L日数",
   "view.live_positions.th.entry": "条目",

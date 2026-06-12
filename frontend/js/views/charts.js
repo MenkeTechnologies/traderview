@@ -197,7 +197,15 @@ export async function renderCharts(mount, _state, symbol = '') {
     const zoomBySymbol = (preset && typeof preset === 'object' && preset.zoom_by_symbol)
         ? { ...preset.zoom_by_symbol } : {};
     const saveZoom = (sym, range) => {
-        if (!sym || !Array.isArray(range)) return;
+        if (!sym) return;
+        // null = user reset the zoom — forget the saved range so the
+        // next open fits the full (current) data instead of clipping
+        // new bars to a stale extent.
+        if (range === null) {
+            if (sym in zoomBySymbol) { delete zoomBySymbol[sym]; savePresetSoon(); }
+            return;
+        }
+        if (!Array.isArray(range)) return;
         zoomBySymbol[sym] = range;
         savePresetSoon();
     };

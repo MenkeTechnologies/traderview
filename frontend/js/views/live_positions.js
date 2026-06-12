@@ -67,10 +67,18 @@ async function refresh(accountId, mount, tok) {
         renderUpnlChart(r);
         renderNotionalChart(r);
         const st = mount.querySelector('#lp-status');
-        if (st) st.textContent = t('view.live_positions.status.updated', {
-            time: new Date(r.fetched_at).toLocaleTimeString(undefined, { hour12: false }),
-            n: r.position_count,
-        });
+        if (st) {
+            let text = t('view.live_positions.status.updated', {
+                time: new Date(r.fetched_at).toLocaleTimeString(undefined, { hour12: false }),
+                n: r.position_count,
+            });
+            // Positions dropped by quote failures must be visible —
+            // a silently-shrunk snapshot reads as "flat".
+            if (r.skipped > 0) {
+                text += ' ' + t('view.live_positions.status.skipped', { n: r.skipped });
+            }
+            st.textContent = text;
+        }
     } catch (e) {
         if (e instanceof ApiError && e.status === 401) return;
         if (!viewIsCurrent(tok)) return;

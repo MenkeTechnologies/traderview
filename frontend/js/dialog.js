@@ -132,7 +132,24 @@ function showDialog(kind, messageKey, params, opts) {
         };
         const cancelAction = () => close(kind === 'confirm' ? false : null);
         const onKey = (e) => {
-            if (isConfirmKey(e) && document.activeElement !== cancelBtn) {
+            // Trap Tab inside the dialog — without this, focus walks into
+            // the page behind the overlay and Enter then confirms blind
+            // (a destructive default on level:'danger' confirms).
+            if (e.key === 'Tab') {
+                const focusables = [input, cancelBtn, confirmBtn].filter(Boolean);
+                const first = focusables[0];
+                const last = focusables[focusables.length - 1];
+                if (!root.contains(document.activeElement)) {
+                    e.preventDefault(); first.focus();
+                } else if (e.shiftKey && document.activeElement === first) {
+                    e.preventDefault(); last.focus();
+                } else if (!e.shiftKey && document.activeElement === last) {
+                    e.preventDefault(); first.focus();
+                }
+                return;
+            }
+            if (isConfirmKey(e) && document.activeElement !== cancelBtn
+                && root.contains(document.activeElement)) {
                 e.preventDefault(); e.stopPropagation();
                 confirmAction();
             } else if (isCancelKey(e)) {

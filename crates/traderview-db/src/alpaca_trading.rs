@@ -563,6 +563,10 @@ pub struct OrderResponse {
     pub order_class: Option<String>,
     pub created_at: Option<DateTime<Utc>>,
     pub updated_at: Option<DateTime<Utc>>,
+    /// Last fill time. Preferred over `updated_at` for execution
+    /// timestamps — for a partially-filled-then-canceled order,
+    /// `updated_at` is the cancel time, not when the fill happened.
+    pub filled_at: Option<DateTime<Utc>>,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]

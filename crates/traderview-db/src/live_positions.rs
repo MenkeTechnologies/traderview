@@ -45,6 +45,11 @@ pub struct LiveSnapshot {
     pub total_day_pnl: f64,
     pub biggest_winner: Option<String>, // symbol
     pub biggest_loser: Option<String>,
+    /// Open positions dropped because their quote failed. Surfaced so
+    /// the frontend can say "N skipped" instead of silently shrinking
+    /// the totals — a snapshot missing positions otherwise reads as
+    /// "flat" (the ETH/ADA Yahoo-404 incident).
+    pub skipped: usize,
     pub fetched_at: DateTime<Utc>,
 }
 
@@ -70,25 +75,35 @@ pub async fn snapshot(pool: &PgPool, account_id: Uuid) -> anyhow::Result<LiveSna
     .fetch_all(pool)
     .await?;
 
-    // Dedupe symbol fetches across multiple open positions in the same name.
-    let mut quote_cache: HashMap<String, crate::market_data::QuoteSnapshot> = HashMap::new();
+    // Dedupe symbol fetches across multiple open positions in the same
+    // name — including failures, so N positions in one failing symbol
+    // cost one timeout, not N sequential ones.
+    let mut quote_cache: HashMap<String, Option<crate::market_data::QuoteSnapshot>> =
+        HashMap::new();
     let mut positions = Vec::with_capacity(rows.len());
+    let mut skipped = 0usize;
 
     for (id, symbol, side, asset_class, qty, entry, mult, opened_at) in rows {
-        let q = match quote_cache.get(&symbol) {
-            Some(q) => q.clone(),
-            None => match crate::market_data::quote(pool, &symbol).await {
-                Ok(q) => {
-                    quote_cache.insert(symbol.clone(), q.clone());
-                    q
-                }
-                Err(e) => {
-                    // A quoteless position silently vanishing from Live P/L
-                    // reads as "0 open positions" — leave a trail.
-                    tracing::warn!(symbol, error = %e, "live_positions: quote failed; position skipped");
-                    continue;
-                }
-            },
+        let cached = match quote_cache.get(&symbol) {
+            Some(c) => c.clone(),
+            None => {
+                let fetched = match crate::market_data::quote(pool, &symbol).await {
+                    Ok(q) => Some(q),
+                    Err(e) => {
+                        // A quoteless position silently vanishing from
+                        // Live P/L reads as "0 open positions" — leave a
+                        // trail and count it for the snapshot.
+                        tracing::warn!(symbol, error = %e, "live_positions: quote failed; position skipped");
+                        None
+                    }
+                };
+                quote_cache.insert(symbol.clone(), fetched.clone());
+                fetched
+            }
+        };
+        let Some(q) = cached else {
+            skipped += 1;
+            continue;
         };
         let qty_f = dec(qty);
         let entry_f = dec(entry);
@@ -149,6 +164,7 @@ pub async fn snapshot(pool: &PgPool, account_id: Uuid) -> anyhow::Result<LiveSna
         total_day_pnl: total_day,
         biggest_winner,
         biggest_loser,
+        skipped,
         fetched_at: Utc::now(),
     })
 }

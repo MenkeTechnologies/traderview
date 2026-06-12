@@ -41956,5 +41956,6 @@
   "wiz.broker.pick": "Broker",
   "wiz.broker.subtitle": "Pick the broker you trade with — the slug drives which CSV import parser fires.",
   "wiz.broker.title": "New broker",
-  "wiz.btn.create": "Criar"
+  "wiz.btn.create": "Criar",
+  "view.live_positions.status.skipped": "· {n} pulou (aspas falharam)"
 }

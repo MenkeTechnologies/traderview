@@ -56,9 +56,15 @@ pub async fn get() -> anyhow::Result<YahooAuth> {
     Ok(auth)
 }
 
-/// Drop the cached auth so the next `get()` re-handshakes. Call on 401.
-pub async fn invalidate() {
-    *CACHE.lock().await = None;
+/// Drop the cached auth so the next `get()` re-handshakes. Call on 401
+/// with the crumb that failed — if another task already replaced the
+/// cache with a fresh crumb, a stale failure must not wipe it (that
+/// caused N sequential re-handshakes under concurrent fan-out).
+pub async fn invalidate(seen_crumb: &str) {
+    let mut guard = CACHE.lock().await;
+    if guard.as_ref().is_some_and(|a| a.crumb == seen_crumb) {
+        *guard = None;
+    }
 }
 
 #[cfg(test)]

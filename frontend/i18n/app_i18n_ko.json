@@ -41956,5 +41956,6 @@
   "wiz.broker.pick": "Broker",
   "wiz.broker.subtitle": "Pick the broker you trade with — the slug drives which CSV import parser fires.",
   "wiz.broker.title": "New broker",
-  "wiz.btn.create": "이름 *"
+  "wiz.btn.create": "이름 *",
+  "view.live_positions.status.skipped": "· {n} 건너뛰기 (예를 들어 실패)"
 }

@@ -15353,6 +15353,7 @@
   "view.live_positions.hint.no_open_positions": "Không mở vị trí.",
   "view.live_positions.hint.notional": "Kích cỡ từng người một. Hiển thị tập trung vốn độc lập với hiệu suất P/L -- 60% nổi tiếng trong một tên là rủi ro tập trung ngay cả khi nó có màu xanh ngày nay.",
   "view.live_positions.hint.snapshot_of_every_open_trade_with_fresh_yahoo_quot": "Chụp ảnh mỗi giao dịch mở với trích dẫn Yahoo mới (60s\nMáy phục vụ-cached). Không xác định được danh dự P/L gia tăng và cạnh (dài/ ngắn). Ngày P/L\nsử dụng trích dẫn về việc đóng cửa. Cứ mỗi 30 giây lại được tươi tỉnh.",
+  "view.live_positions.status.skipped": "· {n} skipped (quote failed)",
   "view.live_positions.status.updated": "Cập nhật vị trí{time}*{n}",
   "view.live_positions.th.day_p_l": "Ngày P/L",
   "view.live_positions.th.entry": "Mục",

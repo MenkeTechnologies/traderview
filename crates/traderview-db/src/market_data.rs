@@ -227,7 +227,7 @@ pub async fn quote_summary(symbol: &str, modules: &[&str]) -> anyhow::Result<ser
             .send()
             .await?;
         if r.status() == reqwest::StatusCode::UNAUTHORIZED && attempt == 0 {
-            crate::yahoo_auth::invalidate().await;
+            crate::yahoo_auth::invalidate(&auth.crumb).await;
             continue;
         }
         resp = Some(r);

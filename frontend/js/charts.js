@@ -84,13 +84,32 @@ export function zoomPlugin({ getBounds } = {}) {
                     over.style.cursor = pan ? 'grabbing'
                         : (spaceDown && hovering ? 'grab' : '');
                 };
+                // Self-cleaning window listeners: charts are torn down by
+                // `el.innerHTML = ''` (dashboard re-renders, #charts Load)
+                // without calling u.destroy(), which would leak these four
+                // window handlers — and the closures pin the dead uPlot,
+                // its data, and the detached DOM. First event after the
+                // chart leaves the document unhooks everything.
+                const cleanup = () => {
+                    window.removeEventListener('mousemove', onMove);
+                    window.removeEventListener('mouseup', onUp);
+                    window.removeEventListener('keydown', onKeyDown);
+                    window.removeEventListener('keyup', onKeyUp);
+                };
+                const gone = () => {
+                    if (over.isConnected) return false;
+                    cleanup();
+                    return true;
+                };
                 const onKeyDown = (e) => {
+                    if (gone()) return;
                     if (e.code !== 'Space' || isTyping()) return;
                     if (hovering) e.preventDefault();
                     spaceDown = true;
                     setCursor();
                 };
                 const onKeyUp = (e) => {
+                    if (gone()) return;
                     if (e.code !== 'Space') return;
                     spaceDown = false;
                     setCursor();
@@ -101,7 +120,10 @@ export function zoomPlugin({ getBounds } = {}) {
                 window.addEventListener('keyup', onKeyUp);
 
                 const onMove = (e) => {
-                    if (!pan) return;
+                    if (gone() || !pan) return;
+                    // Mid-relayout zero width would make the shift NaN and
+                    // apply(NaN, NaN) blanks the chart.
+                    if (!over.clientWidth) return;
                     const sx = u.scales.x;
                     const span = pan.max - pan.min;
                     const [bMin, bMax] = bounds(u);
@@ -112,7 +134,11 @@ export function zoomPlugin({ getBounds } = {}) {
                     if (min + span > bMax) min = bMax - span;
                     if (min !== sx.min) apply(min, min + span);
                 };
-                const onUp = () => { pan = null; setCursor(); };
+                const onUp = () => {
+                    if (gone()) return;
+                    pan = null;
+                    setCursor();
+                };
                 over.addEventListener('mousedown', (e) => {
                     if (e.button !== 0) return;
                     const sx = u.scales.x;
@@ -145,12 +171,7 @@ export function zoomPlugin({ getBounds } = {}) {
                 }
                 wrap.appendChild(bar);
 
-                u._zoomCleanup = () => {
-                    window.removeEventListener('mousemove', onMove);
-                    window.removeEventListener('mouseup', onUp);
-                    window.removeEventListener('keydown', onKeyDown);
-                    window.removeEventListener('keyup', onKeyUp);
-                };
+                u._zoomCleanup = cleanup;
             },
             destroy: (u) => { if (u._zoomCleanup) u._zoomCleanup(); },
         },
@@ -264,24 +285,52 @@ export function ohlcChart(el, bars, marks = [], opts = {}) {
     let zoomTimer = null;
     const setScaleHook = onZoomChange ? (u, key) => {
         if (key !== 'x') return;
+        // Only persist USER zooms. uPlot fires setScale during the
+        // initial autoscale commit too — persisting that wrote the full
+        // data extent as a "zoom", so tomorrow's bars rendered clipped
+        // to yesterday's range. zoomPlugin sets u._zoomRange on every
+        // user gesture and nulls it on reset; null after a reset means
+        // "clear the saved zoom" (delivered as onZoomChange(null)).
         const s = u.scales.x;
         if (!s || s.min == null || s.max == null) return;
+        if (u._zoomRange === undefined) return; // init autoscale — not a gesture
         if (zoomTimer) clearTimeout(zoomTimer);
+        const zoomed = u._zoomRange !== null;
         const from = Number(s.min);
         const to = Number(s.max);
         zoomTimer = setTimeout(() => {
             zoomTimer = null;
-            if (Number.isFinite(from) && Number.isFinite(to) && to > from) {
+            if (!zoomed) {
+                onZoomChange(null);
+            } else if (Number.isFinite(from) && Number.isFinite(to) && to > from) {
                 onZoomChange([from, to]);
             }
         }, 350);
     } : null;
 
+    // y autorange over the VISIBLE bars' highs/lows. uPlot only sees the
+    // close series ([xs, c]), so its own autorange clipped wicks on
+    // wide-range bars — drawn, then cut by the bbox clip.
+    const yRange = (u) => {
+        const sx = u.scales && u.scales.x;
+        let yLo = Infinity, yHi = -Infinity;
+        for (let i = 0; i < xs.length; i++) {
+            if (sx && sx.min != null && (xs[i] < sx.min || xs[i] > sx.max)) continue;
+            if (lo[i] < yLo) yLo = lo[i];
+            if (hi[i] > yHi) yHi = hi[i];
+        }
+        if (!Number.isFinite(yLo) || !Number.isFinite(yHi)) {
+            yLo = Math.min(...lo); yHi = Math.max(...hi);
+        }
+        const pad = (yHi - yLo) * 0.03 || Math.abs(yHi) * 0.01 || 1;
+        return [yLo - pad, yHi + pad];
+    };
+
     const plot = new window.uPlot({
         title: '',
         width: w,
         height: h,
-        scales: { x: { time: true } },
+        scales: { x: { time: true }, y: { range: yRange } },
         series: [
             { label: t('chart.series.time') },
             { label: t('chart.series.price'), stroke: 'transparent', paths: candlePath },

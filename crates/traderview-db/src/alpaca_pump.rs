@@ -162,11 +162,50 @@ pub async fn handle_trade_update(
         stop_price: Decimal::zero(),
         take_profit_price: Decimal::zero(),
     };
+    // Replay/over-count guard. Two ways a slice can arrive that the
+    // ledger already accounts for: (a) Alpaca's trade_updates WS replays
+    // every fill on reconnect, and a pre-fix fill may sit under a
+    // different broker_fill_id than this slice's execution_id, so the
+    // algo_fills UNIQUE alone can't catch it; (b) reconcile_recent_fills
+    // repaired the order while the WS was down, then the reconnect
+    // replays the original slices. Clamp against the broker's cumulative
+    // filled_qty: anything beyond it is a duplicate, not a fill.
+    let fill_qty = if let Some(filled_cum) = event.order.filled_qty {
+        let (ingested, _notional): (Decimal, Decimal) =
+            ingested_for_order(pool, strategy.account_id, &event.order.id, &intent.symbol).await?;
+        match clamp_slice(filled_cum, ingested, fill_qty) {
+            Some(q) => {
+                if q != fill_qty {
+                    tracing::warn!(
+                        symbol = %intent.symbol, broker_order_id = %event.order.id, slice = %fill_qty,
+                        clamped = %q, "fill slice exceeds broker cumulative; clamping"
+                    );
+                }
+                q
+            }
+            None => {
+                tracing::debug!(
+                    symbol = %intent.symbol, broker_order_id = %event.order.id, %fill_qty,
+                    "ledger already covers broker cumulative; dropping replayed slice"
+                );
+                return Ok(());
+            }
+        }
+    } else {
+        fill_qty
+    };
+
     // Slice-unique id for algo_fills idempotency; composite fallback if
-    // Alpaca ever omits execution_id. The executions row keeps the order
-    // id so per-order sums (reconcile) see every slice.
+    // Alpaca ever omits execution_id. The fallback includes the event
+    // timestamp — order id + qty alone collides for two equal-qty slices
+    // of the same order (100+100 round lots). The executions row keeps
+    // the order id so per-order sums (reconcile) see every slice.
     let slice_id = event.execution_id.clone().unwrap_or_else(|| {
-        format!("{}:{}:{}", event.order.id, event.event, fill_qty)
+        format!(
+            "{}:{}:{}:{}",
+            event.order.id, event.event, fill_qty,
+            executed_at.timestamp_millis()
+        )
     });
     let immediate = ImmediateFill {
         price: fill_price,
@@ -180,6 +219,42 @@ pub async fn handle_trade_update(
         .await
         .map_err(|e| anyhow::anyhow!("record_fill: {e}"))?;
     Ok(())
+}
+
+/// Qty already ingested for one broker order: how much of the broker's
+/// cumulative `filled_qty` the executions ledger accounts for. Shared by
+/// the WS replay guard and the reconcile sweep so both compare against
+/// the same number.
+async fn ingested_for_order(
+    pool: &PgPool,
+    account_id: Uuid,
+    broker_order_id: &str,
+    symbol: &str,
+) -> anyhow::Result<(Decimal, Decimal)> {
+    let row: (Decimal, Decimal) = sqlx::query_as(
+        "SELECT COALESCE(SUM(qty), 0), COALESCE(SUM(qty * price), 0)
+           FROM executions
+          WHERE account_id = $1 AND broker_order_id = $2 AND symbol = $3",
+    )
+    .bind(account_id)
+    .bind(broker_order_id)
+    .bind(symbol)
+    .fetch_one(pool)
+    .await?;
+    Ok(row)
+}
+
+/// Clamp an incoming WS slice against the broker's cumulative filled
+/// qty. `None` = the ledger already covers the cumulative (replayed or
+/// reconciled fill) — drop the slice. `Some(q)` = ingest q (the full
+/// slice in the normal live path, or the remaining gap when a repair
+/// row already covers part of it).
+fn clamp_slice(filled_cum: Decimal, ingested: Decimal, slice: Decimal) -> Option<Decimal> {
+    let remaining = filled_cum - ingested;
+    if remaining <= Decimal::zero() {
+        return None;
+    }
+    Some(slice.min(remaining))
 }
 
 /// Given a broker order's cumulative fill state and what the executions
@@ -240,16 +315,8 @@ pub async fn reconcile_recent_fills(
         let Some(strategy) = crate::algo::get_strategy_by_id(pool, strategy_id).await? else {
             continue;
         };
-        let (ingested_qty, ingested_notional): (Decimal, Decimal) = sqlx::query_as(
-            "SELECT COALESCE(SUM(qty), 0), COALESCE(SUM(qty * price), 0)
-               FROM executions
-              WHERE account_id = $1 AND broker_order_id = $2 AND symbol = $3",
-        )
-        .bind(strategy.account_id)
-        .bind(&o.id)
-        .bind(&symbol)
-        .fetch_one(pool)
-        .await?;
+        let (ingested_qty, ingested_notional) =
+            ingested_for_order(pool, strategy.account_id, &o.id, &symbol).await?;
         let Some((miss_qty, miss_price)) =
             remainder_fill(filled_qty, filled_avg, ingested_qty, ingested_notional)
         else {
@@ -276,8 +343,14 @@ pub async fn reconcile_recent_fills(
         let fill = ImmediateFill {
             price: miss_price,
             qty: miss_qty,
+            // Known gap: trade_updates carries no fee and neither does
+            // /v2/orders — crypto taker fees live in the activities
+            // ledger (activity_types=FEE) and are not swept here, so
+            // crypto net P&L is overstated by the fee amount.
             fee: Decimal::zero(),
-            executed_at: o.updated_at.unwrap_or_else(Utc::now),
+            // filled_at over updated_at: for partially-filled-then-
+            // canceled orders updated_at is the cancel time.
+            executed_at: o.filled_at.or(o.updated_at).unwrap_or_else(Utc::now),
             // Ingested-qty suffix keeps re-sweeps idempotent: the same
             // gap maps to the same id (algo_fills UNIQUE rejects the
             // replay); once repaired, delta is zero and no id is minted.
@@ -418,6 +491,27 @@ mod tests {
 
     fn d(s: &str) -> Decimal {
         Decimal::from_str(s).unwrap()
+    }
+
+    #[test]
+    fn clamp_slice_passes_normal_live_slice() {
+        // Broker says 100 filled cumulative, ledger has 60, slice is 40.
+        assert_eq!(super::clamp_slice(d("100"), d("60"), d("40")), Some(d("40")));
+    }
+
+    #[test]
+    fn clamp_slice_drops_replay_when_ledger_covers_cumulative() {
+        // Reconcile repaired the whole order, then the WS replays the
+        // original slices — every one must be dropped, not re-inserted.
+        assert_eq!(super::clamp_slice(d("100"), d("100"), d("40")), None);
+        assert_eq!(super::clamp_slice(d("100"), d("120"), d("40")), None);
+    }
+
+    #[test]
+    fn clamp_slice_trims_partial_overlap_with_repair_row() {
+        // Repair covered 80 of 100; a replayed 40-slice only has 20 of
+        // genuinely-missing qty left.
+        assert_eq!(super::clamp_slice(d("100"), d("80"), d("40")), Some(d("20")));
     }
 
     #[test]

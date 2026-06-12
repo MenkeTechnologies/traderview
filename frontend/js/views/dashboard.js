@@ -1309,8 +1309,10 @@ async function loadDisciplineScore(el, accountId) {
 async function loadRiskGateBadge(el) {
     try {
         const fires = await api.riskFires(200);
-        const today = new Date().toISOString().slice(0, 10);
-        const todays = fires.filter(f => f.fired_at.slice(0, 10) === today);
+        // LOCAL date — toISOString is UTC and rolls to tomorrow at ~5pm PT,
+        // the exact bug localToday was written for.
+        const today = localToday(new Date());
+        const todays = fires.filter(f => localToday(new Date(f.fired_at)) === today);
         const blocks = todays.filter(f => f.blocked).length;
         const warns  = todays.length - blocks;
         if (!todays.length) {

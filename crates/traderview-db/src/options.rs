@@ -46,7 +46,7 @@ pub async fn chain(symbol: &str, expiration: Option<NaiveDate>) -> anyhow::Resul
         }
         let r = req.send().await?;
         if r.status() == reqwest::StatusCode::UNAUTHORIZED && attempt == 0 {
-            crate::yahoo_auth::invalidate().await;
+            crate::yahoo_auth::invalidate(&auth.crumb).await;
             continue;
         }
         resp = Some(r);
