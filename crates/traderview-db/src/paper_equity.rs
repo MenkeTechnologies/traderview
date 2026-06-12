@@ -1582,6 +1582,14 @@ pub struct ConsolidatedHolding {
     /// and the net is a synthetic position nobody entered at any
     /// price. The legs are right there for the real numbers.
     pub weighted_avg_price: Option<f64>,
+    /// Current mark (simple_spot — equities cached, crypto 5s cache,
+    /// OCC chain mid × 100). None when unquotable; the row still lists.
+    pub mark: Option<f64>,
+    /// mark × net_qty.
+    pub market_value: Option<f64>,
+    /// Σ qty × (mark − avg) across legs — well-defined even when the
+    /// legs have mixed signs, unlike the average itself.
+    pub unrealized: Option<f64>,
     pub legs: Vec<HoldingLeg>,
 }
 
@@ -1604,6 +1612,9 @@ pub fn consolidate(rows: &[(String, String, f64, f64)]) -> Vec<ConsolidatedHoldi
                 symbol: symbol.to_string(),
                 net_qty,
                 weighted_avg_price,
+                mark: None,
+                market_value: None,
+                unrealized: None,
                 legs: legs
                     .iter()
                     .map(|l| HoldingLeg { account: l.1.clone(), qty: l.2, avg_price: l.3 })
@@ -1634,7 +1645,25 @@ pub async fn consolidated_holdings(
         .into_iter()
         .map(|(s, a, q, p)| (s, a, q.to_f64().unwrap_or(0.0), p.to_f64().unwrap_or(0.0)))
         .collect();
-    Ok(consolidate(&plain))
+    let mut out = consolidate(&plain);
+    // Mark each consolidated row; unquotable symbols still list with
+    // None marks rather than vanishing. OCC marks via the chain mid
+    // at the option multiplier; everything else via simple_spot.
+    for h in &mut out {
+        let mark = if let Some(occ) = traderview_core::occ_symbol::parse(&h.symbol) {
+            crate::paper::option_quote(&occ).await.ok().flatten().map(|p| p * 100.0)
+        } else {
+            crate::paper::simple_spot(pool, &h.symbol).await.ok()
+        };
+        if let Some(m) = mark.filter(|m| *m > 0.0) {
+            h.mark = Some(m);
+            h.market_value = Some(m * h.net_qty);
+            h.unrealized = Some(
+                h.legs.iter().map(|l| l.qty * (m - l.avg_price)).sum(),
+            );
+        }
+    }
+    Ok(out)
 }
 
 #[cfg(test)]
@@ -1666,6 +1695,13 @@ mod holdings_tests {
         let tsla = &out[2];
         assert_eq!(tsla.net_qty, 60.0);
         assert!(tsla.weighted_avg_price.is_none());
+        // The unrealized formula is leg-wise Σ qty×(mark − avg), which
+        // stays well-defined exactly where the average refuses: TSLA
+        // long 100@200 + short 40@210 marked at 220 → 100×20 + (−40)×10
+        // = +1600 (the long gains, the short loses).
+        let mark = 220.0;
+        let u: f64 = tsla.legs.iter().map(|l| l.qty * (mark - l.avg_price)).sum();
+        assert!((u - 1_600.0).abs() < 1e-9);
     }
 }
 

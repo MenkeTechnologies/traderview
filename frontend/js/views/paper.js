@@ -1100,12 +1100,18 @@ function renderHoldings(rows) {
             <th data-i18n="view.paper.holdings.symbol">Symbol</th>
             <th data-i18n="view.paper.holdings.net">Net qty</th>
             <th data-i18n="view.paper.holdings.avg">Wtd avg</th>
+            <th data-i18n="view.paper.holdings.mark">Mark</th>
+            <th data-i18n="view.paper.holdings.value">Value</th>
+            <th data-i18n="view.paper.holdings.unrealized">Unreal.</th>
             <th data-i18n="view.paper.holdings.legs">Accounts</th>
         </tr></thead><tbody>
         ${rows.map(h => `<tr>
             <td><a href="#research/${encodeURIComponent(h.symbol)}">${esc(h.symbol)}</a></td>
             <td class="${h.net_qty >= 0 ? '' : 'neg'}">${fmt(h.net_qty, 0)}</td>
             <td>${h.weighted_avg_price != null ? fmt(h.weighted_avg_price) : '—'}</td>
+            <td>${h.mark != null ? fmt(h.mark) : '—'}</td>
+            <td>${h.market_value != null ? '$' + fmt(h.market_value) : '—'}</td>
+            <td class="${(h.unrealized ?? 0) >= 0 ? 'pos' : 'neg'}">${h.unrealized != null ? (h.unrealized >= 0 ? '+' : '−') + '$' + fmt(Math.abs(h.unrealized)) : '—'}</td>
             <td class="muted">${h.legs.map(l => `${esc(l.account)}: ${fmt(l.qty, 0)} @ ${fmt(l.avg_price)}`).join(' · ')}</td>
         </tr>`).join('')}
         </tbody></table>
