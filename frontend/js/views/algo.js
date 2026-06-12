@@ -2165,7 +2165,7 @@ function renderBacktestResult(host, r) {
             <div><strong>Avg R:</strong> ${sm.avg_r.toFixed(2)}</div>
             <div><strong>Sharpe (bar):</strong> ${sm.sharpe.toFixed(3)}</div>
             <div><strong>Final equity:</strong> ${finalRow}</div>
-            <div><strong>Exits:</strong> SL ${sm.exits_by_stop} / TP ${sm.exits_by_tp} / Sig ${sm.exits_by_signal} / EOD ${sm.exits_by_eod}</div>
+            <div><strong>Exits:</strong> SL ${sm.exits_by_stop} / TP ${sm.exits_by_tp} / Sig ${sm.exits_by_signal}${sm.exits_by_time_stop ? ` / Time ${sm.exits_by_time_stop}` : ''} / EOD ${sm.exits_by_eod}</div>
             ${r.gate_skips && (r.gate_skips.entry_window + r.gate_skips.daily_entry_cap + r.gate_skips.loss_cooldown + (r.gate_skips.max_drawdown || 0) + (r.gate_skips.entry_days || 0)) > 0
                 ? `<div><strong>Gate skips:</strong> window ${r.gate_skips.entry_window} / daily cap ${r.gate_skips.daily_entry_cap} / cooldown ${r.gate_skips.loss_cooldown}${r.gate_skips.entry_days ? ` / days ${r.gate_skips.entry_days}` : ''}${r.gate_skips.max_drawdown ? ` / drawdown latch ${r.gate_skips.max_drawdown}` : ''} — entries the gates removed from this run</div>`
                 : ''}

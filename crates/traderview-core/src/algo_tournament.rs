@@ -214,6 +214,7 @@ mod tests {
             exits_by_stop: 0,
             exits_by_tp: 0,
             exits_by_signal: 0,
+            exits_by_time_stop: 0,
             exits_by_eod: 0,
         }
     }

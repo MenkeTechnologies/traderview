@@ -60,6 +60,10 @@ pub struct BtGates {
     pub max_entries_per_day: Option<usize>,
     /// Minutes after a losing trade closes before the next entry.
     pub loss_cooldown_minutes: Option<i64>,
+    /// Time stop: force-exit at the close of the first bar where the
+    /// position has been held at least this many minutes — the live
+    /// engine's max_hold_minutes overlay, replayed.
+    pub max_hold_minutes: Option<i64>,
     /// Drawdown circuit breaker: once cumulative trade PnL falls this
     /// many dollars below its peak, ALL later entries are blocked —
     /// a latch, mirroring the live kill switch, which stays tripped
@@ -82,7 +86,7 @@ pub struct GateSkips {
 /// run loop only wires it.
 #[derive(Debug, Clone)]
 pub struct GateState {
-    gates: BtGates,
+    pub gates: BtGates,
     cur_day: Option<chrono::NaiveDate>,
     entries_today: usize,
     last_loss_at: Option<DateTime<Utc>>,
@@ -186,6 +190,11 @@ pub enum ExitReason {
     StopLoss,
     TakeProfit,
     StrategySignal,
+    /// Max-hold time stop — the live engine's max_hold_minutes
+    /// overlay, replayed. Ranks after intrabar SL/TP (price-path
+    /// events that happened regardless) but before the strategy
+    /// signal it overrides.
+    TimeStop,
     EndOfData,
 }
 
@@ -235,6 +244,7 @@ pub struct AlgoBtSummary {
     pub exits_by_stop: usize,
     pub exits_by_tp: usize,
     pub exits_by_signal: usize,
+    pub exits_by_time_stop: usize,
     pub exits_by_eod: usize,
 }
 
@@ -316,6 +326,11 @@ pub fn run_with_gates(
                 Side::Sell => (high >= pos.stop_price, low <= pos.take_profit_price),
             };
 
+            // Time stop: inclusive boundary, same as the live
+            // time_stop_due — held ≥ cap minutes at this bar's time.
+            let ts_hit = gate_state.gates.max_hold_minutes.is_some_and(|cap| {
+                (bar_time - pos.entry_time).num_minutes() >= cap
+            });
             let (exit_price, reason) = if sl_hit && tp_hit {
                 // Pessimistic: assume SL fills first.
                 (pos.stop_price, ExitReason::StopLoss)
@@ -323,6 +338,10 @@ pub fn run_with_gates(
                 (pos.stop_price, ExitReason::StopLoss)
             } else if tp_hit {
                 (pos.take_profit_price, ExitReason::TakeProfit)
+            } else if ts_hit {
+                // Live fills at the last quote; the bar analogue is
+                // this bar's close.
+                (close, ExitReason::TimeStop)
             } else if sig_exit.is_some() {
                 // Signal exit fills at NEXT bar's open + slippage. If
                 // we're the last bar, fall through to end-of-data.
@@ -554,6 +573,10 @@ fn summarize(
         .iter()
         .filter(|t| t.exit_reason == ExitReason::StrategySignal)
         .count();
+    let exits_by_time_stop = trades
+        .iter()
+        .filter(|t| t.exit_reason == ExitReason::TimeStop)
+        .count();
     let exits_by_eod = trades
         .iter()
         .filter(|t| t.exit_reason == ExitReason::EndOfData)
@@ -580,6 +603,7 @@ fn summarize(
         exits_by_stop,
         exits_by_tp,
         exits_by_signal,
+        exits_by_time_stop,
         exits_by_eod,
     }
 }
@@ -914,8 +938,40 @@ mod tests {
         let by_reason = res.summary.exits_by_stop
             + res.summary.exits_by_tp
             + res.summary.exits_by_signal
+            + res.summary.exits_by_time_stop
             + res.summary.exits_by_eod;
         assert_eq!(by_reason, res.summary.trades);
+    }
+
+    #[test]
+    fn time_stop_replay_exits_at_close_with_reason() {
+        // One entry, evaluate_exit always None, SL/TP far out of
+        // reach: only the time stop can close this trade. 1-minute
+        // bars, 5-minute cap — the trade must close with TimeStop at
+        // the close of the bar where held-minutes reaches 5, not ride
+        // to EndOfData.
+        let bars: Vec<PriceBar> = (0..20)
+            .map(|i| bar(1_700_000_000 + i * 60, "100.0", "100.5", "99.5", "100.2", 1_000_000))
+            .collect();
+        let strat = MockSingleEntry {
+            entry_index: 2,
+            side: Side::Buy,
+            entry_price: 100.0,
+            stop_price: 50.0,         // unreachable
+            take_profit_price: 200.0, // unreachable
+        };
+        let gates = BtGates { max_hold_minutes: Some(5), ..Default::default() };
+        let r = run_with_gates(&bars, &strat, &Sizing::default(), BacktestConfig::default(), gates);
+        assert_eq!(r.trades.len(), 1);
+        assert_eq!(r.trades[0].exit_reason, ExitReason::TimeStop);
+        assert_eq!(r.summary.exits_by_time_stop, 1);
+        // Entry at bar 3 (next-bar fill); 5 minutes later = bar 8.
+        assert_eq!(r.trades[0].bars_held, 5);
+        // Exit at the close: 100.2.
+        assert!((r.trades[0].exit_price - 100.2).abs() < 1e-9);
+        // Without the cap the same setup rides to EndOfData.
+        let r2 = run_with_gates(&bars, &strat, &Sizing::default(), BacktestConfig::default(), BtGates::default());
+        assert_eq!(r2.trades[0].exit_reason, ExitReason::EndOfData);
     }
 }
 

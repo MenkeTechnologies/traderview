@@ -645,6 +645,11 @@ async fn post_backtest(
                 .get("max_drawdown_usd")
                 .and_then(|v| v.as_f64())
                 .filter(|v| *v > 0.0),
+            max_hold_minutes: strategy
+                .risk_gates
+                .get("max_hold_minutes")
+                .and_then(|v| v.as_i64())
+                .filter(|n| *n > 0),
         }
     } else {
         traderview_core::algo_backtest::BtGates::default()

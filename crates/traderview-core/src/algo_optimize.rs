@@ -413,6 +413,7 @@ mod tests {
             exits_by_stop: 4,
             exits_by_tp: 5,
             exits_by_signal: 1,
+            exits_by_time_stop: 0,
             exits_by_eod: 0,
         };
         let result = AlgoBtResult {
@@ -452,6 +453,7 @@ mod tests {
             exits_by_stop: 0,
             exits_by_tp: 5,
             exits_by_signal: 0,
+            exits_by_time_stop: 0,
             exits_by_eod: 0,
         };
         let r = AlgoBtResult {
