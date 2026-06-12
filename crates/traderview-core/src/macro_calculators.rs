@@ -1,7 +1,7 @@
 //! Macro policy / recession gauges:
 //!
 //! * Taylor rule (1993) — prescribed policy rate
-//!     i = r* + π + 0.5·(π − π*) + 0.5·gap
+//!   i = r* + π + 0.5·(π − π*) + 0.5·gap
 //!   compared against the actual rate for a tight/loose verdict.
 //! * Sahm rule (2019) — recession signal when the 3-month average
 //!   unemployment rate rises ≥ 0.50pp above its minimum over the
@@ -179,7 +179,7 @@ mod tests {
 
     #[test]
     fn sahm_stays_quiet_on_flat_unemployment() {
-        let r = sahm_rule(&vec![3.7; 24]).unwrap();
+        let r = sahm_rule(&[3.7; 24]).unwrap();
         assert!(r.sahm_value.abs() < 1e-12);
         assert!(!r.triggered);
     }

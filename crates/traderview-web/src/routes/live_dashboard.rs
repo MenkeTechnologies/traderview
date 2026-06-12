@@ -87,7 +87,7 @@ async fn snapshot(
         .await
         .map_err(|e| ApiError::Internal(e.into()))?;
     let broker = row.map(|(b,)| b).unwrap_or_default();
-    if broker.to_ascii_lowercase() != "alpaca" {
+    if !broker.eq_ignore_ascii_case("alpaca") {
         return Ok(Json(LiveDashboard {
             account_id: q.account_id,
             broker: "alpaca",
@@ -110,7 +110,7 @@ async fn snapshot(
 
     let creds = data_source_keys::alpaca_creds_plain(&s.pool, user.id)
         .await
-        .map_err(|e| ApiError::Internal(e.into()))?;
+        .map_err(ApiError::Internal)?;
     let Some((key_id, secret, paper)) = creds else {
         return Ok(Json(LiveDashboard {
             account_id: q.account_id,

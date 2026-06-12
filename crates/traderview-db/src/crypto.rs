@@ -1249,7 +1249,8 @@ pub fn book_depth(
 ) -> Option<BookDepth> {
     let best_bid = bids.iter().map(|(p, _)| *p).fold(f64::MIN, f64::max);
     let best_ask = asks.iter().map(|(p, _)| *p).fold(f64::MAX, f64::min);
-    if !(best_bid > 0.0) || !(best_ask.is_finite()) || best_ask <= 0.0 || best_ask < best_bid {
+    let valid = best_bid > 0.0 && best_ask.is_finite() && best_ask > 0.0 && best_ask >= best_bid;
+    if !valid {
         return None;
     }
     let mid = (best_bid + best_ask) / 2.0;

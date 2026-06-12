@@ -6,20 +6,20 @@
 //! depend on the < 12-month bucket:
 //!
 //!   - current assets       — cash, savings, money market, CDs maturing
-//!                            in < 12m, receivables
+//!     in < 12m, receivables
 //!   - non-current assets   — retirement accounts (locked until 59½),
-//!                            home equity, vehicles, collectibles
+//!     home equity, vehicles, collectibles
 //!   - current liabilities  — credit cards, bills due, loan payments
-//!                            due within 12m
+//!     due within 12m
 //!   - long-term liabilities— mortgage principal beyond 12m, student
-//!                            loans, auto-loan principal beyond 12m
+//!     loans, auto-loan principal beyond 12m
 //!
 //! Outputs:
 //!   - equity_usd = total_assets − total_liabilities (same as net worth)
 //!   - current_ratio = current_assets / current_liabilities
 //!   - quick_ratio   = (current_assets − illiquid_in_current) /
-//!                     current_liabilities — but for personal finance the
-//!                     classical quick = (cash + receivables) / curr_liab
+//!     current_liabilities — but for personal finance the
+//!     classical quick = (cash + receivables) / curr_liab
 //!     We surface both ratios. Quick-ratio inputs come from a separate
 //!     `liquid_only` flag on each current-asset line.
 //!   - working_capital = current_assets − current_liabilities

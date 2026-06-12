@@ -42,7 +42,7 @@ mod tests {
     fn put_call_parity_holds() {
         let (s, k, t, r, q, sig) = (100.0, 95.0, 0.5, 0.04, 0.01, 0.3);
         let lhs = call(s, k, t, r, q, sig) - put(s, k, t, r, q, sig);
-        let rhs = s * (-q * t as f64).exp() - k * (-r * t as f64).exp();
+        let rhs = s * (-q * t).exp() - k * (-r * t).exp();
         assert!((lhs - rhs).abs() < 1e-12, "{lhs} vs {rhs}");
     }
 

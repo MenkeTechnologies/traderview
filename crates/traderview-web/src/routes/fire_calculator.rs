@@ -42,7 +42,7 @@ async fn compute(
             "current_age must be in [1, 110]".into(),
         ));
     }
-    if !(input.target_retirement_age >= input.current_age + 1 && input.target_retirement_age <= 110)
+    if !(input.target_retirement_age > input.current_age && input.target_retirement_age <= 110)
     {
         return Err(ApiError::BadRequest(
             "target_retirement_age must be > current_age and ≤ 110".into(),

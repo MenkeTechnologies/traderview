@@ -1944,7 +1944,7 @@ pub struct SpreadPreview {
 /// premium, and the expiry payoff profile (max profit/loss,
 /// breakevens) over spot ± 30%. Same validation and quote source as
 /// submit_spread, so the preview prices what the submit would fill.
-pub async fn preview_spread(pool: &PgPool, req: &SpreadRequest) -> anyhow::Result<SpreadPreview> {
+pub async fn preview_spread(_pool: &PgPool, req: &SpreadRequest) -> anyhow::Result<SpreadPreview> {
     traderview_core::option_spread::validate(&req.legs).map_err(|e| anyhow::anyhow!(e))?;
     if req.qty <= Decimal::ZERO || req.qty > Decimal::from(1000) {
         anyhow::bail!("qty must be in 1..=1000 spreads");

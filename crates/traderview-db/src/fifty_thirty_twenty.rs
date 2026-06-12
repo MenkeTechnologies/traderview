@@ -2,11 +2,11 @@
 //!
 //! Split after-tax (net) income into three buckets:
 //!   - 50% NEEDS    — rent, groceries, utilities, insurance, minimum
-//!                    debt payments, mandatory expenses
+//!     debt payments, mandatory expenses
 //!   - 30% WANTS    — dining out, streaming, hobbies, vacations,
-//!                    upgrades to needs (organic groceries, gym)
+//!     upgrades to needs (organic groceries, gym)
 //!   - 20% SAVINGS  — emergency fund, retirement, brokerage, EXTRA
-//!                    debt payment beyond minimum
+//!     debt payment beyond minimum
 //!
 //! Each input row carries a `bucket` ∈ {needs, wants, savings} and
 //! an amount. Compute returns per-bucket actual + ideal + delta + %.

@@ -82,10 +82,10 @@ pub fn nelder_mead<F: Fn(&[f64]) -> f64>(
             values[worst] = v_con;
             continue;
         }
+        let best = simplex[idx[0]].clone();
         for i in 1..=n {
-            let bi = idx[0];
-            for j in 0..n {
-                simplex[idx[i]][j] = simplex[bi][j] + sigma * (simplex[idx[i]][j] - simplex[bi][j]);
+            for (x, &b) in simplex[idx[i]].iter_mut().zip(&best) {
+                *x = b + sigma * (*x - b);
             }
             values[idx[i]] = f(&simplex[idx[i]]);
         }

@@ -52,12 +52,15 @@ pub fn compute(
     call_low_price: f64,
     call_high_price: f64,
 ) -> Option<SeagullReport> {
-    if ![put_strike, call_low_strike, call_high_strike].iter().all(|k| k.is_finite() && *k > 0.0)
-        || !(put_strike < call_low_strike && call_low_strike < call_high_strike)
-        || ![put_price, call_low_price, call_high_price]
+    let valid = [put_strike, call_low_strike, call_high_strike]
+        .iter()
+        .all(|k| k.is_finite() && *k > 0.0)
+        && put_strike < call_low_strike
+        && call_low_strike < call_high_strike
+        && [put_price, call_low_price, call_high_price]
             .iter()
-            .all(|p| p.is_finite() && *p >= 0.0)
-    {
+            .all(|p| p.is_finite() && *p >= 0.0);
+    if !valid {
         return None;
     }
     let (k1, k2, k3) = (put_strike, call_low_strike, call_high_strike);

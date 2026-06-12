@@ -10,20 +10,20 @@
 //!   - name
 //!   - period_allotment_usd  — start-of-period budget
 //!   - starting_balance_usd  — what's currently in the envelope
-//!                              (may include rollover from prior period)
+//!     (may include rollover from prior period)
 //!   - spent_this_period_usd
 //!   - rollover               — true = leftover carries into next period
-//!                              (sinking-fund style); false = leftover
-//!                              resets (use-it-or-lose-it categories
-//!                              like groceries)
+//!     (sinking-fund style); false = leftover
+//!     resets (use-it-or-lose-it categories
+//!     like groceries)
 //!
 //! Compute returns per envelope:
 //!   - remaining_usd       = starting_balance − spent_this_period
 //!   - usage_pct           = spent / period_allotment × 100
 //!   - status              = "ok" (usage < 75%) | "warning" (≥ 75 < 100%)
-//!                            | "empty" (≥ 100%, may go negative)
+//!     | "empty" (≥ 100%, may go negative)
 //!   - next_period_balance = if rollover: max(remaining, 0) + period_allotment
-//!                            else: period_allotment
+//!     else: period_allotment
 //!
 //! Plus aggregates: total_allotment / total_starting_balance /
 //! total_spent / total_remaining / envelopes_empty_count /

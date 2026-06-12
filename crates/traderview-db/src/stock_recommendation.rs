@@ -1090,14 +1090,12 @@ pub async fn backtest(
         let highs = &highs_all[..=i];
         let lows = &lows_all[..=i];
         let volumes = &volumes_all[..=i];
-        let components = vec![
-            score_trend(closes),
+        let components = [score_trend(closes),
             score_momentum(closes),
             score_macd(closes),
             score_rsi(closes),
             score_adx(highs, lows, closes),
-            score_volume(volumes, closes),
-        ];
+            score_volume(volumes, closes)];
         let weighted: f64 = components.iter().map(|c| c.weight * c.score).sum();
         let total_weight: f64 = components.iter().map(|c| c.weight).sum();
         let score = if total_weight > 0.0 {

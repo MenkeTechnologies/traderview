@@ -94,7 +94,7 @@ pub fn run(
             baseline_rules,
             grid,
             sizing,
-            cfg.clone(),
+            cfg,
             metric,
             1,
             gates.clone(),
@@ -110,7 +110,7 @@ pub fn run(
             &bars[is_end..oos_end],
             strat.as_ref(),
             sizing,
-            cfg.clone(),
+            cfg,
             gates.clone(),
         );
         oos_total_trades += oos_bt.summary.trades;

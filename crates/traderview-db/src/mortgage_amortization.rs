@@ -166,7 +166,7 @@ pub fn compute(input: &MortgageInput) -> MortgageReport {
 
     let (baseline_interest, baseline_months) = simulate(principal, input.apr_pct, input.term_months, 0.0);
     let (extra_interest, extra_months) = simulate(principal, input.apr_pct, input.term_months, input.extra_principal_usd);
-    let months_saved = if baseline_months > extra_months { baseline_months - extra_months } else { 0 };
+    let months_saved = baseline_months.saturating_sub(extra_months);
     let interest_saved = (baseline_interest - extra_interest).max(0.0);
 
     let head = schedule_head(principal, input.apr_pct, input.term_months, input.extra_principal_usd, 24);

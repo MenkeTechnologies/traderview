@@ -26,9 +26,9 @@
 //!   - current_remaining_interest_usd     (if held to maturity)
 //!   - new_total_interest_usd
 //!   - lifetime_interest_delta_usd        (current − new, positive = refi wins
-//!                                          over full term)
+//!     over full term)
 //!   - status                              — "refi_wins" / "breakeven_too_long" /
-//!                                            "no_savings"
+//!     "no_savings"
 //!
 //! Pure compute.
 

@@ -14,9 +14,9 @@
 //!   - remaining_usd            — target − current
 //!   - required_monthly_usd     — remaining / months (None if months ≤ 0)
 //!   - months_to_target_at_rate — remaining / monthly_contribution
-//!                                (None if no contribution AND remaining > 0)
+//!     (None if no contribution AND remaining > 0)
 //!   - on_track                 — monthly_contribution ≥ required_monthly
-//!                                AND months_to_target ≤ target_date
+//!     AND months_to_target ≤ target_date
 //!   - shortfall_per_month_usd  — required − contribution (≥ 0)
 //!
 //! Plus aggregates:

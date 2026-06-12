@@ -133,8 +133,8 @@ pub fn compute(input: &DebtAvalancheInput) -> DebtAvalancheReport {
         while extra > 0.005 {
             let mut target: Option<usize> = None;
             let mut best_apr = f64::NEG_INFINITY;
-            for i in 0..n {
-                if balances[i] > 0.0 && input.debts[i].apr_pct > best_apr {
+            for (i, bal) in balances.iter().enumerate() {
+                if *bal > 0.0 && input.debts[i].apr_pct > best_apr {
                     best_apr = input.debts[i].apr_pct;
                     target = Some(i);
                 }

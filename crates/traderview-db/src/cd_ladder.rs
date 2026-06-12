@@ -12,7 +12,7 @@
 //!   - term_years_per_rung — typically 1 (each rung extends by 1y)
 //!   - per_rung_apy_pct[]  — published APY per rung, length = rungs
 //!     (if a single rate is supplied as input.flat_apy_pct, all rungs
-//!      use the same rate)
+//!     use the same rate)
 //!   - flat_apy_pct (optional) — overrides per_rung when set
 //!
 //! Pure compute.

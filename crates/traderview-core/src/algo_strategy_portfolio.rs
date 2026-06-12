@@ -117,7 +117,7 @@ pub fn analyze(
         if strat.required_symbols().is_some() {
             return Err(format!("{kind} is multi-symbol — not portfolioable on one bar set"));
         }
-        let bt = run(bars, strat.as_ref(), sizing, cfg.clone());
+        let bt = run(bars, strat.as_ref(), sizing, *cfg);
         let equity: Vec<f64> = bt.equity.iter().map(|p| p.equity).collect();
         let returns = bar_returns(&equity);
         legs.push(PortfolioLeg {

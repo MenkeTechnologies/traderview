@@ -5,26 +5,26 @@
 //! with a published benchmark and a traffic-light rating:
 //!
 //!   - savings_rate        — (gross_income − total_expenses) / gross_income
-//!                           target ≥ 20% (good ≥ 15%, ok ≥ 5%, poor < 5%)
+//!     target ≥ 20% (good ≥ 15%, ok ≥ 5%, poor < 5%)
 //!   - debt_to_income      — total_monthly_debt_payments / gross_monthly_income
-//!                           target ≤ 36% (good ≤ 36%, ok ≤ 43%, poor > 43%)
-//!                           (CFPB 43% qualified-mortgage cap)
+//!     target ≤ 36% (good ≤ 36%, ok ≤ 43%, poor > 43%)
+//!     (CFPB 43% qualified-mortgage cap)
 //!   - front_end_ratio     — housing_payment / gross_monthly_income
-//!                           target ≤ 28% (good ≤ 28%, ok ≤ 33%, poor > 33%)
-//!                           (28/36 rule; FHA caps 31%)
+//!     target ≤ 28% (good ≤ 28%, ok ≤ 33%, poor > 33%)
+//!     (28/36 rule; FHA caps 31%)
 //!   - liquidity_ratio     — liquid_assets / monthly_expenses
-//!                           target ≥ 6 months
+//!     target ≥ 6 months
 //!   - solvency_ratio      — net_worth / total_assets × 100
-//!                           target ≥ 50% (under 20% = high leverage)
+//!     target ≥ 50% (under 20% = high leverage)
 //!   - emergency_fund_ratio— emergency_fund_balance / monthly_expenses
-//!                           target ≥ 6 months
+//!     target ≥ 6 months
 //!   - retirement_savings_ratio — retirement_assets / annual_gross_income
-//!                                target ≥ age × Fidelity benchmark (1x@30,
-//!                                3x@40, 6x@50, 8x@60, 10x@67) — we accept
-//!                                a multiplier-only target since age is
-//!                                user-supplied
+//!     target ≥ age × Fidelity benchmark (1x@30,
+//!     3x@40, 6x@50, 8x@60, 10x@67) — we accept
+//!     a multiplier-only target since age is
+//!     user-supplied
 //!   - composite score     — average of per-ratio scores (0/1/2 per
-//!                            poor/ok/good) → 0-100
+//!     poor/ok/good) → 0-100
 //!
 //! Pure compute — no DB I/O.
 

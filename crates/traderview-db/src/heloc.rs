@@ -4,11 +4,11 @@
 //! equity, typically variable-rate (prime + margin), with two phases:
 //!
 //!   1. DRAW PERIOD     — typically 10 years. Borrower can draw up to
-//!                        the credit limit; minimum payment is usually
-//!                        interest-only (or 1-2% of balance).
+//!      the credit limit; minimum payment is usually
+//!      interest-only (or 1-2% of balance).
 //!   2. REPAYMENT PERIOD — typically 20 years. No more draws; balance
-//!                        amortizes like a standard fixed-rate loan
-//!                        at the current variable rate.
+//!      amortizes like a standard fixed-rate loan
+//!      at the current variable rate.
 //!
 //! Inputs:
 //!   - line_size_usd                  — credit line cap
@@ -17,10 +17,10 @@
 //!   - draw_period_months              — typically 120
 //!   - repayment_period_months         — typically 240
 //!   - draw_phase_min_pct              — minimum draw-phase payment as
-//!                                        % of balance (0 = interest-only,
-//!                                        1.0 = 1% of balance + interest)
+//!     % of balance (0 = interest-only,
+//!     1.0 = 1% of balance + interest)
 //!   - monthly_voluntary_principal_usd — extra principal paid each month
-//!                                        during draw phase
+//!     during draw phase
 //!
 //! Compute returns:
 //!   - utilization_pct = current_balance / line_size × 100
@@ -28,14 +28,14 @@
 //!   - draw_phase_min_payment_usd       (interest + balance × min%)
 //!   - draw_phase_total_payment_usd     (min + voluntary principal)
 //!   - repayment_phase_balance_usd      — projected balance at end of
-//!                                        draw period (if only paying
-//!                                        min + voluntary)
+//!     draw period (if only paying
+//!     min + voluntary)
 //!   - repayment_phase_monthly_pi_usd   — amortizing payment on that
-//!                                        balance at current APR for
-//!                                        repayment period
+//!     balance at current APR for
+//!     repayment period
 //!   - total_lifetime_interest_usd      — sum over both phases
 //!   - status — "interest_only" / "principal_reducing" /
-//!              "underutilized" / "maxed"
+//!     "underutilized" / "maxed"
 //!
 //! Pure compute.
 

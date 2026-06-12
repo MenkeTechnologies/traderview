@@ -45,16 +45,17 @@ pub struct RuinReport {
 }
 
 pub fn compute(inp: &RuinInput) -> Option<RuinReport> {
-    if !inp.win_probability.is_finite()
-        || !(inp.win_probability > 0.0 && inp.win_probability < 1.0)
-        || !inp.payoff_ratio.is_finite()
-        || inp.payoff_ratio <= 0.0
-        || !inp.capital.is_finite()
-        || inp.capital <= 0.0
-        || !inp.risk_per_trade.is_finite()
-        || inp.risk_per_trade <= 0.0
-        || inp.risk_per_trade > inp.capital
-    {
+    let valid = inp.win_probability.is_finite()
+        && inp.win_probability > 0.0
+        && inp.win_probability < 1.0
+        && inp.payoff_ratio.is_finite()
+        && inp.payoff_ratio > 0.0
+        && inp.capital.is_finite()
+        && inp.capital > 0.0
+        && inp.risk_per_trade.is_finite()
+        && inp.risk_per_trade > 0.0
+        && inp.risk_per_trade <= inp.capital;
+    if !valid {
         return None;
     }
     let p = inp.win_probability;

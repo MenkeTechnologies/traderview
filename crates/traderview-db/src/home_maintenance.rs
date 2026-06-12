@@ -9,8 +9,8 @@
 //!      water heater, appliances) have known service lives and
 //!      replacement costs. For each system the user defines:
 //!        - install_year, expected_life_years, replacement_cost_usd
-//!      compute: years_until_replacement, monthly_set_aside =
-//!      replacement_cost / months_until_replacement (clamped ≥ 0).
+//!          compute: years_until_replacement, monthly_set_aside =
+//!          replacement_cost / months_until_replacement (clamped ≥ 0).
 //!
 //! Pure compute.
 

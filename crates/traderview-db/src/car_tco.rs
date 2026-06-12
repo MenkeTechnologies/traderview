@@ -14,7 +14,7 @@
 //!   - fuel_price_per_gallon_usd
 //!   - insurance_annual_usd
 //!   - maintenance_annual_usd  (starts low, grows with age — we apply
-//!                              a 5%/yr inflator)
+//!     a 5%/yr inflator)
 //!   - registration_annual_usd
 //!   - residual_pct_after_hold — assumed sale value as % of MSRP
 //!     (typical 5-year used-vehicle retention ~50-60%)
@@ -290,7 +290,7 @@ mod tests {
         let r = compute(&input());
         // hold = 7 years (84 months), loan = 60 months. Years 6 + 7 should
         // have zero or partial financing.
-        assert!(r.yearly[5].financing_usd == 0.0 || r.yearly[5].financing_usd > 0.0);
+        assert!(r.yearly[5].financing_usd >= 0.0);
         assert_eq!(r.yearly[6].financing_usd, 0.0);
     }
 

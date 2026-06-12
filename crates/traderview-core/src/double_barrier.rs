@@ -34,12 +34,13 @@ pub fn compute(
     drift: f64,
     vol: f64,
 ) -> Option<DoubleBarrierReport> {
-    if ![spot, lower, upper].iter().all(|v| v.is_finite() && *v > 0.0)
-        || !(lower < spot && spot < upper)
-        || !drift.is_finite()
-        || !vol.is_finite()
-        || vol <= 0.0
-    {
+    let valid = [spot, lower, upper].iter().all(|v| v.is_finite() && *v > 0.0)
+        && lower < spot
+        && spot < upper
+        && drift.is_finite()
+        && vol.is_finite()
+        && vol > 0.0;
+    if !valid {
         return None;
     }
     let nu = drift - vol * vol / 2.0;

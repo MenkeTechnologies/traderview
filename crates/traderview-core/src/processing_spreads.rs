@@ -2,10 +2,10 @@
 //! and generators trade:
 //!
 //! * Crack 3-2-1 — 3 bbl crude → 2 bbl gasoline + 1 bbl distillate:
-//!     crack = (2·RB·42 + 1·HO·42 − 3·CL) / 3      ($/bbl)
+//!   crack = (2·RB·42 + 1·HO·42 − 3·CL) / 3      ($/bbl)
 //!   (products quoted $/gal; 42 gal per barrel)
 //! * Soybean board crush — 1 bu (60 lb) beans → 44 lb meal + 11 lb oil:
-//!     crush = 0.022·meal($/short ton) + 11·oil($/lb) − beans($/bu)
+//!   crush = 0.022·meal($/short ton) + 11·oil($/lb) − beans($/bu)
 //!   (44 lb = 0.022 short tons — the CME yield factors)
 //! * Spark spread — power − gas × heat rate; the same formula with a
 //!   coal fuel cost is the dark spread.

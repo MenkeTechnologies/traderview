@@ -653,11 +653,12 @@ impl LiveTickStore {
                 );
                 let h = tokio::spawn(async move {
                     use futures_util::FutureExt;
-                    if let Err(_) = std::panic::AssertUnwindSafe(
+                    if std::panic::AssertUnwindSafe(
                         store.run_alpaca_worker(id, secret, use_sip, chunk),
                     )
                     .catch_unwind()
                     .await
+                    .is_err()
                     {
                         tracing::error!("live_ticks: alpaca equity worker PANICKED");
                     }
@@ -672,11 +673,12 @@ impl LiveTickStore {
                 tracing::info!(symbols = n, "live_ticks: spawning alpaca crypto worker");
                 let h = tokio::spawn(async move {
                     use futures_util::FutureExt;
-                    if let Err(_) = std::panic::AssertUnwindSafe(
+                    if std::panic::AssertUnwindSafe(
                         store.run_alpaca_crypto_worker(id, secret, chunk),
                     )
                     .catch_unwind()
                     .await
+                    .is_err()
                     {
                         tracing::error!("live_ticks: alpaca crypto worker PANICKED");
                     }
@@ -700,10 +702,10 @@ impl LiveTickStore {
                 tracing::info!(symbols = n, "live_ticks: spawning polygon worker");
                 let h = tokio::spawn(async move {
                     use futures_util::FutureExt;
-                    if let Err(_) =
-                        std::panic::AssertUnwindSafe(store.run_polygon_worker(key, chunk))
-                            .catch_unwind()
-                            .await
+                    if std::panic::AssertUnwindSafe(store.run_polygon_worker(key, chunk))
+                        .catch_unwind()
+                        .await
+                        .is_err()
                     {
                         tracing::error!("live_ticks: polygon worker PANICKED");
                     }
@@ -729,10 +731,10 @@ impl LiveTickStore {
             tracing::info!(symbols = n, "live_ticks: spawning finnhub worker");
             let h = tokio::spawn(async move {
                 use futures_util::FutureExt;
-                if let Err(_) =
-                    std::panic::AssertUnwindSafe(store.run_worker(key, chunk))
-                        .catch_unwind()
-                        .await
+                if std::panic::AssertUnwindSafe(store.run_worker(key, chunk))
+                    .catch_unwind()
+                    .await
+                    .is_err()
                 {
                     tracing::error!("live_ticks: finnhub worker PANICKED");
                 }

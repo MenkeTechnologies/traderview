@@ -5,7 +5,7 @@
 //! engine surfaces it; it deliberately does not block (practicing the
 //! restriction is the user's job; the sim's job is the count).
 
-use chrono::{DateTime, Datelike, NaiveDate, Utc};
+use chrono::{DateTime, NaiveDate, Utc};
 
 pub const PDT_EQUITY_FLOOR_USD: f64 = 25_000.0;
 pub const PDT_DAY_TRADE_LIMIT: usize = 4;

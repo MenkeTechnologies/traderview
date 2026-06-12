@@ -64,7 +64,7 @@ pub fn compute(inp: &LynchInput) -> Option<LynchReport> {
     } else {
         "attractive"
     };
-    let fair_price = (inp.eps > 0.0).then(|| inp.eps_growth_pct * inp.eps);
+    let fair_price = (inp.eps > 0.0).then_some(inp.eps_growth_pct * inp.eps);
     let upside_pct = match (fair_price, inp.price > 0.0) {
         (Some(fp), true) => Some((fp / inp.price - 1.0) * 100.0),
         _ => None,

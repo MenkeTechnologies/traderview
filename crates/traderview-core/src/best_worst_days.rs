@@ -123,8 +123,8 @@ mod tests {
     #[test]
     fn hostile_inputs_return_none() {
         assert!(compute(&[100.0, 101.0], 1).is_none()); // too short
-        assert!(compute(&vec![100.0; 10], 5).is_none()); // excludes everything
+        assert!(compute(&[100.0; 10], 5).is_none()); // excludes everything
         assert!(compute(&[100.0, 0.0, 101.0], 1).is_none());
-        assert!(compute(&vec![100.0; 10], 0).is_none());
+        assert!(compute(&[100.0; 10], 0).is_none());
     }
 }

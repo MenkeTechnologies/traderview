@@ -1860,14 +1860,14 @@ mod tests {
         }
         assert_eq!(anchors.len(), 2, "fixture needs two Decembers");
         let mut price = 100.0;
-        for i in 0..days.len() {
+        for (i, day) in days.iter_mut().enumerate() {
             let in_window = anchors
                 .iter()
                 .any(|&a| i + 4 >= a && i <= a + 2 && a >= 4);
             if in_window {
                 price *= 1.01;
             }
-            days[i].1 = price;
+            day.1 = price;
         }
         days
     }

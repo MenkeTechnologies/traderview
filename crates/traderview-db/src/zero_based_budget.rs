@@ -6,13 +6,13 @@
 //!   - total_planned_usd     — sum of every category's planned amount
 //!   - total_actual_usd      — sum of actual spend (if filled in)
 //!   - leftover_usd          — income − planned (positive = unassigned,
-//!                              negative = over-allocated)
+//!     negative = over-allocated)
 //!   - variance_per_category — actual − planned (positive = overspent,
-//!                              negative = underspent)
+//!     negative = underspent)
 //!   - total_variance_usd    — Σ variance (positive = overspent total)
 //!   - is_zero_based         — |leftover| < 1
 //!   - status = "zero-based" / "unassigned" (leftover > 0) /
-//!              "over-allocated" (leftover < 0)
+//!     "over-allocated" (leftover < 0)
 //!
 //! Pure compute.
 

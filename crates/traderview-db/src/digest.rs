@@ -7,7 +7,7 @@
 //! omitted entirely — a digest of empty sections trains the user to
 //! stop reading.
 
-use chrono::{Datelike, Duration, NaiveDate, Utc};
+use chrono::{Duration, NaiveDate, Utc};
 use rust_decimal::Decimal;
 use serde::Serialize;
 use sqlx::PgPool;
@@ -444,7 +444,7 @@ pub fn next_digest_time(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use chrono::TimeZone;
+    use chrono::{Datelike, TimeZone};
 
     #[test]
     fn next_digest_time_pins_before_at_after() {
@@ -511,8 +511,10 @@ mod tests {
 
     #[test]
     fn exposure_section_formats() {
-        let mut d = Digest::default();
-        d.exposure = Some("net +$30000 · gross $70000 (long $50000 / short $20000)".into());
+        let d = Digest {
+            exposure: Some("net +$30000 · gross $70000 (long $50000 / short $20000)".into()),
+            ..Default::default()
+        };
         assert!(!d.is_empty());
         assert!(format_digest(&d).contains("exposure: net +$30000 · gross $70000"));
     }

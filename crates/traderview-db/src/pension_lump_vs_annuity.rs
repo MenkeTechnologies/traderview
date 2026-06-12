@@ -111,9 +111,7 @@ pub fn lump_balance_after(lump: f64, monthly_withdrawal: f64, annual_return_pct:
 }
 
 pub fn compute(input: &PensionInput) -> PensionReport {
-    let years = if input.life_expectancy_age > input.current_age {
-        input.life_expectancy_age - input.current_age
-    } else { 0 };
+    let years = input.life_expectancy_age.saturating_sub(input.current_age);
     let pv = annuity_present_value(
         input.monthly_annuity_usd,
         input.expected_real_return_pct,

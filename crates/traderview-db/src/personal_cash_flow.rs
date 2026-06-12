@@ -5,14 +5,14 @@
 //! applied to a household:
 //!
 //!   - operating   — net salary, side-hustle income, interest, dividends,
-//!                   taxes, mortgage interest (NOT principal), groceries,
-//!                   utilities, insurance premiums, every recurring spend
+//!     taxes, mortgage interest (NOT principal), groceries,
+//!     utilities, insurance premiums, every recurring spend
 //!   - investing   — 401k / IRA / brokerage contributions (outflow),
-//!                   sales of investments (inflow), home down-payment,
-//!                   property purchase (outflow)
+//!     sales of investments (inflow), home down-payment,
+//!     property purchase (outflow)
 //!   - financing   — new debt issued (inflow), principal paydowns on
-//!                   mortgage / auto / student loans / credit cards
-//!                   (outflow), gifts received, large transfers
+//!     mortgage / auto / student loans / credit cards
+//!     (outflow), gifts received, large transfers
 //!
 //! Each input row is `{ name, category ∈ {operating, investing, financing},
 //! direction ∈ {inflow, outflow}, amount_usd }`. Compute returns:
@@ -23,13 +23,13 @@
 //!   - net_change_in_cash = sum of the three nets
 //!   - total_inflows / total_outflows
 //!   - savings_rate_pct = (operating_inflows + investing_inflows
-//!                        − operating_outflows) / total_inflows × 100
+//!     − operating_outflows) / total_inflows × 100
 //!     (Bogleheads-style: % of gross income that ends up as net positive
 //!     after recurring operating outflows. Investing inflows from sales
 //!     are excluded from the numerator since they're not new wealth —
 //!     only their NET treatment over time matters.)
 //!   - status = "surplus" (net_change > 0) | "balanced" (= 0) |
-//!              "deficit" (< 0)
+//!     "deficit" (< 0)
 //!
 //! Pure compute — no DB I/O.
 

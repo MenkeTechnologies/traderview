@@ -1613,31 +1613,6 @@ async fn get_metrics(
         .ok_or_else(|| ApiError::BadRequest("strategy not found".into()))
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    /// The immune-system test for the bug this replaces: a hardcoded
-    /// type list silently rejected 8 registry strategies. Validation
-    /// must accept EVERY kind the registry exposes, forever.
-    #[test]
-    fn every_registry_kind_is_saveable() {
-        for kind in traderview_core::algo_strategies::StrategyKind::all() {
-            validate_strategy_type(kind.as_str())
-                .unwrap_or_else(|_| panic!("{} rejected by route validation", kind.as_str()));
-        }
-    }
-
-    #[test]
-    fn unknown_kind_is_rejected_with_the_full_list() {
-        let err = validate_strategy_type("not_a_strategy").unwrap_err();
-        let msg = format!("{err:?}");
-        assert!(msg.contains("not_a_strategy"));
-        // The error enumerates the registry, derived not typed.
-        assert!(msg.contains("macd_cross") && msg.contains("pairs"));
-    }
-}
-
 /// GET /algo/strategies/:id/pnl-curve — cumulative realized PnL by
 /// trip close time, plus the same current-drawdown figure the
 /// circuit breaker evaluates.
@@ -1700,5 +1675,30 @@ fn bt_gates_for(
             .and_then(|v| v.as_u64())
             .filter(|n| *n >= 2)
             .map(|n| n as usize),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// The immune-system test for the bug this replaces: a hardcoded
+    /// type list silently rejected 8 registry strategies. Validation
+    /// must accept EVERY kind the registry exposes, forever.
+    #[test]
+    fn every_registry_kind_is_saveable() {
+        for kind in traderview_core::algo_strategies::StrategyKind::all() {
+            validate_strategy_type(kind.as_str())
+                .unwrap_or_else(|_| panic!("{} rejected by route validation", kind.as_str()));
+        }
+    }
+
+    #[test]
+    fn unknown_kind_is_rejected_with_the_full_list() {
+        let err = validate_strategy_type("not_a_strategy").unwrap_err();
+        let msg = format!("{err:?}");
+        assert!(msg.contains("not_a_strategy"));
+        // The error enumerates the registry, derived not typed.
+        assert!(msg.contains("macd_cross") && msg.contains("pairs"));
     }
 }

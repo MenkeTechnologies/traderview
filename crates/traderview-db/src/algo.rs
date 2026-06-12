@@ -1090,7 +1090,7 @@ pub async fn last_losing_trip_ts(
     let mut last: Option<i64> = None;
     for fills in by_symbol.values() {
         for trip in traderview_core::live_vs_backtest::round_trips(fills) {
-            if trip.pnl < 0.0 && last.map_or(true, |l| trip.closed_ts > l) {
+            if trip.pnl < 0.0 && last.is_none_or(|l| trip.closed_ts > l) {
                 last = Some(trip.closed_ts);
             }
         }

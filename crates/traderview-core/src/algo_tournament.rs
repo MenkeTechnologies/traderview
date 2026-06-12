@@ -87,7 +87,7 @@ pub fn tournament(
             skipped.push(slug);
             continue;
         }
-        let result = run(bars, strat.as_ref(), sizing, cfg.clone());
+        let result = run(bars, strat.as_ref(), sizing, *cfg);
         rows.push(TournamentRow {
             kind: slug,
             summary: result.summary,
@@ -151,11 +151,11 @@ pub fn matrix(
             for slug in &kinds {
                 let score = from_kind(slug, &serde_json::json!({}))
                     .ok()
-                    .map(|strat| run(bars, strat.as_ref(), sizing, cfg.clone()))
+                    .map(|strat| run(bars, strat.as_ref(), sizing, *cfg))
                     .filter(|bt| bt.summary.trades > 0)
                     .map(|bt| metric_value(&bt.summary, rank_by));
                 if let Some(v) = score {
-                    if v.is_finite() && best.map_or(true, |(_, b)| v > b) {
+                    if v.is_finite() && best.is_none_or(|(_, b)| v > b) {
                         best = Some((slug, v));
                     }
                 }

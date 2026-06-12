@@ -5,8 +5,8 @@
 //!   * **All-Weather** (Dalio): 40% TLT / 30% VTI / 15% IEF / 7.5% GLD
 //!     / 7.5% DBC. Risk-parity-ish across regimes (growth, recession,
 //!     inflation, deflation).
-//!   * **Permanent Portfolio** (Browne 1981): 25% each — VTI (stocks)
-//!     + TLT (long bonds) + GLD (gold) + BIL (cash). One quadrant for
+//!   * **Permanent Portfolio** (Browne 1981): 25% each — VTI (stocks) +
+//!     TLT (long bonds) + GLD (gold) + BIL (cash). One quadrant for
 //!     each macro state.
 //!   * **60/40 traditional**: 60% VTI + 40% AGG. The benchmark for
 //!     boring balanced investing.

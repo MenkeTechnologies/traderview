@@ -115,9 +115,9 @@ pub fn compute(input: &DebtSnowballInput) -> DebtSnowballReport {
         while extra > 0.005 {
             let mut target: Option<usize> = None;
             let mut best_bal = f64::INFINITY;
-            for i in 0..n {
-                if balances[i] > 0.0 && balances[i] < best_bal {
-                    best_bal = balances[i];
+            for (i, bal) in balances.iter().enumerate() {
+                if *bal > 0.0 && *bal < best_bal {
+                    best_bal = *bal;
                     target = Some(i);
                 }
             }

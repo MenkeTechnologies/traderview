@@ -4,19 +4,19 @@
 //!
 //!   - STANDARD       — 120 months amortizing at the loan APR
 //!   - GRADUATED      — payments start lower then step up every 2 years;
-//!                       still pays off in 120 months. Approximated here
-//!                       as a single equivalent payment (we report it
-//!                       like Standard for simplicity).
+//!     still pays off in 120 months. Approximated here
+//!     as a single equivalent payment (we report it
+//!     like Standard for simplicity).
 //!   - IBR            — 15% of discretionary income (AGI − 150% × FPL),
-//!                       forgive after 300 months (25 years).
+//!     forgive after 300 months (25 years).
 //!   - PAYE / NEW IBR — 10% of discretionary, forgive after 240 months
-//!                       (20 years).
+//!     (20 years).
 //!   - SAVE / REPAYE  — 10% of discretionary (5% on undergrad, 10% on
-//!                       grad post-2024-rule), interest subsidy halves
-//!                       unpaid interest, forgive at 240/300 months
-//!                       depending on balance. We use the simple
-//!                       10%/240mo case + the SAVE interest-subsidy
-//!                       halving.
+//!     grad post-2024-rule), interest subsidy halves
+//!     unpaid interest, forgive at 240/300 months
+//!     depending on balance. We use the simple
+//!     10%/240mo case + the SAVE interest-subsidy
+//!     halving.
 //!
 //! Federal poverty level (FPL, single, lower 48, 2026 published):
 //! $15,750 → 150% = $23,625.

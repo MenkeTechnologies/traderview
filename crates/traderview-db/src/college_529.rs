@@ -4,14 +4,14 @@
 //!
 //!   1. Project total cost of a 4-year college education at the year
 //!      the child starts:
-//!        cost_year_t = annual_cost_today × (1 + tuition_inflation)^t
+//!      cost_year_t = annual_cost_today × (1 + tuition_inflation)^t
 //!      summed over the 4 years of college. Tuition inflation has
 //!      historically been ~5%/yr but is dropping toward ~3% recently.
 //!
 //!   2. Given current 529 balance, expected investment return, and
 //!      years until college starts, compute monthly contribution
 //!      required to reach the target.
-//!        FV = current × (1+r)^n + m × ((1+r/12)^(12n) − 1) / (r/12)
+//!      FV = current × (1+r)^n + m × ((1+r/12)^(12n) − 1) / (r/12)
 //!      solve for m.
 //!
 //! Inputs:

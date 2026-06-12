@@ -9,10 +9,10 @@
 //!   - aggregate utilization ≤ 30% — minimum to avoid score damage
 //!   - aggregate utilization ≤ 10% — Experian-published "excellent" tier
 //!   - aggregate utilization  ≤ 1% — observed FICO 800-club median,
-//!                                    leaving at least one card with a
-//!                                    nonzero reported balance
+//!     leaving at least one card with a
+//!     nonzero reported balance
 //!   - per-card utilization ≤ 30% — individual cards above 30% can ding
-//!                                   the score even if aggregate is fine
+//!     the score even if aggregate is fine
 //!
 //! Inputs: list of `{ name, balance_usd, limit_usd }`. Compute:
 //!   - per-card utilization_pct + status (good ≤ 10 / ok ≤ 30 / high > 30)

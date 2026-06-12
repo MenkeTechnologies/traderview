@@ -173,7 +173,7 @@ mod tests {
 
     #[test]
     fn brackets_2026_single_first_bracket() {
-        let b = brackets_2026("single");
+        let b = brackets_for(2026, "single");
         assert_eq!(b[0], (10.0, 0.0));
         assert_eq!(b[1].0, 12.0);
         assert_eq!(b[1].1, 11_925.0);
@@ -181,26 +181,26 @@ mod tests {
 
     #[test]
     fn brackets_2026_mfj_first_bracket() {
-        let b = brackets_2026("mfj");
+        let b = brackets_for(2026, "mfj");
         assert_eq!(b[1].1, 23_850.0);
     }
 
     #[test]
     fn brackets_unknown_status_defaults_single() {
-        let single = brackets_2026("single");
-        let bogus = brackets_2026("bogus");
+        let single = brackets_for(2026, "single");
+        let bogus = brackets_for(2026, "bogus");
         assert_eq!(single, bogus);
     }
 
     #[test]
     fn liability_zero_income() {
-        let b = brackets_2026("single");
+        let b = brackets_for(2026, "single");
         assert_eq!(liability(&b, 0.0), 0.0);
     }
 
     #[test]
     fn liability_only_first_bracket_single() {
-        let b = brackets_2026("single");
+        let b = brackets_for(2026, "single");
         // $10k income, all at 10% = $1000
         let l = liability(&b, 10_000.0);
         assert!((l - 1_000.0).abs() < 0.5);
@@ -208,7 +208,7 @@ mod tests {
 
     #[test]
     fn liability_spans_first_two_brackets() {
-        let b = brackets_2026("single");
+        let b = brackets_for(2026, "single");
         // $20k taxable: first $11,925 @ 10% = $1192.50, next $8075 @ 12% = $969
         let l = liability(&b, 20_000.0);
         let expected = 11_925.0 * 0.10 + (20_000.0 - 11_925.0) * 0.12;

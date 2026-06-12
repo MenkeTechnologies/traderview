@@ -46,7 +46,7 @@ pub fn worst_correlation(
         let a = &candidate_returns[candidate_returns.len() - n..];
         let b = &other[other.len() - n..];
         let Some(rho) = pearson(a, b) else { continue };
-        if rho.abs() > cap && worst.as_ref().map_or(true, |w| rho.abs() > w.rho.abs()) {
+        if rho.abs() > cap && worst.as_ref().is_none_or(|w| rho.abs() > w.rho.abs()) {
             worst = Some(CorrelationHit {
                 symbol: symbol.clone(),
                 rho,
