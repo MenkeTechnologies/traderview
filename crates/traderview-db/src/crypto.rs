@@ -764,3 +764,149 @@ mod carry_tests {
         assert_eq!(annualized_basis_pct(0.0, 101.0, 30), None);
     }
 }
+
+
+/// Parse an OKX option instId tail: "BTC-USD_UM-260619-63500-P" →
+/// (expiry, strike, is_call). The family prefix varies (BTC-USD vs
+/// BTC-USD_UM), so parse from the END like the OCC parser does.
+pub fn parse_okx_option_id(inst_id: &str) -> Option<(chrono::NaiveDate, f64, bool)> {
+    let mut parts = inst_id.rsplit('-');
+    let right = match parts.next()? {
+        "C" => true,
+        "P" => false,
+        _ => return None,
+    };
+    let strike: f64 = parts.next()?.parse().ok()?;
+    let date = parts.next()?;
+    if date.len() != 6 || !date.bytes().all(|b| b.is_ascii_digit()) {
+        return None;
+    }
+    let yy: i32 = date[..2].parse().ok()?;
+    let mm: u32 = date[2..4].parse().ok()?;
+    let dd: u32 = date[4..6].parse().ok()?;
+    let expiry = chrono::NaiveDate::from_ymd_opt(2000 + yy, mm, dd)?;
+    (strike > 0.0).then_some((expiry, strike, right))
+}
+
+#[derive(Debug, Clone, serde::Serialize)]
+pub struct VolExpiry {
+    pub expiry: chrono::NaiveDate,
+    pub days: i64,
+    /// Mark IV of the contract whose |delta| sits closest to 0.50.
+    pub atm_iv_pct: f64,
+    /// 25-delta risk reversal: call IV − put IV at |delta| ≈ 0.25.
+    /// Positive = upside bid (calls richer), negative = downside fear.
+    /// None when either wing has no contract within 0.10 of the
+    /// target delta — a skew read off the wrong strikes is worse
+    /// than no read.
+    pub rr25_pct: Option<f64>,
+    pub contracts: usize,
+}
+
+/// Per-expiry vol summary from (expiry, days, |delta|, is_call,
+/// mark_iv) rows. Pure; rows with non-finite IV/delta are the
+/// caller's to filter.
+pub fn vol_surface(rows: &[(chrono::NaiveDate, i64, f64, bool, f64)]) -> Vec<VolExpiry> {
+    let mut by_expiry: std::collections::BTreeMap<chrono::NaiveDate, Vec<&(chrono::NaiveDate, i64, f64, bool, f64)>> =
+        Default::default();
+    for r in rows {
+        by_expiry.entry(r.0).or_default().push(r);
+    }
+    by_expiry
+        .into_iter()
+        .filter_map(|(expiry, legs)| {
+            let days = legs.first()?.1;
+            let atm = legs
+                .iter()
+                .min_by(|a, b| (a.2 - 0.5).abs().total_cmp(&(b.2 - 0.5).abs()))?;
+            let wing = |call: bool| {
+                legs.iter()
+                    .filter(|l| l.3 == call)
+                    .min_by(|a, b| (a.2 - 0.25).abs().total_cmp(&(b.2 - 0.25).abs()))
+                    .filter(|l| (l.2 - 0.25).abs() <= 0.10)
+            };
+            let rr25_pct = match (wing(true), wing(false)) {
+                (Some(c), Some(p)) => Some((c.4 - p.4) * 100.0),
+                _ => None,
+            };
+            Some(VolExpiry {
+                expiry,
+                days,
+                atm_iv_pct: atm.4 * 100.0,
+                rr25_pct,
+                contracts: legs.len(),
+            })
+        })
+        .collect()
+}
+
+/// Live vol surface for {base}-USD options: ATM IV term structure +
+/// 25-delta risk reversal per expiry, from the venue's opt-summary
+/// (mark vol + BS delta per contract).
+pub async fn crypto_vol_surface(base: &str) -> anyhow::Result<Vec<VolExpiry>> {
+    let base = base.trim().to_uppercase();
+    if base.is_empty() || base.len() > 10 || !base.bytes().all(|b| b.is_ascii_alphanumeric()) {
+        anyhow::bail!("invalid base asset");
+    }
+    let u = format!("https://www.okx.com/api/v5/public/opt-summary?uly={base}-USD");
+    let v = okx_json(&u).await?;
+    let today = chrono::Utc::now().date_naive();
+    let mut rows = Vec::new();
+    for o in v.get("data").and_then(|d| d.as_array()).into_iter().flatten() {
+        let inst = o.get("instId").and_then(|x| x.as_str()).unwrap_or_default();
+        let Some((expiry, strike, call)) = parse_okx_option_id(inst) else {
+            continue;
+        };
+        let _ = strike;
+        let iv: f64 = match o.get("markVol").and_then(|x| x.as_str()).and_then(|s| s.parse().ok()) {
+            Some(x) if x > 0.0 => x,
+            _ => continue,
+        };
+        let delta: f64 = match o.get("deltaBS").and_then(|x| x.as_str()).and_then(|s| s.parse().ok()) {
+            Some(x) => x,
+            None => continue,
+        };
+        let days = (expiry - today).num_days();
+        if days <= 0 {
+            continue;
+        }
+        rows.push((expiry, days, delta.abs(), call, iv));
+    }
+    if rows.is_empty() {
+        anyhow::bail!("no live option marks for {base}-USD");
+    }
+    Ok(vol_surface(&rows))
+}
+
+#[cfg(test)]
+mod vol_tests {
+    use super::*;
+
+    #[test]
+    fn option_id_parse_and_surface_reads() {
+        // Live-observed id shape.
+        let (exp, k, call) = parse_okx_option_id("BTC-USD_UM-260619-63500-P").unwrap();
+        assert_eq!(exp, chrono::NaiveDate::from_ymd_opt(2026, 6, 19).unwrap());
+        assert_eq!(k, 63_500.0);
+        assert!(!call);
+        assert!(parse_okx_option_id("BTC-USD-SWAP").is_none());
+
+        let e = chrono::NaiveDate::from_ymd_opt(2026, 6, 19).unwrap();
+        // ATM = |delta| nearest 0.50; RR25 = call IV − put IV at the
+        // 0.25 wings: 42% − 48% = −6 points (downside fear).
+        let rows = vec![
+            (e, 7, 0.50, true, 0.40),
+            (e, 7, 0.26, true, 0.42),
+            (e, 7, 0.24, false, 0.48),
+            (e, 7, 0.10, true, 0.55),
+        ];
+        let s = vol_surface(&rows);
+        assert_eq!(s.len(), 1);
+        assert!((s[0].atm_iv_pct - 40.0).abs() < 1e-9);
+        assert!((s[0].rr25_pct.unwrap() + 6.0).abs() < 1e-9);
+        // A wing with nothing near 0.25 delta REFUSES the skew read.
+        let rows = vec![(e, 7, 0.50, true, 0.40), (e, 7, 0.45, false, 0.44)];
+        let s = vol_surface(&rows);
+        assert!(s[0].rr25_pct.is_none());
+    }
+}

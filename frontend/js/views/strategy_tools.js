@@ -494,6 +494,31 @@ const TOOLS = {
             5-minute cache; rates settle per interval, not per second. Feed a candidate into
             Funding Arb (live) for the full fee/breakeven ledger.</p>`,
     },
+    'vol-surface': {
+        label: 'Crypto Vol Surface',
+        call: (b) => api.cryptoVolSurface({ base: String(b.base).trim().toUpperCase() }),
+        fields: [
+            { key: 'base', label: 'Base asset (BTC, ETH)', def: 'BTC', text: true },
+        ],
+        render: (r) => `
+            <table class="gs-table">
+                <thead><tr><th>Expiry</th><th>Days</th><th>ATM IV</th><th>25Δ RR</th><th>Contracts</th></tr></thead>
+                <tbody>${r.map(x => `
+                    <tr>
+                        <td>${esc(x.expiry)}</td>
+                        <td>${x.days}</td>
+                        <td><strong>${x.atm_iv_pct.toFixed(1)}%</strong></td>
+                        <td class="${x.rr25_pct == null ? 'muted' : x.rr25_pct >= 0 ? 'pos' : 'neg'}">${x.rr25_pct != null ? x.rr25_pct.toFixed(1) + ' pts' : '—'}</td>
+                        <td class="muted small">${x.contracts}</td>
+                    </tr>`).join('')}
+                </tbody>
+            </table>
+            <p class="muted small">Live OKX option marks (markVol + BS delta per contract). ATM = the contract whose
+            |Δ| sits closest to 0.50 per expiry; 25Δ risk reversal = call IV − put IV at the 0.25 wings — positive
+            means upside is bid, negative means downside fear; — when either wing has no contract within 0.10 of the
+            target delta, because a skew read off the wrong strikes is worse than no read. Rising ATM IV with
+            maturity = normal contango; an inverted front end = event risk priced now.</p>`,
+    },
     'carry-basis': {
         label: 'Cash & Carry (live)',
         call: (b) => api.cryptoCarryBasis({ base: String(b.base).trim().toUpperCase() }),

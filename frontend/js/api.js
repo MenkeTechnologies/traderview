@@ -779,6 +779,7 @@ export const api = {
     cryptoFundingScan:       (bases) => request(`/crypto/funding-scan${bases ? `?bases=${encodeURIComponent(bases)}` : ''}`),
     cryptoPositioning: (body) => request('/crypto/positioning', { method: 'POST', body }),
     cryptoCarryBasis: (body) => request('/crypto/carry-basis', { method: 'POST', body }),
+    cryptoVolSurface: (body) => request('/crypto/vol-surface', { method: 'POST', body }),
     calcFxCarry:             (body) => request('/calc/fx-carry', { method: 'POST', body: JSON.stringify(body) }),
     calcAverageDown:         (body) => request('/calc/average-down', { method: 'POST', body: JSON.stringify(body) }),
     calcLeveragedEtfDecay:   (body) => request('/calc/leveraged-etf-decay', { method: 'POST', body: JSON.stringify(body) }),

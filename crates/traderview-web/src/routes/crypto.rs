@@ -21,6 +21,7 @@ pub fn router() -> Router<AppState> {
         .route("/crypto/funding-scan", get(funding_scan))
         .route("/crypto/positioning", post(positioning))
         .route("/crypto/carry-basis", post(carry_basis))
+        .route("/crypto/vol-surface", post(vol_surface))
 }
 
 #[derive(Deserialize)]
@@ -214,6 +215,16 @@ async fn carry_basis(
     Json(b): Json<PositioningBody>,
 ) -> Result<Json<traderview_db::crypto::CarryBasis>, ApiError> {
     traderview_db::crypto::carry_basis(&b.base)
+        .await
+        .map(Json)
+        .map_err(|e| ApiError::BadRequest(e.to_string()))
+}
+
+/// ATM IV term structure + 25Δ risk reversal per expiry, live marks.
+async fn vol_surface(
+    Json(b): Json<PositioningBody>,
+) -> Result<Json<Vec<traderview_db::crypto::VolExpiry>>, ApiError> {
+    traderview_db::crypto::crypto_vol_surface(&b.base)
         .await
         .map(Json)
         .map_err(|e| ApiError::BadRequest(e.to_string()))
