@@ -1092,6 +1092,7 @@ function renderAttribution(a) {
     const st = a.stats;
     el.innerHTML = `
         <p><strong>Trading:</strong> ${money(a.total_trading_pnl)} \u00b7 <strong>Dividends:</strong> ${money(a.total_dividends)} \u00b7 <strong>Fees:</strong> <span class="neg">\u2212$${fmt(a.total_fees)}</span></p>
+        ${Array.isArray(a.by_class) && a.by_class.length > 1 ? `<p class="small muted">${a.by_class.map(c => `${esc(c.class)}: ${money(c.trading_pnl + c.dividends)} (${c.closed_trips} trips)`).join(' · ')}</p>` : ''}
         ${st ? `<div class="cards">
             <div class="card"><div class="label">Expectancy / trade</div>
                 <div class="value ${st.expectancy >= 0 ? 'pos' : 'neg'}">${st.expectancy >= 0 ? '+' : ''}$${fmt(st.expectancy)}</div>

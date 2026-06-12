@@ -348,10 +348,34 @@ pub fn monthly_rollup(
     map.into_values().collect()
 }
 
+/// Realized split per asset class — meaningful once equities,
+/// options, and crypto coexist in one account.
+#[derive(Debug, Clone, Serialize)]
+pub struct ClassAttribution {
+    pub class: &'static str,
+    pub trading_pnl: f64,
+    pub dividends: f64,
+    pub fees: f64,
+    pub closed_trips: usize,
+}
+
+/// OCC → options, crypto pair → crypto, everything else → equity.
+pub fn asset_class_of(symbol: &str) -> &'static str {
+    if traderview_core::occ_symbol::is_occ(symbol) {
+        "options"
+    } else if crate::crypto::is_crypto_pair(symbol) {
+        "crypto"
+    } else {
+        "equity"
+    }
+}
+
 #[derive(Debug, Clone, Serialize)]
 pub struct Attribution {
     /// Ranked by |total contribution| descending.
     pub symbols: Vec<SymbolAttribution>,
+    /// Realized split by asset class; zero-activity classes omitted.
+    pub by_class: Vec<ClassAttribution>,
     /// Calendar months, chronological — the WHEN to the symbols' WHERE.
     pub months: Vec<MonthRow>,
     /// Trade-quality metrics over all closed trips. None until trips exist.
@@ -501,6 +525,8 @@ pub async fn attribution(
         .map(|(s, c)| (s, c.to_f64().unwrap_or(0.0)))
         .collect();
     let mut symbols = Vec::new();
+    let mut class_map: std::collections::BTreeMap<&'static str, ClassAttribution> =
+        Default::default();
     let (mut tt, mut td, mut tf) = (0.0, 0.0, 0.0);
     let mut seen: std::collections::BTreeSet<String> = Default::default();
     let mut all_trips: Vec<(f64, i64)> = Vec::new();
@@ -517,6 +543,19 @@ pub async fn attribution(
         tt += trading_pnl;
         td += dividends;
         tf += fees;
+        let c = class_map
+            .entry(asset_class_of(symbol))
+            .or_insert_with(|| ClassAttribution {
+                class: asset_class_of(symbol),
+                trading_pnl: 0.0,
+                dividends: 0.0,
+                fees: 0.0,
+                closed_trips: 0,
+            });
+        c.trading_pnl += trading_pnl;
+        c.dividends += dividends;
+        c.fees += *fees;
+        c.closed_trips += trips.len();
         symbols.push(SymbolAttribution {
             symbol: symbol.clone(),
             trading_pnl,
@@ -530,6 +569,16 @@ pub async fn attribution(
     for (symbol, dividends) in &div_map {
         if !seen.contains(symbol) {
             td += dividends;
+            class_map
+                .entry(asset_class_of(symbol))
+                .or_insert_with(|| ClassAttribution {
+                    class: asset_class_of(symbol),
+                    trading_pnl: 0.0,
+                    dividends: 0.0,
+                    fees: 0.0,
+                    closed_trips: 0,
+                })
+                .dividends += *dividends;
             symbols.push(SymbolAttribution {
                 symbol: symbol.clone(),
                 trading_pnl: 0.0,
@@ -567,6 +616,7 @@ pub async fn attribution(
         all_flagged.iter().filter(|(_, _, f)| !*f).map(|(p, _, _)| *p).collect();
     Ok(Attribution {
         symbols,
+        by_class: class_map.into_values().collect(),
         months,
         stats,
         hold,
