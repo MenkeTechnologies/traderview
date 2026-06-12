@@ -41,6 +41,9 @@ fn default_days_held() -> f64 {
 struct FundingArbLive {
     snapshot: traderview_db::crypto::FundingSnapshot,
     report: traderview_core::funding_rate_arb::Report,
+    /// Realized-funding regime over the last ~30 intervals — a rich
+    /// rate that's a one-interval spike is a trap, not a trade.
+    persistence: Option<traderview_db::crypto::FundingPersistence>,
 }
 
 /// Funding arb with LIVE OKX inputs: spot/perp/funding fetched fresh,
@@ -55,6 +58,12 @@ async fn funding_arb_live(
     let snapshot = traderview_db::crypto::funding_snapshot(&b.base)
         .await
         .map_err(|e| ApiError::BadRequest(e.to_string()))?;
+    // History failure degrades to None — the ledger still answers.
+    let persistence = traderview_db::crypto::funding_history(&b.base, 30)
+        .await
+        .ok()
+        .as_deref()
+        .and_then(traderview_db::crypto::funding_persistence);
     let report = traderview_core::funding_rate_arb::compute(&traderview_core::funding_rate_arb::Input {
         spot_price: snapshot.spot,
         perp_price: snapshot.perp,
@@ -64,7 +73,7 @@ async fn funding_arb_live(
         days_held: b.days_held,
     })
     .ok_or_else(|| ApiError::BadRequest("invalid inputs".into()))?;
-    Ok(Json(FundingArbLive { snapshot, report }))
+    Ok(Json(FundingArbLive { snapshot, report, persistence }))
 }
 
 /// Funding sweep across the major-perp universe, 5-minute cached

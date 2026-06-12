@@ -294,3 +294,82 @@ pub async fn funding_scan() -> FundingScan {
     rows.sort_by(|a, b| b.funding_apr_pct.abs().total_cmp(&a.funding_apr_pct.abs()));
     FundingScan { rows, failed }
 }
+
+
+#[derive(Debug, Clone, serde::Serialize)]
+pub struct FundingPersistence {
+    /// Realized intervals examined (venue-capped).
+    pub intervals: usize,
+    /// Mean realized rate per interval (raw, not 8h-normalized — the
+    /// trend question is sign and stability, not APR units).
+    pub mean_rate: f64,
+    /// Share of intervals whose sign matches the LATEST rate — the
+    /// regime question: 0.9 = persistent, 0.5 = coin-flip noise.
+    pub same_sign_as_latest_pct: f64,
+}
+
+/// Persistence stats over realized funding rates (newest first, as
+/// the venue returns them). None for an empty history. Zero-rate
+/// intervals count as matching nothing (they pay nobody).
+pub fn funding_persistence(rates_newest_first: &[f64]) -> Option<FundingPersistence> {
+    let latest = *rates_newest_first.first()?;
+    let n = rates_newest_first.len();
+    let mean_rate = rates_newest_first.iter().sum::<f64>() / n as f64;
+    let same = rates_newest_first
+        .iter()
+        .filter(|r| latest != 0.0 && r.signum() == latest.signum() && **r != 0.0)
+        .count();
+    Some(FundingPersistence {
+        intervals: n,
+        mean_rate,
+        same_sign_as_latest_pct: same as f64 / n as f64,
+    })
+}
+
+/// Realized funding history from OKX, newest first.
+pub async fn funding_history(base: &str, limit: u32) -> anyhow::Result<Vec<f64>> {
+    let base = base.trim().to_uppercase();
+    if base.is_empty() || base.len() > 10 || !base.bytes().all(|b| b.is_ascii_alphanumeric()) {
+        anyhow::bail!("invalid base asset");
+    }
+    let v = okx_json(&format!(
+        "https://www.okx.com/api/v5/public/funding-rate-history?instId={base}-USDT-SWAP&limit={}",
+        limit.clamp(1, 100)
+    ))
+    .await?;
+    let rows = v
+        .get("data")
+        .and_then(|d| d.as_array())
+        .cloned()
+        .unwrap_or_default();
+    Ok(rows
+        .iter()
+        .filter_map(|r| {
+            r.get("realizedRate")
+                .or_else(|| r.get("fundingRate"))
+                .and_then(|x| x.as_str())
+                .and_then(|s| s.parse().ok())
+        })
+        .collect())
+}
+
+#[cfg(test)]
+mod funding_tests {
+    use super::*;
+
+    #[test]
+    fn persistence_pins_regime_vs_noise() {
+        // 4/5 negative matching a negative latest: persistent.
+        let p = funding_persistence(&[-0.0002, -0.0001, 0.0001, -0.0003, -0.0002]).unwrap();
+        assert_eq!(p.intervals, 5);
+        assert!((p.same_sign_as_latest_pct - 0.8).abs() < 1e-12);
+        assert!((p.mean_rate + 0.00014).abs() < 1e-9);
+        // Alternating signs: half match — coin-flip, not a regime.
+        let p = funding_persistence(&[0.0001, -0.0001, 0.0001, -0.0001]).unwrap();
+        assert!((p.same_sign_as_latest_pct - 0.5).abs() < 1e-12);
+        // Zero latest matches nothing; empty history is None.
+        let p = funding_persistence(&[0.0, 0.0001]).unwrap();
+        assert_eq!(p.same_sign_as_latest_pct, 0.0);
+        assert!(funding_persistence(&[]).is_none());
+    }
+}

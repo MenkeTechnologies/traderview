@@ -514,6 +514,12 @@ const TOOLS = {
                     <div class="value ${r.report.net_pnl_usd >= 0 ? 'pos' : 'neg'}">$${r.report.net_pnl_usd.toFixed(0)}</div>
                     <div class="small muted">breakeven ${r.report.breakeven_days != null ? r.report.breakeven_days.toFixed(1) + 'd' : '—'} · basis ${r.report.basis_pct.toFixed(3)}%</div></div>
             </div>
+            ${r.persistence ? `<p class="small">
+                <strong>Persistence:</strong> ${(r.persistence.same_sign_as_latest_pct * 100).toFixed(0)}% of the last
+                ${r.persistence.intervals} intervals match the current sign (mean ${(r.persistence.mean_rate * 100).toFixed(4)}%/interval)
+                ${r.persistence.same_sign_as_latest_pct >= 0.7
+                    ? '<span class="pos">— a regime, not a spike</span>'
+                    : '<span class="neg">— closer to a coin-flip than a regime; a one-interval spike is a trap</span>'}</p>` : ''}
             <p class="muted small">Live OKX inputs (spot/perp last + current funding, the venue's variable interval
             normalized to 8h) through the same ledger as the manual tool — the snapshot is shown so the numbers are auditable.</p>`,
     },
