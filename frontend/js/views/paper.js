@@ -119,6 +119,30 @@ export async function renderPaper(mount) {
                     <button data-i18n="view.paper.btn.submit" data-tip="view.paper.tip.submit" data-shortcut="paper_submit" class="primary" type="submit">SUBMIT</button>
                 </form>
                 <h2 data-i18n="view.paper.h2.spread_ticket">Option spread ticket</h2>
+                <form id="preset-form" class="inline-form">
+                    <select name="preset" data-tip="view.paper.tip.preset">
+                        <option value="straddle" data-i18n="view.paper.opt.straddle">straddle</option>
+                        <option value="strangle" data-i18n="view.paper.opt.strangle">strangle</option>
+                        <option value="iron_condor" data-i18n="view.paper.opt.iron_condor">iron condor</option>
+                        <option value="butterfly" data-i18n="view.paper.opt.butterfly">butterfly</option>
+                    </select>
+                    <input name="root" placeholder="underlying" data-i18n-placeholder="view.paper.placeholder.preset_root" required style="text-transform:uppercase;width:90px">
+                    <input name="expiry" type="date" required>
+                    <input name="k1" type="number" step="0.5" placeholder="K1" style="width:70px" required>
+                    <input name="k2" type="number" step="0.5" placeholder="K2" style="width:70px">
+                    <input name="k3" type="number" step="0.5" placeholder="K3" style="width:70px">
+                    <input name="k4" type="number" step="0.5" placeholder="K4" style="width:70px">
+                    <select name="direction">
+                        <option value="long" data-i18n="view.paper.opt.preset_long">buy</option>
+                        <option value="short" data-i18n="view.paper.opt.preset_short">sell</option>
+                    </select>
+                    <input name="qty" type="number" min="1" step="1" value="1">
+                    <button type="button" id="preset-preview" data-i18n="view.paper.btn.preview_spread">PREVIEW</button>
+                    <button class="primary" type="submit" data-i18n="view.paper.btn.submit_spread">SPREAD</button>
+                </form>
+                <p class="muted small" data-i18n="view.paper.hint.preset">straddle: K1 (both legs) · strangle: K1 put &lt; K2 call · iron condor: K1&lt;K2 puts, K3&lt;K4 calls (sell = the classic credit) · butterfly: K1&lt;K2&lt;K3 calls 1-2-1 · fills atomically through the same path as the manual legs below</p>
+                <div id="preset-out" class="muted small"></div>
+
                 <form id="spread-form" class="inline-form">
                     <input name="leg1" placeholder="buy leg OCC (e.g. AAPL260117C00190000)" data-i18n-placeholder="view.paper.placeholder.spread_buy" data-tip="view.paper.tip.spread_leg" required style="min-width:220px">
                     <input name="leg2" placeholder="sell leg OCC" data-i18n-placeholder="view.paper.placeholder.spread_sell" required style="min-width:220px">
@@ -577,6 +601,85 @@ export async function renderPaper(mount) {
             renderPaper(mount);
         } catch (err) { showToast(t('common.error', { err: err.message }), { level: 'error' }); }
     });
+
+    // OCC symbol from parts: root + YYMMDD + C/P + strike×1000 in 8
+    // digits — the same format occ_symbol::parse pins server-side.
+    const occSym = (root, dateStr, call, strike) => {
+        const d = dateStr.replaceAll('-', '').slice(2);
+        const k = String(Math.round(strike * 1000)).padStart(8, '0');
+        return `${root}${d}${call ? 'C' : 'P'}${k}`;
+    };
+    const presetLegs = () => {
+        const fd = new FormData(mount.querySelector('#preset-form'));
+        const root = (fd.get('root') || '').trim().toUpperCase();
+        const expiry = fd.get('expiry');
+        const ks = ['k1', 'k2', 'k3', 'k4'].map(k => Number(fd.get(k)) || 0);
+        const long = fd.get('direction') === 'long';
+        const flip = legs => long ? legs : legs.map(l => ({ ...l, buy: !l.buy }));
+        if (!root || !expiry || ks[0] <= 0) throw new Error(t('view.paper.err.preset_fields'));
+        const sym = (call, k) => occSym(root, expiry, call, k);
+        switch (fd.get('preset')) {
+            case 'straddle':
+                return { legs: flip([
+                    { symbol: sym(true, ks[0]), buy: true, ratio: 1 },
+                    { symbol: sym(false, ks[0]), buy: true, ratio: 1 },
+                ]), qty: Number(fd.get('qty')) || 1 };
+            case 'strangle':
+                if (!(ks[1] > ks[0])) throw new Error(t('view.paper.err.preset_order'));
+                return { legs: flip([
+                    { symbol: sym(false, ks[0]), buy: true, ratio: 1 },
+                    { symbol: sym(true, ks[1]), buy: true, ratio: 1 },
+                ]), qty: Number(fd.get('qty')) || 1 };
+            case 'iron_condor':
+                if (!(ks[0] < ks[1] && ks[1] < ks[2] && ks[2] < ks[3])) throw new Error(t('view.paper.err.preset_order'));
+                // direction 'short' = the classic credit condor; the
+                // flip() convention means we describe the LONG one.
+                return { legs: flip([
+                    { symbol: sym(false, ks[0]), buy: false, ratio: 1 },
+                    { symbol: sym(false, ks[1]), buy: true, ratio: 1 },
+                    { symbol: sym(true, ks[2]), buy: true, ratio: 1 },
+                    { symbol: sym(true, ks[3]), buy: false, ratio: 1 },
+                ]), qty: Number(fd.get('qty')) || 1 };
+            case 'butterfly':
+                if (!(ks[0] < ks[1] && ks[1] < ks[2])) throw new Error(t('view.paper.err.preset_order'));
+                return { legs: flip([
+                    { symbol: sym(true, ks[0]), buy: true, ratio: 1 },
+                    { symbol: sym(true, ks[1]), buy: false, ratio: 2 },
+                    { symbol: sym(true, ks[2]), buy: true, ratio: 1 },
+                ]), qty: Number(fd.get('qty')) || 1 };
+            default:
+                throw new Error('unknown preset');
+        }
+    };
+    mount.querySelector('#preset-preview').addEventListener('click', async () => {
+        const out = mount.querySelector('#preset-out');
+        try {
+            const req = presetLegs();
+            out.textContent = t('common.loading');
+            const r = await api.paperSpreadPreview(req);
+            const p = r.payoff;
+            out.innerHTML = `
+                <strong>${r.net_premium_usd >= 0 ? 'Credit' : 'Debit'} $${Math.abs(r.net_premium_usd).toFixed(2)}</strong>
+                · max profit $${p.max_profit.toFixed(0)} · max loss $${p.max_loss.toFixed(0)}
+                · breakeven${p.breakevens.length === 1 ? '' : 's'} ${p.breakevens.length ? p.breakevens.map(b => b.toFixed(2)).join(', ') : '—'}
+                · ${req.legs.map(l => `${l.buy ? '+' : '−'}${l.ratio > 1 ? l.ratio + '×' : ''}${l.symbol}`).join(' ')}`;
+        } catch (err) {
+            out.textContent = err.message || String(err);
+        }
+    });
+    mount.querySelector('#preset-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        try {
+            const req = presetLegs();
+            const r = await api.paperSpreadCreate(acct.id, req);
+            if (!viewIsCurrent(tok)) return;
+            showToast(t('view.paper.toast.spread_filled', {
+                premium: (r.net_premium_usd >= 0 ? '+' : '') + r.net_premium_usd.toFixed(2),
+            }), { level: 'success' });
+            renderPaper(mount);
+        } catch (err) { showToast(t('common.error', { err: err.message }), { level: 'error' }); }
+    });
+
     mount.querySelector('#spread-preview').addEventListener('click', async () => {
         const form = mount.querySelector('#spread-form');
         const fd = new FormData(form);
