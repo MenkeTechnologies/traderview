@@ -385,7 +385,11 @@ pub struct SymbolWashSales {
 /// pre-scaled 100×). Only symbols with at least one flagged sale are
 /// returned. Exact-symbol matching only: a loss in shares followed by
 /// a repurchase via options on the same underlying is "substantially
-/// identical" to the IRS but NOT detected here.
+/// identical" to the IRS but NOT detected here. Crypto pairs are
+/// EXCLUDED: §1091 covers securities, and crypto is treated as
+/// property under current rules — flagging a BTC rebuy as a wash
+/// sale would be a false accusation (if that rule changes, this is
+/// the one line to flip).
 pub async fn wash_sales(
     pool: &PgPool,
     user_id: Uuid,
@@ -414,6 +418,9 @@ pub async fn wash_sales(
     let mut by_symbol: std::collections::BTreeMap<String, Vec<traderview_core::live_vs_backtest::Fill>> =
         Default::default();
     for (symbol, side, qty, price, fee, at) in fills {
+        if crate::crypto::is_crypto_pair(&symbol) {
+            continue; // property, not a security — §1091 doesn't apply
+        }
         let scale = if traderview_core::occ_symbol::is_occ(&symbol) { 100.0 } else { 1.0 };
         by_symbol.entry(symbol).or_default().push(traderview_core::live_vs_backtest::Fill {
             buy: side == "buy" || side == "cover",
@@ -1792,7 +1799,10 @@ mod maintenance_tests {
 /// PDT status for one account: trips from the same FIFO fill
 /// reconstruction as attribution, equity from the latest snapshot
 /// (None when the account has never been sampled — the pure layer
-/// refuses to flag on unknown equity).
+/// refuses to flag on unknown equity). Crypto pairs are EXCLUDED
+/// from the count: FINRA 4210 covers equities and options; a BTC
+/// scalp is not a day trade under the rule, and counting it would
+/// manufacture a false flag.
 pub async fn pdt_status(
     pool: &PgPool,
     user_id: Uuid,
@@ -1821,6 +1831,9 @@ pub async fn pdt_status(
     let mut by_symbol: std::collections::BTreeMap<String, Vec<traderview_core::live_vs_backtest::Fill>> =
         Default::default();
     for (symbol, side, qty, price, fee, at) in fills {
+        if crate::crypto::is_crypto_pair(&symbol) {
+            continue; // FINRA 4210 covers equities/options, not crypto
+        }
         by_symbol.entry(symbol).or_default().push(traderview_core::live_vs_backtest::Fill {
             buy: side == "buy" || side == "cover",
             qty: qty.to_f64().unwrap_or(0.0),
