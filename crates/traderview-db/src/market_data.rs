@@ -255,8 +255,8 @@ pub async fn quote_summary(symbol: &str, modules: &[&str]) -> anyhow::Result<ser
 /// Adapter `finnhub_rest::fundamentals_yahoo_shape` composes a JSON
 /// envelope that matches Yahoo's nested `{raw, fmt}` shape so the
 /// existing frontend extractor in `research.js::renderFund` works
-/// unchanged. Falls back to Yahoo `quoteSummary` if no Finnhub key is
-/// configured (will still 401 for now — set the key in Settings).
+/// unchanged. Falls back to Yahoo `quoteSummary` (cookie+crumb via
+/// `yahoo_auth`) if no Finnhub key is configured.
 pub async fn fundamentals(symbol: &str) -> anyhow::Result<serde_json::Value> {
     match crate::finnhub_rest::fundamentals_yahoo_shape(symbol).await {
         Ok(v) => return Ok(v),
@@ -294,8 +294,8 @@ async fn fundamentals_yahoo_legacy(symbol: &str) -> anyhow::Result<serde_json::V
 /// `finnhub_rest::earnings_yahoo_shape` returns Yahoo's
 /// `{earningsHistory.history[], calendarEvents.earnings.{earningsDate,
 /// earningsAverage, revenueAverage}}` shape so the existing extractor in
-/// `research.js::renderEarnings` works unchanged. Falls back to broken
-/// Yahoo `quoteSummary` only when no Finnhub key is configured.
+/// `research.js::renderEarnings` works unchanged. Falls back to Yahoo
+/// `quoteSummary` (cookie+crumb via `yahoo_auth`) when Finnhub fails.
 pub async fn earnings(symbol: &str) -> anyhow::Result<serde_json::Value> {
     match crate::finnhub_rest::earnings_yahoo_shape(symbol).await {
         Ok(v) => return Ok(v),
@@ -323,8 +323,8 @@ pub async fn earnings(symbol: &str) -> anyhow::Result<serde_json::Value> {
 ///
 /// **Backend:** Finnhub `/stock/recommendation` (free tier). Adapter
 /// `finnhub_rest::recommendations_yahoo_shape` returns Yahoo's
-/// `{recommendationTrend.trend[]}` envelope. Falls back to broken Yahoo
-/// `quoteSummary` only when no Finnhub key is configured.
+/// `{recommendationTrend.trend[]}` envelope. Falls back to Yahoo
+/// `quoteSummary` (cookie+crumb via `yahoo_auth`) when Finnhub fails.
 pub async fn recommendations(symbol: &str) -> anyhow::Result<serde_json::Value> {
     match crate::finnhub_rest::recommendations_yahoo_shape(symbol).await {
         Ok(v) => return Ok(v),
@@ -373,10 +373,10 @@ pub async fn insiders(symbol: &str) -> anyhow::Result<serde_json::Value> {
 
 /// Dividend lookup.
 ///
-/// **Backend:** Yahoo `v8/finance/chart` with `events=div,split`. This is
-/// the only Yahoo endpoint that still works without the crumb+cookie
-/// dance — `v10/finance/quoteSummary` (the previous backend) has required
-/// a crumb since late 2023 and returns 401 / 429 otherwise.
+/// **Backend:** Yahoo `v8/finance/chart` with `events=div,split` — the
+/// chart endpoint needs no crumb, so this stays on the anonymous client.
+/// (`v10/finance/quoteSummary`, the previous backend, requires the
+/// cookie+crumb handshake — handled by `yahoo_auth` where still used.)
 ///
 /// **Output shape:** synthesized to look like the old quoteSummary payload
 /// (`{summaryDetail: {...}, calendarEvents: {...}}`) so the existing

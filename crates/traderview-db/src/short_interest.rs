@@ -34,9 +34,10 @@ pub struct ShortStats {
     pub fetched_at: DateTime<Utc>,
 }
 
-/// Yahoo-backed short stats — kept for legacy callers but the
-/// `quoteSummary` endpoint requires a "crumb" since late 2023 and
-/// 401s without one. Prefer [`finnhub_short_stats`] for new code.
+/// Yahoo-backed short stats. The `quoteSummary` endpoint's crumb
+/// requirement is handled by `yahoo_auth` inside
+/// `market_data::quote_summary`. Prefer [`finnhub_short_stats`] for
+/// new code anyway — Finnhub's short data updates faster.
 pub async fn yahoo_short_stats(symbol: &str) -> anyhow::Result<ShortStats> {
     let v = crate::market_data::quote_summary(symbol, &["defaultKeyStatistics"]).await?;
     let ks = &v["defaultKeyStatistics"];
