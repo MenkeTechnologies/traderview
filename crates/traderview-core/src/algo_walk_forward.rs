@@ -74,6 +74,7 @@ pub fn run(
     is_bars: usize,
     oos_bars: usize,
     step: Option<usize>,
+    gates: crate::algo_backtest::BtGates,
 ) -> Result<AlgoWfResult, OptimizeError> {
     let step = step.unwrap_or(oos_bars).max(1);
     let windows_layout = layout(bars.len(), is_bars, oos_bars, step);
@@ -96,6 +97,7 @@ pub fn run(
             cfg.clone(),
             metric,
             1,
+            gates.clone(),
         )?;
         let best = opt
             .top
@@ -104,7 +106,13 @@ pub fn run(
         // Validate the winner on bars it has never seen.
         let strat = from_kind(strategy_kind, &best.entry_rules)
             .map_err(|e| OptimizeError::StrategyBuild(e.to_string()))?;
-        let oos_bt = algo_backtest::run(&bars[is_end..oos_end], strat.as_ref(), sizing, cfg.clone());
+        let oos_bt = algo_backtest::run_with_gates(
+            &bars[is_end..oos_end],
+            strat.as_ref(),
+            sizing,
+            cfg.clone(),
+            gates.clone(),
+        );
         oos_total_trades += oos_bt.summary.trades;
         windows.push(WfWindow {
             window: w,
@@ -204,6 +212,7 @@ mod tests {
             120,
             60,
             None,
+            crate::algo_backtest::BtGates::default(),
         )
         .expect("walk-forward must run");
         // layout(260, 120, 60, 60) → starts 0, 60 → 2 windows.
@@ -241,6 +250,7 @@ mod tests {
             100,
             50,
             None,
+            crate::algo_backtest::BtGates::default(),
         )
         .is_err());
     }

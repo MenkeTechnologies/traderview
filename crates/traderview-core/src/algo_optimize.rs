@@ -109,6 +109,9 @@ pub fn run(
     cfg: BacktestConfig,
     metric: OptimizeMetric,
     top_n: usize,
+    // Time-replayable discipline gates — optimizing the UNGATED
+    // system finds params for a system nobody runs.
+    gates: crate::algo_backtest::BtGates,
 ) -> Result<OptimizeResult, OptimizeError> {
     if grid.is_empty() {
         return Err(OptimizeError::EmptyGrid);
@@ -148,7 +151,7 @@ pub fn run(
         }
         let strat = from_kind(strategy_kind, &entry_rules)
             .map_err(|e| OptimizeError::StrategyBuild(e.to_string()))?;
-        let bt = algo_backtest::run(bars, strat.as_ref(), sizing, cfg);
+        let bt = algo_backtest::run_with_gates(bars, strat.as_ref(), sizing, cfg, gates.clone());
         let score = metric.score(&bt);
         results.push(OptimizeRunResult {
             entry_rules,
@@ -258,6 +261,7 @@ mod tests {
             BacktestConfig::default(),
             OptimizeMetric::Sharpe,
             10,
+            crate::algo_backtest::BtGates::default(),
         )
         .expect("optimize");
         assert_eq!(res.combinations_evaluated, 6, "2 × 3 must equal 6");
@@ -280,6 +284,7 @@ mod tests {
             BacktestConfig::default(),
             OptimizeMetric::Sharpe,
             3,
+            crate::algo_backtest::BtGates::default(),
         )
         .expect("optimize");
         assert_eq!(res.combinations_evaluated, 12);
@@ -306,6 +311,7 @@ mod tests {
             BacktestConfig::default(),
             OptimizeMetric::Sharpe,
             5,
+            crate::algo_backtest::BtGates::default(),
         );
         assert!(matches!(res, Err(OptimizeError::EmptyGrid)));
     }
@@ -328,6 +334,7 @@ mod tests {
             BacktestConfig::default(),
             OptimizeMetric::Sharpe,
             5,
+            crate::algo_backtest::BtGates::default(),
         );
         assert!(matches!(res, Err(OptimizeError::TooManyCombinations(1728))));
     }
@@ -350,6 +357,7 @@ mod tests {
             BacktestConfig::default(),
             OptimizeMetric::Sharpe,
             5,
+            crate::algo_backtest::BtGates::default(),
         )
         .expect("optimize");
         for entry in &res.top {
@@ -379,6 +387,7 @@ mod tests {
             BacktestConfig::default(),
             OptimizeMetric::Sharpe,
             5,
+            crate::algo_backtest::BtGates::default(),
         );
         match res {
             Err(OptimizeError::StrategyBuild(msg)) => {

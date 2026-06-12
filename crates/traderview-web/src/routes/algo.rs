@@ -617,49 +617,7 @@ async fn post_backtest(
         slippage_bps: body.slippage_bps.unwrap_or(5.0),
         side_mode,
     };
-    let gates = if body.apply_gates {
-        traderview_core::algo_backtest::BtGates {
-            entry_window: strategy
-                .risk_gates
-                .get("entry_window")
-                .and_then(|v| v.as_str())
-                .and_then(traderview_db::algo_engine::parse_entry_window),
-            entry_days: strategy
-                .risk_gates
-                .get("entry_days")
-                .and_then(|v| v.as_str())
-                .and_then(traderview_core::risk_gate::parse_entry_days),
-            max_entries_per_day: strategy
-                .risk_gates
-                .get("max_entries_per_day")
-                .and_then(|v| v.as_u64())
-                .filter(|n| *n > 0)
-                .map(|n| n as usize),
-            loss_cooldown_minutes: strategy
-                .risk_gates
-                .get("loss_cooldown_minutes")
-                .and_then(|v| v.as_i64())
-                .filter(|n| *n > 0),
-            max_drawdown_usd: strategy
-                .risk_gates
-                .get("max_drawdown_usd")
-                .and_then(|v| v.as_f64())
-                .filter(|v| *v > 0.0),
-            max_hold_minutes: strategy
-                .risk_gates
-                .get("max_hold_minutes")
-                .and_then(|v| v.as_i64())
-                .filter(|n| *n > 0),
-            equity_curve_filter_trips: strategy
-                .risk_gates
-                .get("equity_curve_filter_trips")
-                .and_then(|v| v.as_u64())
-                .filter(|n| *n >= 2)
-                .map(|n| n as usize),
-        }
-    } else {
-        traderview_core::algo_backtest::BtGates::default()
-    };
+    let gates = bt_gates_for(&strategy, body.apply_gates);
     let result =
         traderview_core::algo_backtest::run_with_gates(&bars, strat.as_ref(), &sizing, cfg, gates);
 
@@ -759,6 +717,10 @@ struct OptimizeBody {
     metric: traderview_core::algo_optimize::OptimizeMetric,
     #[serde(default = "default_top_n")]
     top_n: usize,
+    /// Replay the strategy's time-replayable gates inside every grid
+    /// cell — optimize the system you actually run.
+    #[serde(default)]
+    apply_gates: bool,
 }
 
 fn default_metric() -> traderview_core::algo_optimize::OptimizeMetric {
@@ -887,6 +849,7 @@ async fn post_optimize(
         cfg,
         body.metric,
         body.top_n,
+        bt_gates_for(&strategy, body.apply_gates),
     )
     .map_err(|e| ApiError::BadRequest(format!("optimize: {e}")))?;
     Ok(Json(result))
@@ -1057,7 +1020,8 @@ struct WalkForwardBody {
     #[serde(default = "default_wf_oos_bars")]
     oos_bars: usize,
     #[serde(default)]
-    step_bars: Option<usize>,
+    step_bars: Option<usize>,    #[serde(default)]
+    apply_gates: bool,
 }
 
 fn default_wf_is_bars() -> usize {
@@ -1122,6 +1086,7 @@ async fn post_walk_forward(
         body.is_bars,
         body.oos_bars,
         body.step_bars,
+        bt_gates_for(&strategy, body.apply_gates),
     )
     .map(Json)
     .map_err(|e| ApiError::BadRequest(format!("walk-forward: {e}")))
@@ -1663,4 +1628,55 @@ async fn get_pnl_curve(
         .await
         .map(Json)
         .map_err(|e| ApiError::BadRequest(e.to_string()))
+}
+
+/// The strategy's time-replayable gates as BtGates — ONE mapping
+/// shared by the backtest, optimizer, and walk-forward routes so the
+/// three simulations can't disagree about which gates exist.
+fn bt_gates_for(
+    strategy: &AlgoStrategy,
+    apply: bool,
+) -> traderview_core::algo_backtest::BtGates {
+    if !apply {
+        return traderview_core::algo_backtest::BtGates::default();
+    }
+    traderview_core::algo_backtest::BtGates {
+        entry_window: strategy
+            .risk_gates
+            .get("entry_window")
+            .and_then(|v| v.as_str())
+            .and_then(traderview_db::algo_engine::parse_entry_window),
+        entry_days: strategy
+            .risk_gates
+            .get("entry_days")
+            .and_then(|v| v.as_str())
+            .and_then(traderview_core::risk_gate::parse_entry_days),
+        max_entries_per_day: strategy
+            .risk_gates
+            .get("max_entries_per_day")
+            .and_then(|v| v.as_u64())
+            .filter(|n| *n > 0)
+            .map(|n| n as usize),
+        loss_cooldown_minutes: strategy
+            .risk_gates
+            .get("loss_cooldown_minutes")
+            .and_then(|v| v.as_i64())
+            .filter(|n| *n > 0),
+        max_drawdown_usd: strategy
+            .risk_gates
+            .get("max_drawdown_usd")
+            .and_then(|v| v.as_f64())
+            .filter(|v| *v > 0.0),
+        max_hold_minutes: strategy
+            .risk_gates
+            .get("max_hold_minutes")
+            .and_then(|v| v.as_i64())
+            .filter(|n| *n > 0),
+        equity_curve_filter_trips: strategy
+            .risk_gates
+            .get("equity_curve_filter_trips")
+            .and_then(|v| v.as_u64())
+            .filter(|n| *n >= 2)
+            .map(|n| n as usize),
+    }
 }

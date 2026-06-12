@@ -1522,6 +1522,7 @@ async function openWalkForwardModal(s) {
         <div class="modal-inner" style="max-width:1040px">
             <h2>Walk-forward: ${esc(s.name)}</h2>
             <p class="muted small" data-i18n="view.algo.hint.walkforward">Rolling optimize-then-validate: the grid winner from each in-sample window is backtested on the unseen out-of-sample slice that follows. Walk-forward efficiency = avg OOS / avg IS score \u2014 below ~0.5 the optimizer curve-fit.</p>
+            <label class="small"><input type="checkbox" name="apply_gates" checked data-tip="view.algo.tip.apply_gates_opt"> <span data-i18n="view.algo.label.apply_gates_wf">Apply risk gates in IS optimization AND OOS validation</span></label>
             <form id="wf-form" class="inline-form">
                 <input name="symbol" value="${esc(symbol)}" required style="text-transform:uppercase">
                 <select name="interval">
@@ -1563,6 +1564,7 @@ async function openWalkForwardModal(s) {
                 is_bars: Number(fd.get('is_bars')),
                 oos_bars: Number(fd.get('oos_bars')),
                 metric: fd.get('metric'),
+                apply_gates: fd.get('apply_gates') === 'on',
                 grid,
             });
             const wfe = r.wf_efficiency;
@@ -1783,6 +1785,7 @@ async function openOptimizeModal(mount, s) {
         <div class="modal-inner" style="max-width:1040px">
             <h2>Optimize: ${esc(s.name)}</h2>
             <p class="muted small">Sweeps the strategy's <code>entry_rules</code> across the grid below, runs the backtester for each combination, and ranks results by the chosen metric. Cap: 1024 combinations per sweep.</p>
+            <label class="small"><input type="checkbox" name="apply_gates" checked data-tip="view.algo.tip.apply_gates_opt"> <span data-i18n="view.algo.label.apply_gates_opt">Apply risk gates in every grid cell — optimize the system you actually run</span></label>
             <form id="opt-form" class="algo-form">
                 <label>Symbol
                     <input name="symbol" value="${esc(symbol)}" required>
@@ -1850,6 +1853,7 @@ async function openOptimizeModal(mount, s) {
             initial_equity: Number(fd.get('initial_equity')),
             metric: fd.get('metric'),
             top_n: Number(fd.get('top_n')),
+            apply_gates: fd.get('apply_gates') === 'on',
             grid,
         };
         const out = wrap.querySelector('#opt-results');
