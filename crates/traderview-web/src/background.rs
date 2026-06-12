@@ -248,7 +248,7 @@ fn spawn_margin_call_watch(pool: PgPool, hub: crate::realtime::Hub) {
     tokio::spawn(async move {
         let mut called: std::collections::HashSet<uuid::Uuid> = Default::default();
         loop {
-            match traderview_db::paper_equity::margin_calls(&pool).await {
+            match traderview_db::paper_equity::margin_calls(&pool, 1.0).await {
                 Ok(calls) => {
                     let breached: std::collections::HashSet<uuid::Uuid> =
                         calls.iter().map(|c| c.account_id).collect();

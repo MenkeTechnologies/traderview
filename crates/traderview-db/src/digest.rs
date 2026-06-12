@@ -24,6 +24,12 @@ pub struct Digest {
     /// the warning BEFORE the auto-pause, while there's still a cap
     /// left to act inside.
     pub breaker_proximity: Vec<String>,
+    /// Accounts at/inside 1.25× the maintenance requirement — the
+    /// warning before the margin-call watcher fires.
+    pub margin_risk: Vec<String>,
+    /// SHORT option positions in the money within 5 days of expiry —
+    /// early-assignment candidates.
+    pub assignment_risk: Vec<String>,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -47,6 +53,8 @@ impl Digest {
             && self.earnings_soon.is_empty()
             && self.rebalance_needed.is_empty()
             && self.breaker_proximity.is_empty()
+            && self.margin_risk.is_empty()
+            && self.assignment_risk.is_empty()
     }
 }
 
@@ -79,6 +87,12 @@ pub fn format_digest(d: &Digest) -> String {
     }
     if !d.breaker_proximity.is_empty() {
         out.push(format!("near breaker: {}", d.breaker_proximity.join(", ")));
+    }
+    if !d.margin_risk.is_empty() {
+        out.push(format!("margin: {}", d.margin_risk.join(", ")));
+    }
+    if !d.assignment_risk.is_empty() {
+        out.push(format!("assignment risk: {}", d.assignment_risk.join(", ")));
     }
     out.join(" · ")
 }
@@ -162,6 +176,52 @@ pub async fn for_user(pool: &PgPool, user_id: Uuid) -> anyhow::Result<Digest> {
         if dd >= 0.7 * cap {
             d.breaker_proximity
                 .push(format!("{name} (${dd:.0} of ${cap:.0} drawdown cap)"));
+        }
+    }
+
+    // Margin proximity: marked equity inside 1.25× the maintenance
+    // requirement — the same sweep the hourly watcher runs at 1.0,
+    // so the warning and the call can't disagree about the math.
+    if let Ok(calls) = crate::paper_equity::margin_calls(pool, 1.25).await {
+        for c in calls.into_iter().filter(|c| c.user_id == user_id) {
+            d.margin_risk.push(format!(
+                "{} (${:.0} vs ${:.0} required)",
+                c.name, c.equity, c.required
+            ));
+        }
+    }
+
+    // Early-assignment candidates: SHORT options ITM within 5 days.
+    // Spot from the cached quote; unquotable underlyings are skipped,
+    // not guessed.
+    let shorts: Vec<(String, String, Decimal)> = sqlx::query_as(
+        "SELECT a.name, p.symbol, p.qty
+           FROM paper_positions p
+           JOIN paper_accounts a ON a.id = p.paper_account_id
+          WHERE a.user_id = $1 AND p.qty < 0",
+    )
+    .bind(user_id)
+    .fetch_all(pool)
+    .await
+    .unwrap_or_default();
+    let opt_today = Utc::now().date_naive();
+    for (account, symbol, qty) in &shorts {
+        let Some(occ) = traderview_core::occ_symbol::parse(symbol) else {
+            continue; // equity short — assignment doesn't apply
+        };
+        let days = (occ.expiry - opt_today).num_days();
+        if !(0..=5).contains(&days) {
+            continue;
+        }
+        let Ok(q) = crate::market_data::quote(pool, &occ.underlying).await else {
+            continue;
+        };
+        let itm = traderview_core::occ_symbol::intrinsic(occ.call, occ.strike, q.price);
+        if itm > 0.0 {
+            d.assignment_risk.push(format!(
+                "{account}: short {} {symbol} ITM ${itm:.2} expiring in {days}d",
+                qty.abs()
+            ));
         }
     }
 
@@ -364,6 +424,18 @@ mod tests {
         assert!(!s.contains("drifting"));
         assert!(!s.contains("rebalance"));
         assert!(!s.contains("near breaker"));
+    }
+
+    #[test]
+    fn margin_and_assignment_sections_format() {
+        let mut d = Digest::default();
+        d.margin_risk.push("SimTrader ($9000 vs $12500 required)".into());
+        d.assignment_risk
+            .push("income: short 2 AAPL260117C00190000 ITM $4.20 expiring in 3d".into());
+        assert!(!d.is_empty());
+        let s = format_digest(&d);
+        assert!(s.contains("margin: SimTrader ($9000 vs $12500 required)"));
+        assert!(s.contains("assignment risk: income: short 2"));
     }
 
     #[test]

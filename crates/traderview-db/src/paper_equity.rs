@@ -1596,7 +1596,11 @@ pub struct MarginCall {
 /// quotes, chain mids × 100 for OCC); a partially-marked book is
 /// SKIPPED, not judged — calling a margin call on stale marks is
 /// worse than calling it one pass late.
-pub async fn margin_calls(pool: &PgPool) -> anyhow::Result<Vec<MarginCall>> {
+/// `headroom` scales the trigger: 1.0 flags BREACHED accounts (the
+/// watcher's margin call); 1.25 flags accounts within 25% of the
+/// line too (the digest's early warning). `required` in the result
+/// is always the true 25% figure, not the scaled trigger.
+pub async fn margin_calls(pool: &PgPool, headroom: f64) -> anyhow::Result<Vec<MarginCall>> {
     use rust_decimal::prelude::ToPrimitive;
     let accounts: Vec<(Uuid, String, Uuid, Decimal)> = sqlx::query_as(
         "SELECT id, name, user_id, cash FROM paper_accounts",
@@ -1644,7 +1648,7 @@ pub async fn margin_calls(pool: &PgPool) -> anyhow::Result<Vec<MarginCall>> {
         }
         let equity = (cash + signed).to_f64().unwrap_or(0.0);
         let gross_f = gross.to_f64().unwrap_or(0.0);
-        if !maintenance_ok(equity, gross_f, MAINTENANCE_PCT) {
+        if !maintenance_ok(equity, gross_f, MAINTENANCE_PCT * headroom.max(1.0)) {
             out.push(MarginCall {
                 account_id,
                 name,
