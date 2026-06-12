@@ -248,6 +248,11 @@ export async function renderPaper(mount) {
         </div>
 
         <div class="chart-panel">
+            <h2 data-i18n="view.paper.h2.ledger">Cash & funding ledger</h2>
+            <div id="paper-ledger" class="muted small"></div>
+        </div>
+
+        <div class="chart-panel">
             <h2 data-i18n="view.paper.h2.statement">Monthly statement</h2>
             <form id="stmt-form" class="inline-form">
                 <input name="month" type="month" value="${new Date().toISOString().slice(0, 7)}">
@@ -339,6 +344,12 @@ export async function renderPaper(mount) {
             .then(h => { if (viewIsCurrent(tok)) renderHoldings(h); })
             .catch(() => {});
     }
+    Promise.all([
+        api.paperInterest(acct.id).catch(() => []),
+        api.paperCashFlows(acct.id).catch(() => []),
+    ]).then(([interest, flows]) => {
+        if (viewIsCurrent(tok)) renderLedger(interest, flows);
+    });
     api.paperPdt(acct.id)
         .then(p => {
             if (!viewIsCurrent(tok)) return;
@@ -913,6 +924,50 @@ function wireProtectButtons(mount, acctId) {
             }
         });
     });
+}
+
+const LEDGER_KIND = {
+    cash_sweep: 'sweep interest',
+    short_borrow: 'borrow fee',
+    margin_interest: 'loan interest',
+};
+
+function renderLedger(interest, flows) {
+    const el = document.getElementById('paper-ledger');
+    if (!el) return;
+    const rows = [
+        ...(Array.isArray(interest) ? interest : []).map(r => ({
+            date: r.credited_on,
+            kind: LEDGER_KIND[r.kind] || r.kind,
+            amount: Number(r.amount),
+            detail: `${Number(r.apy_pct)}% APY × ${r.days}d`,
+        })),
+        ...(Array.isArray(flows) ? flows : []).map(f => ({
+            date: String(f.created_at).slice(0, 10),
+            kind: Number(f.amount) >= 0 ? 'deposit' : 'withdrawal',
+            amount: Number(f.amount),
+            detail: f.note || '',
+        })),
+    ].sort((a, b) => (a.date < b.date ? 1 : -1)).slice(0, 30);
+    if (!rows.length) {
+        el.innerHTML = `<p class="muted" data-i18n="view.paper.empty.ledger">${esc(t('view.paper.empty.ledger'))}</p>`;
+        return;
+    }
+    el.innerHTML = `
+        <table class="data-table small"><thead><tr>
+            <th data-i18n="view.paper.ledger.date">Date</th>
+            <th data-i18n="view.paper.ledger.kind">Kind</th>
+            <th data-i18n="view.paper.ledger.amount">Amount</th>
+            <th data-i18n="view.paper.ledger.detail">Detail</th>
+        </tr></thead><tbody>
+        ${rows.map(r => `<tr>
+            <td>${esc(r.date)}</td>
+            <td>${esc(r.kind)}</td>
+            <td class="${r.amount >= 0 ? 'pos' : 'neg'}">${r.amount >= 0 ? '+' : '−'}$${Math.abs(r.amount).toFixed(2)}</td>
+            <td class="muted">${esc(r.detail)}</td>
+        </tr>`).join('')}
+        </tbody></table>
+        <p class="muted small" data-i18n="view.paper.hint.ledger">Every non-trading cash movement, newest first (last 30): sweep interest, short borrow fees, margin loan interest, deposits, withdrawals. Trading cash flows live in the order history; dividends in their own panel.</p>`;
 }
 
 function renderHoldings(rows) {
