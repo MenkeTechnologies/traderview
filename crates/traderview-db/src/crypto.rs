@@ -1154,3 +1154,113 @@ pub async fn fetch_okx_bars(
     out.dedup_by_key(|b| b.bar_time);
     Ok(out)
 }
+
+
+#[derive(Debug, Clone, serde::Serialize)]
+pub struct BookDepth {
+    pub best_bid: f64,
+    pub best_ask: f64,
+    pub mid: f64,
+    pub spread_bps: f64,
+    /// Notional resting within ±band_pct of mid, each side.
+    pub bid_depth_usd: f64,
+    pub ask_depth_usd: f64,
+    /// bid / (bid + ask) depth — 0.5 balanced, > 0.5 bid-heavy
+    /// (buyers stacked), < 0.5 ask-heavy. None when the band holds
+    /// nothing on either side.
+    pub imbalance: Option<f64>,
+    pub band_pct: f64,
+    pub levels: usize,
+}
+
+/// Depth + imbalance from raw (price, size) levels. Pure; levels in
+/// any order, sizes in base units (notional = price × size).
+pub fn book_depth(
+    bids: &[(f64, f64)],
+    asks: &[(f64, f64)],
+    band_pct: f64,
+) -> Option<BookDepth> {
+    let best_bid = bids.iter().map(|(p, _)| *p).fold(f64::MIN, f64::max);
+    let best_ask = asks.iter().map(|(p, _)| *p).fold(f64::MAX, f64::min);
+    if !(best_bid > 0.0) || !(best_ask.is_finite()) || best_ask <= 0.0 || best_ask < best_bid {
+        return None;
+    }
+    let mid = (best_bid + best_ask) / 2.0;
+    let lo = mid * (1.0 - band_pct / 100.0);
+    let hi = mid * (1.0 + band_pct / 100.0);
+    let bid_depth_usd: f64 = bids
+        .iter()
+        .filter(|(p, _)| *p >= lo)
+        .map(|(p, s)| p * s)
+        .sum();
+    let ask_depth_usd: f64 = asks
+        .iter()
+        .filter(|(p, _)| *p <= hi)
+        .map(|(p, s)| p * s)
+        .sum();
+    let total = bid_depth_usd + ask_depth_usd;
+    Some(BookDepth {
+        best_bid,
+        best_ask,
+        mid,
+        spread_bps: (best_ask - best_bid) / mid * 10_000.0,
+        bid_depth_usd,
+        ask_depth_usd,
+        imbalance: (total > 0.0).then(|| bid_depth_usd / total),
+        band_pct,
+        levels: bids.len() + asks.len(),
+    })
+}
+
+/// Live order-book depth for a spot pair: top 400 levels, depth
+/// summed inside ±band_pct of mid.
+pub async fn spot_book_depth(base: &str, band_pct: f64) -> anyhow::Result<BookDepth> {
+    let base = base.trim().to_uppercase();
+    if base.is_empty() || base.len() > 10 || !base.bytes().all(|b| b.is_ascii_alphanumeric()) {
+        anyhow::bail!("invalid base asset");
+    }
+    let band = band_pct.clamp(0.05, 10.0);
+    let u = format!("https://www.okx.com/api/v5/market/books?instId={base}-USDT&sz=400");
+    let v = okx_json(&u).await?;
+    let parse_side = |key: &str| -> Vec<(f64, f64)> {
+        v.get("data")
+            .and_then(|d| d.as_array())
+            .and_then(|a| a.first())
+            .and_then(|r| r.get(key))
+            .and_then(|x| x.as_array())
+            .into_iter()
+            .flatten()
+            .filter_map(|lvl| {
+                let p: f64 = lvl.get(0)?.as_str()?.parse().ok()?;
+                let s: f64 = lvl.get(1)?.as_str()?.parse().ok()?;
+                Some((p, s))
+            })
+            .collect()
+    };
+    book_depth(&parse_side("bids"), &parse_side("asks"), band)
+        .ok_or_else(|| anyhow::anyhow!("no usable book for {base}-USDT"))
+}
+
+#[cfg(test)]
+mod book_tests {
+    use super::*;
+
+    #[test]
+    fn depth_imbalance_and_band_pins() {
+        // Mid 100, 1% band = [99, 101]. Bid 99.5×10 inside, 98×100
+        // outside; ask 100.5×10 inside, 103×100 outside.
+        let bids = [(99.5, 10.0), (98.0, 100.0)];
+        let asks = [(100.5, 10.0), (103.0, 100.0)];
+        let d = book_depth(&bids, &asks, 1.0).unwrap();
+        assert!((d.mid - 100.0).abs() < 1e-9);
+        // Spread 1.0 on mid 100 = 100 bps.
+        assert!((d.spread_bps - 100.0).abs() < 1e-9);
+        assert!((d.bid_depth_usd - 995.0).abs() < 1e-9);
+        assert!((d.ask_depth_usd - 1005.0).abs() < 1e-9);
+        // 995/2000 = 0.4975 — slightly ask-heavy.
+        assert!((d.imbalance.unwrap() - 0.4975).abs() < 1e-9);
+        // Crossed/garbage books refuse.
+        assert!(book_depth(&[(101.0, 1.0)], &[(100.0, 1.0)], 1.0).is_none());
+        assert!(book_depth(&[], &[(100.0, 1.0)], 1.0).is_none());
+    }
+}

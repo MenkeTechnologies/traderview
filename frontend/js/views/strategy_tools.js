@@ -494,6 +494,30 @@ const TOOLS = {
             5-minute cache; rates settle per interval, not per second. Feed a candidate into
             Funding Arb (live) for the full fee/breakeven ledger.</p>`,
     },
+    'book-depth': {
+        label: 'Crypto Book Depth',
+        call: (b) => api.cryptoBookDepth({ base: String(b.base).trim().toUpperCase(), band_pct: Number(b.band_pct) || 1 }),
+        fields: [
+            { key: 'base', label: 'Base asset (BTC, ETH…)', def: 'BTC', text: true },
+            { key: 'band_pct', label: 'Depth band ±%', def: 1 },
+        ],
+        render: (r) => `
+            <div class="cards">
+                <div class="card"><div class="label">Spread</div>
+                    <div class="value">${r.spread_bps.toFixed(2)} bps</div>
+                    <div class="small muted">${r.best_bid} / ${r.best_ask}</div></div>
+                <div class="card"><div class="label">Bid depth ±${r.band_pct}%</div>
+                    <div class="value">$${(r.bid_depth_usd / 1e6).toFixed(2)}M</div></div>
+                <div class="card"><div class="label">Ask depth ±${r.band_pct}%</div>
+                    <div class="value">$${(r.ask_depth_usd / 1e6).toFixed(2)}M</div></div>
+                <div class="card"><div class="label">Imbalance</div>
+                    <div class="value ${r.imbalance == null ? '' : r.imbalance >= 0.5 ? 'pos' : 'neg'}">${r.imbalance != null ? (r.imbalance * 100).toFixed(1) + '% bid' : '—'}</div>
+                    <div class="small muted">${r.levels} levels read</div></div>
+            </div>
+            <p class="muted small">Live OKX spot book (top 400 levels). Depth = notional resting within ±band of mid;
+            imbalance = bid share of that depth — above 50% buyers are stacked, below it sellers are. Resting depth
+            is a snapshot, not a promise: it can be pulled faster than you can hit it.</p>`,
+    },
     'crypto-vrp': {
         label: 'Crypto VRP',
         call: (b) => api.cryptoVrp({ base: String(b.base).trim().toUpperCase() }),

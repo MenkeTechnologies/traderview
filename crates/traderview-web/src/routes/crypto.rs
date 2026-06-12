@@ -23,6 +23,7 @@ pub fn router() -> Router<AppState> {
         .route("/crypto/carry-basis", post(carry_basis))
         .route("/crypto/vol-surface", post(vol_surface))
         .route("/crypto/vrp", post(vrp))
+        .route("/crypto/book-depth", post(book_depth))
 }
 
 #[derive(Deserialize)]
@@ -236,6 +237,26 @@ async fn vrp(
     Json(b): Json<PositioningBody>,
 ) -> Result<Json<traderview_db::crypto::CryptoVrp>, ApiError> {
     traderview_db::crypto::crypto_vrp(&b.base)
+        .await
+        .map(Json)
+        .map_err(|e| ApiError::BadRequest(e.to_string()))
+}
+
+#[derive(serde::Deserialize)]
+struct BookDepthBody {
+    base: String,
+    #[serde(default = "default_band")]
+    band_pct: f64,
+}
+fn default_band() -> f64 {
+    1.0
+}
+
+/// Live spot book: spread, ±band depth, imbalance.
+async fn book_depth(
+    Json(b): Json<BookDepthBody>,
+) -> Result<Json<traderview_db::crypto::BookDepth>, ApiError> {
+    traderview_db::crypto::spot_book_depth(&b.base, b.band_pct)
         .await
         .map(Json)
         .map_err(|e| ApiError::BadRequest(e.to_string()))
