@@ -45,6 +45,10 @@ pub struct AlgoStrategy {
     pub sizing: Json,
     pub risk_gates: Json,
     pub broker_mode: String, // 'internal_sim' | 'alpaca_paper' | 'alpaca_live'
+    /// The thesis — why this strategy should work, written before it
+    /// runs. Documentation, not config: deliberately NOT snapshotted
+    /// into revisions (editing the thesis isn't a config change).
+    pub notes: Option<String>,
     pub paper_locked_until: DateTime<Utc>,
     pub kill_switch: bool,
     pub kill_reason: Option<String>,
@@ -92,6 +96,8 @@ pub struct AlgoStrategyInput {
     pub risk_gates: Json,
     #[serde(default = "default_broker_mode")]
     pub broker_mode: String,
+    #[serde(default)]
+    pub notes: Option<String>,
 }
 
 fn default_timeframe() -> String {
@@ -277,8 +283,8 @@ pub async fn create_strategy(
         "INSERT INTO algo_strategies
              (user_id, name, enabled, timeframe, universe_mode, watchlist_id,
               autoscan_top_n, side_mode, strategy_type, account_id,
-              entry_rules, exit_rules, sizing, risk_gates, broker_mode)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+              entry_rules, exit_rules, sizing, risk_gates, broker_mode, notes)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
          RETURNING *",
     )
     .bind(user_id)
@@ -296,6 +302,7 @@ pub async fn create_strategy(
     .bind(input.sizing)
     .bind(input.risk_gates)
     .bind(input.broker_mode)
+    .bind(input.notes.as_deref().map(str::trim).filter(|s| !s.is_empty()))
     .fetch_one(pool)
     .await?)
 }
@@ -328,7 +335,7 @@ pub async fn update_strategy(
                 watchlist_id = $7, autoscan_top_n = $8, side_mode = $9,
                 strategy_type = $10, account_id = $11, entry_rules = $12,
                 exit_rules = $13, sizing = $14, risk_gates = $15,
-                broker_mode = $16, updated_at = now()
+                broker_mode = $16, notes = $17, updated_at = now()
           WHERE id = $1 AND user_id = $2
           RETURNING *",
     )
@@ -348,6 +355,7 @@ pub async fn update_strategy(
     .bind(input.sizing)
     .bind(input.risk_gates)
     .bind(input.broker_mode)
+    .bind(input.notes.as_deref().map(str::trim).filter(|s| !s.is_empty()))
     .fetch_optional(pool)
     .await?)
 }

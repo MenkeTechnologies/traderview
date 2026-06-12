@@ -1401,6 +1401,9 @@ async fn post_restore_revision(
         rev.broker_mode.clone()
     };
     let input = AlgoStrategyInput {
+        // Restores carry the CURRENT thesis: notes are documentation,
+        // not config, and weren't snapshotted into the revision.
+        notes: current.notes.clone(),
         name: rev.name.clone(),
         enabled: current.enabled,
         timeframe: rev.timeframe.clone(),
@@ -1452,6 +1455,7 @@ async fn post_fork_strategy(
         .filter(|n| !n.is_empty())
         .unwrap_or_else(|| format!("{} (fork)", src.name));
     let input = AlgoStrategyInput {
+        notes: src.notes.clone(),
         name,
         enabled: false,
         timeframe: src.timeframe.clone(),
@@ -1500,6 +1504,7 @@ async fn export_strategy(
         "exit_rules": src.exit_rules,
         "sizing": src.sizing,
         "risk_gates": src.risk_gates,
+        "notes": src.notes,
     })))
 }
 
@@ -1527,6 +1532,8 @@ struct ImportBody {
     /// Optional override; defaults to the user's first broker account.
     #[serde(default)]
     account_id: Option<Uuid>,
+    #[serde(default)]
+    notes: Option<String>,
 }
 fn default_import_timeframe() -> String {
     "1d".into()
@@ -1571,6 +1578,7 @@ async fn import_strategy(
         }
     };
     let input = AlgoStrategyInput {
+        notes: b.notes,
         name: b.name.trim().to_string(),
         enabled: false,
         timeframe: b.timeframe,

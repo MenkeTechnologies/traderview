@@ -1017,7 +1017,7 @@ async function refreshStrategies(mount) {
     }
     table.innerHTML = strategies.map(s => `
         <tr data-strat="${s.id}">
-            <td>${esc(s.name)} ${paperLockBadge(s.paper_locked_until)} ${killBadge(s)}</td>
+            <td>${esc(s.name)}${s.notes ? `<span title="${esc(s.notes)}"> 📝</span>` : ''} ${paperLockBadge(s.paper_locked_until)} ${killBadge(s)}</td>
             <td>${esc(s.strategy_type || 'momentum')}</td>
             <td>${esc(s.timeframe)}</td>
             <td>${esc(s.universe_mode)}${s.universe_mode === 'autoscan' ? ` (top ${s.autoscan_top_n})` : ''}</td>
@@ -2332,6 +2332,9 @@ async function openStrategyModal(mount, existing = null, prefill = null) {
                     <label><span data-i18n="view.algo.label.name">Name</span>
                         <input name="name" value="${esc(s.name)}" required>
                     </label>
+                    <label style="grid-column:1/-1"><span data-i18n="view.algo.label.notes">Thesis (why should this work?)</span>
+                        <textarea name="notes" rows="2" data-tip="view.algo.tip.notes" style="width:100%">${esc(s.notes || '')}</textarea>
+                    </label>
                     <label><span data-i18n="view.algo.label.account">Broker account</span>
                         <select name="account_id" required>
                             ${accountOptions || `<option value="">${esc(t('view.algo.label.no_accounts'))}</option>`}
@@ -2520,6 +2523,7 @@ async function openStrategyModal(mount, existing = null, prefill = null) {
                 htf_ema_period: Number(f.get('htf_ema_period')) || 50,
             }),
             broker_mode: f.get('broker_mode'),
+            notes: (f.get('notes') || '').trim() || null,
         };
         try {
             if (existing) {
