@@ -54,6 +54,8 @@ fn default_side_mode() -> SideMode {
 pub struct BtGates {
     /// US-Eastern minutes since midnight, [start, end).
     pub entry_window: Option<(u32, u32)>,
+    /// US-Eastern weekday bitmask (core::risk_gate::parse_entry_days).
+    pub entry_days: Option<u8>,
     /// Entries per UTC day.
     pub max_entries_per_day: Option<usize>,
     /// Minutes after a losing trade closes before the next entry.
@@ -70,6 +72,7 @@ pub struct BtGates {
 #[derive(Debug, Clone, Default, Serialize)]
 pub struct GateSkips {
     pub entry_window: usize,
+    pub entry_days: usize,
     pub daily_entry_cap: usize,
     pub loss_cooldown: usize,
     pub max_drawdown: usize,
@@ -115,6 +118,12 @@ impl GateState {
             if !(w.0..w.1).contains(&m) {
                 self.skips.entry_window += 1;
                 return Some("entry_window");
+            }
+        }
+        if let Some(mask) = self.gates.entry_days {
+            if !crate::risk_gate::in_entry_days(bar_time, mask) {
+                self.skips.entry_days += 1;
+                return Some("entry_days");
             }
         }
         if let Some(cap) = self.gates.max_entries_per_day {
@@ -950,6 +959,22 @@ mod gate_state_tests {
         let day2 = Utc.with_ymd_and_hms(2026, 6, 11, 14, 0, 0).unwrap();
         assert_eq!(g.blocks_entry(day2), None);
         assert_eq!(g.skips.daily_entry_cap, 1);
+    }
+
+    #[test]
+    fn entry_days_gate_blocks_excluded_weekdays() {
+        use chrono::TimeZone;
+        // Mask = mon..thu (no fri). 2026-06-12 is a Friday.
+        let mut g = GateState::new(BtGates {
+            entry_days: crate::risk_gate::parse_entry_days("mon,tue,wed,thu"),
+            ..Default::default()
+        });
+        let fri = Utc.with_ymd_and_hms(2026, 6, 12, 14, 30, 0).unwrap();
+        assert_eq!(g.blocks_entry(fri), Some("entry_days"));
+        // Monday passes; the skip counter recorded exactly the Friday.
+        let mon = Utc.with_ymd_and_hms(2026, 6, 15, 14, 30, 0).unwrap();
+        assert_eq!(g.blocks_entry(mon), None);
+        assert_eq!(g.skips.entry_days, 1);
     }
 
     #[test]

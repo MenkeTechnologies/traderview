@@ -624,6 +624,11 @@ async fn post_backtest(
                 .get("entry_window")
                 .and_then(|v| v.as_str())
                 .and_then(traderview_db::algo_engine::parse_entry_window),
+            entry_days: strategy
+                .risk_gates
+                .get("entry_days")
+                .and_then(|v| v.as_str())
+                .and_then(traderview_core::risk_gate::parse_entry_days),
             max_entries_per_day: strategy
                 .risk_gates
                 .get("max_entries_per_day")

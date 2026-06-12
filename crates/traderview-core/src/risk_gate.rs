@@ -409,6 +409,42 @@ pub fn us_eastern_minutes(now: DateTime<Utc>) -> u32 {
     local.hour() * 60 + local.minute()
 }
 
+/// Parse "mon,wed,fri" into a weekday bitmask (Mon = bit 0 … Sun =
+/// bit 6). Unknown tokens make the WHOLE string None — a typo'd day
+/// list disables the gate rather than silently trading a day the
+/// user excluded. Empty/all-seven masks also return None: both mean
+/// "no restriction", and None is the single off state.
+pub fn parse_entry_days(s: &str) -> Option<u8> {
+    let mut mask = 0u8;
+    for tok in s.split(',') {
+        let tok = tok.trim().to_lowercase();
+        if tok.is_empty() {
+            continue;
+        }
+        mask |= match tok.as_str() {
+            "mon" => 1 << 0,
+            "tue" => 1 << 1,
+            "wed" => 1 << 2,
+            "thu" => 1 << 3,
+            "fri" => 1 << 4,
+            "sat" => 1 << 5,
+            "sun" => 1 << 6,
+            _ => return None,
+        };
+    }
+    (mask != 0 && mask != 0b111_1111).then_some(mask)
+}
+
+/// Is `now` on an allowed weekday — judged in US-Eastern wall time,
+/// because "no Friday entries" means the trading-session Friday, and
+/// a 00:30 UTC Saturday is still Friday evening in New York.
+pub fn in_entry_days(now: DateTime<Utc>, mask: u8) -> bool {
+    use chrono::Datelike;
+    let local = now + chrono::Duration::hours(us_eastern_offset_hours(now));
+    let bit = local.weekday().num_days_from_monday(); // Mon = 0
+    mask & (1 << bit) != 0
+}
+
 fn is_us_rth(now: DateTime<Utc>) -> bool {
     use chrono::{Datelike, Timelike, Weekday};
     let local = now + chrono::Duration::hours(us_eastern_offset_hours(now));
@@ -477,6 +513,28 @@ pub fn preset_rules(preset: Preset) -> Vec<RiskRule> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn entry_days_parse_and_eastern_judgment() {
+        use chrono::TimeZone;
+        // Mon+Fri mask: bits 0 and 4.
+        assert_eq!(parse_entry_days("mon,fri"), Some(0b1_0001));
+        assert_eq!(parse_entry_days(" Wed , THU "), Some(0b0110 << 1));
+        // A typo disables the WHOLE gate — never silently trades an
+        // excluded day. Empty and all-seven are both "no restriction".
+        assert_eq!(parse_entry_days("mon,tue,wendsday"), None);
+        assert_eq!(parse_entry_days(""), None);
+        assert_eq!(parse_entry_days("mon,tue,wed,thu,fri,sat,sun"), None);
+        // 2026-06-12 is a Friday. 23:30 UTC Friday is 19:30 ET Friday
+        // — still Friday in New York...
+        let fri_eve = chrono::Utc.with_ymd_and_hms(2026, 6, 12, 23, 30, 0).unwrap();
+        assert!(in_entry_days(fri_eve, 1 << 4));
+        // ...and 00:30 UTC Saturday is ALSO Friday evening ET — the
+        // session day, not the UTC day, is what the rule means.
+        let sat_utc = chrono::Utc.with_ymd_and_hms(2026, 6, 13, 0, 30, 0).unwrap();
+        assert!(in_entry_days(sat_utc, 1 << 4));
+        assert!(!in_entry_days(sat_utc, 1 << 0));
+    }
     use chrono::TimeZone;
     use std::str::FromStr;
 

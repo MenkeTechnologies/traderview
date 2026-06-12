@@ -173,6 +173,8 @@ pub enum EngineError {
     },
     #[error("outside entry window {window} ET; entry skipped")]
     OutsideEntryWindow { window: String },
+    #[error("not an allowed entry day ({days}); entry skipped")]
+    OutsideEntryDays { days: String },
     #[error("daily entry cap reached ({count}/{cap}); entry skipped until tomorrow")]
     DailyEntryCap { cap: i64, count: i64 },
     #[error("loss cooldown: last losing trade closed {minutes_ago}m ago (cooldown {cooldown}m); entry skipped")]
@@ -331,6 +333,7 @@ impl EngineError {
             Self::PositionSizeCap { .. } => Some("position_size_cap"),
             Self::EarningsBlackout { .. } => Some("earnings_blackout"),
             Self::OutsideEntryWindow { .. } => Some("entry_window"),
+            Self::OutsideEntryDays { .. } => Some("entry_days"),
             Self::DailyEntryCap { .. } => Some("daily_entry_cap"),
             Self::LossCooldown { .. } => Some("loss_cooldown"),
             Self::CorrelationGate { .. } => Some("correlation"),
@@ -388,6 +391,11 @@ pub struct EngineConfig {
     /// as minutes since midnight (start inclusive, end exclusive).
     /// Exits are never blocked. None = always.
     pub entry_window: Option<(u32, u32)>,
+    /// ENTRIES allowed only on these US-Eastern weekdays — bitmask
+    /// from core::risk_gate::parse_entry_days ("mon,tue,wed"); typos
+    /// disable the gate rather than silently trading an excluded day.
+    /// Exits never blocked. None = all days.
+    pub entry_days: Option<u8>,
     /// Overtrading gate: cap on entry orders per UTC day. Exits are
     /// never blocked. None = unlimited.
     pub max_entries_per_day: Option<i64>,
@@ -475,6 +483,11 @@ impl EngineConfig {
             .get("entry_window")
             .and_then(|v| v.as_str())
             .and_then(parse_entry_window);
+        let entry_days = s
+            .risk_gates
+            .get("entry_days")
+            .and_then(|v| v.as_str())
+            .and_then(traderview_core::risk_gate::parse_entry_days);
         let max_entries_per_day = s
             .risk_gates
             .get("max_entries_per_day")
@@ -517,6 +530,7 @@ impl EngineConfig {
             max_position_size_usd,
             earnings_blackout_days,
             entry_window,
+            entry_days,
             max_entries_per_day,
             loss_cooldown_minutes,
             max_entry_correlation,
@@ -648,6 +662,18 @@ async fn trip_kill_switch(
 /// Parse "HH:MM-HH:MM" into minutes-since-midnight. Malformed input
 /// or a non-increasing window (overnight wrap unsupported for US
 /// equities) disables the gate by returning None.
+/// Human label for an entry-days mask, for error/audit text.
+pub fn entry_days_label(mask: u8) -> String {
+    const NAMES: [&str; 7] = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
+    NAMES
+        .iter()
+        .enumerate()
+        .filter(|(i, _)| mask & (1 << i) != 0)
+        .map(|(_, n)| *n)
+        .collect::<Vec<_>>()
+        .join(",")
+}
+
 pub fn parse_entry_window(s: &str) -> Option<(u32, u32)> {
     let (a, b) = s.split_once('-')?;
     let parse = |t: &str| -> Option<u32> {
@@ -832,6 +858,15 @@ pub async fn process_bar_window(
                     "{:02}:{:02}-{:02}:{:02}",
                     window.0 / 60, window.0 % 60, window.1 / 60, window.1 % 60
                 ),
+            });
+        }
+    }
+    // Risk gate: entry days — the "no Mondays / no Fridays" rule,
+    // judged in US-Eastern wall time (the session day, not UTC's).
+    if let Some(mask) = cfg.entry_days {
+        if !traderview_core::risk_gate::in_entry_days(chrono::Utc::now(), mask) {
+            return Err(EngineError::OutsideEntryDays {
+                days: entry_days_label(mask),
             });
         }
     }

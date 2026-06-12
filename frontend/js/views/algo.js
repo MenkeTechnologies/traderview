@@ -2166,8 +2166,8 @@ function renderBacktestResult(host, r) {
             <div><strong>Sharpe (bar):</strong> ${sm.sharpe.toFixed(3)}</div>
             <div><strong>Final equity:</strong> ${finalRow}</div>
             <div><strong>Exits:</strong> SL ${sm.exits_by_stop} / TP ${sm.exits_by_tp} / Sig ${sm.exits_by_signal} / EOD ${sm.exits_by_eod}</div>
-            ${r.gate_skips && (r.gate_skips.entry_window + r.gate_skips.daily_entry_cap + r.gate_skips.loss_cooldown + (r.gate_skips.max_drawdown || 0)) > 0
-                ? `<div><strong>Gate skips:</strong> window ${r.gate_skips.entry_window} / daily cap ${r.gate_skips.daily_entry_cap} / cooldown ${r.gate_skips.loss_cooldown}${r.gate_skips.max_drawdown ? ` / drawdown latch ${r.gate_skips.max_drawdown}` : ''} — entries the gates removed from this run</div>`
+            ${r.gate_skips && (r.gate_skips.entry_window + r.gate_skips.daily_entry_cap + r.gate_skips.loss_cooldown + (r.gate_skips.max_drawdown || 0) + (r.gate_skips.entry_days || 0)) > 0
+                ? `<div><strong>Gate skips:</strong> window ${r.gate_skips.entry_window} / daily cap ${r.gate_skips.daily_entry_cap} / cooldown ${r.gate_skips.loss_cooldown}${r.gate_skips.entry_days ? ` / days ${r.gate_skips.entry_days}` : ''}${r.gate_skips.max_drawdown ? ` / drawdown latch ${r.gate_skips.max_drawdown}` : ''} — entries the gates removed from this run</div>`
                 : ''}
         </div>
         <details ${trades.length ? 'open' : ''}>
@@ -2390,6 +2390,9 @@ async function openStrategyModal(mount, existing = null, prefill = null) {
                     <label><span data-i18n="view.algo.label.entry_window">Entry window ET (empty = always)</span>
                         <input type="text" name="entry_window" placeholder="10:00-15:30" value="${esc(s.risk_gates?.entry_window ?? '')}" data-tip="view.algo.tip.entry_window">
                     </label>
+                    <label><span data-i18n="view.algo.label.entry_days">Entry days (empty = all)</span>
+                        <input type="text" name="entry_days" placeholder="mon,tue,wed,thu" value="${esc(s.risk_gates?.entry_days ?? '')}" data-tip="view.algo.tip.entry_days">
+                    </label>
                     <label><span data-i18n="view.algo.label.max_entries_day">Max entries / day (0 = unlimited)</span>
                         <input type="number" name="max_entries_per_day" min="0" max="500" value="${Number(s.risk_gates?.max_entries_per_day ?? 0)}" data-tip="view.algo.tip.max_entries_day">
                     </label>
@@ -2484,6 +2487,7 @@ async function openStrategyModal(mount, existing = null, prefill = null) {
                 max_concurrent_positions: Number(f.get('max_concurrent_positions')) || 5,
                 earnings_blackout_days: Number(f.get('earnings_blackout_days')) || 0,
                 entry_window: (f.get('entry_window') || '').trim(),
+                entry_days: (f.get('entry_days') || '').trim(),
                 max_entries_per_day: Number(f.get('max_entries_per_day')) || 0,
                 loss_cooldown_minutes: Number(f.get('loss_cooldown_minutes')) || 0,
                 max_drawdown_usd: Number(f.get('max_drawdown_usd')) || 0,
