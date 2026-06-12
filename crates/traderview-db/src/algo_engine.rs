@@ -165,6 +165,8 @@ pub enum EngineError {
     MaxDrawdown { cap: Decimal, drawdown: Decimal },
     #[error("position size ${notional} exceeds cap ${cap}; order rejected")]
     PositionSizeCap { notional: Decimal, cap: Decimal },
+    #[error("account exposure ${open_notional} at/over cap ${cap}; entry skipped")]
+    AccountExposureCap { open_notional: Decimal, cap: Decimal },
     #[error("earnings blackout: {symbol} reports on {date} (within {days}d window); entry skipped")]
     EarningsBlackout {
         symbol: String,
@@ -329,6 +331,7 @@ impl EngineError {
             Self::PositionCap(_) => Some("position_cap"),
             Self::DailyLossCap { .. } => Some("daily_loss_cap"),
             Self::MaxDrawdown { .. } => Some("max_drawdown"),
+            Self::AccountExposureCap { .. } => Some("account_exposure"),
             Self::ConsecutiveLossesCap { .. } => Some("consecutive_losses"),
             Self::PositionSizeCap { .. } => Some("position_size_cap"),
             Self::EarningsBlackout { .. } => Some("earnings_blackout"),
@@ -383,6 +386,13 @@ pub struct EngineConfig {
     pub max_drawdown_usd: Option<Decimal>,
     /// Reject orders whose entry-price × qty exceeds this notional cap.
     pub max_position_size_usd: Option<Decimal>,
+    /// ACCOUNT-level exposure ceiling: skip entries while the summed
+    /// open entry notional across ALL strategies on this account is
+    /// at/over the cap. Per-strategy caps bound one strategy; five
+    /// strategies each inside their own cap can still stack the
+    /// account — this is the aggregate brake. Portfolio-dependent,
+    /// hence live-only (not backtest-replayable from one bar series).
+    pub max_account_notional_usd: Option<Decimal>,
     /// Skip ENTRIES when the symbol's next earnings report is within
     /// this many days (forward-looking: the risk being managed is
     /// holding INTO the print). Exits are never blocked.
@@ -417,6 +427,28 @@ pub struct EngineConfig {
     /// Insufficient higher-TF history SKIPS the gate (allow + log),
     /// matching the correlation gate's thin-history convention.
     pub htf_filter: Option<(traderview_core::BarInterval, usize)>,
+}
+
+/// Account-level exposure brake, shared by the single- and
+/// multi-symbol paths. Entry notional (deterministic, no quotes) —
+/// the same convention as the borrow-fee pass. Does NOT trip the
+/// kill switch: exposure recedes as positions close, so the gate
+/// self-clears, unlike drawdown which needs a human.
+async fn check_account_exposure_gate(
+    pool: &PgPool,
+    strategy: &AlgoStrategy,
+) -> Result<(), EngineError> {
+    let cfg = EngineConfig::from_strategy(strategy);
+    let Some(cap) = cfg.max_account_notional_usd else {
+        return Ok(());
+    };
+    let open_notional = crate::trades::open_account_notional(pool, strategy.account_id)
+        .await
+        .map_err(|e| EngineError::Broker(e.to_string()))?;
+    if open_notional >= cap {
+        return Err(EngineError::AccountExposureCap { open_notional, cap });
+    }
+    Ok(())
 }
 
 /// Max-drawdown circuit breaker, shared by the single- and
@@ -468,6 +500,10 @@ impl EngineConfig {
         };
         let max_daily_loss_usd = s.risk_gates.get("max_daily_loss_usd").and_then(f64_to_dec);
         let max_drawdown_usd = s.risk_gates.get("max_drawdown_usd").and_then(f64_to_dec);
+        let max_account_notional_usd = s
+            .risk_gates
+            .get("max_account_notional_usd")
+            .and_then(f64_to_dec);
         let max_consecutive_losses = s
             .risk_gates
             .get("max_consecutive_losses")
@@ -535,6 +571,7 @@ impl EngineConfig {
             max_concurrent_positions,
             max_daily_loss_usd,
             max_drawdown_usd,
+            max_account_notional_usd,
             max_consecutive_losses,
             max_position_size_usd,
             earnings_blackout_days,
@@ -857,6 +894,10 @@ pub async fn process_bar_window(
     let Some(sig) = strat.evaluate_entry(bars, cfg.side_mode) else {
         return Ok(None);
     };
+    // Risk gate: account exposure — entries only, AFTER the exit pass
+    // so positions can always flatten; the gate self-clears as closes
+    // reduce the aggregate.
+    check_account_exposure_gate(pool, strategy).await?;
     // Risk gate: earnings blackout — entries only; the exit pass above
     // already ran, so positions can always flatten into the print.
     if let Some(days) = cfg.earnings_blackout_days {
@@ -1359,6 +1400,9 @@ pub async fn process_bar_window_multi(
     let Some(sig) = strat.evaluate_entry_multi(bars_by_symbol, cfg.side_mode) else {
         return Ok(None);
     };
+    // Account exposure — entries only, after the per-leg exit pass so
+    // pairs can always flatten; self-clears as closes reduce the sum.
+    check_account_exposure_gate(pool, strategy).await?;
     let qty = algo_strategies::size_shares(equity, sig.entry_price, sig.stop_distance, &cfg.sizing);
     if qty == 0 {
         return Err(EngineError::ZeroQty);

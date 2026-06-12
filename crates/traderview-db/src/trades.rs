@@ -655,6 +655,22 @@ pub async fn open_symbols(pool: &PgPool, account_id: Uuid) -> anyhow::Result<Vec
     Ok(rows.into_iter().map(|(s,)| s).collect())
 }
 
+/// Total open entry notional across the WHOLE account — every open
+/// trade's |qty × entry_avg|, all strategies, all symbols. Entry
+/// notional, not marked value: deterministic from the trades table
+/// with no quote dependency (same convention as the borrow-fee pass).
+pub async fn open_account_notional(pool: &PgPool, account_id: Uuid) -> anyhow::Result<Decimal> {
+    let r: Option<(Decimal,)> = sqlx::query_as(
+        "SELECT COALESCE(SUM(ABS(qty * entry_avg)), 0)
+           FROM trades
+          WHERE account_id = $1 AND status = 'open'",
+    )
+    .bind(account_id)
+    .fetch_optional(pool)
+    .await?;
+    Ok(r.map(|(d,)| d).unwrap_or_default())
+}
+
 pub async fn open_positions_for_symbol(
     pool: &PgPool,
     account_id: Uuid,
