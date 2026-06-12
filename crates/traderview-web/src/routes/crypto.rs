@@ -19,6 +19,7 @@ pub fn router() -> Router<AppState> {
         .route("/crypto/calc/funding-arb", post(funding_arb))
         .route("/crypto/calc/funding-arb-live", post(funding_arb_live))
         .route("/crypto/funding-scan", get(funding_scan))
+        .route("/crypto/positioning", post(positioning))
 }
 
 #[derive(Deserialize)]
@@ -174,4 +175,20 @@ async fn btc_chain(_s: State<AppState>, _u: AuthUser) -> Result<Json<OnChainBtc>
         .map_err(ApiError::Internal)?;
     *BC.lock().await = Some((Instant::now(), v.clone()));
     Ok(Json(v))
+}
+
+#[derive(serde::Deserialize)]
+struct PositioningBody {
+    base: String,
+}
+
+/// Live OKX positioning: OI×price quadrant, long/short account ratio,
+/// taker flow, funding — who is positioned where, in one read.
+async fn positioning(
+    Json(b): Json<PositioningBody>,
+) -> Result<Json<traderview_db::crypto::Positioning>, ApiError> {
+    traderview_db::crypto::positioning(&b.base)
+        .await
+        .map(Json)
+        .map_err(|e| ApiError::BadRequest(e.to_string()))
 }

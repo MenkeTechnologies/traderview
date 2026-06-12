@@ -777,6 +777,7 @@ export const api = {
     cryptoFundingArb:        (body) => request('/crypto/calc/funding-arb', { method: 'POST', body: JSON.stringify(body) }),
     cryptoFundingArbLive:    (body) => request('/crypto/calc/funding-arb-live', { method: 'POST', body: JSON.stringify(body) }),
     cryptoFundingScan:       () => request('/crypto/funding-scan'),
+    cryptoPositioning: (body) => request('/crypto/positioning', { method: 'POST', body }),
     calcFxCarry:             (body) => request('/calc/fx-carry', { method: 'POST', body: JSON.stringify(body) }),
     calcAverageDown:         (body) => request('/calc/average-down', { method: 'POST', body: JSON.stringify(body) }),
     calcLeveragedEtfDecay:   (body) => request('/calc/leveraged-etf-decay', { method: 'POST', body: JSON.stringify(body) }),

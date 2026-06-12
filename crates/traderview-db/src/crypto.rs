@@ -383,3 +383,153 @@ mod funding_tests {
         assert!(funding_persistence(&[]).is_none());
     }
 }
+
+
+/// OI × price quadrant — the classic positioning read. Both rising:
+/// new money agreeing with the move. Price up on falling OI: shorts
+/// closing, not buyers arriving. Price down on rising OI: new shorts
+/// pressing. Both falling: longs liquidating. Changes inside ±EPS%
+/// are noise, read as flat.
+pub fn oi_price_quadrant(price_chg_pct: f64, oi_chg_pct: f64) -> &'static str {
+    const EPS: f64 = 0.05;
+    let (p, o) = (price_chg_pct, oi_chg_pct);
+    if p.abs() < EPS || o.abs() < EPS {
+        "flat"
+    } else if p > 0.0 && o > 0.0 {
+        "new_longs"
+    } else if p > 0.0 {
+        "short_covering"
+    } else if o > 0.0 {
+        "new_shorts"
+    } else {
+        "long_liquidation"
+    }
+}
+
+#[derive(Debug, Clone, serde::Serialize)]
+pub struct Positioning {
+    pub inst_id: String,
+    pub price_last: f64,
+    pub price_chg_24h_pct: f64,
+    /// Open interest across the USDT swap, USD terms.
+    pub oi_usd: f64,
+    /// 24h OI change from the venue's daily OI series (all {base}
+    /// contracts, a broader scope than the single swap's level — the
+    /// DIRECTION is the signal, not the level match). None when the
+    /// series is too short.
+    pub oi_chg_24h_pct: Option<f64>,
+    pub quadrant: Option<&'static str>,
+    /// Long/short ACCOUNT ratio (1.4 = 40% more long accounts than
+    /// short) — retail positioning, newest hour.
+    pub long_short_ratio: Option<f64>,
+    pub long_short_ratio_24h_ago: Option<f64>,
+    /// Taker buy share of the last 24 hourly buckets — aggressor flow.
+    pub taker_buy_share_24h_pct: Option<f64>,
+    pub funding_rate: Option<f64>,
+}
+
+fn rubik_rows(v: &serde_json::Value) -> Vec<Vec<f64>> {
+    v.get("data")
+        .and_then(|d| d.as_array())
+        .map(|rows| {
+            rows.iter()
+                .filter_map(|r| {
+                    r.as_array().map(|xs| {
+                        xs.iter()
+                            .filter_map(|x| x.as_str().and_then(|s| s.parse().ok()))
+                            .collect()
+                    })
+                })
+                .collect()
+        })
+        .unwrap_or_default()
+}
+
+/// Live positioning dashboard: who is positioned where, fetched
+/// concurrently. Ticker + open interest are required; the rubik
+/// stats (ratio, taker flow, OI history) and funding are enrichment
+/// — each degrades to None independently so one dark endpoint
+/// doesn't kill the read.
+pub async fn positioning(base: &str) -> anyhow::Result<Positioning> {
+    let base = base.trim().to_uppercase();
+    if base.is_empty() || base.len() > 10 || !base.bytes().all(|b| b.is_ascii_alphanumeric()) {
+        anyhow::bail!("invalid base asset");
+    }
+    let inst = format!("{base}-USDT-SWAP");
+    let u_ticker = format!("https://www.okx.com/api/v5/market/ticker?instId={inst}");
+    let u_oi = format!("https://www.okx.com/api/v5/public/open-interest?instId={inst}");
+    let u_oi_hist = format!(
+        "https://www.okx.com/api/v5/rubik/stat/contracts/open-interest-volume?ccy={base}&period=1D"
+    );
+    let u_ls = format!(
+        "https://www.okx.com/api/v5/rubik/stat/contracts/long-short-account-ratio?ccy={base}&period=1H"
+    );
+    let u_taker = format!(
+        "https://www.okx.com/api/v5/rubik/stat/taker-volume?ccy={base}&instType=CONTRACTS&period=1H"
+    );
+    let u_funding = format!("https://www.okx.com/api/v5/public/funding-rate?instId={inst}");
+    let (ticker, oi, oi_hist, ls, taker, funding) = futures_util::join!(
+        okx_json(&u_ticker),
+        okx_json(&u_oi),
+        okx_json(&u_oi_hist),
+        okx_json(&u_ls),
+        okx_json(&u_taker),
+        okx_json(&u_funding),
+    );
+    let ticker = ticker?;
+    let last = okx_f64(&ticker, &["data", "0", "last"])
+        .ok_or_else(|| anyhow::anyhow!("no last price"))?;
+    let open24h = okx_f64(&ticker, &["data", "0", "open24h"])
+        .ok_or_else(|| anyhow::anyhow!("no open24h"))?;
+    let price_chg_24h_pct = (last / open24h - 1.0) * 100.0;
+    let oi = oi?;
+    let oi_usd = okx_f64(&oi, &["data", "0", "oiUsd"])
+        .ok_or_else(|| anyhow::anyhow!("no open interest"))?;
+    // Daily OI series, newest first: [ts, oiUsd, volUsd].
+    let oi_chg_24h_pct = oi_hist.ok().map(|v| rubik_rows(&v)).and_then(|rows| {
+        let now = rows.first().and_then(|r| r.get(1)).copied()?;
+        let prev = rows.get(1).and_then(|r| r.get(1)).copied()?;
+        (prev != 0.0).then(|| (now / prev - 1.0) * 100.0)
+    });
+    let ls_rows = ls.ok().map(|v| rubik_rows(&v)).unwrap_or_default();
+    let long_short_ratio = ls_rows.first().and_then(|r| r.get(1)).copied();
+    let long_short_ratio_24h_ago = ls_rows.get(24).and_then(|r| r.get(1)).copied();
+    // Taker volume, newest first: [ts, sellVol, buyVol] per the venue
+    // docs — sell FIRST. Sum the last 24 hourly buckets.
+    let taker_buy_share_24h_pct = taker.ok().map(|v| rubik_rows(&v)).and_then(|rows| {
+        let (mut sell, mut buy) = (0.0, 0.0);
+        for r in rows.iter().take(24) {
+            sell += r.get(1).copied().unwrap_or(0.0);
+            buy += r.get(2).copied().unwrap_or(0.0);
+        }
+        (sell + buy > 0.0).then(|| buy / (sell + buy) * 100.0)
+    });
+    Ok(Positioning {
+        inst_id: inst,
+        price_last: last,
+        price_chg_24h_pct,
+        oi_usd,
+        quadrant: oi_chg_24h_pct.map(|o| oi_price_quadrant(price_chg_24h_pct, o)),
+        oi_chg_24h_pct,
+        long_short_ratio,
+        long_short_ratio_24h_ago,
+        taker_buy_share_24h_pct,
+        funding_rate: funding.ok().and_then(|v| okx_f64(&v, &["data", "0", "fundingRate"])),
+    })
+}
+
+#[cfg(test)]
+mod positioning_tests {
+    use super::*;
+
+    #[test]
+    fn quadrant_pins_all_five_reads() {
+        assert_eq!(oi_price_quadrant(2.0, 3.0), "new_longs");
+        assert_eq!(oi_price_quadrant(2.0, -3.0), "short_covering");
+        assert_eq!(oi_price_quadrant(-2.0, 3.0), "new_shorts");
+        assert_eq!(oi_price_quadrant(-2.0, -3.0), "long_liquidation");
+        // Sub-noise moves on EITHER axis read flat, both boundaries.
+        assert_eq!(oi_price_quadrant(0.01, 5.0), "flat");
+        assert_eq!(oi_price_quadrant(5.0, -0.01), "flat");
+    }
+}

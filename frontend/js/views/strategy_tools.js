@@ -491,6 +491,38 @@ const TOOLS = {
             5-minute cache; rates settle per interval, not per second. Feed a candidate into
             Funding Arb (live) for the full fee/breakeven ledger.</p>`,
     },
+    'positioning': {
+        label: 'Crypto Positioning',
+        call: (b) => api.cryptoPositioning({ base: String(b.base).trim().toUpperCase() }),
+        fields: [
+            { key: 'base', label: 'Base asset (BTC, ETH, SOL…)', def: 'BTC', text: true },
+        ],
+        render: (r) => `
+            <div class="cards">
+                <div class="card"><div class="label">${esc(r.inst_id)}</div>
+                    <div class="value">$${r.price_last}</div>
+                    <div class="small ${r.price_chg_24h_pct >= 0 ? 'pos' : 'neg'}">${r.price_chg_24h_pct.toFixed(2)}% 24h</div></div>
+                <div class="card"><div class="label">Open interest</div>
+                    <div class="value">$${(r.oi_usd / 1e9).toFixed(2)}B</div>
+                    <div class="small ${r.oi_chg_24h_pct == null ? 'muted' : r.oi_chg_24h_pct >= 0 ? 'pos' : 'neg'}">${r.oi_chg_24h_pct != null ? r.oi_chg_24h_pct.toFixed(2) + '% 24h' : 'no history'}</div></div>
+                <div class="card"><div class="label">Quadrant</div>
+                    <div class="value">${r.quadrant ? esc(r.quadrant.replace('_', ' ')) : '—'}</div>
+                    <div class="small muted">price × OI, 24h</div></div>
+                <div class="card"><div class="label">Long/short accounts</div>
+                    <div class="value">${r.long_short_ratio != null ? r.long_short_ratio.toFixed(2) : '—'}</div>
+                    <div class="small muted">${r.long_short_ratio_24h_ago != null ? '24h ago: ' + r.long_short_ratio_24h_ago.toFixed(2) : ''}</div></div>
+                <div class="card"><div class="label">Taker buy share 24h</div>
+                    <div class="value">${r.taker_buy_share_24h_pct != null ? r.taker_buy_share_24h_pct.toFixed(1) + '%' : '—'}</div>
+                    <div class="small muted">aggressor flow</div></div>
+                <div class="card"><div class="label">Funding</div>
+                    <div class="value">${r.funding_rate != null ? (r.funding_rate * 100).toFixed(4) + '%' : '—'}</div>
+                    <div class="small muted">per interval</div></div>
+            </div>
+            <p class="muted small">Live OKX. Quadrant is the classic OI×price read — new longs (both up: new money
+            agreeing), short covering (price up, OI down: shorts closing, not buyers arriving), new shorts (price
+            down, OI up), long liquidation (both down); ±0.05% reads flat. Long/short is the ACCOUNT ratio (retail
+            head-count, not notional). Ticker + OI are required; ratio/flow/history each degrade to — independently.</p>`,
+    },
     'funding-arb-live': {
         label: 'Funding Arb (live)',
         call: (b) => api.cryptoFundingArbLive({
