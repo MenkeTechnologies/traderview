@@ -10,7 +10,7 @@
 //! Pure compute. Companion to `monte_carlo_var`, `evt_value_at_risk`,
 //! `cornish_fisher_var`, `expected_shortfall`.
 
-#[derive(Debug)]
+#[derive(Debug, Clone, serde::Serialize)]
 pub struct Report {
     pub var: f64,
     pub expected_shortfall: f64,

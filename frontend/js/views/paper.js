@@ -178,6 +178,7 @@ export async function renderPaper(mount) {
 
         <div class="chart-panel" id="paper-corr-panel" style="display:none">
             <h2 data-i18n="view.paper.h2.correlations">Holdings correlation</h2>
+            <div id="paper-var" class="muted small"></div>
             <div id="paper-corr" class="muted small"></div>
         </div>
 
@@ -258,6 +259,9 @@ export async function renderPaper(mount) {
     if (positions.filter(p => p.symbol.length <= 15).length >= 2) {
         api.paperCorrelations(acct.id)
             .then(c => { if (viewIsCurrent(tok)) renderCorrelations(c); })
+            .catch(() => {});
+        api.paperVar(acct.id)
+            .then(v => { if (viewIsCurrent(tok)) renderVar(v); })
             .catch(() => {});
     }
     mount.querySelector('#recur-form').addEventListener('submit', async (e) => {
@@ -446,6 +450,17 @@ export async function renderPaper(mount) {
             renderPaper(mount);
         } catch (err) { showToast(t('toast.error.api', { err: err.message }), { level: 'error' }); }
     });
+}
+
+function renderVar(v) {
+    const panel = document.getElementById('paper-corr-panel');
+    const el = document.getElementById('paper-var');
+    if (!panel || !el) return;
+    panel.style.display = '';
+    el.innerHTML = `<p><strong>1-day VaR</strong> (historical, ${v.sessions} sessions, $${fmt(v.book_value)} gross):
+        95% <span class="neg">\u2212$${fmt(v.var_95_usd)}</span> (${v.var_95_pct.toFixed(2)}%, ES \u2212$${fmt(v.es_95_usd)})
+        \u00b7 99% <span class="neg">\u2212$${fmt(v.var_99_usd)}</span> (${v.var_99_pct.toFixed(2)}%, ES \u2212$${fmt(v.es_99_usd)})
+        ${v.excluded_options.length ? `<span class="muted small">\u00b7 options excluded</span>` : ''}</p>`;
 }
 
 function renderCorrelations(c) {

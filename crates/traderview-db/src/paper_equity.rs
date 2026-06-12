@@ -527,6 +527,121 @@ pub async fn position_correlations(
     })
 }
 
+/// Weighted portfolio returns over the TRAILING common overlap of the
+/// per-symbol return series — today's weights applied historically
+/// (the standard historical-simulation approximation). Pure, pinned.
+pub fn weighted_portfolio_returns(weights: &[f64], returns: &[Vec<f64>]) -> Vec<f64> {
+    if weights.is_empty() || weights.len() != returns.len() {
+        return Vec::new();
+    }
+    let Some(len) = returns.iter().map(|r| r.len()).min() else {
+        return Vec::new();
+    };
+    (0..len)
+        .map(|t| {
+            weights
+                .iter()
+                .zip(returns)
+                .map(|(w, r)| w * r[r.len() - len + t])
+                .sum()
+        })
+        .collect()
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct PortfolioVar {
+    /// Current book value the dollar figures scale against.
+    pub book_value: f64,
+    pub sessions: usize,
+    pub var_95_usd: f64,
+    pub es_95_usd: f64,
+    pub var_99_usd: f64,
+    pub es_99_usd: f64,
+    pub var_95_pct: f64,
+    pub var_99_pct: f64,
+    pub excluded_options: Vec<String>,
+}
+
+/// Historical-simulation portfolio VaR of the current equity book:
+/// today's weights over the joint trailing return history, the
+/// empirical 95/99 quantiles in dollars. Needs >= 60 common sessions —
+/// a VaR from a few weeks of data is noise stated as a number.
+pub async fn portfolio_var(
+    pool: &PgPool,
+    user_id: Uuid,
+    account_id: Uuid,
+    lookback_days: i64,
+) -> anyhow::Result<PortfolioVar> {
+    use rust_decimal::prelude::ToPrimitive;
+    let owner: Option<(Uuid,)> =
+        sqlx::query_as("SELECT user_id FROM paper_accounts WHERE id = $1")
+            .bind(account_id)
+            .fetch_optional(pool)
+            .await?;
+    if !matches!(owner, Some((u,)) if u == user_id) {
+        anyhow::bail!("forbidden");
+    }
+    let held: Vec<(String, Decimal)> = sqlx::query_as(
+        "SELECT symbol, qty FROM paper_positions WHERE paper_account_id = $1",
+    )
+    .bind(account_id)
+    .fetch_all(pool)
+    .await?;
+    let mut excluded_options = Vec::new();
+    let mut notionals: Vec<f64> = Vec::new();
+    let mut all_returns: Vec<Vec<f64>> = Vec::new();
+    let to = Utc::now();
+    let from = to - chrono::Duration::days(lookback_days.clamp(90, 730));
+    for (symbol, qty) in held {
+        if traderview_core::occ_symbol::is_occ(&symbol) {
+            excluded_options.push(symbol);
+            continue;
+        }
+        let bars =
+            crate::prices::get_bars(pool, &symbol, traderview_core::BarInterval::D1, from, to)
+                .await?;
+        let closes: Vec<f64> = bars.iter().map(|b| b.close.to_f64().unwrap_or(0.0)).collect();
+        let Some(last) = closes.last().copied().filter(|p| *p > 0.0) else {
+            anyhow::bail!("no price history for {symbol}");
+        };
+        notionals.push(qty.to_f64().unwrap_or(0.0) * last);
+        all_returns.push(traderview_core::correlation_gate::daily_returns(&closes));
+    }
+    if notionals.is_empty() {
+        anyhow::bail!("no equity positions to measure");
+    }
+    // Gross-exposure weights: shorts contribute their SIGNED return
+    // weighted by signed notional over GROSS book, so a hedged book
+    // shows reduced VaR rather than inflated.
+    let gross: f64 = notionals.iter().map(|n| n.abs()).sum();
+    if gross <= 0.0 {
+        anyhow::bail!("zero book value");
+    }
+    let weights: Vec<f64> = notionals.iter().map(|n| n / gross).collect();
+    let port = weighted_portfolio_returns(&weights, &all_returns);
+    if port.len() < 60 {
+        anyhow::bail!(
+            "only {} common sessions across holdings — need >= 60 for a VaR that isn't noise",
+            port.len()
+        );
+    }
+    let v95 = traderview_core::value_at_risk_historical::compute(&port, 0.95)
+        .ok_or_else(|| anyhow::anyhow!("VaR computation failed"))?;
+    let v99 = traderview_core::value_at_risk_historical::compute(&port, 0.99)
+        .ok_or_else(|| anyhow::anyhow!("VaR computation failed"))?;
+    Ok(PortfolioVar {
+        book_value: gross,
+        sessions: port.len(),
+        var_95_usd: v95.var * gross,
+        es_95_usd: v95.expected_shortfall * gross,
+        var_99_usd: v99.var * gross,
+        es_99_usd: v99.expected_shortfall * gross,
+        var_95_pct: v95.var * 100.0,
+        var_99_pct: v99.var * 100.0,
+        excluded_options,
+    })
+}
+
 /// Equity history for an owned account, oldest first, with summary.
 pub async fn history(
     pool: &PgPool,
@@ -738,6 +853,22 @@ mod tests {
         assert_eq!(rows[1].closed_trips, 2);
         assert!((rows[1].dividends - 10.0).abs() < 1e-9);
         assert!((rows[2].trading_pnl - 300.0).abs() < 1e-9);
+    }
+
+    #[test]
+    fn weighted_portfolio_returns_pin_trailing_alignment() {
+        // Two assets 60/40; the longer series contributes its TAIL.
+        let w = [0.6, 0.4];
+        let r = vec![vec![0.01, 0.02, -0.01], vec![99.0, 0.00, 0.01, 0.02]];
+        let p = weighted_portfolio_returns(&w, &r);
+        // Common length 3 → second series uses its last 3 (0.00, 0.01, 0.02).
+        assert_eq!(p.len(), 3);
+        assert!((p[0] - (0.6 * 0.01 + 0.4 * 0.00)).abs() < 1e-12);
+        assert!((p[1] - (0.6 * 0.02 + 0.4 * 0.01)).abs() < 1e-12);
+        assert!((p[2] - (0.6 * -0.01 + 0.4 * 0.02)).abs() < 1e-12);
+        // Mismatched lengths or empty: empty result, never a panic.
+        assert!(weighted_portfolio_returns(&[1.0], &[]).is_empty());
+        assert!(weighted_portfolio_returns(&[], &[]).is_empty());
     }
 
     #[test]

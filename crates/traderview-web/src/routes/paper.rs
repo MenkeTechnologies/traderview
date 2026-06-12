@@ -48,6 +48,7 @@ pub fn router() -> Router<AppState> {
         .route("/paper/accounts/:id/equity-history", get(equity_history))
         .route("/paper/accounts/:id/attribution", get(attribution))
         .route("/paper/accounts/:id/correlations", get(correlations))
+        .route("/paper/accounts/:id/var", get(portfolio_var))
         .route("/paper/accounts/comparison", get(account_comparison))
         .route("/paper/accounts/create", post(create_account))
         .route("/paper/accounts/:id/rename", post(rename_account))
@@ -156,6 +157,28 @@ async fn correlations(
     Query(q): Query<CorrelationsQ>,
 ) -> Result<Json<traderview_db::paper_equity::PositionCorrelations>, ApiError> {
     traderview_db::paper_equity::position_correlations(&s.pool, user.id, account_id, q.lookback_days)
+        .await
+        .map(Json)
+        .map_err(|e| ApiError::BadRequest(e.to_string()))
+}
+
+#[derive(Deserialize)]
+struct VarQ {
+    #[serde(default = "default_var_lookback")]
+    lookback_days: i64,
+}
+fn default_var_lookback() -> i64 {
+    365
+}
+
+/// Historical-simulation VaR/ES of the current equity book.
+async fn portfolio_var(
+    State(s): State<AppState>,
+    user: AuthUser,
+    Path(account_id): Path<Uuid>,
+    Query(q): Query<VarQ>,
+) -> Result<Json<traderview_db::paper_equity::PortfolioVar>, ApiError> {
+    traderview_db::paper_equity::portfolio_var(&s.pool, user.id, account_id, q.lookback_days)
         .await
         .map(Json)
         .map_err(|e| ApiError::BadRequest(e.to_string()))
