@@ -49,6 +49,13 @@ pub const PAPER_EQUITY_SNAPSHOT: Duration = Duration::from_secs(15 * 60);
 /// Strategy drift sweep — live-vs-backtest divergence across every
 /// active strategy. Twice a day: drift moves on the scale of sessions.
 pub const STRATEGY_DRIFT_WATCH: Duration = Duration::from_secs(12 * 60 * 60);
+/// Funding regime sweep — hourly; rates settle per interval, so finer
+/// is noise. ~24 OKX calls per pass via the existing concurrent scan.
+pub const FUNDING_REGIME_WATCH: Duration = Duration::from_secs(60 * 60);
+/// Alert floor: |APR| ≥ this AND persistence ≥ FUNDING_ALERT_PERSISTENCE.
+pub const FUNDING_ALERT_APR_PCT: f64 = 15.0;
+/// Same 0.7 regime threshold the scanner UI colors green — one convention.
+pub const FUNDING_ALERT_PERSISTENCE: f64 = 0.7;
 /// Rebalance drift sweep — allocation drift also moves on the scale
 /// of sessions.
 pub const REBALANCE_DRIFT_WATCH: Duration = Duration::from_secs(12 * 60 * 60);
@@ -128,6 +135,7 @@ pub fn spawn_refreshers(pool: PgPool, cache: TileCache, hub: crate::realtime::Hu
     spawn_screener_snapshots(pool.clone());
     spawn_paper_twap_ticker(pool.clone(), hub.clone());
     spawn_strategy_drift_watch(pool.clone(), hub.clone());
+    spawn_funding_regime_watch(hub.clone());
     let hub2 = hub.clone();
     spawn_rebalance_drift_watch(pool.clone(), hub);
     spawn_paper_recurring(pool.clone());
@@ -179,6 +187,54 @@ fn spawn_paper_twap_ticker(pool: PgPool, hub: crate::realtime::Hub) {
 /// shared live-vs-backtest comparison and publishes a StrategyDrift
 /// event for degraded/watch verdicts. Healthy and insufficient-sample
 /// strategies stay silent: the feed is for divergence, not status.
+/// Funding regime watcher: hourly sweep of the perp funding universe;
+/// publishes funding_regime to the live feed when a base ENTERS the
+/// alert state (|APR| ≥ floor AND same-sign persistence ≥ threshold —
+/// the regime test, so a one-interval spike never alerts). Transition
+/// dedup mirrors the drift watches; recovery clears so a relapse
+/// re-alerts. Live-feed only: global market data, not per-user, so no
+/// webhook fan-out. Needs no db pool — the scan is venue-direct.
+fn spawn_funding_regime_watch(hub: crate::realtime::Hub) {
+    tokio::spawn(async move {
+        let mut alerting: std::collections::HashSet<String> = Default::default();
+        loop {
+            let scan = traderview_db::crypto::funding_scan().await;
+            for row in &scan.rows {
+                let regime = row.persistence.as_ref().is_some_and(|p| {
+                    p.same_sign_as_latest_pct >= FUNDING_ALERT_PERSISTENCE
+                });
+                let hot = row.funding_apr_pct.abs() >= FUNDING_ALERT_APR_PCT && regime;
+                if hot {
+                    if alerting.insert(row.base.clone()) {
+                        tracing::info!(
+                            base = %row.base,
+                            apr = row.funding_apr_pct,
+                            "funding regime alert"
+                        );
+                        hub.publish(crate::realtime::Event::FundingRegime {
+                            base: row.base.clone(),
+                            apr_pct: row.funding_apr_pct,
+                            same_sign_pct: row
+                                .persistence
+                                .as_ref()
+                                .map(|p| p.same_sign_as_latest_pct)
+                                .unwrap_or(0.0),
+                            collect_via: if row.funding_rate_8h > 0.0 {
+                                "long spot + short perp"
+                            } else {
+                                "short spot + long perp"
+                            },
+                        });
+                    }
+                } else {
+                    alerting.remove(&row.base);
+                }
+            }
+            tokio::time::sleep(FUNDING_REGIME_WATCH).await;
+        }
+    });
+}
+
 fn spawn_strategy_drift_watch(pool: PgPool, hub: crate::realtime::Hub) {
     tokio::spawn(async move {
         // Webhook dedup: notify on ENTERING a bad verdict, not on every

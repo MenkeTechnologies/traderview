@@ -136,6 +136,18 @@ pub enum Event {
         signals_emitted: i64,
         seconds_to_next_eval: i64,
     },
+    /// Funding regime watcher: a perp's funding APR crossed the alert
+    /// threshold WITH persistence (the regime test, not a one-interval
+    /// spike). Live-feed only — global market data, not per-user, so
+    /// it deliberately skips webhook fan-out.
+    FundingRegime {
+        base: String,
+        apr_pct: f64,
+        same_sign_pct: f64,
+        /// "long spot + short perp" or the mirror.
+        collect_via: &'static str,
+    },
+
     /// Raw trade off the live-tick WS — every parsed Trade is fanned
     /// out so a frontend tape pane can render the unaggregated tick
     /// stream as it arrives (separate from the per-state-update
@@ -280,6 +292,20 @@ mod tests {
         assert_eq!(v["type"], "sentiment");
         assert_eq!(v["wsb"], 4);
         assert_eq!(v["stocktwits"], 9);
+    }
+
+    #[test]
+    fn funding_regime_serializes_snake_case() {
+        let v = serde_json::to_value(Event::FundingRegime {
+            base: "BTC".into(),
+            apr_pct: 21.9,
+            same_sign_pct: 0.9,
+            collect_via: "long spot + short perp",
+        })
+        .unwrap();
+        assert_eq!(v["type"], "funding_regime");
+        assert_eq!(v["base"], "BTC");
+        assert_eq!(v["collect_via"], "long spot + short perp");
     }
 
     #[test]
