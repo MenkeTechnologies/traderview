@@ -209,10 +209,12 @@ pub async fn tick(pool: &PgPool) -> anyhow::Result<usize> {
             _ => continue,
         };
         // Quote failures are transient: leave next_run_at so it retries.
-        let Ok(quote) = crate::market_data::quote(pool, &buy_symbol).await else {
+        // simple_spot routes crypto pairs to the venue — "$100 of BTC
+        // weekly" is the DCA case this pass exists for.
+        let Ok(spot) = crate::paper::simple_spot(pool, &buy_symbol).await else {
             continue;
         };
-        let Ok(price) = Decimal::try_from(quote.price) else { continue };
+        let Ok(price) = Decimal::try_from(spot) else { continue };
         if price <= Decimal::ZERO {
             continue;
         }

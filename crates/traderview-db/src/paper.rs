@@ -2170,6 +2170,18 @@ struct ResolvedQuote {
 /// the cached quote at 1x; OCC options from the chain mid at 100x.
 /// Expired contracts and quoteless options are hard errors here (the
 /// SUBMIT path); the ticker treats those cases as cancel/keep-resting.
+/// Spot price for any engine-quotable non-option symbol: crypto
+/// pairs from the venue (5s cache), everything else from the cached
+/// equity quote. The auto-invest and rebalance passes share it so
+/// "$100 of BTC weekly" prices through the same seam the ticket uses.
+pub async fn simple_spot(pool: &PgPool, symbol: &str) -> anyhow::Result<f64> {
+    if crate::crypto::is_crypto_pair(symbol) {
+        crate::crypto::spot_quote_cached(symbol).await
+    } else {
+        Ok(crate::market_data::quote(pool, symbol).await?.price)
+    }
+}
+
 /// Crypto taker fee, percent of notional — the taker fee IS the
 /// friction model for crypto (no per-share slippage tier, no SEC fee).
 pub const CRYPTO_TAKER_FEE_PCT: f64 = 0.1;

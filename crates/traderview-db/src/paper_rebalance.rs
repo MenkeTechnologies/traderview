@@ -264,8 +264,8 @@ pub async fn plan(
         if qty == 0.0 {
             continue;
         }
-        let price = match crate::market_data::quote(pool, &p.symbol).await {
-            Ok(q) => q.price,
+        let price = match crate::paper::simple_spot(pool, &p.symbol).await {
+            Ok(p) => p,
             Err(_) => p.avg_price.to_f64().unwrap_or(0.0),
         };
         holdings.push(HoldingInput {
