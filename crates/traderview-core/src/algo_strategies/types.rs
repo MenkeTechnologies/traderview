@@ -25,6 +25,14 @@ pub enum SideMode {
 pub struct Sizing {
     pub risk_pct_per_trade: f64,
     pub max_pos_pct: f64,
+    /// Fixed-notional mode: when set (> 0), every entry is
+    /// floor(notional / entry_price) shares instead of risk-based —
+    /// the small-account / flat-stake mode. The max_pos_pct cap still
+    /// applies: a fixed stake above the cap is a config error caught
+    /// by the cap, not honored. serde(default) keeps every persisted
+    /// sizing config readable.
+    #[serde(default)]
+    pub fixed_notional_usd: Option<f64>,
 }
 
 impl Default for Sizing {
@@ -32,6 +40,7 @@ impl Default for Sizing {
         Self {
             risk_pct_per_trade: 0.01,
             max_pos_pct: 0.20,
+            fixed_notional_usd: None,
         }
     }
 }
@@ -69,9 +78,13 @@ pub fn size_shares(equity: f64, entry_price: f64, stop_distance: f64, sizing: &S
     if entry_price <= 0.0 || stop_distance <= 0.0 || equity <= 0.0 {
         return 0;
     }
+    let cap_qty = ((equity * sizing.max_pos_pct) / entry_price).floor();
+    // Fixed-notional mode short-circuits risk sizing but never the cap.
+    if let Some(n) = sizing.fixed_notional_usd.filter(|n| *n > 0.0) {
+        return (n / entry_price).floor().min(cap_qty).max(0.0) as u64;
+    }
     let risk_dollars = equity * sizing.risk_pct_per_trade;
     let risk_qty = (risk_dollars / stop_distance).floor();
-    let cap_qty = ((equity * sizing.max_pos_pct) / entry_price).floor();
     risk_qty.min(cap_qty).max(0.0) as u64
 }
 
@@ -90,9 +103,31 @@ mod tests {
             &Sizing {
                 risk_pct_per_trade: 0.01,
                 max_pos_pct: 0.20,
+                fixed_notional_usd: None,
             },
         );
         assert_eq!(qty, 200);
+    }
+
+    #[test]
+    fn fixed_notional_overrides_risk_but_not_cap() {
+        let sizing = Sizing {
+            risk_pct_per_trade: 0.01,
+            max_pos_pct: 0.20,
+            fixed_notional_usd: Some(5_000.0),
+        };
+        // $5k at $100/sh = 50 shares — stop distance is irrelevant in
+        // fixed mode (same answer at $2 and $0.50 stops).
+        assert_eq!(size_shares(100_000.0, 100.0, 2.0, &sizing), 50);
+        assert_eq!(size_shares(100_000.0, 100.0, 0.5, &sizing), 50);
+        // The cap still binds: $50k stake vs 20% of $100k = $20k cap
+        // ⇒ 200 shares, not 500. A stake above the cap is a config
+        // error caught by the cap, not honored.
+        let big = Sizing { fixed_notional_usd: Some(50_000.0), ..sizing.clone() };
+        assert_eq!(size_shares(100_000.0, 100.0, 2.0, &big), 200);
+        // Zero/negative notional falls back to risk sizing.
+        let off = Sizing { fixed_notional_usd: Some(0.0), ..sizing };
+        assert_eq!(size_shares(100_000.0, 100.0, 2.0, &off), 200);
     }
 
     #[test]

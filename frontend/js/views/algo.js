@@ -2378,6 +2378,9 @@ async function openStrategyModal(mount, existing = null, prefill = null) {
                     <label><span data-i18n="view.algo.label.max_pos_pct">Max position % of equity</span>
                         <input type="number" name="max_pos_pct" step="0.01" min="0.01" max="1.0" value="${Number(s.sizing?.max_pos_pct ?? 0.20)}">
                     </label>
+                    <label><span data-i18n="view.algo.label.fixed_notional">Fixed $ per entry (0 = risk-based)</span>
+                        <input type="number" name="fixed_notional_usd" min="0" step="100" value="${Number(s.sizing?.fixed_notional_usd ?? 0)}" data-tip="view.algo.tip.fixed_notional">
+                    </label>
                     <label><span data-i18n="view.algo.label.max_concurrent">Max concurrent positions</span>
                         <input type="number" name="max_concurrent_positions" min="1" max="50" value="${Number(s.risk_gates?.max_concurrent_positions ?? 5)}">
                     </label>
@@ -2475,6 +2478,7 @@ async function openStrategyModal(mount, existing = null, prefill = null) {
             sizing: {
                 risk_pct_per_trade: Number(f.get('risk_pct_per_trade')) || 0.01,
                 max_pos_pct: Number(f.get('max_pos_pct')) || 0.20,
+                fixed_notional_usd: Number(f.get('fixed_notional_usd')) > 0 ? Number(f.get('fixed_notional_usd')) : null,
             },
             risk_gates: Object.assign({}, s.risk_gates || {}, {
                 max_concurrent_positions: Number(f.get('max_concurrent_positions')) || 5,

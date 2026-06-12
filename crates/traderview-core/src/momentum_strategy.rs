@@ -509,6 +509,7 @@ mod tests {
             &Sizing {
                 risk_pct_per_trade: 0.01,
                 max_pos_pct: 0.20,
+                fixed_notional_usd: None,
             },
             &Rules::default(),
         );
