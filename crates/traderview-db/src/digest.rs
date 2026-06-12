@@ -30,6 +30,9 @@ pub struct Digest {
     /// SHORT option positions in the money within 5 days of expiry —
     /// early-assignment candidates.
     pub assignment_risk: Vec<String>,
+    /// Sub-$25k accounts at 3+ day trades in the 5-trading-day window
+    /// — one trade from the PDT flag, or already flagged.
+    pub pdt_risk: Vec<String>,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -55,6 +58,7 @@ impl Digest {
             && self.breaker_proximity.is_empty()
             && self.margin_risk.is_empty()
             && self.assignment_risk.is_empty()
+            && self.pdt_risk.is_empty()
     }
 }
 
@@ -93,6 +97,9 @@ pub fn format_digest(d: &Digest) -> String {
     }
     if !d.assignment_risk.is_empty() {
         out.push(format!("assignment risk: {}", d.assignment_risk.join(", ")));
+    }
+    if !d.pdt_risk.is_empty() {
+        out.push(format!("PDT: {}", d.pdt_risk.join(", ")));
     }
     out.join(" · ")
 }
@@ -222,6 +229,22 @@ pub async fn for_user(pool: &PgPool, user_id: Uuid) -> anyhow::Result<Digest> {
                 "{account}: short {} {symbol} ITM ${itm:.2} expiring in {days}d",
                 qty.abs()
             ));
+        }
+    }
+
+    // PDT proximity: same pdt_status the route serves — warn at 3+
+    // day trades under the floor (one trade before the flag), and
+    // state an already-tripped flag plainly.
+    for (account_id, name) in &accounts {
+        if let Ok(p) = crate::paper_equity::pdt_status(pool, user_id, *account_id).await {
+            if p.flagged {
+                d.pdt_risk.push(format!("{name} FLAGGED ({} day trades/5d)", p.day_trades_5d));
+            } else if p.day_trades_5d >= 3 && p.remaining_before_flag <= 1 {
+                d.pdt_risk.push(format!(
+                    "{name} {}/4 day trades — one more flags it",
+                    p.day_trades_5d
+                ));
+            }
         }
     }
 
@@ -424,6 +447,14 @@ mod tests {
         assert!(!s.contains("drifting"));
         assert!(!s.contains("rebalance"));
         assert!(!s.contains("near breaker"));
+    }
+
+    #[test]
+    fn pdt_section_formats() {
+        let mut d = Digest::default();
+        d.pdt_risk.push("SimTrader 3/4 day trades — one more flags it".into());
+        assert!(!d.is_empty());
+        assert!(format_digest(&d).contains("PDT: SimTrader 3/4 day trades — one more flags it"));
     }
 
     #[test]
