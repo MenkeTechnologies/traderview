@@ -617,6 +617,7 @@
   "component.chart.ind.vwap_bands": "VWAP 带",
   "component.chart.ind.williams_r": "威廉姆斯 % R {period} (韩语)",
   "component.chart.ind.wma": "WMA {period} (韩语)",
+  "component.chart.ind.wolfe": "Wolfe Wave",
   "component.chart.ind.zlema": "ZLEMA {period} (韩语)",
   "component.chart.indicators": "指标",
   "component.chart.menu.clear": "清除所有指标",

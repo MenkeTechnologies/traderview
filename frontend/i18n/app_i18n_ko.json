@@ -617,6 +617,7 @@
   "component.chart.ind.vwap_bands": "VWAP 밴드",
   "component.chart.ind.williams_r": "윌리엄스 %R {period}",
   "component.chart.ind.wma": "WMA {period} {period}",
+  "component.chart.ind.wolfe": "Wolfe Wave",
   "component.chart.ind.zlema": "ZL EMA {period}",
   "component.chart.indicators": "회사연혁",
   "component.chart.menu.clear": "모든 지표를 정리",

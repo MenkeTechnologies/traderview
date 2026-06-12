@@ -617,6 +617,7 @@
   "component.chart.ind.vwap_bands": "VWAP バンド",
   "component.chart.ind.williams_r": "ウィリアムズ %R {period}",
   "component.chart.ind.wma": "WMA {period}",
+  "component.chart.ind.wolfe": "Wolfe Wave",
   "component.chart.ind.zlema": "ZLEMA {period}",
   "component.chart.indicators": "インジケーター",
   "component.chart.menu.clear": "すべてのインジケータをクリア",

@@ -617,6 +617,7 @@
   "component.chart.ind.vwap_bands": "VWAP Bands",
   "component.chart.ind.williams_r": "Williams% R {period}",
   "component.chart.ind.wma": "WMA {okres}",
+  "component.chart.ind.wolfe": "Wolfe Wave",
   "component.chart.ind.zlema": "ZL EMA {period}",
   "component.chart.indicators": "Wskaźniki",
   "component.chart.menu.clear": "Wyczyść wszystkie wskaźniki",

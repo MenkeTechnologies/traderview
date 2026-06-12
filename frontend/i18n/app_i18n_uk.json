@@ -617,6 +617,7 @@
   "component.chart.ind.vwap_bands": "VWAP Гурти",
   "component.chart.ind.williams_r": "Вільямс %Р {period}",
   "component.chart.ind.wma": "WMA {period}",
+  "component.chart.ind.wolfe": "Wolfe Wave",
   "component.chart.ind.zlema": "ЗЛEMA {period}",
   "component.chart.indicators": "Індикатори",
   "component.chart.menu.clear": "Очистити всі показники",

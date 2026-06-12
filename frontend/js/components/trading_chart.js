@@ -54,6 +54,9 @@ const WINDOW_SECONDS = {
 //     macd (line/signal/histogram), stochastic (k/d).
 // Oscillators carry `scaleId` so they draw on a separate bottom pane.
 const OVERLAY_INDICATORS = [
+    // ── Pattern overlays (markers on the price pane) ───────────────
+    { id: 'wolfe', apiFn: 'indWolfeWave', q: { lookback: 5, line_tolerance: 0.10 },
+      color: 'rgba(0,0,0,0)', labelKey: 'component.chart.ind.wolfe', wolfe: true },
     // ── Moving averages (main price scale) ─────────────────────────
     { id: 'sma20',  apiFn: 'indSma',  q: { period: 20 },  color: '#f5a623', labelKey: 'component.chart.ind.sma',  period: 20 },
     { id: 'sma50',  apiFn: 'indSma',  q: { period: 50 },  color: '#f78fb3', labelKey: 'component.chart.ind.sma',  period: 50 },
@@ -567,7 +570,42 @@ export function createTradingChart(container, opts = {}) {
         try {
             const data = await api[def.apiFn](state.symbol, q);
             if (state.destroyed) return;
-            if (Array.isArray(def.lines) && def.lines.length) {
+            if (def.wolfe) {
+                // Wolfe events → numbered pivot markers + EPA label on
+                // an invisible carrier series (framework manages its
+                // lifecycle like any other overlay). Last 3 events only
+                // — older patterns are chart noise.
+                const times = data.t.map(x => Math.floor(new Date(x).getTime() / 1000));
+                const carrier = entry.allSeries[0];
+                // Carrier needs data points at marker times to anchor them.
+                carrier.setData(times.map(tm => ({ time: tm, value: NaN })));
+                const markers = [];
+                for (const ev of (data.events || []).slice(-3)) {
+                    const bull = ev.bias === 'bullish';
+                    const color = bull ? '#39ff14' : '#ff3366';
+                    [ev.p1_idx, ev.p2_idx, ev.p3_idx, ev.p4_idx, ev.p5_idx].forEach((idx, k) => {
+                        if (times[idx] == null) return;
+                        markers.push({
+                            time: times[idx],
+                            position: bull ? 'belowBar' : 'aboveBar',
+                            color,
+                            shape: 'circle',
+                            text: String(k + 1),
+                        });
+                    });
+                    if (times[ev.p5_idx] != null) {
+                        markers.push({
+                            time: times[ev.p5_idx],
+                            position: bull ? 'aboveBar' : 'belowBar',
+                            color,
+                            shape: bull ? 'arrowUp' : 'arrowDown',
+                            text: `EPA ${ev.epa_target.toFixed(2)}`,
+                        });
+                    }
+                }
+                markers.sort((x, y) => x.time - y.time);
+                if (typeof carrier.setMarkers === 'function') carrier.setMarkers(markers);
+            } else if (Array.isArray(def.lines) && def.lines.length) {
                 def.lines.forEach((line, i) => {
                     entry.allSeries[i].setData(toLineDataKey(data, line.key));
                 });
