@@ -49,6 +49,7 @@ pub fn router() -> Router<AppState> {
         .route("/paper/accounts/:id/attribution", get(attribution))
         .route("/paper/accounts/:id/correlations", get(correlations))
         .route("/paper/accounts/:id/var", get(portfolio_var))
+        .route("/paper/accounts/:id/stress", get(stress))
         .route("/paper/accounts/comparison", get(account_comparison))
         .route("/paper/accounts/create", post(create_account))
         .route("/paper/accounts/:id/rename", post(rename_account))
@@ -182,6 +183,36 @@ async fn portfolio_var(
         .await
         .map(Json)
         .map_err(|e| ApiError::BadRequest(e.to_string()))
+}
+
+#[derive(Deserialize)]
+struct StressQ {
+    #[serde(default = "default_var_lookback")]
+    lookback_days: i64,
+    #[serde(default = "default_stress_benchmark")]
+    benchmark: String,
+}
+fn default_stress_benchmark() -> String {
+    "SPY".into()
+}
+
+/// Worst observed windows + beta-scaled benchmark shocks.
+async fn stress(
+    State(s): State<AppState>,
+    user: AuthUser,
+    Path(account_id): Path<Uuid>,
+    Query(q): Query<StressQ>,
+) -> Result<Json<traderview_db::paper_equity::StressReport>, ApiError> {
+    traderview_db::paper_equity::stress(
+        &s.pool,
+        user.id,
+        account_id,
+        q.lookback_days,
+        &q.benchmark.trim().to_uppercase(),
+    )
+    .await
+    .map(Json)
+    .map_err(|e| ApiError::BadRequest(e.to_string()))
 }
 
 /// Per-symbol realized P&L decomposition: closed trips + dividends − fees.

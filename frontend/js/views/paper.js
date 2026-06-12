@@ -179,6 +179,7 @@ export async function renderPaper(mount) {
         <div class="chart-panel" id="paper-corr-panel" style="display:none">
             <h2 data-i18n="view.paper.h2.correlations">Holdings correlation</h2>
             <div id="paper-var" class="muted small"></div>
+            <div id="paper-stress" class="muted small"></div>
             <div id="paper-corr" class="muted small"></div>
         </div>
 
@@ -262,6 +263,9 @@ export async function renderPaper(mount) {
             .catch(() => {});
         api.paperVar(acct.id)
             .then(v => { if (viewIsCurrent(tok)) renderVar(v); })
+            .catch(() => {});
+        api.paperStress(acct.id)
+            .then(st => { if (viewIsCurrent(tok)) renderStress(st); })
             .catch(() => {});
     }
     mount.querySelector('#recur-form').addEventListener('submit', async (e) => {
@@ -450,6 +454,16 @@ export async function renderPaper(mount) {
             renderPaper(mount);
         } catch (err) { showToast(t('toast.error.api', { err: err.message }), { level: 'error' }); }
     });
+}
+
+function renderStress(s) {
+    const el = document.getElementById('paper-stress');
+    if (!el) return;
+    el.innerHTML = `<p><strong>Stress:</strong> worst observed day <span class="neg">$${fmt(s.worst_day_usd)}</span>
+        \u00b7 week <span class="neg">$${fmt(s.worst_week_usd)}</span>
+        \u00b7 month <span class="neg">$${fmt(s.worst_month_usd)}</span>
+        ${s.beta != null ? `\u00b7 \u03b2 vs ${esc(s.benchmark)} ${s.beta.toFixed(2)} \u2192 ${s.scenarios.map(sc =>
+            `${esc(sc.label)}: <span class="neg">$${fmt(sc.book_move_usd)}</span>`).join(' \u00b7 ')}` : ''}</p>`;
 }
 
 function renderVar(v) {

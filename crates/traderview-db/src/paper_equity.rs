@@ -562,16 +562,14 @@ pub struct PortfolioVar {
     pub excluded_options: Vec<String>,
 }
 
-/// Historical-simulation portfolio VaR of the current equity book:
-/// today's weights over the joint trailing return history, the
-/// empirical 95/99 quantiles in dollars. Needs >= 60 common sessions —
-/// a VaR from a few weeks of data is noise stated as a number.
-pub async fn portfolio_var(
+/// (gross exposure, portfolio daily returns, excluded options) for
+/// the current equity book — the shared input to VaR and stress.
+async fn book_returns(
     pool: &PgPool,
     user_id: Uuid,
     account_id: Uuid,
     lookback_days: i64,
-) -> anyhow::Result<PortfolioVar> {
+) -> anyhow::Result<(f64, Vec<f64>, Vec<String>)> {
     use rust_decimal::prelude::ToPrimitive;
     let owner: Option<(Uuid,)> =
         sqlx::query_as("SELECT user_id FROM paper_accounts WHERE id = $1")
@@ -610,15 +608,27 @@ pub async fn portfolio_var(
     if notionals.is_empty() {
         anyhow::bail!("no equity positions to measure");
     }
-    // Gross-exposure weights: shorts contribute their SIGNED return
-    // weighted by signed notional over GROSS book, so a hedged book
-    // shows reduced VaR rather than inflated.
     let gross: f64 = notionals.iter().map(|n| n.abs()).sum();
     if gross <= 0.0 {
         anyhow::bail!("zero book value");
     }
     let weights: Vec<f64> = notionals.iter().map(|n| n / gross).collect();
     let port = weighted_portfolio_returns(&weights, &all_returns);
+    Ok((gross, port, excluded_options))
+}
+
+/// Historical-simulation portfolio VaR of the current equity book:
+/// today's weights over the joint trailing return history, the
+/// empirical 95/99 quantiles in dollars. Needs >= 60 common sessions —
+/// a VaR from a few weeks of data is noise stated as a number.
+pub async fn portfolio_var(
+    pool: &PgPool,
+    user_id: Uuid,
+    account_id: Uuid,
+    lookback_days: i64,
+) -> anyhow::Result<PortfolioVar> {
+    let (gross, port, excluded_options) =
+        book_returns(pool, user_id, account_id, lookback_days).await?;
     if port.len() < 60 {
         anyhow::bail!(
             "only {} common sessions across holdings — need >= 60 for a VaR that isn't noise",
@@ -638,6 +648,109 @@ pub async fn portfolio_var(
         es_99_usd: v99.expected_shortfall * gross,
         var_95_pct: v95.var * 100.0,
         var_99_pct: v99.var * 100.0,
+        excluded_options,
+    })
+}
+
+/// Worst observed k-day compounded return in the series — the
+/// realized stress record. Pure, pinned.
+pub fn worst_window(returns: &[f64], k: usize) -> Option<f64> {
+    if k == 0 || returns.len() < k {
+        return None;
+    }
+    returns
+        .windows(k)
+        .map(|w| w.iter().fold(1.0, |acc, r| acc * (1.0 + r)) - 1.0)
+        .min_by(|a, b| a.total_cmp(b))
+}
+
+/// OLS beta of the portfolio vs a benchmark over the trailing common
+/// overlap: cov(p, b) / var(b). Pure, pinned.
+pub fn beta_vs(port: &[f64], bench: &[f64]) -> Option<f64> {
+    let n = port.len().min(bench.len());
+    if n < 20 {
+        return None;
+    }
+    let p = &port[port.len() - n..];
+    let b = &bench[bench.len() - n..];
+    let mp = p.iter().sum::<f64>() / n as f64;
+    let mb = b.iter().sum::<f64>() / n as f64;
+    let cov: f64 = p.iter().zip(b).map(|(x, y)| (x - mp) * (y - mb)).sum();
+    let var: f64 = b.iter().map(|y| (y - mb) * (y - mb)).sum();
+    (var > 0.0).then(|| cov / var)
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct StressScenario {
+    pub label: String,
+    pub book_move_usd: f64,
+    pub book_move_pct: f64,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct StressReport {
+    pub book_value: f64,
+    pub sessions: usize,
+    /// Worst OBSERVED windows in the book's own joint history.
+    pub worst_day_usd: f64,
+    pub worst_week_usd: f64,
+    pub worst_month_usd: f64,
+    /// Beta vs the benchmark; shock scenarios scale by it.
+    pub beta: Option<f64>,
+    pub benchmark: String,
+    pub scenarios: Vec<StressScenario>,
+    pub excluded_options: Vec<String>,
+}
+
+/// Stress test: the book's own worst observed 1/5/20-day windows
+/// (realized history, no model) + beta-scaled benchmark shocks
+/// (-5/-10/-20%). The first answers "what HAS this book done"; the
+/// second "what would a market break do".
+pub async fn stress(
+    pool: &PgPool,
+    user_id: Uuid,
+    account_id: Uuid,
+    lookback_days: i64,
+    benchmark: &str,
+) -> anyhow::Result<StressReport> {
+    use rust_decimal::prelude::ToPrimitive;
+    let (gross, port, excluded_options) =
+        book_returns(pool, user_id, account_id, lookback_days).await?;
+    if port.len() < 60 {
+        anyhow::bail!(
+            "only {} common sessions across holdings — need >= 60",
+            port.len()
+        );
+    }
+    let to = Utc::now();
+    let from = to - chrono::Duration::days(lookback_days.clamp(90, 730));
+    let bars =
+        crate::prices::get_bars(pool, benchmark, traderview_core::BarInterval::D1, from, to)
+            .await?;
+    let closes: Vec<f64> = bars.iter().map(|b| b.close.to_f64().unwrap_or(0.0)).collect();
+    let bench_returns = traderview_core::correlation_gate::daily_returns(&closes);
+    let beta = beta_vs(&port, &bench_returns);
+    let scenarios = beta
+        .map(|b| {
+            [-0.05, -0.10, -0.20]
+                .iter()
+                .map(|shock| StressScenario {
+                    label: format!("{benchmark} {:.0}%", shock * 100.0),
+                    book_move_usd: b * shock * gross,
+                    book_move_pct: b * shock * 100.0,
+                })
+                .collect()
+        })
+        .unwrap_or_default();
+    Ok(StressReport {
+        book_value: gross,
+        sessions: port.len(),
+        worst_day_usd: worst_window(&port, 1).unwrap_or(0.0) * gross,
+        worst_week_usd: worst_window(&port, 5).unwrap_or(0.0) * gross,
+        worst_month_usd: worst_window(&port, 20).unwrap_or(0.0) * gross,
+        beta,
+        benchmark: benchmark.to_string(),
+        scenarios,
         excluded_options,
     })
 }
@@ -853,6 +966,23 @@ mod tests {
         assert_eq!(rows[1].closed_trips, 2);
         assert!((rows[1].dividends - 10.0).abs() < 1e-9);
         assert!((rows[2].trading_pnl - 300.0).abs() < 1e-9);
+    }
+
+    #[test]
+    fn worst_window_and_beta_pin_hand_math() {
+        // Returns: +1%, −2%, −3%, +4%. Worst day −3%; worst 2-day
+        // window compounds −2% then −3%: 0.98×0.97 − 1 = −4.94%.
+        let r = [0.01, -0.02, -0.03, 0.04];
+        assert!((worst_window(&r, 1).unwrap() + 0.03).abs() < 1e-12);
+        assert!((worst_window(&r, 2).unwrap() + 0.0494).abs() < 1e-9);
+        assert!(worst_window(&r, 5).is_none()); // window longer than data
+        assert!(worst_window(&r, 0).is_none());
+        // Beta: portfolio = exactly 1.5 × benchmark → beta 1.5.
+        let bench: Vec<f64> = (0..40).map(|i| ((i as f64) * 0.7).sin() * 0.01).collect();
+        let port: Vec<f64> = bench.iter().map(|r| 1.5 * r).collect();
+        assert!((beta_vs(&port, &bench).unwrap() - 1.5).abs() < 1e-9);
+        // Sub-20 overlap refuses.
+        assert!(beta_vs(&port[..10], &bench[..10]).is_none());
     }
 
     #[test]
