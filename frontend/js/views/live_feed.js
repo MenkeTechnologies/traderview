@@ -25,6 +25,7 @@ const EVENT_TYPES = [
     'paper_fill',
     'strategy_drift',
     'rebalance_drift',
+    'daily_digest',
     'algo_signal_fired',
     'algo_order_submitted',
     'algo_fill_received',
@@ -45,6 +46,7 @@ const TYPE_COLOR = {
     paper_fill:          'lf-fill',
     strategy_drift:      'lf-alert',
     rebalance_drift:     'lf-alert',
+    daily_digest:        'lf-news',
     algo_signal_fired:   'lf-signal',
     algo_order_submitted:'lf-order',
     algo_fill_received:  'lf-fill',
@@ -262,6 +264,8 @@ function summarize(type, d) {
             return `<strong>${esc(d.name)}</strong> ${esc(d.verdict)} · z=${d.win_rate_z != null ? num(d.win_rate_z, 2) : '—'} over ${num(d.live_trades, 0)} live trades — live record diverging from backtest`;
         case 'rebalance_drift':
             return `<strong>${esc(d.name)}</strong> max drift ${num(d.max_drift_pct, 1)}% > ${num(d.threshold_pct, 1)}% tolerance — portfolio needs rebalancing`;
+        case 'daily_digest':
+            return `<strong>digest</strong> ${esc(d.summary)}`;
         case 'algo_signal_fired':
             return `<strong>${esc(d.symbol)}</strong> ${esc(d.side)} @ ${num(d.entry_price, 4)} (${esc(d.kind)}) strat=${esc(d.strategy_id?.slice(0, 8))}`;
         case 'algo_order_submitted':

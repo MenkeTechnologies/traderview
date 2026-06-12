@@ -53,6 +53,10 @@ pub enum Event {
         order_type: String,
     },
 
+    /// Morning digest — one pre-market summary of everything the
+    /// background watchers know.
+    DailyDigest { summary: String },
+
     /// Background rebalance watch: a paper target portfolio's max
     /// drift crossed its own threshold.
     RebalanceDrift {

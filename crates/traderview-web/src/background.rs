@@ -55,6 +55,9 @@ pub const REBALANCE_DRIFT_WATCH: Duration = Duration::from_secs(12 * 60 * 60);
 /// Auto-invest pass — cadences are daily+; an hourly pass keeps
 /// catch-up snappy after the app was closed.
 pub const PAPER_RECURRING_TICK: Duration = Duration::from_secs(60 * 60);
+/// Morning digest hour (UTC). 12:00 UTC = pre-market US Eastern
+/// year-round (07:00 EST / 08:00 EDT).
+pub const DIGEST_HOUR_UTC: u32 = 12;
 /// Paper dividend crediting — ex-dates are daily-bar data and the pass
 /// is idempotent, so a few runs a day is plenty.
 pub const PAPER_DIVIDEND_CREDIT: Duration = Duration::from_secs(6 * 60 * 60);
@@ -122,8 +125,10 @@ pub fn spawn_refreshers(pool: PgPool, cache: TileCache, hub: crate::realtime::Hu
     spawn_screener_snapshots(pool.clone());
     spawn_paper_twap_ticker(pool.clone(), hub.clone());
     spawn_strategy_drift_watch(pool.clone(), hub.clone());
+    let hub2 = hub.clone();
     spawn_rebalance_drift_watch(pool.clone(), hub);
     spawn_paper_recurring(pool.clone());
+    spawn_daily_digest(pool.clone(), hub2);
     spawn_paper_equity_snapshots(pool.clone());
     spawn_paper_dividend_credits(pool.clone());
     spawn_paper_split_adjustments(pool.clone());
@@ -311,6 +316,51 @@ fn spawn_paper_recurring(pool: PgPool) {
                 Err(e) => tracing::warn!(error = %e, "auto-invest tick failed"),
             }
             tokio::time::sleep(PAPER_RECURRING_TICK).await;
+        }
+    });
+}
+
+/// Morning digest — sleeps to the next DIGEST_HOUR_UTC, assembles one
+/// summary per user (paper equity day-change, drifting strategies,
+/// gate fires, earnings in held names, rebalance drift), publishes to
+/// the live feed and the user's webhooks. Empty digests stay silent —
+/// a digest of empty sections trains the user to stop reading.
+fn spawn_daily_digest(pool: PgPool, hub: crate::realtime::Hub) {
+    tokio::spawn(async move {
+        loop {
+            let next = traderview_db::digest::next_digest_time(chrono::Utc::now(), DIGEST_HOUR_UTC);
+            let wait = (next - chrono::Utc::now()).num_seconds().max(1) as u64;
+            tokio::time::sleep(Duration::from_secs(wait)).await;
+            match traderview_db::digest::audience(&pool).await {
+                Ok(users) => {
+                    for user_id in users {
+                        match traderview_db::digest::for_user(&pool, user_id).await {
+                            Ok(d) if !d.is_empty() => {
+                                let summary = traderview_db::digest::format_digest(&d);
+                                tracing::info!(user = %user_id, %summary, "daily digest");
+                                hub.publish(crate::realtime::Event::DailyDigest {
+                                    summary: summary.clone(),
+                                });
+                                let payload = traderview_db::webhooks::AlertPayload {
+                                    title: "Morning digest".into(),
+                                    message: summary,
+                                    symbol: None,
+                                    kind: "daily_digest".into(),
+                                    url: None,
+                                    fired_at: chrono::Utc::now(),
+                                };
+                                traderview_db::webhooks::fan_out_all(&pool, user_id, &payload)
+                                    .await;
+                            }
+                            Ok(_) => {}
+                            Err(e) => {
+                                tracing::warn!(user = %user_id, error = %e, "digest failed")
+                            }
+                        }
+                    }
+                }
+                Err(e) => tracing::warn!(error = %e, "digest audience query failed"),
+            }
         }
     });
 }
