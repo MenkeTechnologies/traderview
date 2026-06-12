@@ -880,6 +880,8 @@ export const api = {
     paperPdt: (id) => request(`/paper/accounts/${id}/pdt`),
     paperStopSuggestion: (symbol) => request(`/paper/stop-suggestion?symbol=${encodeURIComponent(symbol)}`),
     paperCashFlows: (id) => request(`/paper/accounts/${id}/cash-flows`),
+    paperTransfer: (from, to, amount) =>
+        request('/paper/transfers', { method: 'POST', body: JSON.stringify({ from, to, amount }) }),
     paperCashFlow: (id, amount, note) =>
         request(`/paper/accounts/${id}/cash-flows`, { method: 'POST', body: JSON.stringify({ amount, note }) }),
     paperAttribution: (id) => request(`/paper/accounts/${id}/attribution`),

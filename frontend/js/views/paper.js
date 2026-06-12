@@ -65,6 +65,7 @@ export async function renderPaper(mount) {
             <label class="small" data-tip="view.paper.tip.cash_apy"><span data-i18n="view.paper.label.cash_apy">Cash APY %</span> <input type="number" id="acct-apy" min="0" max="20" step="0.25" value="${Number(acct.cash_apy_pct || 0)}" style="width:64px"></label>
             <button class="small" id="acct-deposit" data-i18n="view.paper.btn.deposit" data-tip="view.paper.tip.deposit">DEPOSIT</button>
             <button class="small" id="acct-withdraw" data-i18n="view.paper.btn.withdraw" data-tip="view.paper.tip.withdraw">WITHDRAW</button>
+            ${accounts.length > 1 ? `<button class="small" id="acct-transfer" data-i18n="view.paper.btn.transfer" data-tip="view.paper.tip.transfer">TRANSFER</button>` : ''}
             <span class="small" id="paper-pdt"></span>
             <a class="small" id="acct-export" href="/api/export/paper-orders/${esc(acct.id)}.csv" download data-i18n="view.paper.btn.export_csv" data-tip="view.paper.tip.export_csv">CSV</a>
             <label class="small" data-tip="view.paper.tip.borrow_apy"><span data-i18n="view.paper.label.borrow_apy">Borrow APY %</span> <input type="number" id="acct-borrow-apy" min="0" max="50" step="0.25" value="${Number(acct.borrow_apy_pct || 0)}" style="width:64px"></label>
@@ -744,6 +745,25 @@ export async function renderPaper(mount) {
     };
     wireCashFlow('#acct-deposit', 1, 'view.paper.prompt.deposit', 'view.paper.toast.deposited');
     wireCashFlow('#acct-withdraw', -1, 'view.paper.prompt.withdraw', 'view.paper.toast.withdrawn');
+    const transferBtn = mount.querySelector('#acct-transfer');
+    if (transferBtn) {
+        transferBtn.addEventListener('click', async () => {
+            const others = accounts.filter(a => a.id !== acct.id);
+            const names = others.map((a, i) => `${i + 1}. ${a.name}`).join('\n');
+            const pick = Number(prompt(`${t('view.paper.prompt.transfer_to')}\n${names}`));
+            const dest = others[pick - 1];
+            if (!dest) return;
+            const v = Number(prompt(t('view.paper.prompt.transfer_amount', { name: dest.name })));
+            if (!v || v <= 0) return;
+            try {
+                await api.paperTransfer(acct.id, dest.id, v);
+                showToast(t('view.paper.toast.transferred', { amount: v.toFixed(2), name: dest.name }), { level: 'success' });
+                renderPaper(mount);
+            } catch (err) {
+                showToast(t('common.error', { err: err.message }), { level: 'error' });
+            }
+        });
+    }
     mount.querySelector('#acct-autoliq').addEventListener('change', async (e) => {
         try {
             await api.paperSetAutoLiquidate(acct.id, e.target.checked);

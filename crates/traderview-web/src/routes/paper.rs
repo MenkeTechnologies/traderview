@@ -59,6 +59,7 @@ pub fn router() -> Router<AppState> {
             "/paper/accounts/:id/cash-flows",
             get(cash_flows).post(post_cash_flow),
         )
+        .route("/paper/transfers", post(transfer))
         .route(
             "/paper/recurring/:id",
             axum::routing::delete(delete_recurring),
@@ -1024,5 +1025,24 @@ async fn stop_suggestion(
     traderview_db::paper::stop_suggestion(&s.pool, &q.symbol)
         .await
         .map(Json)
+        .map_err(|e| ApiError::BadRequest(e.to_string()))
+}
+
+#[derive(Deserialize)]
+struct TransferBody {
+    from: Uuid,
+    to: Uuid,
+    amount: Decimal,
+}
+
+/// Atomic cash transfer between two of the user's paper accounts.
+async fn transfer(
+    State(s): State<AppState>,
+    user: AuthUser,
+    Json(b): Json<TransferBody>,
+) -> Result<Json<bool>, ApiError> {
+    traderview_db::paper::transfer(&s.pool, user.id, b.from, b.to, b.amount)
+        .await
+        .map(|_| Json(true))
         .map_err(|e| ApiError::BadRequest(e.to_string()))
 }

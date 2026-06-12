@@ -140,6 +140,74 @@ pub async fn cash_flow(
     Ok(row)
 }
 
+/// Move cash between two of the user's accounts atomically — the
+/// capital-reallocation op the strategy-per-account layout needs.
+/// One transaction: the source debit is overdraw-guarded by CASH
+/// (money that is currently stock cannot move), both legs land in
+/// paper_cash_flows with cross-referencing notes, and each side's
+/// flow-aware returns see it correctly (an outflow here, an inflow
+/// there — TWR and Dietz already treat flows as capital, not
+/// performance).
+pub async fn transfer(
+    pool: &PgPool,
+    user_id: Uuid,
+    from: Uuid,
+    to: Uuid,
+    amount: Decimal,
+) -> anyhow::Result<()> {
+    if amount <= Decimal::ZERO {
+        anyhow::bail!("amount must be positive");
+    }
+    if from == to {
+        anyhow::bail!("from and to are the same account");
+    }
+    let mut tx = pool.begin().await?;
+    // Names for the cross-referencing notes + ownership of BOTH ends.
+    let names: Vec<(Uuid, String)> = sqlx::query_as(
+        "SELECT id, name FROM paper_accounts WHERE user_id = $1 AND id IN ($2, $3)",
+    )
+    .bind(user_id)
+    .bind(from)
+    .bind(to)
+    .fetch_all(&mut *tx)
+    .await?;
+    let name_of = |id: Uuid| names.iter().find(|(i, _)| *i == id).map(|(_, n)| n.clone());
+    let (Some(from_name), Some(to_name)) = (name_of(from), name_of(to)) else {
+        anyhow::bail!("account not found");
+    };
+    let debited = sqlx::query(
+        "UPDATE paper_accounts SET cash = cash - $2
+          WHERE id = $1 AND cash - $2 >= 0",
+    )
+    .bind(from)
+    .bind(amount)
+    .execute(&mut *tx)
+    .await?
+    .rows_affected();
+    if debited == 0 {
+        anyhow::bail!("transfer exceeds source cash");
+    }
+    sqlx::query("UPDATE paper_accounts SET cash = cash + $2 WHERE id = $1")
+        .bind(to)
+        .bind(amount)
+        .execute(&mut *tx)
+        .await?;
+    sqlx::query(
+        "INSERT INTO paper_cash_flows (paper_account_id, amount, note)
+         VALUES ($1, $2, $3), ($4, $5, $6)",
+    )
+    .bind(from)
+    .bind(-amount)
+    .bind(format!("transfer to {to_name}"))
+    .bind(to)
+    .bind(amount)
+    .bind(format!("transfer from {from_name}"))
+    .execute(&mut *tx)
+    .await?;
+    tx.commit().await?;
+    Ok(())
+}
+
 pub async fn list_cash_flows(
     pool: &PgPool,
     user_id: Uuid,
