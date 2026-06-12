@@ -650,6 +650,12 @@ async fn post_backtest(
                 .get("max_hold_minutes")
                 .and_then(|v| v.as_i64())
                 .filter(|n| *n > 0),
+            equity_curve_filter_trips: strategy
+                .risk_gates
+                .get("equity_curve_filter_trips")
+                .and_then(|v| v.as_u64())
+                .filter(|n| *n >= 2)
+                .map(|n| n as usize),
         }
     } else {
         traderview_core::algo_backtest::BtGates::default()

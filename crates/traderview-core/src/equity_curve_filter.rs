@@ -34,6 +34,30 @@ pub struct EcfReport {
     pub filter_helped: bool,
 }
 
+/// Point-in-time decision for the LIVE gate and the backtest replay:
+/// with these trade PnLs (oldest first), is the always-on curve
+/// AT/ABOVE its N-trade SMA? The curve is start + running cumsum; a
+/// constant start shifts curve and SMA equally, so the decision is
+/// start-invariant — callers pass 0.0. Warm-up (fewer points than the
+/// window) evaluates over what exists; an empty record is above (no
+/// evidence = trade), and equality counts as above, both matching
+/// compute()'s at-or-above convention.
+pub fn curve_above_ma(start: f64, trade_pnls: &[f64], ma_length: usize) -> bool {
+    if ma_length < 2 {
+        return true; // no meaningful MA — filter off
+    }
+    let mut curve = Vec::with_capacity(trade_pnls.len() + 1);
+    let mut eq = start;
+    curve.push(eq);
+    for p in trade_pnls {
+        eq += p;
+        curve.push(eq);
+    }
+    let n = curve.len().min(ma_length);
+    let sma: f64 = curve[curve.len() - n..].iter().sum::<f64>() / n as f64;
+    *curve.last().unwrap() >= sma
+}
+
 pub fn compute(inp: &EcfInput) -> Option<EcfReport> {
     if !inp.starting_equity.is_finite()
         || inp.starting_equity <= 0.0
@@ -91,6 +115,26 @@ pub fn compute(inp: &EcfInput) -> Option<EcfReport> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn curve_above_ma_point_decision() {
+        // Rising record: cum 10, 20, 30 — last point above the SMA.
+        assert!(curve_above_ma(0.0, &[10.0, 10.0, 10.0], 3));
+        // Losing streak drags the last point below the window mean.
+        assert!(!curve_above_ma(0.0, &[50.0, -40.0, -40.0], 3));
+        // Empty record / warm-up: no evidence = trade.
+        assert!(curve_above_ma(0.0, &[], 5));
+        assert!(curve_above_ma(0.0, &[5.0], 5));
+        // Flat record: equality counts as above (at-or-above).
+        assert!(curve_above_ma(0.0, &[0.0, 0.0], 3));
+        // Start-invariance: same decision from any constant base.
+        assert_eq!(
+            curve_above_ma(0.0, &[50.0, -40.0, -40.0], 3),
+            curve_above_ma(100_000.0, &[50.0, -40.0, -40.0], 3)
+        );
+        // ma_length < 2 disables (always true).
+        assert!(curve_above_ma(0.0, &[-100.0, -100.0], 1));
+    }
 
     #[test]
     fn long_losing_streak_is_mostly_skipped() {

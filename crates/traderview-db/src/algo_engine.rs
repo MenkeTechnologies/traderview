@@ -167,6 +167,8 @@ pub enum EngineError {
     PositionSizeCap { notional: Decimal, cap: Decimal },
     #[error("account exposure ${open_notional} at/over cap ${cap}; entry skipped")]
     AccountExposureCap { open_notional: Decimal, cap: Decimal },
+    #[error("equity-curve filter: cum PnL below its {ma_trips}-trip MA; entry skipped")]
+    EquityCurveFilter { ma_trips: usize },
     #[error("earnings blackout: {symbol} reports on {date} (within {days}d window); entry skipped")]
     EarningsBlackout {
         symbol: String,
@@ -332,6 +334,7 @@ impl EngineError {
             Self::DailyLossCap { .. } => Some("daily_loss_cap"),
             Self::MaxDrawdown { .. } => Some("max_drawdown"),
             Self::AccountExposureCap { .. } => Some("account_exposure"),
+            Self::EquityCurveFilter { .. } => Some("equity_curve_filter"),
             Self::ConsecutiveLossesCap { .. } => Some("consecutive_losses"),
             Self::PositionSizeCap { .. } => Some("position_size_cap"),
             Self::EarningsBlackout { .. } => Some("earnings_blackout"),
@@ -393,6 +396,11 @@ pub struct EngineConfig {
     /// account — this is the aggregate brake. Portfolio-dependent,
     /// hence live-only (not backtest-replayable from one bar series).
     pub max_account_notional_usd: Option<Decimal>,
+    /// Equity-curve meta-filter: skip entries while the strategy's own
+    /// cumulative realized PnL sits below its N-trip SMA. Can't fix a
+    /// bad system; shortens the losing streaks of a decaying one at
+    /// the cost of whipsaw re-entries. ≥ 2 trips; None/0/1 = off.
+    pub equity_curve_filter_trips: Option<usize>,
     /// Skip ENTRIES when the symbol's next earnings report is within
     /// this many days (forward-looking: the risk being managed is
     /// holding INTO the print). Exits are never blocked.
@@ -451,6 +459,28 @@ async fn check_account_exposure_gate(
     Ok(())
 }
 
+/// Equity-curve meta-filter, entry-side. Shares curve_above_ma with
+/// the backtest replay — one decision implementation — over the same
+/// strategy_trips reconstruction the drawdown gate reads. Start 0.0:
+/// the decision is start-invariant (pinned in core).
+async fn check_equity_curve_gate(
+    pool: &PgPool,
+    strategy: &AlgoStrategy,
+) -> Result<(), EngineError> {
+    let cfg = EngineConfig::from_strategy(strategy);
+    let Some(ma) = cfg.equity_curve_filter_trips else {
+        return Ok(());
+    };
+    let trips = crate::algo::strategy_trips(pool, strategy.user_id, strategy.id)
+        .await
+        .map_err(|e| EngineError::Broker(e.to_string()))?;
+    let pnls: Vec<f64> = trips.iter().map(|t| t.pnl).collect();
+    if !traderview_core::equity_curve_filter::curve_above_ma(0.0, &pnls, ma) {
+        return Err(EngineError::EquityCurveFilter { ma_trips: ma });
+    }
+    Ok(())
+}
+
 /// Max-drawdown circuit breaker, shared by the single- and
 /// multi-symbol paths. Drawdown is the CURRENT distance of cumulative
 /// realized PnL from its peak (core::realized_drawdown) over the
@@ -504,6 +534,12 @@ impl EngineConfig {
             .risk_gates
             .get("max_account_notional_usd")
             .and_then(f64_to_dec);
+        let equity_curve_filter_trips = s
+            .risk_gates
+            .get("equity_curve_filter_trips")
+            .and_then(|v| v.as_u64())
+            .filter(|n| *n >= 2)
+            .map(|n| n as usize);
         let max_consecutive_losses = s
             .risk_gates
             .get("max_consecutive_losses")
@@ -572,6 +608,7 @@ impl EngineConfig {
             max_daily_loss_usd,
             max_drawdown_usd,
             max_account_notional_usd,
+            equity_curve_filter_trips,
             max_consecutive_losses,
             max_position_size_usd,
             earnings_blackout_days,
@@ -898,6 +935,7 @@ pub async fn process_bar_window(
     // so positions can always flatten; the gate self-clears as closes
     // reduce the aggregate.
     check_account_exposure_gate(pool, strategy).await?;
+    check_equity_curve_gate(pool, strategy).await?;
     // Risk gate: earnings blackout — entries only; the exit pass above
     // already ran, so positions can always flatten into the print.
     if let Some(days) = cfg.earnings_blackout_days {
@@ -1403,6 +1441,7 @@ pub async fn process_bar_window_multi(
     // Account exposure — entries only, after the per-leg exit pass so
     // pairs can always flatten; self-clears as closes reduce the sum.
     check_account_exposure_gate(pool, strategy).await?;
+    check_equity_curve_gate(pool, strategy).await?;
     let qty = algo_strategies::size_shares(equity, sig.entry_price, sig.stop_distance, &cfg.sizing);
     if qty == 0 {
         return Err(EngineError::ZeroQty);

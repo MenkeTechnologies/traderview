@@ -64,6 +64,9 @@ pub struct BtGates {
     /// position has been held at least this many minutes — the live
     /// engine's max_hold_minutes overlay, replayed.
     pub max_hold_minutes: Option<i64>,
+    /// Equity-curve meta-filter: entries only while cum trade PnL is
+    /// at/above its N-trip SMA (shared curve_above_ma decision).
+    pub equity_curve_filter_trips: Option<usize>,
     /// Drawdown circuit breaker: once cumulative trade PnL falls this
     /// many dollars below its peak, ALL later entries are blocked —
     /// a latch, mirroring the live kill switch, which stays tripped
@@ -80,6 +83,7 @@ pub struct GateSkips {
     pub daily_entry_cap: usize,
     pub loss_cooldown: usize,
     pub max_drawdown: usize,
+    pub equity_curve: usize,
 }
 
 /// Replay-state for the gates. Pinned directly by unit tests so the
@@ -93,6 +97,7 @@ pub struct GateState {
     cum_pnl: f64,
     peak_pnl: f64,
     dd_breached: bool,
+    trade_pnls: Vec<f64>,
     pub skips: GateSkips,
 }
 
@@ -106,6 +111,7 @@ impl GateState {
             cum_pnl: 0.0,
             peak_pnl: 0.0,
             dd_breached: false,
+            trade_pnls: Vec::new(),
             skips: GateSkips::default(),
         }
     }
@@ -152,6 +158,12 @@ impl GateState {
                 return Some("max_drawdown");
             }
         }
+        if let Some(ma) = self.gates.equity_curve_filter_trips {
+            if !crate::equity_curve_filter::curve_above_ma(0.0, &self.trade_pnls, ma) {
+                self.skips.equity_curve += 1;
+                return Some("equity_curve_filter");
+            }
+        }
         None
     }
 
@@ -170,6 +182,7 @@ impl GateState {
         }
         self.cum_pnl += pnl;
         self.peak_pnl = self.peak_pnl.max(self.cum_pnl);
+        self.trade_pnls.push(pnl);
     }
 }
 
@@ -1031,6 +1044,29 @@ mod gate_state_tests {
         let mon = Utc.with_ymd_and_hms(2026, 6, 15, 14, 30, 0).unwrap();
         assert_eq!(g.blocks_entry(mon), None);
         assert_eq!(g.skips.entry_days, 1);
+    }
+
+    #[test]
+    fn equity_curve_filter_blocks_below_ma_and_releases() {
+        use chrono::TimeZone;
+        let t0 = Utc.with_ymd_and_hms(2026, 6, 12, 14, 0, 0).unwrap();
+        let mut g = GateState::new(BtGates {
+            equity_curve_filter_trips: Some(3),
+            ..Default::default()
+        });
+        // Warm-up / healthy record: allowed.
+        assert_eq!(g.blocks_entry(t0), None);
+        g.on_trade_closed(50.0, t0);
+        assert_eq!(g.blocks_entry(t0), None);
+        // Two losses drag cum PnL below the 3-trip MA: blocked.
+        g.on_trade_closed(-40.0, t0);
+        g.on_trade_closed(-40.0, t0);
+        assert_eq!(g.blocks_entry(t0), Some("equity_curve_filter"));
+        assert_eq!(g.skips.equity_curve, 1);
+        // A recovery win lifts the curve back to its MA: released —
+        // unlike the drawdown latch, this filter is meant to whipsaw.
+        g.on_trade_closed(80.0, t0);
+        assert_eq!(g.blocks_entry(t0), None);
     }
 
     #[test]
