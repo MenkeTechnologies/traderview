@@ -28,6 +28,10 @@ pub struct Fill {
     pub commission: f64,
     /// Fill time, epoch seconds — stamps the trip's close.
     pub ts: i64,
+    /// Caller-defined marker carried onto the trip from its OPENING
+    /// fill (e.g. "had a written plan"). Closing fills' flags are
+    /// ignored — the discipline question is about entry.
+    pub flag: bool,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -38,6 +42,9 @@ pub struct Trip {
     pub opened_ts: i64,
     /// Epoch seconds of the fill that closed the trip.
     pub closed_ts: i64,
+    /// The OPENING fill's flag (flip remainders inherit the flip
+    /// fill's flag).
+    pub opened_flag: bool,
 }
 
 /// FIFO round trips from one symbol's chronological fills. The
@@ -49,6 +56,7 @@ pub fn round_trips(fills: &[Fill]) -> Vec<Trip> {
     let mut trip_pnl = 0.0_f64; // realized gross within the open trip
     let mut trip_comm = 0.0_f64;
     let mut trip_open_ts = 0_i64;
+    let mut trip_open_flag = false;
     for f in fills {
         if f.qty <= 0.0 || f.price <= 0.0 {
             continue;
@@ -59,6 +67,7 @@ pub fn round_trips(fills: &[Fill]) -> Vec<Trip> {
             // Opening / adding — weighted average cost.
             if pos == 0.0 {
                 trip_open_ts = f.ts;
+                trip_open_flag = f.flag;
             }
             let new_pos = pos + signed;
             avg = (avg * pos.abs() + f.price * f.qty) / new_pos.abs();
@@ -75,6 +84,7 @@ pub fn round_trips(fills: &[Fill]) -> Vec<Trip> {
                     pnl: trip_pnl - trip_comm,
                     opened_ts: trip_open_ts,
                     closed_ts: f.ts,
+                    opened_flag: trip_open_flag,
                 });
                 trip_pnl = 0.0;
                 trip_comm = 0.0;
@@ -84,6 +94,7 @@ pub fn round_trips(fills: &[Fill]) -> Vec<Trip> {
                     pos = if f.buy { remaining } else { -remaining };
                     avg = f.price;
                     trip_open_ts = f.ts;
+                    trip_open_flag = f.flag;
                 }
             }
         }
@@ -263,7 +274,37 @@ mod tests {
         // ts increments per construction so closed_ts is observable.
         use std::sync::atomic::{AtomicI64, Ordering};
         static T: AtomicI64 = AtomicI64::new(1_000);
-        Fill { buy, qty, price, commission: c, ts: T.fetch_add(60, Ordering::Relaxed) }
+        Fill {
+            buy, qty, price, commission: c,
+            ts: T.fetch_add(60, Ordering::Relaxed),
+            flag: false,
+        }
+    }
+
+    #[test]
+    fn trip_inherits_the_opening_fills_flag_only() {
+        // Flagged open, unflagged close → trip flagged.
+        let mut f1 = fill(true, 100.0, 10.0, 0.0);
+        f1.flag = true;
+        let close = fill(false, 100.0, 12.0, 0.0);
+        let trips = round_trips(&[f1, close]);
+        assert!(trips[0].opened_flag);
+        // Unflagged open, FLAGGED close → trip unflagged: the
+        // discipline question is about entry.
+        let open = fill(true, 100.0, 10.0, 0.0);
+        let mut c2 = fill(false, 100.0, 12.0, 0.0);
+        c2.flag = true;
+        assert!(!round_trips(&[open, c2])[0].opened_flag);
+        // Flip: the remainder's trip carries the FLIP fill's flag.
+        let open = fill(true, 100.0, 10.0, 0.0);
+        let mut flip = fill(false, 150.0, 12.0, 0.0);
+        flip.flag = true;
+        let mut cover = fill(true, 50.0, 11.0, 0.0);
+        cover.flag = false;
+        let trips = round_trips(&[open, flip, cover]);
+        assert_eq!(trips.len(), 2);
+        assert!(!trips[0].opened_flag); // original long opened unflagged
+        assert!(trips[1].opened_flag); // short remainder opened BY the flip
     }
 
     #[test]

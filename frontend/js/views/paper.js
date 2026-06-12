@@ -564,6 +564,9 @@ function renderAttribution(a) {
             <div class="card"><div class="label">Kelly (record-implied)</div>
                 <div class="value">${st.kelly_fraction != null ? (st.kelly_fraction * 100).toFixed(1) + '%' : '\u2014'}</div>
                 <div class="small muted">${st.kelly_fraction != null ? 'size at half: ' + (st.kelly_fraction * 50).toFixed(1) + '%' : 'needs wins AND losses'} \u00b7 streak ${st.current_streak > 0 ? '+' + st.current_streak : st.current_streak} (best +${st.longest_win_streak} / worst \u2212${st.longest_loss_streak})</div></div>
+            ${a.planned_stats && a.unplanned_stats ? `<div class="card"><div class="label">Planned vs unplanned</div>
+                <div class="value"><span class="${a.planned_stats.expectancy >= a.unplanned_stats.expectancy ? 'pos' : 'neg'}">${a.planned_stats.expectancy >= 0 ? '+' : ''}$${fmt(a.planned_stats.expectancy)}</span> / ${a.unplanned_stats.expectancy >= 0 ? '+' : ''}$${fmt(a.unplanned_stats.expectancy)}</div>
+                <div class="small muted">expectancy with a written plan (${a.planned_stats.trades}) vs without (${a.unplanned_stats.trades})</div></div>` : ''}
             ${a.hold ? `<div class="card"><div class="label">Avg hold (win / loss)</div>
                 <div class="value">${holdFmt(a.hold.avg_hold_secs_winners)} / ${holdFmt(a.hold.avg_hold_secs_losers)}</div>
                 ${a.hold.behavioral_flag ? `<div class="small neg" data-i18n="view.paper.flag.riding_losers">${esc(t('view.paper.flag.riding_losers'))}</div>` : ''}</div>` : ''}

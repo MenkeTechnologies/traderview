@@ -954,6 +954,7 @@ pub async fn live_divergence(
                 price: f.fill_price.to_f64().unwrap_or(0.0),
                 commission: f.commission.to_f64().unwrap_or(0.0),
                 ts: f.filled_at.timestamp(),
+                flag: false,
             },
         );
     }
@@ -1015,6 +1016,7 @@ pub async fn last_losing_trip_ts(
                 price: f.fill_price.to_f64().unwrap_or(0.0),
                 commission: f.commission.to_f64().unwrap_or(0.0),
                 ts: f.filled_at.timestamp(),
+                flag: false,
             },
         );
     }

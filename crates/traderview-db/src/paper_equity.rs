@@ -295,6 +295,10 @@ pub struct Attribution {
     pub stats: Option<TripStats>,
     /// Hold-duration discipline check (winners vs losers).
     pub hold: Option<HoldStats>,
+    /// Trips whose OPENING order carried a written plan vs those
+    /// without — the measurable payoff of plan-before-trade.
+    pub planned_stats: Option<TripStats>,
+    pub unplanned_stats: Option<TripStats>,
     pub total_trading_pnl: f64,
     pub total_dividends: f64,
     pub total_fees: f64,
@@ -319,9 +323,9 @@ pub async fn attribution(
     if !matches!(owner, Some((u,)) if u == user_id) {
         anyhow::bail!("forbidden");
     }
-    let fills: Vec<(String, String, Decimal, Decimal, Decimal, chrono::DateTime<Utc>)> =
+    let fills: Vec<(String, String, Decimal, Decimal, Decimal, chrono::DateTime<Utc>, Option<String>)> =
         sqlx::query_as(
-            "SELECT symbol, side::text, filled_qty, filled_price, fee, filled_at
+            "SELECT symbol, side::text, filled_qty, filled_price, fee, filled_at, plan_note
                FROM paper_orders
               WHERE paper_account_id = $1 AND status = 'filled'
                 AND filled_qty IS NOT NULL AND filled_price IS NOT NULL
@@ -333,7 +337,7 @@ pub async fn attribution(
     use rust_decimal::prelude::ToPrimitive;
     let mut by_symbol: std::collections::BTreeMap<String, (Vec<traderview_core::live_vs_backtest::Fill>, f64)> =
         Default::default();
-    for (symbol, side, qty, price, fee, at) in fills {
+    for (symbol, side, qty, price, fee, at, plan_note) in fills {
         // Options: pre-scale the per-share price by the 100× multiplier
         // so trip PnL is dollar-true while commissions (already dollars)
         // stay unscaled inside the reconstruction.
@@ -346,6 +350,9 @@ pub async fn attribution(
             price: price.to_f64().unwrap_or(0.0) * scale,
             commission: fee.to_f64().unwrap_or(0.0),
             ts: at.timestamp(),
+            // The plan flag rides the fill; trips inherit it from
+            // their OPENING fill only.
+            flag: plan_note.as_deref().map(str::trim).is_some_and(|s| !s.is_empty()),
         });
     }
     let divs: Vec<(String, Decimal)> = sqlx::query_as(
@@ -364,10 +371,12 @@ pub async fn attribution(
     let mut seen: std::collections::BTreeSet<String> = Default::default();
     let mut all_trips: Vec<(f64, i64)> = Vec::new();
     let mut all_holds: Vec<(f64, i64)> = Vec::new();
+    let mut all_flagged: Vec<(f64, i64, bool)> = Vec::new();
     for (symbol, (fills, fees)) in &by_symbol {
         let trips = traderview_core::live_vs_backtest::round_trips(fills);
         all_trips.extend(trips.iter().map(|t| (t.pnl, t.closed_ts)));
         all_holds.extend(trips.iter().map(|t| (t.pnl, t.closed_ts - t.opened_ts)));
+        all_flagged.extend(trips.iter().map(|t| (t.pnl, t.closed_ts, t.opened_flag)));
         let trading_pnl: f64 = trips.iter().map(|t| t.pnl).sum();
         let dividends = div_map.get(symbol).copied().unwrap_or(0.0);
         seen.insert(symbol.clone());
@@ -417,11 +426,18 @@ pub async fn attribution(
     let pnls: Vec<f64> = all_trips.iter().map(|(p, _)| *p).collect();
     let stats = trip_stats(&pnls);
     let hold = hold_stats(&all_holds);
+    // Planned/unplanned splits, each chronological for their streaks.
+    all_flagged.sort_by_key(|(_, ts, _)| *ts);
+    let planned: Vec<f64> = all_flagged.iter().filter(|(_, _, f)| *f).map(|(p, _, _)| *p).collect();
+    let unplanned: Vec<f64> =
+        all_flagged.iter().filter(|(_, _, f)| !*f).map(|(p, _, _)| *p).collect();
     Ok(Attribution {
         symbols,
         months,
         stats,
         hold,
+        planned_stats: trip_stats(&planned),
+        unplanned_stats: trip_stats(&unplanned),
         total_trading_pnl: tt,
         total_dividends: td,
         total_fees: tf,
