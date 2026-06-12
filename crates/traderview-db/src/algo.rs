@@ -899,6 +899,38 @@ pub struct StrategyFill {
 
 /// Every fill the strategy has received, chronological — the raw
 /// material for live round-trip reconstruction.
+/// The strategy's closed round trips, chronological by close time —
+/// THE shared reconstruction (fills grouped per symbol, FIFO trips,
+/// then re-sorted). Consumers: live_divergence, the max-drawdown gate.
+pub async fn strategy_trips(
+    pool: &PgPool,
+    user_id: Uuid,
+    strategy_id: Uuid,
+) -> anyhow::Result<Vec<traderview_core::live_vs_backtest::Trip>> {
+    use rust_decimal::prelude::ToPrimitive;
+    let fills = fills_for_strategy(pool, user_id, strategy_id).await?;
+    let mut by_symbol: std::collections::BTreeMap<String, Vec<traderview_core::live_vs_backtest::Fill>> =
+        std::collections::BTreeMap::new();
+    for f in fills {
+        by_symbol.entry(f.symbol.clone()).or_default().push(
+            traderview_core::live_vs_backtest::Fill {
+                buy: f.side == "buy",
+                qty: f.fill_qty.to_f64().unwrap_or(0.0),
+                price: f.fill_price.to_f64().unwrap_or(0.0),
+                commission: f.commission.to_f64().unwrap_or(0.0),
+                ts: f.filled_at.timestamp(),
+                flag: false,
+            },
+        );
+    }
+    let mut trips = Vec::new();
+    for fills in by_symbol.values() {
+        trips.extend(traderview_core::live_vs_backtest::round_trips(fills));
+    }
+    trips.sort_by_key(|t| t.closed_ts);
+    Ok(trips)
+}
+
 pub async fn fills_for_strategy(
     pool: &PgPool,
     user_id: Uuid,
@@ -943,27 +975,7 @@ pub async fn live_divergence(
     let Some(bt) = backtests.first() else {
         return Ok(None);
     };
-    let fills = fills_for_strategy(pool, user_id, strategy_id).await?;
-    let mut by_symbol: std::collections::BTreeMap<String, Vec<traderview_core::live_vs_backtest::Fill>> =
-        std::collections::BTreeMap::new();
-    for f in fills {
-        by_symbol.entry(f.symbol.clone()).or_default().push(
-            traderview_core::live_vs_backtest::Fill {
-                buy: f.side == "buy",
-                qty: f.fill_qty.to_f64().unwrap_or(0.0),
-                price: f.fill_price.to_f64().unwrap_or(0.0),
-                commission: f.commission.to_f64().unwrap_or(0.0),
-                ts: f.filled_at.timestamp(),
-                flag: false,
-            },
-        );
-    }
-    let mut trips = Vec::new();
-    for fills in by_symbol.values() {
-        trips.extend(traderview_core::live_vs_backtest::round_trips(fills));
-    }
-    // Chronological for streaks (trips were grouped per symbol).
-    trips.sort_by_key(|t| t.closed_ts);
+    let trips = strategy_trips(pool, user_id, strategy_id).await?;
     let pnls: Vec<f64> = trips.iter().map(|t| t.pnl).collect();
     let holds: Vec<(f64, i64)> = trips
         .iter()

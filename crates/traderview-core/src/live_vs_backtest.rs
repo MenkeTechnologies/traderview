@@ -130,6 +130,19 @@ pub struct TripStats {
 /// Zero-PnL trips count as losses (they paid fees for nothing).
 /// Input must be CHRONOLOGICAL (by close time) — streaks depend on
 /// order; the ratios don't.
+/// CURRENT drawdown of cumulative realized PnL from its peak — the
+/// circuit-breaker number, not the max-ever drawdown. The peak floors
+/// at 0: a strategy that has only ever lost is fully in drawdown from
+/// its starting point. Input chronological by close time.
+pub fn realized_drawdown(pnls: &[f64]) -> f64 {
+    let (mut cum, mut peak) = (0.0_f64, 0.0_f64);
+    for p in pnls {
+        cum += p;
+        peak = peak.max(cum);
+    }
+    peak - cum
+}
+
 pub fn trip_stats(pnls: &[f64]) -> Option<TripStats> {
     if pnls.is_empty() {
         return None;
@@ -269,6 +282,19 @@ pub fn compare(live_pnls: &[f64], expected: Expectation) -> DivergenceReport {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn realized_drawdown_is_current_not_max() {
+        // Peak 100 after the first win; two losses leave cum at 20.
+        assert_eq!(realized_drawdown(&[100.0, -50.0, -30.0]), 80.0);
+        // Losses from the start: peak floors at 0, fully in drawdown.
+        assert_eq!(realized_drawdown(&[-50.0, -30.0]), 80.0);
+        // Recovery to a NEW peak: current drawdown is 0 even though a
+        // historical max drawdown of 50 existed mid-sequence.
+        assert_eq!(realized_drawdown(&[100.0, -50.0, 80.0]), 0.0);
+        assert_eq!(realized_drawdown(&[]), 0.0);
+        assert_eq!(realized_drawdown(&[10.0, 20.0]), 0.0);
+    }
 
     fn fill(buy: bool, qty: f64, price: f64, c: f64) -> Fill {
         // ts increments per construction so closed_ts is observable.

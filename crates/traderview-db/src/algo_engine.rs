@@ -151,6 +151,8 @@ pub enum EngineError {
     DailyLossCap { cap: Decimal, pnl: Decimal },
     #[error("consecutive losses cap ({cap}) breached (streak: {streak}); strategy auto-paused")]
     ConsecutiveLossesCap { cap: i64, streak: i64 },
+    #[error("max drawdown ${cap} breached (current drawdown from peak: ${drawdown}); strategy auto-paused")]
+    MaxDrawdown { cap: Decimal, drawdown: Decimal },
     #[error("position size ${notional} exceeds cap ${cap}; order rejected")]
     PositionSizeCap { notional: Decimal, cap: Decimal },
     #[error("earnings blackout: {symbol} reports on {date} (within {days}d window); entry skipped")]
@@ -312,6 +314,7 @@ impl EngineError {
         match self {
             Self::PositionCap(_) => Some("position_cap"),
             Self::DailyLossCap { .. } => Some("daily_loss_cap"),
+            Self::MaxDrawdown { .. } => Some("max_drawdown"),
             Self::ConsecutiveLossesCap { .. } => Some("consecutive_losses"),
             Self::PositionSizeCap { .. } => Some("position_size_cap"),
             Self::EarningsBlackout { .. } => Some("earnings_blackout"),
@@ -358,6 +361,11 @@ pub struct EngineConfig {
     pub max_daily_loss_usd: Option<Decimal>,
     /// Pause when this many consecutive losing trades have closed.
     pub max_consecutive_losses: Option<i64>,
+    /// Circuit breaker: pause when cumulative realized PnL's CURRENT
+    /// drawdown from its all-time peak reaches this dollar amount —
+    /// catches the slow bleed across many days that never trips the
+    /// daily cap. Stored positive USD. None = off.
+    pub max_drawdown_usd: Option<Decimal>,
     /// Reject orders whose entry-price × qty exceeds this notional cap.
     pub max_position_size_usd: Option<Decimal>,
     /// Skip ENTRIES when the symbol's next earnings report is within
@@ -387,6 +395,34 @@ pub struct EngineConfig {
     pub htf_filter: Option<(traderview_core::BarInterval, usize)>,
 }
 
+/// Max-drawdown circuit breaker, shared by the single- and
+/// multi-symbol paths. Drawdown is the CURRENT distance of cumulative
+/// realized PnL from its peak (core::realized_drawdown) over the
+/// strategy's full trip history — a strategy that recovered to a new
+/// peak is not in drawdown regardless of past dips.
+async fn check_drawdown_gate(
+    pool: &PgPool,
+    strategy: &AlgoStrategy,
+) -> Result<(), EngineError> {
+    let cfg = EngineConfig::from_strategy(strategy);
+    let Some(cap) = cfg.max_drawdown_usd else {
+        return Ok(());
+    };
+    let trips = crate::algo::strategy_trips(pool, strategy.user_id, strategy.id)
+        .await
+        .map_err(|e| EngineError::Broker(e.to_string()))?;
+    let pnls: Vec<f64> = trips.iter().map(|t| t.pnl).collect();
+    let dd = traderview_core::live_vs_backtest::realized_drawdown(&pnls);
+    let drawdown = Decimal::try_from(dd).unwrap_or_default();
+    if drawdown >= cap {
+        let reason =
+            format!("auto-paused: max drawdown ${cap} breached (current drawdown: ${drawdown})");
+        trip_kill_switch(pool, strategy.id, strategy.user_id, &reason).await?;
+        return Err(EngineError::MaxDrawdown { cap, drawdown });
+    }
+    Ok(())
+}
+
 impl EngineConfig {
     pub fn from_strategy(s: &AlgoStrategy) -> Self {
         let sizing = serde_json::from_value::<Sizing>(s.sizing.clone())
@@ -407,6 +443,7 @@ impl EngineConfig {
                 .filter(|d| *d > Decimal::zero())
         };
         let max_daily_loss_usd = s.risk_gates.get("max_daily_loss_usd").and_then(f64_to_dec);
+        let max_drawdown_usd = s.risk_gates.get("max_drawdown_usd").and_then(f64_to_dec);
         let max_consecutive_losses = s
             .risk_gates
             .get("max_consecutive_losses")
@@ -463,6 +500,7 @@ impl EngineConfig {
             side_mode,
             max_concurrent_positions,
             max_daily_loss_usd,
+            max_drawdown_usd,
             max_consecutive_losses,
             max_position_size_usd,
             earnings_blackout_days,
@@ -723,6 +761,7 @@ pub async fn process_bar_window(
             return Err(EngineError::ConsecutiveLossesCap { cap, streak });
         }
     }
+    check_drawdown_gate(pool, strategy).await?;
 
     let strat = algo_strategies::from_kind(&strategy.strategy_type, &strategy.entry_rules)
         .map_err(|e| EngineError::Broker(e.to_string()))?;
@@ -1214,6 +1253,7 @@ pub async fn process_bar_window_multi(
             return Err(EngineError::ConsecutiveLossesCap { cap, streak });
         }
     }
+    check_drawdown_gate(pool, strategy).await?;
     let strat = algo_strategies::from_kind(&strategy.strategy_type, &strategy.entry_rules)
         .map_err(|e| EngineError::Broker(e.to_string()))?;
     let primary_symbol = strat
