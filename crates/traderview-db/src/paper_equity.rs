@@ -193,6 +193,131 @@ pub async fn compare(pool: &PgPool, user_id: Uuid) -> anyhow::Result<Vec<Account
     Ok(rows)
 }
 
+#[derive(Debug, Clone, Serialize)]
+pub struct SymbolAttribution {
+    pub symbol: String,
+    /// Realized PnL of CLOSED round trips (FIFO from the fill ledger,
+    /// fees netted; options scaled by the 100× multiplier).
+    pub trading_pnl: f64,
+    pub closed_trips: usize,
+    pub dividends: f64,
+    pub fees: f64,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct Attribution {
+    /// Ranked by |total contribution| descending.
+    pub symbols: Vec<SymbolAttribution>,
+    pub total_trading_pnl: f64,
+    pub total_dividends: f64,
+    pub total_fees: f64,
+}
+
+/// Where the account's P&L came from, per symbol: closed-trip trading
+/// PnL + dividends − fees. Reconstructed from the fill ledger because
+/// paper_positions deletes a row when it closes to zero — realized
+/// PnL of closed positions lives nowhere else. Open positions'
+/// unrealized PnL is deliberately NOT included: this is the realized
+/// record, and the positions table already shows live unrealized.
+pub async fn attribution(
+    pool: &PgPool,
+    user_id: Uuid,
+    account_id: Uuid,
+) -> anyhow::Result<Attribution> {
+    let owner: Option<(Uuid,)> =
+        sqlx::query_as("SELECT user_id FROM paper_accounts WHERE id = $1")
+            .bind(account_id)
+            .fetch_optional(pool)
+            .await?;
+    if !matches!(owner, Some((u,)) if u == user_id) {
+        anyhow::bail!("forbidden");
+    }
+    let fills: Vec<(String, String, Decimal, Decimal, Decimal, chrono::DateTime<Utc>)> =
+        sqlx::query_as(
+            "SELECT symbol, side::text, filled_qty, filled_price, fee, filled_at
+               FROM paper_orders
+              WHERE paper_account_id = $1 AND status = 'filled'
+                AND filled_qty IS NOT NULL AND filled_price IS NOT NULL
+              ORDER BY filled_at",
+        )
+        .bind(account_id)
+        .fetch_all(pool)
+        .await?;
+    use rust_decimal::prelude::ToPrimitive;
+    let mut by_symbol: std::collections::BTreeMap<String, (Vec<traderview_core::live_vs_backtest::Fill>, f64)> =
+        Default::default();
+    for (symbol, side, qty, price, fee, at) in fills {
+        // Options: pre-scale the per-share price by the 100× multiplier
+        // so trip PnL is dollar-true while commissions (already dollars)
+        // stay unscaled inside the reconstruction.
+        let scale = if traderview_core::occ_symbol::is_occ(&symbol) { 100.0 } else { 1.0 };
+        let entry = by_symbol.entry(symbol).or_default();
+        entry.1 += fee.to_f64().unwrap_or(0.0);
+        entry.0.push(traderview_core::live_vs_backtest::Fill {
+            buy: side == "buy" || side == "cover",
+            qty: qty.to_f64().unwrap_or(0.0),
+            price: price.to_f64().unwrap_or(0.0) * scale,
+            commission: fee.to_f64().unwrap_or(0.0),
+            ts: at.timestamp(),
+        });
+    }
+    let divs: Vec<(String, Decimal)> = sqlx::query_as(
+        "SELECT symbol, COALESCE(SUM(cash_credited), 0)
+           FROM paper_dividends WHERE paper_account_id = $1 GROUP BY symbol",
+    )
+    .bind(account_id)
+    .fetch_all(pool)
+    .await?;
+    let div_map: std::collections::BTreeMap<String, f64> = divs
+        .into_iter()
+        .map(|(s, c)| (s, c.to_f64().unwrap_or(0.0)))
+        .collect();
+    let mut symbols = Vec::new();
+    let (mut tt, mut td, mut tf) = (0.0, 0.0, 0.0);
+    let mut seen: std::collections::BTreeSet<String> = Default::default();
+    for (symbol, (fills, fees)) in &by_symbol {
+        let trips = traderview_core::live_vs_backtest::round_trips(fills);
+        let trading_pnl: f64 = trips.iter().map(|t| t.pnl).sum();
+        let dividends = div_map.get(symbol).copied().unwrap_or(0.0);
+        seen.insert(symbol.clone());
+        tt += trading_pnl;
+        td += dividends;
+        tf += fees;
+        symbols.push(SymbolAttribution {
+            symbol: symbol.clone(),
+            trading_pnl,
+            closed_trips: trips.len(),
+            dividends,
+            fees: *fees,
+        });
+    }
+    // Dividend-only symbols (position opened elsewhere/now closed with
+    // no fills in range, or credited after full exit) still appear.
+    for (symbol, dividends) in &div_map {
+        if !seen.contains(symbol) {
+            td += dividends;
+            symbols.push(SymbolAttribution {
+                symbol: symbol.clone(),
+                trading_pnl: 0.0,
+                closed_trips: 0,
+                dividends: *dividends,
+                fees: 0.0,
+            });
+        }
+    }
+    symbols.sort_by(|a, b| {
+        (b.trading_pnl + b.dividends)
+            .abs()
+            .total_cmp(&(a.trading_pnl + a.dividends).abs())
+    });
+    Ok(Attribution {
+        symbols,
+        total_trading_pnl: tt,
+        total_dividends: td,
+        total_fees: tf,
+    })
+}
+
 /// Equity history for an owned account, oldest first, with summary.
 pub async fn history(
     pool: &PgPool,

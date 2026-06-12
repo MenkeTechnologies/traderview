@@ -176,6 +176,11 @@ export async function renderPaper(mount) {
             <div id="recur-list" class="muted small"></div>
         </div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.paper.h2.attribution">P&L attribution</h2>
+            <div id="paper-attribution" class="muted small"></div>
+        </div>
+
         <div class="chart-panel" id="paper-greeks-panel" style="display:none">
             <h2 data-i18n="view.paper.h2.greeks">Option greeks</h2>
             <div id="paper-greeks"></div>
@@ -241,6 +246,9 @@ export async function renderPaper(mount) {
         .catch(() => {});
     api.paperRecurringList()
         .then(rows => { if (viewIsCurrent(tok)) renderRecurring(mount, rows); })
+        .catch(() => {});
+    api.paperAttribution(acct.id)
+        .then(a => { if (viewIsCurrent(tok)) renderAttribution(a); })
         .catch(() => {});
     mount.querySelector('#recur-form').addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -428,6 +436,31 @@ export async function renderPaper(mount) {
             renderPaper(mount);
         } catch (err) { showToast(t('toast.error.api', { err: err.message }), { level: 'error' }); }
     });
+}
+
+function renderAttribution(a) {
+    const el = document.getElementById('paper-attribution');
+    if (!el) return;
+    if (!a.symbols.length) {
+        el.innerHTML = `<p class="muted" data-i18n="view.paper.empty.attribution">${esc(t('view.paper.empty.attribution'))}</p>`;
+        return;
+    }
+    const money = (v) => `<span class="${v >= 0 ? 'pos' : 'neg'}">${v >= 0 ? '+' : ''}$${fmt(v)}</span>`;
+    el.innerHTML = `
+        <p><strong>Trading:</strong> ${money(a.total_trading_pnl)} \u00b7 <strong>Dividends:</strong> ${money(a.total_dividends)} \u00b7 <strong>Fees:</strong> <span class="neg">\u2212$${fmt(a.total_fees)}</span></p>
+        <table class="trades">
+            <thead><tr><th>Symbol</th><th>Trading P&L</th><th>Closed trips</th><th>Dividends</th><th>Fees</th></tr></thead>
+            <tbody>${a.symbols.map(s => `
+                <tr>
+                    <td>${esc(s.symbol)}</td>
+                    <td>${money(s.trading_pnl)}</td>
+                    <td>${s.closed_trips}</td>
+                    <td>${s.dividends ? money(s.dividends) : '\u2014'}</td>
+                    <td>$${fmt(s.fees)}</td>
+                </tr>`).join('')}
+            </tbody>
+        </table>
+        <p class="muted small" data-i18n="view.paper.hint.attribution">Realized record only — closed round trips (FIFO from fills, fees netted) plus dividends. Open positions\u2019 unrealized P&L lives in the positions table above.</p>`;
 }
 
 function renderRecurring(mount, rows) {

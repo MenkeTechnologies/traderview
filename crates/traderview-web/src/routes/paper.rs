@@ -46,6 +46,7 @@ pub fn router() -> Router<AppState> {
             axum::routing::delete(delete_recurring),
         )
         .route("/paper/accounts/:id/equity-history", get(equity_history))
+        .route("/paper/accounts/:id/attribution", get(attribution))
         .route("/paper/accounts/comparison", get(account_comparison))
         .route("/paper/accounts/create", post(create_account))
         .route("/paper/accounts/:id/rename", post(rename_account))
@@ -135,6 +136,18 @@ async fn delete_account(
         .await
         .map(Json)
         .map_err(ApiError::Internal)
+}
+
+/// Per-symbol realized P&L decomposition: closed trips + dividends − fees.
+async fn attribution(
+    State(s): State<AppState>,
+    user: AuthUser,
+    Path(account_id): Path<Uuid>,
+) -> Result<Json<traderview_db::paper_equity::Attribution>, ApiError> {
+    traderview_db::paper_equity::attribution(&s.pool, user.id, account_id)
+        .await
+        .map(Json)
+        .map_err(|e| ApiError::BadRequest(e.to_string()))
 }
 
 /// Background-sampled equity curve with return/drawdown summary.
