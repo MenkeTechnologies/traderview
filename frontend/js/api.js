@@ -872,6 +872,7 @@ export const api = {
     paperInterest: (id) => request(`/paper/accounts/${id}/interest`),
     paperStatement: (id, month) => request(`/paper/accounts/${id}/statement?month=${encodeURIComponent(month)}`),
     paperHoldings: () => request('/paper/holdings'),
+    paperPdt: (id) => request(`/paper/accounts/${id}/pdt`),
     paperCashFlow: (id, amount, note) =>
         request(`/paper/accounts/${id}/cash-flows`, { method: 'POST', body: JSON.stringify({ amount, note }) }),
     paperAttribution: (id) => request(`/paper/accounts/${id}/attribution`),

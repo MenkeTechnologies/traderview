@@ -65,6 +65,7 @@ export async function renderPaper(mount) {
             <label class="small" data-tip="view.paper.tip.cash_apy"><span data-i18n="view.paper.label.cash_apy">Cash APY %</span> <input type="number" id="acct-apy" min="0" max="20" step="0.25" value="${Number(acct.cash_apy_pct || 0)}" style="width:64px"></label>
             <button class="small" id="acct-deposit" data-i18n="view.paper.btn.deposit" data-tip="view.paper.tip.deposit">DEPOSIT</button>
             <button class="small" id="acct-withdraw" data-i18n="view.paper.btn.withdraw" data-tip="view.paper.tip.withdraw">WITHDRAW</button>
+            <span class="small" id="paper-pdt"></span>
             <a class="small" id="acct-export" href="/api/export/paper-orders/${esc(acct.id)}.csv" download data-i18n="view.paper.btn.export_csv" data-tip="view.paper.tip.export_csv">CSV</a>
             <label class="small" data-tip="view.paper.tip.borrow_apy"><span data-i18n="view.paper.label.borrow_apy">Borrow APY %</span> <input type="number" id="acct-borrow-apy" min="0" max="50" step="0.25" value="${Number(acct.borrow_apy_pct || 0)}" style="width:64px"></label>
             <label class="small" data-tip="view.paper.tip.margin"><span data-i18n="view.paper.label.margin">Margin ×</span> <select id="acct-margin">
@@ -337,6 +338,18 @@ export async function renderPaper(mount) {
             .then(h => { if (viewIsCurrent(tok)) renderHoldings(h); })
             .catch(() => {});
     }
+    api.paperPdt(acct.id)
+        .then(p => {
+            if (!viewIsCurrent(tok)) return;
+            const el = mount.querySelector('#paper-pdt');
+            if (!el) return;
+            if (p.flagged) {
+                el.innerHTML = `<span class="neg" data-tip="view.paper.tip.pdt">PDT ${p.day_trades_5d} day trades / 5d — flagged (under $25k)</span>`;
+            } else if (p.day_trades_5d > 0) {
+                el.innerHTML = `<span class="${p.remaining_before_flag <= 1 ? 'neg' : 'muted'}" data-tip="view.paper.tip.pdt">day trades ${p.day_trades_5d}/4 in 5d</span>`;
+            }
+        })
+        .catch(() => {});
     api.paperWashSales(acct.id)
         .then(w => { if (viewIsCurrent(tok)) renderWashSales(w); })
         .catch(() => {});

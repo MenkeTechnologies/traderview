@@ -17456,6 +17456,7 @@
   "view.paper.tip.margin": "Buying power: gross entry-basis exposure may not exceed this multiple of entry-basis equity. 1 = cash account, 2 = Reg-T initial margin, 4 = day-trading. Fills that would breach it reject; resting orders the account can no longer afford cancel with the reason.",
   "view.paper.tip.margin_apy": "Margin loan interest: negative cash is charged daily at this APY (ACT/365 simple, same exactly-once pass as the sweep; 0 = off)",
   "view.paper.tip.order_type": "Pazar = son olarak doldurun; Limit = fiyat ≤ / ≥ limit; Dur = fiyatla tetikleyici",
+  "view.paper.tip.pdt": "FINRA pattern-day-trader rule: 4+ same-session round trips within 5 trading days flags accounts under $25k. The sim counts and warns — it does not block.",
   "view.paper.tip.plan": "Written plan stored with the order — satisfies the RequirePlanBeforeTrade risk rule; rows with a plan show 📝 with the note on hover",
   "view.paper.tip.preset": "Multi-leg preset — legs constructed from underlying + expiry + strikes, filled atomically through the same spread path",
   "view.paper.tip.preset_cp": "Right (call/put) for calendar and diagonal legs",

@@ -937,5 +937,6 @@ pub mod drawdown_episodes;
 pub mod trade_report_card;
 pub mod futures_curve;
 pub mod tax;
+pub mod pdt_status;
 
 pub use models::*;

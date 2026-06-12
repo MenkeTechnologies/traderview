@@ -49,6 +49,7 @@ pub fn router() -> Router<AppState> {
         .route("/paper/accounts/:id/margin-apy", post(set_margin_apy))
         .route("/paper/accounts/:id/interest", get(interest))
         .route("/paper/accounts/:id/statement", get(statement))
+        .route("/paper/accounts/:id/pdt", get(pdt))
         .route(
             "/paper/accounts/:id/cash-flows",
             get(cash_flows).post(post_cash_flow),
@@ -912,6 +913,19 @@ async fn set_margin_apy(
     Json(b): Json<CashApyBody>,
 ) -> Result<Json<bool>, ApiError> {
     traderview_db::paper_interest::set_margin_apy(&s.pool, user.id, id, b.apy_pct)
+        .await
+        .map(Json)
+        .map_err(|e| ApiError::BadRequest(e.to_string()))
+}
+
+/// Pattern-day-trader status: day trades in the 5-trading-day window
+/// + the under-25k flag. Status only — the sim counts, it doesn't block.
+async fn pdt(
+    State(s): State<AppState>,
+    user: AuthUser,
+    Path(id): Path<Uuid>,
+) -> Result<Json<traderview_core::pdt_status::PdtStatus>, ApiError> {
+    traderview_db::paper_equity::pdt_status(&s.pool, user.id, id)
         .await
         .map(Json)
         .map_err(|e| ApiError::BadRequest(e.to_string()))

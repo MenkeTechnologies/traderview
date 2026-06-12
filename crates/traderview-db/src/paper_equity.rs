@@ -1682,3 +1682,67 @@ mod maintenance_tests {
         assert!(!maintenance_ok(-5.0, 1.0, 0.25));
     }
 }
+
+
+/// PDT status for one account: trips from the same FIFO fill
+/// reconstruction as attribution, equity from the latest snapshot
+/// (None when the account has never been sampled — the pure layer
+/// refuses to flag on unknown equity).
+pub async fn pdt_status(
+    pool: &PgPool,
+    user_id: Uuid,
+    account_id: Uuid,
+) -> anyhow::Result<traderview_core::pdt_status::PdtStatus> {
+    use rust_decimal::prelude::ToPrimitive;
+    let owner: Option<(Uuid,)> =
+        sqlx::query_as("SELECT user_id FROM paper_accounts WHERE id = $1")
+            .bind(account_id)
+            .fetch_optional(pool)
+            .await?;
+    if !matches!(owner, Some((u,)) if u == user_id) {
+        anyhow::bail!("forbidden");
+    }
+    let fills: Vec<(String, String, Decimal, Decimal, Decimal, chrono::DateTime<Utc>)> =
+        sqlx::query_as(
+            "SELECT symbol, side::text, filled_qty, filled_price, fee, filled_at
+               FROM paper_orders
+              WHERE paper_account_id = $1 AND status = 'filled'
+                AND filled_qty IS NOT NULL AND filled_price IS NOT NULL
+              ORDER BY filled_at",
+        )
+        .bind(account_id)
+        .fetch_all(pool)
+        .await?;
+    let mut by_symbol: std::collections::BTreeMap<String, Vec<traderview_core::live_vs_backtest::Fill>> =
+        Default::default();
+    for (symbol, side, qty, price, fee, at) in fills {
+        by_symbol.entry(symbol).or_default().push(traderview_core::live_vs_backtest::Fill {
+            buy: side == "buy" || side == "cover",
+            qty: qty.to_f64().unwrap_or(0.0),
+            price: price.to_f64().unwrap_or(0.0),
+            commission: fee.to_f64().unwrap_or(0.0),
+            ts: at.timestamp(),
+            flag: false,
+        });
+    }
+    let mut trips: Vec<(i64, i64)> = Vec::new();
+    for fills in by_symbol.values() {
+        trips.extend(
+            traderview_core::live_vs_backtest::round_trips(fills)
+                .iter()
+                .map(|t| (t.opened_ts, t.closed_ts)),
+        );
+    }
+    let equity: Option<(Decimal,)> = sqlx::query_as(
+        "SELECT equity FROM paper_equity_snapshots
+          WHERE paper_account_id = $1 ORDER BY taken_at DESC LIMIT 1",
+    )
+    .bind(account_id)
+    .fetch_optional(pool)
+    .await?;
+    Ok(traderview_core::pdt_status::pdt_status(
+        &trips,
+        equity.and_then(|(e,)| e.to_f64()),
+        Utc::now().date_naive(),
+    ))
+}
