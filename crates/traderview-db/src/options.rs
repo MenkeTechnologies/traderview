@@ -1,6 +1,7 @@
 //! Yahoo options chain fetcher.
 //!
-//! Endpoint (no auth):
+//! Endpoints (cookie+crumb auth via `yahoo_auth` — v7 rejects anonymous
+//! calls with 401 "Invalid Crumb"):
 //!   <https://query2.finance.yahoo.com/v7/finance/options/SYMBOL>
 //!   <https://query2.finance.yahoo.com/v7/finance/options/SYMBOL?date=EPOCH>
 //! The first call returns `expirationDates: [..]` listing available expiries.
@@ -8,9 +9,6 @@
 
 use chrono::NaiveDate;
 use serde::Serialize;
-
-const UA: &str =
-    "Mozilla/5.0 (compatible; traderview/0.1; +https://github.com/MenkeTechnologies/traderview)";
 
 #[derive(Debug, Clone, Serialize)]
 pub struct OptionContract {
@@ -34,24 +32,27 @@ pub struct Chain {
     pub puts: Vec<OptionContract>,
 }
 
-fn client() -> reqwest::Client {
-    reqwest::Client::builder()
-        .user_agent(UA)
-        .timeout(std::time::Duration::from_secs(10))
-        .build()
-        .unwrap()
-}
-
 pub async fn chain(symbol: &str, expiration: Option<NaiveDate>) -> anyhow::Result<Chain> {
-    let mut url = format!(
-        "https://query2.finance.yahoo.com/v7/finance/options/{sym}",
-        sym = symbol,
-    );
-    if let Some(d) = expiration {
-        let epoch = d.and_hms_opt(0, 0, 0).unwrap().and_utc().timestamp();
-        url.push_str(&format!("?date={}", epoch));
+    // One retry after invalidating the cached crumb — Yahoo expires
+    // crumbs server-side, surfacing as a 401 on a previously-good pair.
+    let mut resp = None;
+    for attempt in 0..2 {
+        let auth = crate::yahoo_auth::get().await?;
+        let url = format!("https://query2.finance.yahoo.com/v7/finance/options/{symbol}");
+        let mut req = auth.client.get(&url).query(&[("crumb", auth.crumb.as_str())]);
+        if let Some(d) = expiration {
+            let epoch = d.and_hms_opt(0, 0, 0).unwrap().and_utc().timestamp();
+            req = req.query(&[("date", epoch.to_string().as_str())]);
+        }
+        let r = req.send().await?;
+        if r.status() == reqwest::StatusCode::UNAUTHORIZED && attempt == 0 {
+            crate::yahoo_auth::invalidate().await;
+            continue;
+        }
+        resp = Some(r);
+        break;
     }
-    let resp = client().get(&url).send().await?;
+    let resp = resp.expect("loop always sets resp on its final iteration");
     if !resp.status().is_success() {
         anyhow::bail!("options HTTP {}", resp.status());
     }

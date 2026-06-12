@@ -211,12 +211,29 @@ struct ChartMeta {
 /// Fetch one or more quoteSummary modules. Returns raw JSON so the frontend
 /// can render whatever shape Yahoo currently exposes.
 pub async fn quote_summary(symbol: &str, modules: &[&str]) -> anyhow::Result<serde_json::Value> {
+    // Cookie+crumb auth — anonymous v10 calls 401 "Invalid Crumb".
+    // One retry after invalidating a server-side-expired crumb.
     let url = format!(
-        "https://query1.finance.yahoo.com/v10/finance/quoteSummary/{sym}?modules={mods}",
+        "https://query1.finance.yahoo.com/v10/finance/quoteSummary/{sym}",
         sym = enc(symbol),
-        mods = modules.join(","),
     );
-    let resp = client().get(&url).send().await?;
+    let mut resp = None;
+    for attempt in 0..2 {
+        let auth = crate::yahoo_auth::get().await?;
+        let r = auth
+            .client
+            .get(&url)
+            .query(&[("modules", modules.join(",").as_str()), ("crumb", auth.crumb.as_str())])
+            .send()
+            .await?;
+        if r.status() == reqwest::StatusCode::UNAUTHORIZED && attempt == 0 {
+            crate::yahoo_auth::invalidate().await;
+            continue;
+        }
+        resp = Some(r);
+        break;
+    }
+    let resp = resp.expect("loop always sets resp on its final iteration");
     let status = resp.status();
     if !status.is_success() {
         anyhow::bail!("quoteSummary HTTP {}", status);

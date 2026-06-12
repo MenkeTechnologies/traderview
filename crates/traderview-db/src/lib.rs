@@ -196,6 +196,7 @@ pub mod vrp_scanner;
 pub mod watchlists;
 pub mod webhooks;
 pub mod webull;
+pub mod yahoo_auth;
 pub mod zero_based_budget;
 
 use sqlx::postgres::PgPoolOptions;
