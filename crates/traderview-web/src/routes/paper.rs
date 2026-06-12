@@ -446,7 +446,8 @@ async fn submit_bracket(
         req.qty,
         // Limit entry price when known; market entries degrade to zero.
         req.limit_price.unwrap_or(Decimal::ZERO),
-        Some(req.stop_loss),
+        // Trailing brackets have no fixed stop for the gate to see.
+        req.stop_loss,
         // A bracket IS an attached plan: stop and target up front.
         true,
     )

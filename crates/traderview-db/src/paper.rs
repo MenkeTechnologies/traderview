@@ -660,11 +660,19 @@ pub async fn check_pending(pool: &PgPool) -> anyhow::Result<Vec<BackgroundFill>>
     )
     .execute(pool)
     .await?;
-    // Promote bracket exit legs whose entry has filled: held → pending.
+    // Promote bracket exit legs whose entry has filled: held →
+    // pending. Trailing legs also get their ratchet seeded from the
+    // ENTRY's fill price — without it the trailing branch would skip
+    // them forever (it requires an extreme to ratchet from).
     sqlx::query(
-        "UPDATE paper_orders SET status = 'pending'
-          WHERE status = 'held'
-            AND parent_order_id IN (SELECT id FROM paper_orders WHERE status = 'filled')",
+        "UPDATE paper_orders o
+            SET status = 'pending',
+                trail_extreme = CASE WHEN o.order_type = 'trailing'
+                                     THEN COALESCE(o.trail_extreme, p.filled_price)
+                                     ELSE o.trail_extreme END
+           FROM paper_orders p
+          WHERE o.parent_order_id = p.id
+            AND o.status = 'held' AND p.status = 'filled'",
     )
     .execute(pool)
     .await?;
@@ -943,8 +951,45 @@ pub struct BracketRequest {
     /// bracket: a buy stop above resistance with the exits attached.
     #[serde(default)]
     pub stop_price: Option<Decimal>,
-    pub stop_loss: Decimal,
+    /// Fixed stop leg. Exactly one of stop_loss / trail_value.
+    #[serde(default)]
+    pub stop_loss: Option<Decimal>,
+    /// Trailing stop leg instead of a fixed stop: dollars, or a
+    /// fraction of the ratcheting extreme when trail_is_pct.
+    #[serde(default)]
+    pub trail_value: Option<Decimal>,
+    #[serde(default)]
+    pub trail_is_pct: Option<bool>,
     pub take_profit: Decimal,
+}
+
+/// Validation for the TRAILING bracket variant: the target must sit
+/// on the profit side of a known entry hint (the fixed-stop ordering
+/// check has no fixed stop to order against), and the trail itself
+/// must be well-formed. Pure.
+pub fn validate_trailing_bracket(
+    side: Side,
+    entry_hint: Option<Decimal>,
+    take_profit: Decimal,
+    trail_value: Option<Decimal>,
+    trail_is_pct: Option<bool>,
+) -> Result<(), &'static str> {
+    if !matches!(side, Side::Buy | Side::Short) {
+        return Err("bracket entry side must be buy or short");
+    }
+    if !order_well_formed("trailing", None, None, trail_value, trail_is_pct) {
+        return Err("trail must be dollars > 0, or a fraction in (0, 1) when trail_is_pct");
+    }
+    if let Some(e) = entry_hint {
+        let ok = match side {
+            Side::Buy => take_profit > e,
+            _ => take_profit < e,
+        };
+        if !ok {
+            return Err("take_profit must be on the profit side of the entry");
+        }
+    }
+    Ok(())
 }
 
 /// Entry hint for bracket price-relationship validation, pure. Market
@@ -990,8 +1035,15 @@ pub async fn submit_bracket(
 ) -> anyhow::Result<Bracket> {
     let entry_hint = bracket_entry_hint(&req.entry_type, req.limit_price, req.stop_price)
         .map_err(|e| anyhow::anyhow!(e))?;
-    validate_bracket(req.side, entry_hint, req.stop_loss, req.take_profit)
-        .map_err(|e| anyhow::anyhow!(e))?;
+    match (req.stop_loss, req.trail_value) {
+        (Some(sl), None) => validate_bracket(req.side, entry_hint, sl, req.take_profit)
+            .map_err(|e| anyhow::anyhow!(e))?,
+        (None, Some(_)) => validate_trailing_bracket(
+            req.side, entry_hint, req.take_profit, req.trail_value, req.trail_is_pct,
+        )
+        .map_err(|e| anyhow::anyhow!(e))?,
+        _ => anyhow::bail!("exactly one of stop_loss / trail_value"),
+    }
 
     let entry = submit(
         pool,
@@ -1031,14 +1083,29 @@ pub async fn submit_bracket(
     let group = Uuid::new_v4();
     let symbol = req.symbol.trim().to_uppercase();
     let mut tx = pool.begin().await?;
-    let stop = insert_leg(
-        &mut tx, account_id, &symbol, exit_side, req.qty,
-        "stop", None, Some(req.stop_loss), leg_status, group, Some(entry.id),
-    )
-    .await?;
+    // Trailing stop legs start their ratchet at the ENTRY fill when
+    // it already happened; held legs get the extreme stamped at
+    // promotion from the parent's fill price.
+    let stop = match (req.stop_loss, req.trail_value) {
+        (Some(sl), _) => {
+            insert_leg(
+                &mut tx, account_id, &symbol, exit_side, req.qty,
+                "stop", None, Some(sl), leg_status, group, Some(entry.id), None, None, None,
+            )
+            .await?
+        }
+        (None, tv) => {
+            insert_leg(
+                &mut tx, account_id, &symbol, exit_side, req.qty,
+                "trailing", None, None, leg_status, group, Some(entry.id),
+                tv, req.trail_is_pct, entry.filled_price,
+            )
+            .await?
+        }
+    };
     let target = insert_leg(
         &mut tx, account_id, &symbol, exit_side, req.qty,
-        "limit", Some(req.take_profit), None, leg_status, group, Some(entry.id),
+        "limit", Some(req.take_profit), None, leg_status, group, Some(entry.id), None, None, None,
     )
     .await?;
     tx.commit().await?;
@@ -1119,12 +1186,12 @@ pub async fn attach_protection(
     let mut tx = pool.begin().await?;
     let stop = insert_leg(
         &mut tx, account_id, &symbol, exit_side, qty,
-        "stop", None, Some(stop_loss), "pending", group, None,
+        "stop", None, Some(stop_loss), "pending", group, None, None, None, None,
     )
     .await?;
     let target = insert_leg(
         &mut tx, account_id, &symbol, exit_side, qty,
-        "limit", Some(take_profit), None, "pending", group, None,
+        "limit", Some(take_profit), None, "pending", group, None, None, None, None,
     )
     .await?;
     tx.commit().await?;
@@ -1144,13 +1211,16 @@ async fn insert_leg(
     status: &str,
     group: Uuid,
     parent: Option<Uuid>,
+    trail_value: Option<Decimal>,
+    trail_is_pct: Option<bool>,
+    trail_extreme: Option<Decimal>,
 ) -> anyhow::Result<PaperOrder> {
     Ok(sqlx::query_as(
         "INSERT INTO paper_orders
             (paper_account_id, symbol, side, qty, order_type, limit_price, stop_price,
-             status, oco_group, parent_order_id)
+             status, oco_group, parent_order_id, trail_value, trail_is_pct, trail_extreme)
          VALUES ($1, $2, $3::side_t, $4, $5::paper_order_type_t, $6, $7,
-                 $8::paper_order_status_t, $9, $10)
+                 $8::paper_order_status_t, $9, $10, $11, $12, $13)
          RETURNING id, paper_account_id, symbol, side::text, qty, order_type::text,
                    limit_price, stop_price, status::text,
                    trail_value, trail_is_pct, trail_extreme, oco_group, parent_order_id,
@@ -1166,6 +1236,9 @@ async fn insert_leg(
     .bind(status)
     .bind(group)
     .bind(parent)
+    .bind(trail_value)
+    .bind(trail_is_pct)
+    .bind(trail_extreme)
     .fetch_one(&mut *tx)
     .await?)
 }
@@ -1959,6 +2032,30 @@ mod tests {
             bracket_entry_hint("trailing", None, None),
             Err("entry_type must be market, limit, stop, or stop_limit")
         );
+    }
+
+    #[test]
+    fn trailing_bracket_validation_pins() {
+        // Long: target above the entry hint; trail $2 valid.
+        assert!(validate_trailing_bracket(Side::Buy, Some(d(100)), d(110), Some(d(2)), Some(false)).is_ok());
+        // Target on the wrong side rejects, both directions.
+        assert_eq!(
+            validate_trailing_bracket(Side::Buy, Some(d(100)), d(95), Some(d(2)), None),
+            Err("take_profit must be on the profit side of the entry")
+        );
+        assert_eq!(
+            validate_trailing_bracket(Side::Short, Some(d(100)), d(105), Some(d(2)), None),
+            Err("take_profit must be on the profit side of the entry")
+        );
+        // Short with target below passes; market entry (no hint) only
+        // checks the trail itself.
+        assert!(validate_trailing_bracket(Side::Short, Some(d(100)), d(90), Some(d(2)), None).is_ok());
+        assert!(validate_trailing_bracket(Side::Buy, None, d(1), Some(d(2)), None).is_ok());
+        // Bad trails: zero, and a pct ≥ 1.
+        assert!(validate_trailing_bracket(Side::Buy, None, d(110), Some(d(0)), None).is_err());
+        assert!(validate_trailing_bracket(Side::Buy, None, d(110), Some(d(2)), Some(true)).is_err());
+        // Sell/cover are not entry sides.
+        assert!(validate_trailing_bracket(Side::Sell, None, d(110), Some(d(2)), None).is_err());
     }
 
     #[test]

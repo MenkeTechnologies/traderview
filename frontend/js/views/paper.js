@@ -142,7 +142,12 @@ export async function renderPaper(mount) {
                     </select>
                     <input name="limit_price" type="number" step="0.01" placeholder="limit" data-i18n-placeholder="common.placeholder.limit">
                     <input name="entry_stop" type="number" step="0.01" placeholder="entry stop" data-i18n-placeholder="view.paper.placeholder.entry_stop" data-tip="view.paper.tip.bracket_entry_stop">
-                    <input name="stop_loss" type="number" step="0.01" placeholder="stop loss" data-i18n-placeholder="common.placeholder.stop_loss" data-tip="view.paper.tip.bracket_stop" required>
+                    <input name="stop_loss" type="number" step="0.01" placeholder="stop loss" data-i18n-placeholder="common.placeholder.stop_loss" data-tip="view.paper.tip.bracket_stop">
+                    <input name="bracket_trail" type="number" step="0.01" placeholder="or trail" data-i18n-placeholder="view.paper.placeholder.bracket_trail" data-tip="view.paper.tip.bracket_trail" style="width:80px">
+                    <select name="bracket_trail_unit" data-tip="view.paper.tip.bracket_trail">
+                        <option value="usd">$</option>
+                        <option value="pct">%</option>
+                    </select>
                     <input name="take_profit" type="number" step="0.01" placeholder="target" data-i18n-placeholder="common.placeholder.target" data-tip="view.paper.tip.bracket_target" required>
                     <button data-i18n="view.paper.btn.submit_bracket" class="primary" type="submit">BRACKET</button>
                 </form>
@@ -576,7 +581,11 @@ export async function renderPaper(mount) {
                 entry_type: fd.get('entry_type'),
                 stop_price: fd.get('entry_stop') ? Number(fd.get('entry_stop')) : null,
                 limit_price: fd.get('limit_price') ? Number(fd.get('limit_price')) : null,
-                stop_loss: Number(fd.get('stop_loss')),
+                stop_loss: fd.get('stop_loss') ? Number(fd.get('stop_loss')) : null,
+                trail_value: fd.get('bracket_trail')
+                    ? Number(fd.get('bracket_trail')) / (fd.get('bracket_trail_unit') === 'pct' ? 100 : 1)
+                    : null,
+                trail_is_pct: fd.get('bracket_trail') ? fd.get('bracket_trail_unit') === 'pct' : null,
                 take_profit: Number(fd.get('take_profit')),
             });
             if (!viewIsCurrent(tok)) return;
