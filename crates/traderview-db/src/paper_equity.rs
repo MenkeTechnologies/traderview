@@ -21,7 +21,12 @@ pub struct EquitySnapshot {
 
 #[derive(Debug, Clone, Serialize)]
 pub struct EquitySummary {
+    /// Naive first-to-last return — inflated by deposits; kept for
+    /// continuity, read twr_return_pct for performance.
     pub return_pct: f64,
+    /// Flow-aware time-weighted return; equals return_pct when the
+    /// account has no cash flows in the window.
+    pub twr_return_pct: Option<f64>,
     pub max_drawdown_pct: f64,
     pub currently_underwater: bool,
 }
@@ -68,6 +73,35 @@ pub fn align_benchmark(
     out
 }
 
+/// Time-weighted return over a snapshot series with external cash
+/// flows: each snapshot interval's return strips the net flow that
+/// landed inside it ((e_next − flow) / e_prev), and the segments
+/// compound. Deposits don't fake performance, withdrawals don't fake
+/// losses — the measure of the STRATEGY, not the funding. Flows
+/// outside the snapshot window are ignored (they're not in the
+/// measured period); a non-positive segment base is None, not a
+/// nonsense compound. Both inputs ascending by timestamp.
+pub fn twr_return_pct(snapshots: &[(i64, f64)], flows: &[(i64, f64)]) -> Option<f64> {
+    if snapshots.len() < 2 {
+        return None;
+    }
+    let mut factor = 1.0_f64;
+    for w in snapshots.windows(2) {
+        let (t0, e0) = w[0];
+        let (t1, e1) = w[1];
+        if e0 <= 0.0 {
+            return None;
+        }
+        let flow: f64 = flows
+            .iter()
+            .filter(|(t, _)| *t > t0 && *t <= t1)
+            .map(|(_, a)| a)
+            .sum();
+        factor *= (e1 - flow) / e0;
+    }
+    Some((factor - 1.0) * 100.0)
+}
+
 /// Summary over an equity series: total return plus worst drawdown via
 /// the shared drawdown_episodes core. None for fewer than 2 points.
 pub fn summarize(series: &[f64]) -> Option<EquitySummary> {
@@ -85,6 +119,7 @@ pub fn summarize(series: &[f64]) -> Option<EquitySummary> {
         .min(report.current_drawdown_pct);
     Some(EquitySummary {
         return_pct: (series[series.len() - 1] / series[0] - 1.0) * 100.0,
+        twr_return_pct: None, // db wrapper fills this with flow data
         max_drawdown_pct: -worst,
         currently_underwater: report.currently_underwater,
     })
@@ -216,7 +251,24 @@ pub async fn compare(pool: &PgPool, user_id: Uuid) -> anyhow::Result<Vec<Account
             name,
             starting_cash,
             equity,
-            return_pct: account_return_pct(starting_cash, equity),
+            // Lifetime modified Dietz over net deposits — a funded
+            // account doesn't outrank an unfunded one on deposits.
+            return_pct: {
+                use rust_decimal::prelude::ToPrimitive;
+                let flows: Option<(Decimal,)> = sqlx::query_as(
+                    "SELECT COALESCE(SUM(amount), 0) FROM paper_cash_flows
+                      WHERE paper_account_id = $1",
+                )
+                .bind(account_id)
+                .fetch_optional(pool)
+                .await
+                .unwrap_or(None);
+                let net_flow = flows.and_then(|(d,)| d.to_f64()).unwrap_or(0.0);
+                match (starting_cash.to_f64(), equity.to_f64()) {
+                    (Some(s), Some(e)) if s > 0.0 => modified_dietz(s, e, net_flow),
+                    _ => account_return_pct(starting_cash, equity),
+                }
+            },
             max_drawdown_pct: summary.as_ref().map(|s| s.max_drawdown_pct),
             currently_underwater: summary.map(|s| s.currently_underwater).unwrap_or(false),
             snapshots: snaps.len() as i64,
@@ -867,7 +919,28 @@ pub async fn history(
         .iter()
         .filter_map(|s| s.equity.to_string().parse().ok())
         .collect();
-    let summary = summarize(&series);
+    let mut summary = summarize(&series);
+    if let Some(sm) = summary.as_mut() {
+        let flows: Vec<(chrono::DateTime<Utc>, Decimal)> = sqlx::query_as(
+            "SELECT created_at, amount FROM paper_cash_flows
+              WHERE paper_account_id = $1 ORDER BY created_at",
+        )
+        .bind(account_id)
+        .fetch_all(pool)
+        .await
+        .unwrap_or_default();
+        use rust_decimal::prelude::ToPrimitive;
+        let snap_pts: Vec<(i64, f64)> = snapshots
+            .iter()
+            .zip(series.iter())
+            .map(|(s, e)| (s.taken_at.timestamp(), *e))
+            .collect();
+        let flow_pts: Vec<(i64, f64)> = flows
+            .iter()
+            .map(|(t, a)| (t.timestamp(), a.to_f64().unwrap_or(0.0)))
+            .collect();
+        sm.twr_return_pct = twr_return_pct(&snap_pts, &flow_pts);
+    }
     // Benchmark overlay: SPY (or caller's symbol) normalized so both
     // series start at the FIRST SNAPSHOT's equity — same start, same
     // scale, honest comparison.
@@ -1317,6 +1390,40 @@ pub async fn statement(
 #[cfg(test)]
 mod statement_tests {
     use super::*;
+
+    #[test]
+    fn twr_compounds_segments_and_strips_flows() {
+        // No flows: 100k → 110k = 10%, same as naive.
+        assert!((twr_return_pct(&[(0, 100_000.0), (10, 110_000.0)], &[]).unwrap() - 10.0).abs() < 1e-9);
+        // Deposit inside the window with zero trading gain: 0%.
+        let r = twr_return_pct(
+            &[(0, 100_000.0), (10, 120_000.0)],
+            &[(5, 20_000.0)],
+        ).unwrap();
+        assert!(r.abs() < 1e-9);
+        // Deposit then a real 10% segment: (120−20)/100 × 132/120 = 1.1.
+        let r = twr_return_pct(
+            &[(0, 100_000.0), (10, 120_000.0), (20, 132_000.0)],
+            &[(5, 20_000.0)],
+        ).unwrap();
+        assert!((r - 10.0).abs() < 1e-9);
+        // Withdrawal isn't a loss: 100k → 85k with 20k out = +5%.
+        let r = twr_return_pct(&[(0, 100_000.0), (10, 85_000.0)], &[(5, -20_000.0)]).unwrap();
+        assert!((r - 5.0).abs() < 1e-9);
+        // Flow exactly AT a snapshot belongs to the interval it ends
+        // (t > t0 && t <= t1) — no double-count, no gap.
+        let r = twr_return_pct(
+            &[(0, 100_000.0), (10, 120_000.0)],
+            &[(10, 20_000.0)],
+        ).unwrap();
+        assert!(r.abs() < 1e-9);
+        // Flows outside the window are not the window's business.
+        let r = twr_return_pct(&[(10, 100.0), (20, 110.0)], &[(5, 50.0), (25, 50.0)]).unwrap();
+        assert!((r - 10.0).abs() < 1e-9);
+        // Degenerate base / too few points.
+        assert!(twr_return_pct(&[(0, 0.0), (10, 100.0)], &[]).is_none());
+        assert!(twr_return_pct(&[(0, 100.0)], &[]).is_none());
+    }
 
     #[test]
     fn dietz_flows_are_capital_not_performance() {

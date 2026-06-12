@@ -952,7 +952,8 @@ function renderEquityCurve(hist) {
         const s = hist.summary;
         const b = hist.benchmark;
         const alpha = b && b.summary ? s.return_pct - b.summary.return_pct : null;
-        sumEl.innerHTML = `<span class="${s.return_pct >= 0 ? 'pos' : 'neg'}">${s.return_pct >= 0 ? '+' : ''}${s.return_pct.toFixed(2)}%</span>
+        const perf = s.twr_return_pct != null ? s.twr_return_pct : s.return_pct;
+        sumEl.innerHTML = `<span class="${perf >= 0 ? 'pos' : 'neg'}">${perf >= 0 ? '+' : ''}${perf.toFixed(2)}%</span>${s.twr_return_pct != null && Math.abs(s.twr_return_pct - s.return_pct) > 0.005 ? ` <span class="muted small">(${s.return_pct >= 0 ? '+' : ''}${s.return_pct.toFixed(2)}% incl. flows)</span>` : ''}
             · max DD ${s.max_drawdown_pct.toFixed(2)}%${s.currently_underwater ? ' · ' + esc(t('view.paper.label.underwater')) : ''}${
             b && b.summary ? ` · ${esc(b.symbol)} ${b.summary.return_pct >= 0 ? '+' : ''}${b.summary.return_pct.toFixed(2)}% · <strong class="${alpha >= 0 ? 'pos' : 'neg'}">${alpha >= 0 ? '+' : ''}${alpha.toFixed(2)}% vs ${esc(b.symbol)}</strong>` : ''}`;
     }
