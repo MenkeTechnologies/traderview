@@ -1053,6 +1053,19 @@ mod pair_tests {
     use super::*;
 
     #[test]
+    fn okx_bar_mapping_pins() {
+        use traderview_core::BarInterval as B;
+        // The venue capitalizes hour/day/week bars; minutes stay lower.
+        assert_eq!(okx_bar(B::M1), Some("1m"));
+        assert_eq!(okx_bar(B::M15), Some("15m"));
+        assert_eq!(okx_bar(B::H1), Some("1H"));
+        assert_eq!(okx_bar(B::D1), Some("1D"));
+        assert_eq!(okx_bar(B::W1), Some("1W"));
+        // 10s candles don't exist on the venue: refuse, don't guess.
+        assert_eq!(okx_bar(B::S10), None);
+    }
+
+    #[test]
     fn crypto_pair_detection_is_narrow() {
         assert!(is_crypto_pair("BTC-USDT"));
         assert!(is_crypto_pair("ETH-USD"));
@@ -1065,4 +1078,79 @@ mod pair_tests {
         assert!(!is_crypto_pair("BTC-EUR"));
         assert!(!is_crypto_pair("B-USD"));
     }
+}
+
+
+/// OKX bar string for a BarInterval; None for intervals the venue's
+/// candle API doesn't serve (10s).
+pub fn okx_bar(interval: traderview_core::BarInterval) -> Option<&'static str> {
+    use traderview_core::BarInterval as B;
+    Some(match interval {
+        B::M1 => "1m",
+        B::M5 => "5m",
+        B::M15 => "15m",
+        B::H1 => "1H",
+        B::D1 => "1D",
+        B::W1 => "1W",
+        B::S10 => return None,
+    })
+}
+
+/// Historical candles for a crypto pair, oldest-first, paginated via
+/// the venue's `after` cursor (live-verified: after=ts returns
+/// candles strictly OLDER than ts, newest-first per page). Hard cap
+/// 3000 bars per call — a runaway range stops, it doesn't loop.
+pub async fn fetch_okx_bars(
+    symbol: &str,
+    interval: traderview_core::BarInterval,
+    from: chrono::DateTime<chrono::Utc>,
+    to: chrono::DateTime<chrono::Utc>,
+) -> anyhow::Result<Vec<traderview_core::PriceBar>> {
+    let bar = okx_bar(interval).ok_or_else(|| anyhow::anyhow!("interval unsupported on okx"))?;
+    let mut out: Vec<traderview_core::PriceBar> = Vec::new();
+    let mut after = to.timestamp_millis();
+    let from_ms = from.timestamp_millis();
+    loop {
+        let u = format!(
+            "https://www.okx.com/api/v5/market/candles?instId={symbol}&bar={bar}&limit=300&after={after}"
+        );
+        let v = okx_json(&u).await?;
+        let rows = v.get("data").and_then(|d| d.as_array()).cloned().unwrap_or_default();
+        if rows.is_empty() {
+            break;
+        }
+        let mut oldest = after;
+        for r in &rows {
+            let cell = |i: usize| r.get(i).and_then(|x| x.as_str());
+            let Some(ts): Option<i64> = cell(0).and_then(|s| s.parse().ok()) else { continue };
+            oldest = oldest.min(ts);
+            if ts < from_ms || ts > to.timestamp_millis() {
+                continue;
+            }
+            let dec = |i: usize| {
+                cell(i)
+                    .and_then(|s| s.parse::<rust_decimal::Decimal>().ok())
+                    .unwrap_or_default()
+            };
+            out.push(traderview_core::PriceBar {
+                symbol: symbol.to_string(),
+                interval,
+                bar_time: chrono::DateTime::from_timestamp_millis(ts)
+                    .unwrap_or_default(),
+                open: dec(1),
+                high: dec(2),
+                low: dec(3),
+                close: dec(4),
+                volume: dec(5),
+                source: "okx".into(),
+            });
+        }
+        if oldest <= from_ms || out.len() >= 3000 || oldest >= after {
+            break;
+        }
+        after = oldest;
+    }
+    out.sort_by_key(|b| b.bar_time);
+    out.dedup_by_key(|b| b.bar_time);
+    Ok(out)
 }

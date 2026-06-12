@@ -27,7 +27,16 @@ pub async fn get_bars(
     to: DateTime<Utc>,
 ) -> anyhow::Result<Vec<PriceBar>> {
     if !is_range_cached(pool, symbol, interval, from, to).await? {
-        match fetch_yahoo(symbol, interval, from, to).await {
+        // Crypto pairs fill the SAME bar store from the venue's
+        // candles; everything downstream (backtests, optimizer, HTF
+        // gate, correlation gate, benchmark overlays) reads bars the
+        // same way regardless of source.
+        let fetched = if crate::crypto::is_crypto_pair(symbol) {
+            crate::crypto::fetch_okx_bars(symbol, interval, from, to).await
+        } else {
+            fetch_yahoo(symbol, interval, from, to).await
+        };
+        match fetched {
             Ok(bars) => {
                 upsert(pool, &bars).await?;
                 log_fetch(pool, symbol, interval, from, to, bars.len() as i32).await?;
@@ -37,7 +46,7 @@ pub async fn get_bars(
                     ?e,
                     symbol,
                     ?interval,
-                    "yahoo fetch failed; serving cached only"
+                    "bar fetch failed; serving cached only"
                 );
             }
         }
