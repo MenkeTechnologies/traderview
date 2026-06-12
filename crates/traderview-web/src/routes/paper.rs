@@ -31,6 +31,7 @@ pub fn router() -> Router<AppState> {
         )
         .route("/paper/orders/:id/cancel", post(cancel_order))
         .route("/paper/accounts/:id/brackets", post(submit_bracket))
+        .route("/paper/accounts/:id/protect", post(protect))
         .route("/paper/accounts/:id/spreads", post(submit_spread))
         .route("/paper/accounts/:id/option-greeks", get(option_greeks))
         .route("/paper/spreads/preview", post(preview_spread))
@@ -449,6 +450,28 @@ async fn submit_bracket(
         .await
         .map(Json)
         .map_err(|e| ApiError::BadRequest(e.to_string()))
+}
+
+#[derive(serde::Deserialize)]
+struct ProtectBody {
+    symbol: String,
+    qty: rust_decimal::Decimal,
+    stop_loss: rust_decimal::Decimal,
+    take_profit: rust_decimal::Decimal,
+}
+
+async fn protect(
+    State(s): State<AppState>,
+    user: AuthUser,
+    Path(account_id): Path<Uuid>,
+    Json(b): Json<ProtectBody>,
+) -> Result<Json<traderview_db::paper::Protection>, ApiError> {
+    traderview_db::paper::attach_protection(
+        &s.pool, user.id, account_id, &b.symbol, b.qty, b.stop_loss, b.take_profit,
+    )
+    .await
+    .map(Json)
+    .map_err(|e| ApiError::BadRequest(e.to_string()))
 }
 
 /// Cancel a RESTING (pending) limit/stop order.

@@ -844,16 +844,102 @@ pub async fn submit_bracket(
     let mut tx = pool.begin().await?;
     let stop = insert_leg(
         &mut tx, account_id, &symbol, exit_side, req.qty,
-        "stop", None, Some(req.stop_loss), leg_status, group, entry.id,
+        "stop", None, Some(req.stop_loss), leg_status, group, Some(entry.id),
     )
     .await?;
     let target = insert_leg(
         &mut tx, account_id, &symbol, exit_side, req.qty,
-        "limit", Some(req.take_profit), None, leg_status, group, entry.id,
+        "limit", Some(req.take_profit), None, leg_status, group, Some(entry.id),
     )
     .await?;
     tx.commit().await?;
     Ok(Bracket { entry, stop, target })
+}
+
+/// Protection sanity for an EXISTING position: derive the bracket
+/// entry-side semantics from the position's sign and bound the
+/// protected qty by what's held. Returns (entry_side for
+/// validate_bracket, exit side string).
+pub fn validate_protection(
+    pos_qty: Decimal,
+    req_qty: Decimal,
+) -> Result<(Side, &'static str), &'static str> {
+    if req_qty <= Decimal::ZERO {
+        return Err("qty must be positive");
+    }
+    if pos_qty == Decimal::ZERO {
+        return Err("no position to protect");
+    }
+    if req_qty > pos_qty.abs() {
+        return Err("qty exceeds position size");
+    }
+    Ok(if pos_qty > Decimal::ZERO {
+        (Side::Buy, "sell")
+    } else {
+        (Side::Short, "cover")
+    })
+}
+
+#[derive(Debug, Serialize)]
+pub struct Protection {
+    pub stop: PaperOrder,
+    pub target: PaperOrder,
+}
+
+/// Attach an OCO stop/target pair to a position already held — the
+/// gap brackets can't cover: a bracket bundles its own entry, but a
+/// market buy, a recurring-invest fill, or a DRIP share has no exits.
+/// Both legs rest as plain pending orders sharing an oco_group (no
+/// parent — there is no entry), so the 5s ticker's first-fill-cancels-
+/// sibling machinery applies unchanged. The price relationship is
+/// checked by the same validate_bracket as real brackets, with the
+/// CURRENT quote as the entry hint — a stop above the market on a
+/// long is rejected here, not discovered as an instant fill.
+pub async fn attach_protection(
+    pool: &PgPool,
+    user_id: Uuid,
+    account_id: Uuid,
+    symbol: &str,
+    qty: Decimal,
+    stop_loss: Decimal,
+    take_profit: Decimal,
+) -> anyhow::Result<Protection> {
+    let owner: Option<(Uuid,)> = sqlx::query_as("SELECT user_id FROM paper_accounts WHERE id = $1")
+        .bind(account_id)
+        .fetch_optional(pool)
+        .await?;
+    if !matches!(owner, Some((u,)) if u == user_id) {
+        anyhow::bail!("forbidden");
+    }
+    let symbol = symbol.trim().to_uppercase();
+    let pos: Option<(Decimal,)> = sqlx::query_as(
+        "SELECT qty FROM paper_positions WHERE paper_account_id = $1 AND symbol = $2",
+    )
+    .bind(account_id)
+    .bind(&symbol)
+    .fetch_optional(pool)
+    .await?;
+    let pos_qty = pos.map(|(q,)| q).unwrap_or(Decimal::ZERO);
+    let (entry_side, exit_side) =
+        validate_protection(pos_qty, qty).map_err(|e| anyhow::anyhow!(e))?;
+    // Also rejects expired option contracts at attach time.
+    let rq = resolve_quote(pool, &symbol).await?;
+    validate_bracket(entry_side, Some(rq.last), stop_loss, take_profit)
+        .map_err(|e| anyhow::anyhow!(e))?;
+    let group = Uuid::new_v4();
+    let mut tx = pool.begin().await?;
+    let stop = insert_leg(
+        &mut tx, account_id, &symbol, exit_side, qty,
+        "stop", None, Some(stop_loss), "pending", group, None,
+    )
+    .await?;
+    let target = insert_leg(
+        &mut tx, account_id, &symbol, exit_side, qty,
+        "limit", Some(take_profit), None, "pending", group, None,
+    )
+    .await?;
+    tx.commit().await?;
+    Ok(Protection { stop, target })
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -868,7 +954,7 @@ async fn insert_leg(
     stop_price: Option<Decimal>,
     status: &str,
     group: Uuid,
-    parent: Uuid,
+    parent: Option<Uuid>,
 ) -> anyhow::Result<PaperOrder> {
     Ok(sqlx::query_as(
         "INSERT INTO paper_orders
@@ -1499,6 +1585,19 @@ mod tests {
         // Short/Cover route through the same sell/buy arms.
         assert_eq!(stop_limit_action(Side::Short, d(94), d(95), d(93), false), (true, Some(d(94))));
         assert_eq!(stop_limit_action(Side::Cover, d(106), d(105), d(107), false), (true, Some(d(106))));
+    }
+
+    #[test]
+    fn protection_side_derivation_and_qty_bounds() {
+        // Long 100: exits are sells, bracket semantics are Buy-side.
+        assert_eq!(validate_protection(d(100), d(100)), Ok((Side::Buy, "sell")));
+        assert_eq!(validate_protection(d(100), d(50)), Ok((Side::Buy, "sell")));
+        // Short -100: exits are covers, Short-side semantics.
+        assert_eq!(validate_protection(d(-100), d(100)), Ok((Side::Short, "cover")));
+        // Bounds: more than held, nothing held, non-positive qty.
+        assert_eq!(validate_protection(d(100), d(101)), Err("qty exceeds position size"));
+        assert_eq!(validate_protection(d(0), d(1)), Err("no position to protect"));
+        assert_eq!(validate_protection(d(100), d(0)), Err("qty must be positive"));
     }
 
     #[test]

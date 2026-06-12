@@ -861,6 +861,7 @@ export const api = {
         request(`/paper/accounts/${id}/drip`, { method: 'POST', body: JSON.stringify({ enabled }) }),
     paperAttribution: (id) => request(`/paper/accounts/${id}/attribution`),
     paperWashSales: (id) => request(`/paper/accounts/${id}/wash-sales`),
+    paperProtect: (id, body) => request(`/paper/accounts/${id}/protect`, { method: 'POST', body }),
     paperCorrelations: (id, lookback = 90) => request(`/paper/accounts/${id}/correlations?lookback_days=${lookback}`),
     paperVar: (id, lookback = 365) => request(`/paper/accounts/${id}/var?lookback_days=${lookback}`),
     paperStress: (id, lookback = 365) => request(`/paper/accounts/${id}/stress?lookback_days=${lookback}`),

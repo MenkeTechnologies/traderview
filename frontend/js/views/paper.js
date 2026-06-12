@@ -146,7 +146,7 @@ export async function renderPaper(mount) {
                 <h2 data-i18n="view.paper.h2.open_positions">Open positions</h2>
                 ${positions.length ? `<table class="trades">
                     <thead><tr><th data-i18n="view.paper.th.sym">Sym</th><th data-i18n="view.paper.th.qty">Qty</th><th data-i18n="view.paper.th.avg">Avg</th><th data-i18n="view.paper.th.last">Last</th>
-                    <th data-i18n="view.paper.th.unrealized">Unrealized</th><th data-i18n="view.paper.th.realized">Realized</th></tr></thead>
+                    <th data-i18n="view.paper.th.unrealized">Unrealized</th><th data-i18n="view.paper.th.realized">Realized</th><th></th></tr></thead>
                     <tbody>${positions.map(p => {
                         const q = quotes[p.symbol];
                         const last = q ? Number(q.price) : null;
@@ -159,6 +159,7 @@ export async function renderPaper(mount) {
                             <td>${last != null ? fmt(last) : '—'}</td>
                             <td class="${cls}">${u != null ? (u >= 0 ? '+' : '') + '$' + fmt(u) : '—'}</td>
                             <td class="${Number(p.realized_pnl) >= 0 ? 'pos' : 'neg'}">$${fmt(p.realized_pnl)}</td>
+                            <td><button class="small protect-btn" data-symbol="${esc(p.symbol)}" data-qty="${esc(p.qty)}" data-i18n="view.paper.btn.protect" data-tip="view.paper.tip.protect">OCO</button></td>
                         </tr>`;
                     }).join('')}</tbody></table>` : '<p data-i18n="view.paper.hint.no_open_positions" class="muted">No open positions.</p>'}
             </div>
@@ -346,6 +347,7 @@ export async function renderPaper(mount) {
             showToast(t('common.error', { err: err.message }), { level: 'error' });
         }
     });
+    wireProtectButtons(mount, acct.id);
     mount.querySelector('#ord-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         const fd = new FormData(e.target);
@@ -547,6 +549,26 @@ function holdFmt(secs) {
     if (secs >= 86400) return (secs / 86400).toFixed(1) + 'd';
     if (secs >= 3600) return (secs / 3600).toFixed(1) + 'h';
     return Math.round(secs / 60) + 'm';
+}
+
+function wireProtectButtons(mount, acctId) {
+    mount.querySelectorAll('.protect-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+            const symbol = btn.dataset.symbol;
+            const stop = Number(prompt(`${t('view.paper.prompt.protect_stop')} (${symbol})`));
+            if (!stop) return;
+            const target = Number(prompt(`${t('view.paper.prompt.protect_target')} (${symbol})`));
+            if (!target) return;
+            const qty = Math.abs(Number(btn.dataset.qty));
+            try {
+                await api.paperProtect(acctId, { symbol, qty, stop_loss: stop, take_profit: target });
+                showToast(t('view.paper.toast.protected', { symbol }), { level: 'success' });
+                renderPaper(mount);
+            } catch (err) {
+                showToast(t('common.error', { err: err.message }), { level: 'error' });
+            }
+        });
+    });
 }
 
 function renderWashSales(rows) {
