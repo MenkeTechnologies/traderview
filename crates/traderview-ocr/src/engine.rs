@@ -504,7 +504,9 @@ fn preprocess(bytes: &[u8]) -> Result<Vec<u8>, OcrError> {
 /// For each pixel `p`, compute `μ` (mean) and `σ` (std-dev) over the
 /// `(2w+1)×(2w+1)` window centered at `p`. The local threshold is:
 ///
-///     T(p) = μ * (1 + k * (σ/R - 1))
+/// ```text
+/// T(p) = μ * (1 + k * (σ/R - 1))
+/// ```
 ///
 /// with `k = 0.34` and `R = 128` (the standard Sauvola defaults for
 /// 8-bit images). Pixel becomes 0 (foreground/text) when `p < T(p)`,

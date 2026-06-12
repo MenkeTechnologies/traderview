@@ -4,7 +4,9 @@
 //! today; ibkr/schwab/tastytrade follow when wiring lands). Maintains a
 //! per-user `high_water_mark`. When
 //!
-//!     drawdown_pct = (high_water_mark - current_equity) / high_water_mark * 100
+//! ```text
+//! drawdown_pct = (high_water_mark - current_equity) / high_water_mark * 100
+//! ```
 //!
 //! crosses `max_drawdown_pct`, fires the existing
 //! `multi_broker::kill_all_for_user` once and pins `auto_killed_at`.

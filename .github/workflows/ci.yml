@@ -46,6 +46,9 @@ jobs:
       # src-tauri excluded everywhere — it has no library tests, only the
       # GUI entry point that depends on platform GTK/Webkit libs.
       - run: cargo test --workspace --locked --no-fail-fast --lib --exclude traderview-desktop
+      # --lib skips doctests; run them explicitly so indented doc-comment
+      # blocks that rustdoc compiles as code can't silently break.
+      - run: cargo test --workspace --locked --no-fail-fast --doc --exclude traderview-desktop
 
   frontend-test:
     name: Frontend JS Tests
