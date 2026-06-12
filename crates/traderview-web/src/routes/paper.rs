@@ -45,6 +45,7 @@ pub fn router() -> Router<AppState> {
         .route("/paper/accounts/:id/drip", post(set_drip))
         .route("/paper/accounts/:id/cash-apy", post(set_cash_apy))
         .route("/paper/accounts/:id/borrow-apy", post(set_borrow_apy))
+        .route("/paper/accounts/:id/margin", post(set_margin))
         .route("/paper/accounts/:id/interest", get(interest))
         .route("/paper/accounts/:id/statement", get(statement))
         .route(
@@ -882,4 +883,22 @@ async fn holdings(
         .await
         .map(Json)
         .map_err(ApiError::Internal)
+}
+
+#[derive(Deserialize)]
+struct MarginBody {
+    multiplier: Decimal,
+}
+
+/// Margin multiplier: 1 = cash account, 2 = Reg-T (default), up to 4.
+async fn set_margin(
+    State(s): State<AppState>,
+    user: AuthUser,
+    Path(id): Path<Uuid>,
+    Json(b): Json<MarginBody>,
+) -> Result<Json<bool>, ApiError> {
+    traderview_db::paper_interest::set_margin_multiplier(&s.pool, user.id, id, b.multiplier)
+        .await
+        .map(Json)
+        .map_err(|e| ApiError::BadRequest(e.to_string()))
 }

@@ -21,6 +21,7 @@ pub struct PaperAccount {
     pub drip: bool,
     pub cash_apy_pct: Decimal,
     pub borrow_apy_pct: Decimal,
+    pub margin_multiplier: Decimal,
     pub created_at: DateTime<Utc>,
     pub reset_at: Option<DateTime<Utc>>,
 }
@@ -63,7 +64,7 @@ pub struct PaperPosition {
 
 pub async fn list_accounts(pool: &PgPool, user_id: Uuid) -> anyhow::Result<Vec<PaperAccount>> {
     Ok(sqlx::query_as::<_, PaperAccount>(
-        "SELECT id, user_id, name, starting_cash, cash, drip, cash_apy_pct, borrow_apy_pct, created_at, reset_at
+        "SELECT id, user_id, name, starting_cash, cash, drip, cash_apy_pct, borrow_apy_pct, margin_multiplier, created_at, reset_at
            FROM paper_accounts WHERE user_id = $1 ORDER BY created_at",
     )
     .bind(user_id)
@@ -78,7 +79,7 @@ pub async fn ensure_default(pool: &PgPool, user_id: Uuid) -> anyhow::Result<Pape
     Ok(sqlx::query_as::<_, PaperAccount>(
         "INSERT INTO paper_accounts (user_id, name, starting_cash, cash)
               VALUES ($1, 'SimTrader', 200000, 200000)
-         RETURNING id, user_id, name, starting_cash, cash, drip, cash_apy_pct, borrow_apy_pct, created_at, reset_at",
+         RETURNING id, user_id, name, starting_cash, cash, drip, cash_apy_pct, borrow_apy_pct, margin_multiplier, created_at, reset_at",
     )
     .bind(user_id)
     .fetch_one(pool)
@@ -157,6 +158,30 @@ pub async fn list_cash_flows(
     .await?)
 }
 
+/// Buying-power constraint on ENTRY-BASIS books (deterministic — no
+/// quote dependency, the borrow-fee convention): equity = cash +
+/// signed book value; the account is inside its power when equity is
+/// positive and gross exposure ≤ multiplier × equity. m = 1 is a
+/// cash account (longs bounded by cash, shorts at 2|S| ≤ cash —
+/// conservative, in the spirit of Reg-T's 150% short requirement);
+/// m = 2 is Reg-T initial margin. Entry basis, not marked value: a
+/// stated approximation, the same one the borrow-fee pass makes.
+pub fn buying_power_ok(
+    cash: Decimal,
+    signed_book: Decimal,
+    gross_book: Decimal,
+    multiplier: Decimal,
+) -> bool {
+    let m = multiplier.max(Decimal::ONE);
+    let equity = cash + signed_book;
+    if gross_book.is_zero() {
+        // No positions: only a non-negative cash balance is required
+        // (withdrawals already guard overdraw; fees can graze zero).
+        return cash >= Decimal::ZERO || equity > Decimal::ZERO;
+    }
+    equity > Decimal::ZERO && gross_book <= m * equity
+}
+
 /// Cap so a runaway client can't mint unbounded accounts.
 const MAX_ACCOUNTS_PER_USER: i64 = 12;
 
@@ -196,7 +221,7 @@ pub async fn create_account(
     Ok(sqlx::query_as::<_, PaperAccount>(
         "INSERT INTO paper_accounts (user_id, name, starting_cash, cash)
               VALUES ($1, $2, $3, $3)
-         RETURNING id, user_id, name, starting_cash, cash, drip, cash_apy_pct, borrow_apy_pct, created_at, reset_at",
+         RETURNING id, user_id, name, starting_cash, cash, drip, cash_apy_pct, borrow_apy_pct, margin_multiplier, created_at, reset_at",
     )
     .bind(user_id)
     .bind(name)
@@ -881,7 +906,23 @@ pub async fn check_pending(pool: &PgPool) -> anyhow::Result<Vec<BackgroundFill>>
             tx.rollback().await?;
             continue;
         }
-        apply_fill(&mut tx, o.paper_account_id, &o.symbol, side, o.qty, adjusted, multiplier).await?;
+        if let Err(e) = apply_fill(&mut tx, o.paper_account_id, &o.symbol, side, o.qty, adjusted, multiplier).await {
+            // Buying power (or any fill-invariant) failure: roll the
+            // claim back and CANCEL the order with the reason — a
+            // resting order the account can no longer afford must not
+            // wedge the ticker retrying forever.
+            tx.rollback().await?;
+            sqlx::query(
+                "UPDATE paper_orders SET status = 'cancelled', reject_reason = $2
+                  WHERE id = $1 AND status = 'pending'",
+            )
+            .bind(o.id)
+            .bind(e.to_string())
+            .execute(pool)
+            .await
+            .ok();
+            continue;
+        }
         deduct_fee(&mut tx, o.paper_account_id, fee).await?;
         // OCO: the first leg to fill kills its siblings — atomically
         // with the fill so a crash can't leave both legs live.
@@ -1894,6 +1935,37 @@ async fn apply_fill(
         .execute(&mut *tx)
         .await?;
 
+    // Buying power — ONE enforcement point covering every fill path
+    // (ticket, brackets, spreads, rolls, background fills). Post-state
+    // validation: the tx rolls back everything above on violation.
+    let (cash, m): (Decimal, Decimal) = sqlx::query_as(
+        "SELECT cash, margin_multiplier FROM paper_accounts WHERE id = $1",
+    )
+    .bind(account_id)
+    .fetch_one(&mut *tx)
+    .await?;
+    let books: Vec<(String, Decimal, Decimal)> = sqlx::query_as(
+        "SELECT symbol, qty, avg_price FROM paper_positions WHERE paper_account_id = $1",
+    )
+    .bind(account_id)
+    .fetch_all(&mut *tx)
+    .await?;
+    let (mut signed_book, mut gross_book) = (Decimal::ZERO, Decimal::ZERO);
+    for (sym, q, avg) in &books {
+        let mult = if traderview_core::occ_symbol::is_occ(sym) {
+            Decimal::from(100)
+        } else {
+            Decimal::ONE
+        };
+        signed_book += *q * *avg * mult;
+        gross_book += (*q * *avg * mult).abs();
+    }
+    if !buying_power_ok(cash, signed_book, gross_book, m) {
+        anyhow::bail!(
+            "insufficient buying power: gross exposure ${gross_book} exceeds {m}x entry-basis equity"
+        );
+    }
+
     let _ = notional;
     Ok(())
 }
@@ -2107,7 +2179,31 @@ mod tests {
     }
 
     #[test]
-    fn trailing_bracket_validation_pins() {
+    fn buying_power_pins_cash_regt_and_shorts() {
+        let bp = |c: i64, s: i64, g: i64, m: i64| {
+            buying_power_ok(d(c), d(s), d(g), d(m))
+        };
+        // Cash account (m=1): a long book bounded by remaining cash —
+        // $100k cash, buy $60k: cash 40k, book 60k, gross 60k ≤ 1×100k.
+        assert!(bp(40_000, 60_000, 60_000, 1));
+        // Overbuy on m=1: $120k of stock on $100k — cash −20k,
+        // equity 100k, gross 120k > 100k: rejected.
+        assert!(!bp(-20_000, 120_000, 120_000, 1));
+        // Reg-T (m=2) allows exactly that: 120k ≤ 2×100k.
+        assert!(bp(-20_000, 120_000, 120_000, 2));
+        // Reg-T boundary: $200k of stock on $100k is exactly 2×equity.
+        assert!(bp(-100_000, 200_000, 200_000, 2));
+        assert!(!bp(-100_001, 200_001, 200_001, 2));
+        // Shorts: proceeds raise cash, signed book is negative.
+        // $100k cash + short $40k: cash 140k, signed −40k, equity
+        // 100k, gross 40k ≤ 2×100k fine on Reg-T; m=1 needs
+        // 2|S| ≤ cash → 40k ≤ 100k−40k... gross 40k ≤ 1×100k: ok.
+        assert!(bp(140_000, -40_000, 40_000, 2));
+        // Blown account: equity ≤ 0 fails regardless of multiplier.
+        assert!(!bp(10_000, -50_000, 50_000, 4));
+        // Empty book: plain cash sanity.
+        assert!(bp(100_000, 0, 0, 1));
+        assert!(!bp(-1, 0, 0, 4));
         // Long: target above the entry hint; trail $2 valid.
         assert!(validate_trailing_bracket(Side::Buy, Some(d(100)), d(110), Some(d(2)), Some(false)).is_ok());
         // Target on the wrong side rejects, both directions.

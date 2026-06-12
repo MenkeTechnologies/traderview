@@ -67,6 +67,11 @@ export async function renderPaper(mount) {
             <button class="small" id="acct-withdraw" data-i18n="view.paper.btn.withdraw" data-tip="view.paper.tip.withdraw">WITHDRAW</button>
             <a class="small" id="acct-export" href="/api/export/paper-orders/${esc(acct.id)}.csv" download data-i18n="view.paper.btn.export_csv" data-tip="view.paper.tip.export_csv">CSV</a>
             <label class="small" data-tip="view.paper.tip.borrow_apy"><span data-i18n="view.paper.label.borrow_apy">Borrow APY %</span> <input type="number" id="acct-borrow-apy" min="0" max="50" step="0.25" value="${Number(acct.borrow_apy_pct || 0)}" style="width:64px"></label>
+            <label class="small" data-tip="view.paper.tip.margin"><span data-i18n="view.paper.label.margin">Margin ×</span> <select id="acct-margin">
+                <option value="1" ${Number(acct.margin_multiplier) === 1 ? 'selected' : ''}>1 (cash)</option>
+                <option value="2" ${Number(acct.margin_multiplier) === 2 ? 'selected' : ''}>2 (Reg-T)</option>
+                <option value="4" ${Number(acct.margin_multiplier) === 4 ? 'selected' : ''}>4 (day)</option>
+            </select></label>
         </div>
 
         <div class="cards">
@@ -564,6 +569,14 @@ export async function renderPaper(mount) {
     };
     wireCashFlow('#acct-deposit', 1, 'view.paper.prompt.deposit', 'view.paper.toast.deposited');
     wireCashFlow('#acct-withdraw', -1, 'view.paper.prompt.withdraw', 'view.paper.toast.withdrawn');
+    mount.querySelector('#acct-margin').addEventListener('change', async (e) => {
+        try {
+            await api.paperSetMargin(acct.id, Number(e.target.value));
+            showToast(t('view.paper.toast.margin_set', { m: e.target.value }), { level: 'success' });
+        } catch (err) {
+            showToast(t('common.error', { err: err.message }), { level: 'error' });
+        }
+    });
     mount.querySelector('#acct-borrow-apy').addEventListener('change', async (e) => {
         try {
             await api.paperSetBorrowApy(acct.id, Number(e.target.value) || 0);

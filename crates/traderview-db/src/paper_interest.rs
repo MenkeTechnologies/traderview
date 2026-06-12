@@ -63,6 +63,27 @@ pub async fn set_cash_apy(
     Ok(r.rows_affected() > 0)
 }
 
+/// Set the account's margin multiplier: 1 = cash, 2 = Reg-T, up to 4.
+pub async fn set_margin_multiplier(
+    pool: &PgPool,
+    user_id: Uuid,
+    account_id: Uuid,
+    multiplier: Decimal,
+) -> anyhow::Result<bool> {
+    if multiplier < Decimal::ONE || multiplier > Decimal::from(4) {
+        anyhow::bail!("margin_multiplier must be in 1..=4");
+    }
+    let r = sqlx::query(
+        "UPDATE paper_accounts SET margin_multiplier = $3 WHERE id = $1 AND user_id = $2",
+    )
+    .bind(account_id)
+    .bind(user_id)
+    .bind(multiplier)
+    .execute(pool)
+    .await?;
+    Ok(r.rows_affected() > 0)
+}
+
 /// Set the account's short borrow APY (0 disables). 50% covers even
 /// hard-to-borrow names.
 pub async fn set_borrow_apy(
