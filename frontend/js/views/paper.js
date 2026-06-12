@@ -446,8 +446,20 @@ function renderAttribution(a) {
         return;
     }
     const money = (v) => `<span class="${v >= 0 ? 'pos' : 'neg'}">${v >= 0 ? '+' : ''}$${fmt(v)}</span>`;
+    const st = a.stats;
     el.innerHTML = `
         <p><strong>Trading:</strong> ${money(a.total_trading_pnl)} \u00b7 <strong>Dividends:</strong> ${money(a.total_dividends)} \u00b7 <strong>Fees:</strong> <span class="neg">\u2212$${fmt(a.total_fees)}</span></p>
+        ${st ? `<div class="cards">
+            <div class="card"><div class="label">Expectancy / trade</div>
+                <div class="value ${st.expectancy >= 0 ? 'pos' : 'neg'}">${st.expectancy >= 0 ? '+' : ''}$${fmt(st.expectancy)}</div>
+                <div class="small muted">${st.trades} closed trips</div></div>
+            <div class="card"><div class="label">Win rate</div>
+                <div class="value">${(st.win_rate * 100).toFixed(0)}%</div>
+                <div class="small muted">avg win $${fmt(st.avg_win)} / avg loss $${fmt(st.avg_loss)}</div></div>
+            <div class="card"><div class="label">Profit factor</div>
+                <div class="value">${st.profit_factor != null ? st.profit_factor.toFixed(2) : '\u2014'}</div>
+                <div class="small muted">best ${money(st.largest_win)} \u00b7 worst ${money(st.largest_loss)}</div></div>
+        </div>` : ''}
         <table class="trades">
             <thead><tr><th>Symbol</th><th>Trading P&L</th><th>Closed trips</th><th>Dividends</th><th>Fees</th></tr></thead>
             <tbody>${a.symbols.map(s => `

@@ -285,11 +285,54 @@ pub fn monthly_rollup(
 }
 
 #[derive(Debug, Clone, Serialize)]
+pub struct TripStats {
+    pub trades: usize,
+    pub wins: usize,
+    pub win_rate: f64,
+    pub avg_win: f64,
+    pub avg_loss: f64,
+    /// Gross wins / gross losses; None with no losses (infinity is a
+    /// sample-size artifact, not a ratio).
+    pub profit_factor: Option<f64>,
+    /// Mean PnL per trade — the number that must be positive for the
+    /// process to be worth running.
+    pub expectancy: f64,
+    pub largest_win: f64,
+    pub largest_loss: f64,
+}
+
+/// Trade-quality stats over closed-trip PnLs. None for an empty set.
+/// Zero-PnL trips count as losses (they paid fees for nothing).
+pub fn trip_stats(pnls: &[f64]) -> Option<TripStats> {
+    if pnls.is_empty() {
+        return None;
+    }
+    let n = pnls.len();
+    let wins: Vec<f64> = pnls.iter().copied().filter(|p| *p > 0.0).collect();
+    let losses: Vec<f64> = pnls.iter().copied().filter(|p| *p <= 0.0).collect();
+    let gross_win: f64 = wins.iter().sum();
+    let gross_loss: f64 = -losses.iter().sum::<f64>();
+    Some(TripStats {
+        trades: n,
+        wins: wins.len(),
+        win_rate: wins.len() as f64 / n as f64,
+        avg_win: if wins.is_empty() { 0.0 } else { gross_win / wins.len() as f64 },
+        avg_loss: if losses.is_empty() { 0.0 } else { gross_loss / losses.len() as f64 },
+        profit_factor: (gross_loss > 0.0).then(|| gross_win / gross_loss),
+        expectancy: pnls.iter().sum::<f64>() / n as f64,
+        largest_win: pnls.iter().copied().fold(f64::MIN, f64::max).max(0.0),
+        largest_loss: pnls.iter().copied().fold(f64::MAX, f64::min).min(0.0),
+    })
+}
+
+#[derive(Debug, Clone, Serialize)]
 pub struct Attribution {
     /// Ranked by |total contribution| descending.
     pub symbols: Vec<SymbolAttribution>,
     /// Calendar months, chronological — the WHEN to the symbols' WHERE.
     pub months: Vec<MonthRow>,
+    /// Trade-quality metrics over all closed trips. None until trips exist.
+    pub stats: Option<TripStats>,
     pub total_trading_pnl: f64,
     pub total_dividends: f64,
     pub total_fees: f64,
@@ -405,9 +448,12 @@ pub async fn attribution(
         .map(|(c, d)| (c.to_f64().unwrap_or(0.0), d))
         .collect();
     let months = monthly_rollup(&all_trips, &div_dated);
+    let pnls: Vec<f64> = all_trips.iter().map(|(p, _)| *p).collect();
+    let stats = trip_stats(&pnls);
     Ok(Attribution {
         symbols,
         months,
+        stats,
         total_trading_pnl: tt,
         total_dividends: td,
         total_fees: tf,
@@ -528,6 +574,30 @@ mod tests {
         assert!(summarize(&[100.0]).is_none());
         assert!(summarize(&[]).is_none());
         assert!(summarize(&[0.0, 100.0]).is_none());
+    }
+
+    #[test]
+    fn trip_stats_pin_expectancy_and_edge_handling() {
+        // 3 wins (100, 50, 250), 2 losses (-80, -120): n=5.
+        let s = trip_stats(&[100.0, -80.0, 50.0, 250.0, -120.0]).unwrap();
+        assert_eq!(s.trades, 5);
+        assert_eq!(s.wins, 3);
+        assert!((s.win_rate - 0.6).abs() < 1e-12);
+        assert!((s.avg_win - 400.0 / 3.0).abs() < 1e-9);
+        assert!((s.avg_loss - 100.0).abs() < 1e-9);
+        assert!((s.profit_factor.unwrap() - 2.0).abs() < 1e-9); // 400/200
+        assert!((s.expectancy - 40.0).abs() < 1e-9); // 200/5
+        assert!((s.largest_win - 250.0).abs() < 1e-9);
+        assert!((s.largest_loss + 120.0).abs() < 1e-9);
+        // All winners: PF None (not infinity), largest_loss 0.
+        let s = trip_stats(&[10.0, 20.0]).unwrap();
+        assert_eq!(s.profit_factor, None);
+        assert_eq!(s.largest_loss, 0.0);
+        // A zero-PnL trip counts as a LOSS — it paid fees for nothing.
+        let s = trip_stats(&[0.0, 10.0]).unwrap();
+        assert_eq!(s.wins, 1);
+        assert!((s.win_rate - 0.5).abs() < 1e-12);
+        assert!(trip_stats(&[]).is_none());
     }
 
     #[test]
