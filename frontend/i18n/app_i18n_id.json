@@ -17295,6 +17295,7 @@
   "view.paper.h2.splits": "Penyesuaian split",
   "view.paper.h2.spread_ticket": "Option spread ticket",
   "view.paper.h2.unrealized_chart": "Posisi per buka P & L tidak disadari",
+  "view.paper.h3.monthly": "By month",
   "view.paper.hint.attribution": "Realized record only — closed round trips (FIFO from fills, fees netted) plus dividends. Open positions' unrealized P&L lives in the positions table above.",
   "view.paper.hint.leaderboard": "Return is measured against each account's starting cash — comparable across accounts created at different times. ↓ = currently below its high-water mark.",
   "view.paper.hint.no_open_positions": "Tidak ada posisi terbuka.",

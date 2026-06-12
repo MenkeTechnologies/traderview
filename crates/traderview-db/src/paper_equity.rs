@@ -241,9 +241,55 @@ pub struct SymbolAttribution {
 }
 
 #[derive(Debug, Clone, Serialize)]
+pub struct MonthRow {
+    /// "YYYY-MM".
+    pub month: String,
+    pub trading_pnl: f64,
+    pub dividends: f64,
+    pub closed_trips: usize,
+}
+
+/// Group realized trips (by close time) and dividends (by ex-date)
+/// into calendar months, chronological. Pure — pinned directly.
+pub fn monthly_rollup(
+    trips: &[(f64, i64)],
+    dividends: &[(f64, chrono::NaiveDate)],
+) -> Vec<MonthRow> {
+    use chrono::Datelike;
+    let mut map: std::collections::BTreeMap<String, MonthRow> = Default::default();
+    for (pnl, ts) in trips {
+        let d = chrono::DateTime::from_timestamp(*ts, 0)
+            .map(|t| t.date_naive())
+            .unwrap_or_default();
+        let key = format!("{:04}-{:02}", d.year(), d.month());
+        let row = map.entry(key.clone()).or_insert_with(|| MonthRow {
+            month: key,
+            trading_pnl: 0.0,
+            dividends: 0.0,
+            closed_trips: 0,
+        });
+        row.trading_pnl += pnl;
+        row.closed_trips += 1;
+    }
+    for (amount, date) in dividends {
+        let key = format!("{:04}-{:02}", date.year(), date.month());
+        let row = map.entry(key.clone()).or_insert_with(|| MonthRow {
+            month: key,
+            trading_pnl: 0.0,
+            dividends: 0.0,
+            closed_trips: 0,
+        });
+        row.dividends += amount;
+    }
+    map.into_values().collect()
+}
+
+#[derive(Debug, Clone, Serialize)]
 pub struct Attribution {
     /// Ranked by |total contribution| descending.
     pub symbols: Vec<SymbolAttribution>,
+    /// Calendar months, chronological — the WHEN to the symbols' WHERE.
+    pub months: Vec<MonthRow>,
     pub total_trading_pnl: f64,
     pub total_dividends: f64,
     pub total_fees: f64,
@@ -311,8 +357,10 @@ pub async fn attribution(
     let mut symbols = Vec::new();
     let (mut tt, mut td, mut tf) = (0.0, 0.0, 0.0);
     let mut seen: std::collections::BTreeSet<String> = Default::default();
+    let mut all_trips: Vec<(f64, i64)> = Vec::new();
     for (symbol, (fills, fees)) in &by_symbol {
         let trips = traderview_core::live_vs_backtest::round_trips(fills);
+        all_trips.extend(trips.iter().map(|t| (t.pnl, t.closed_ts)));
         let trading_pnl: f64 = trips.iter().map(|t| t.pnl).sum();
         let dividends = div_map.get(symbol).copied().unwrap_or(0.0);
         seen.insert(symbol.clone());
@@ -346,8 +394,20 @@ pub async fn attribution(
             .abs()
             .total_cmp(&(a.trading_pnl + a.dividends).abs())
     });
+    let div_dated: Vec<(Decimal, chrono::NaiveDate)> = sqlx::query_as(
+        "SELECT cash_credited, ex_date FROM paper_dividends WHERE paper_account_id = $1",
+    )
+    .bind(account_id)
+    .fetch_all(pool)
+    .await?;
+    let div_dated: Vec<(f64, chrono::NaiveDate)> = div_dated
+        .into_iter()
+        .map(|(c, d)| (c.to_f64().unwrap_or(0.0), d))
+        .collect();
+    let months = monthly_rollup(&all_trips, &div_dated);
     Ok(Attribution {
         symbols,
+        months,
         total_trading_pnl: tt,
         total_dividends: td,
         total_fees: tf,
@@ -468,6 +528,46 @@ mod tests {
         assert!(summarize(&[100.0]).is_none());
         assert!(summarize(&[]).is_none());
         assert!(summarize(&[0.0, 100.0]).is_none());
+    }
+
+    #[test]
+    fn monthly_rollup_pins_grouping_and_order() {
+        use chrono::NaiveDate;
+        // Two trips in 2026-05 (one negative), one in 2026-06; a
+        // dividend in 2026-04 (a month with NO trips) and one in May.
+        let may1 = 1_777_000_000i64; // 2026-04-24? compute below instead
+        // Use explicit timestamps: 2026-05-05 and 2026-05-20, 2026-06-02.
+        let ts = |y: i32, m: u32, d: u32| {
+            NaiveDate::from_ymd_opt(y, m, d)
+                .unwrap()
+                .and_hms_opt(15, 0, 0)
+                .unwrap()
+                .and_utc()
+                .timestamp()
+        };
+        let _ = may1;
+        let trips = vec![
+            (500.0, ts(2026, 5, 5)),
+            (-200.0, ts(2026, 5, 20)),
+            (300.0, ts(2026, 6, 2)),
+        ];
+        let divs = vec![
+            (12.5, NaiveDate::from_ymd_opt(2026, 4, 15).unwrap()),
+            (10.0, NaiveDate::from_ymd_opt(2026, 5, 11).unwrap()),
+        ];
+        let rows = monthly_rollup(&trips, &divs);
+        assert_eq!(
+            rows.iter().map(|r| r.month.as_str()).collect::<Vec<_>>(),
+            vec!["2026-04", "2026-05", "2026-06"]
+        );
+        // April: dividend-only month still appears.
+        assert_eq!(rows[0].closed_trips, 0);
+        assert!((rows[0].dividends - 12.5).abs() < 1e-9);
+        // May nets the winner and loser, counts both trips.
+        assert!((rows[1].trading_pnl - 300.0).abs() < 1e-9);
+        assert_eq!(rows[1].closed_trips, 2);
+        assert!((rows[1].dividends - 10.0).abs() < 1e-9);
+        assert!((rows[2].trading_pnl - 300.0).abs() < 1e-9);
     }
 
     #[test]

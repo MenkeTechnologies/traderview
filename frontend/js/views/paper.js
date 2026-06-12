@@ -460,6 +460,22 @@ function renderAttribution(a) {
                 </tr>`).join('')}
             </tbody>
         </table>
+        ${a.months.length ? `
+        <h3 class="small" data-i18n="view.paper.h3.monthly">By month</h3>
+        <table class="trades">
+            <thead><tr><th>Month</th><th>Trading</th><th>Dividends</th><th>Total</th><th>Trips</th></tr></thead>
+            <tbody>${a.months.map(m => {
+                const total = m.trading_pnl + m.dividends;
+                return `<tr>
+                    <td>${esc(m.month)}</td>
+                    <td>${money(m.trading_pnl)}</td>
+                    <td>${m.dividends ? money(m.dividends) : '\u2014'}</td>
+                    <td>${money(total)}</td>
+                    <td>${m.closed_trips}</td>
+                </tr>`;
+            }).join('')}
+            </tbody>
+        </table>` : ''}
         <p class="muted small" data-i18n="view.paper.hint.attribution">Realized record only — closed round trips (FIFO from fills, fees netted) plus dividends. Open positions\u2019 unrealized P&L lives in the positions table above.</p>`;
 }
 
