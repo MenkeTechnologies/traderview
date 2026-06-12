@@ -496,10 +496,11 @@ const TOOLS = {
     },
     'book-depth': {
         label: 'Crypto Book Depth',
-        call: (b) => api.cryptoBookDepth({ base: String(b.base).trim().toUpperCase(), band_pct: Number(b.band_pct) || 1 }),
+        call: (b) => api.cryptoBookDepth({ base: String(b.base).trim().toUpperCase(), band_pct: Number(b.band_pct) || 1, impact_notional_usd: Number(b.impact_notional_usd) || null }),
         fields: [
             { key: 'base', label: 'Base asset (BTC, ETH…)', def: 'BTC', text: true },
             { key: 'band_pct', label: 'Depth band ±%', def: 1 },
+            { key: 'impact_notional_usd', label: 'Impact preview $ (0 = off)', def: 250000 },
         ],
         render: (r) => `
             <div class="cards">
@@ -514,6 +515,11 @@ const TOOLS = {
                     <div class="value ${r.imbalance == null ? '' : r.imbalance >= 0.5 ? 'pos' : 'neg'}">${r.imbalance != null ? (r.imbalance * 100).toFixed(1) + '% bid' : '—'}</div>
                     <div class="small muted">${r.levels} levels read</div></div>
             </div>
+            ${r.buy_impact ? `<p class="small"><strong>Impact preview:</strong>
+                BUY $${(r.buy_impact.filled_usd / 1e3).toFixed(0)}k → avg ${r.buy_impact.avg_price.toFixed(2)}
+                (<span class="neg">${r.buy_impact.slippage_bps.toFixed(2)} bps</span>, worst ${r.buy_impact.worst_price.toFixed(2)})${r.buy_impact.fully_filled ? '' : ' <span class="neg">— visible book EXHAUSTED, real cost worse</span>'}
+                · SELL → avg ${r.sell_impact.avg_price.toFixed(2)}
+                (<span class="neg">${r.sell_impact.slippage_bps.toFixed(2)} bps</span>${r.sell_impact.fully_filled ? '' : ', exhausted'})</p>` : ''}
             <p class="muted small">Live OKX spot book (top 400 levels). Depth = notional resting within ±band of mid;
             imbalance = bid share of that depth — above 50% buyers are stacked, below it sellers are. Resting depth
             is a snapshot, not a promise: it can be pulled faster than you can hit it.</p>`,

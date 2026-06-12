@@ -1171,6 +1171,73 @@ pub struct BookDepth {
     pub imbalance: Option<f64>,
     pub band_pct: f64,
     pub levels: usize,
+    /// Impact of a market BUY of the caller's notional, walked
+    /// against the visible asks. None when no notional was asked.
+    pub buy_impact: Option<ImpactEstimate>,
+    /// Mirror: market SELL walked against the bids.
+    pub sell_impact: Option<ImpactEstimate>,
+}
+
+#[derive(Debug, Clone, PartialEq, serde::Serialize)]
+pub struct ImpactEstimate {
+    /// Notional the ladder could actually absorb (≤ requested).
+    pub filled_usd: f64,
+    /// Size-weighted average fill price across consumed levels.
+    pub avg_price: f64,
+    /// Deepest level touched.
+    pub worst_price: f64,
+    /// avg vs mid, basis points — the cost of immediacy.
+    pub slippage_bps: f64,
+    /// False when the visible book exhausted before the notional —
+    /// the avg/slippage then describe only the filled portion, and
+    /// the real order would be worse.
+    pub fully_filled: bool,
+}
+
+/// Walk one side of the ladder with a market order of `notional_usd`.
+/// `levels` = (price, size) for the side being HIT (asks for a buy,
+/// bids for a sell), any order — sorted internally best-first by
+/// `buying`. Pure.
+pub fn walk_book(
+    levels: &[(f64, f64)],
+    notional_usd: f64,
+    mid: f64,
+    buying: bool,
+) -> Option<ImpactEstimate> {
+    if notional_usd <= 0.0 || mid <= 0.0 || levels.is_empty() {
+        return None;
+    }
+    let mut lv: Vec<(f64, f64)> = levels.iter().copied().filter(|(p, s)| *p > 0.0 && *s > 0.0).collect();
+    if buying {
+        lv.sort_by(|a, b| a.0.total_cmp(&b.0)); // cheapest asks first
+    } else {
+        lv.sort_by(|a, b| b.0.total_cmp(&a.0)); // highest bids first
+    }
+    let mut remaining = notional_usd;
+    let (mut cost, mut qty, mut worst) = (0.0, 0.0, 0.0);
+    for (p, s) in lv {
+        if remaining <= 0.0 {
+            break;
+        }
+        let level_notional = p * s;
+        let take = level_notional.min(remaining);
+        cost += take;
+        qty += take / p;
+        worst = p;
+        remaining -= take;
+    }
+    if qty <= 0.0 {
+        return None;
+    }
+    let avg = cost / qty;
+    let slip = if buying { avg / mid - 1.0 } else { 1.0 - avg / mid };
+    Some(ImpactEstimate {
+        filled_usd: cost,
+        avg_price: avg,
+        worst_price: worst,
+        slippage_bps: slip * 10_000.0,
+        fully_filled: remaining <= 1e-9,
+    })
 }
 
 /// Depth + imbalance from raw (price, size) levels. Pure; levels in
@@ -1209,12 +1276,18 @@ pub fn book_depth(
         imbalance: (total > 0.0).then(|| bid_depth_usd / total),
         band_pct,
         levels: bids.len() + asks.len(),
+        buy_impact: None,
+        sell_impact: None,
     })
 }
 
 /// Live order-book depth for a spot pair: top 400 levels, depth
 /// summed inside ±band_pct of mid.
-pub async fn spot_book_depth(base: &str, band_pct: f64) -> anyhow::Result<BookDepth> {
+pub async fn spot_book_depth(
+    base: &str,
+    band_pct: f64,
+    impact_notional_usd: Option<f64>,
+) -> anyhow::Result<BookDepth> {
     let base = base.trim().to_uppercase();
     if base.is_empty() || base.len() > 10 || !base.bytes().all(|b| b.is_ascii_alphanumeric()) {
         anyhow::bail!("invalid base asset");
@@ -1237,8 +1310,15 @@ pub async fn spot_book_depth(base: &str, band_pct: f64) -> anyhow::Result<BookDe
             })
             .collect()
     };
-    book_depth(&parse_side("bids"), &parse_side("asks"), band)
-        .ok_or_else(|| anyhow::anyhow!("no usable book for {base}-USDT"))
+    let bids = parse_side("bids");
+    let asks = parse_side("asks");
+    let mut depth = book_depth(&bids, &asks, band)
+        .ok_or_else(|| anyhow::anyhow!("no usable book for {base}-USDT"))?;
+    if let Some(n) = impact_notional_usd.filter(|n| *n > 0.0) {
+        depth.buy_impact = walk_book(&asks, n, depth.mid, true);
+        depth.sell_impact = walk_book(&bids, n, depth.mid, false);
+    }
+    Ok(depth)
 }
 
 #[cfg(test)]
@@ -1262,5 +1342,30 @@ mod book_tests {
         // Crossed/garbage books refuse.
         assert!(book_depth(&[(101.0, 1.0)], &[(100.0, 1.0)], 1.0).is_none());
         assert!(book_depth(&[], &[(100.0, 1.0)], 1.0).is_none());
+    }
+
+    #[test]
+    fn walk_book_exact_two_level_arithmetic() {
+        // Buy $1500 against asks 100×10 ($1000) then 102×10: takes all
+        // of level 1 + $500 of level 2. qty = 10 + 500/102; avg =
+        // 1500/qty; worst = 102.
+        let asks = [(102.0, 10.0), (100.0, 10.0)]; // unsorted on purpose
+        let e = walk_book(&asks, 1_500.0, 99.5, true).unwrap();
+        let qty = 10.0 + 500.0 / 102.0;
+        assert!((e.avg_price - 1_500.0 / qty).abs() < 1e-9);
+        assert_eq!(e.worst_price, 102.0);
+        assert!(e.fully_filled);
+        assert!((e.slippage_bps - (e.avg_price / 99.5 - 1.0) * 10_000.0).abs() < 1e-9);
+        // Exhausted book: partial, flagged — the avg describes only
+        // what filled, and the real order would be worse.
+        let e = walk_book(&asks, 10_000.0, 99.5, true).unwrap();
+        assert!(!e.fully_filled);
+        assert!((e.filled_usd - 2_020.0).abs() < 1e-9);
+        // Sell side slips DOWN from mid; positive bps = cost.
+        let bids = [(99.0, 10.0)];
+        let e = walk_book(&bids, 500.0, 99.5, false).unwrap();
+        assert!((e.slippage_bps - (1.0 - 99.0 / 99.5) * 10_000.0).abs() < 1e-9);
+        // Nothing to walk.
+        assert!(walk_book(&[], 100.0, 99.5, true).is_none());
     }
 }

@@ -247,6 +247,9 @@ struct BookDepthBody {
     base: String,
     #[serde(default = "default_band")]
     band_pct: f64,
+    /// Walk a market order of this notional both ways for impact.
+    #[serde(default)]
+    impact_notional_usd: Option<f64>,
 }
 fn default_band() -> f64 {
     1.0
@@ -256,7 +259,7 @@ fn default_band() -> f64 {
 async fn book_depth(
     Json(b): Json<BookDepthBody>,
 ) -> Result<Json<traderview_db::crypto::BookDepth>, ApiError> {
-    traderview_db::crypto::spot_book_depth(&b.base, b.band_pct)
+    traderview_db::crypto::spot_book_depth(&b.base, b.band_pct, b.impact_notional_usd)
         .await
         .map(Json)
         .map_err(|e| ApiError::BadRequest(e.to_string()))
