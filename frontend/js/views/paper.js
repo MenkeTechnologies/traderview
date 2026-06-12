@@ -137,8 +137,11 @@ export async function renderPaper(mount) {
                     <select name="entry_type" data-tip="view.paper.tip.bracket_entry">
                         <option data-i18n="view.paper.opt.market" value="market">market</option>
                         <option data-i18n="view.paper.opt.limit" value="limit">limit</option>
+                        <option data-i18n="view.paper.opt.stop" value="stop">stop</option>
+                        <option data-i18n="view.paper.opt.stop_limit" value="stop_limit">stop limit</option>
                     </select>
                     <input name="limit_price" type="number" step="0.01" placeholder="limit" data-i18n-placeholder="common.placeholder.limit">
+                    <input name="entry_stop" type="number" step="0.01" placeholder="entry stop" data-i18n-placeholder="view.paper.placeholder.entry_stop" data-tip="view.paper.tip.bracket_entry_stop">
                     <input name="stop_loss" type="number" step="0.01" placeholder="stop loss" data-i18n-placeholder="common.placeholder.stop_loss" data-tip="view.paper.tip.bracket_stop" required>
                     <input name="take_profit" type="number" step="0.01" placeholder="target" data-i18n-placeholder="common.placeholder.target" data-tip="view.paper.tip.bracket_target" required>
                     <button data-i18n="view.paper.btn.submit_bracket" class="primary" type="submit">BRACKET</button>
@@ -571,6 +574,7 @@ export async function renderPaper(mount) {
                 side: fd.get('side'),
                 qty: Number(fd.get('qty')),
                 entry_type: fd.get('entry_type'),
+                stop_price: fd.get('entry_stop') ? Number(fd.get('entry_stop')) : null,
                 limit_price: fd.get('limit_price') ? Number(fd.get('limit_price')) : null,
                 stop_loss: Number(fd.get('stop_loss')),
                 take_profit: Number(fd.get('take_profit')),

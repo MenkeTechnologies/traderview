@@ -937,10 +937,36 @@ pub struct BracketRequest {
     pub symbol: String,
     pub side: Side, // buy or short — the ENTRY direction
     pub qty: Decimal,
-    pub entry_type: String, // 'market' | 'limit'
+    pub entry_type: String, // 'market' | 'limit' | 'stop' | 'stop_limit'
     pub limit_price: Option<Decimal>,
+    /// Entry trigger for stop / stop_limit entries — the breakout
+    /// bracket: a buy stop above resistance with the exits attached.
+    #[serde(default)]
+    pub stop_price: Option<Decimal>,
     pub stop_loss: Decimal,
     pub take_profit: Decimal,
+}
+
+/// Entry hint for bracket price-relationship validation, pure. Market
+/// has no knowable entry price (the fill quote is the hint's job at
+/// fill time); limit anchors at its limit; stop and stop_limit anchor
+/// at the STOP — the trigger is where the position comes alive, and a
+/// stop_limit's limit only bounds slippage past it.
+pub fn bracket_entry_hint(
+    entry_type: &str,
+    limit_price: Option<Decimal>,
+    stop_price: Option<Decimal>,
+) -> Result<Option<Decimal>, &'static str> {
+    match entry_type {
+        "market" => Ok(None),
+        "limit" => limit_price.map(Some).ok_or("limit entry needs limit_price"),
+        "stop" => stop_price.map(Some).ok_or("stop entry needs stop_price"),
+        "stop_limit" => match (stop_price, limit_price) {
+            (Some(sp), Some(_)) => Ok(Some(sp)),
+            _ => Err("stop_limit entry needs stop_price and limit_price"),
+        },
+        _ => Err("entry_type must be market, limit, stop, or stop_limit"),
+    }
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -962,15 +988,8 @@ pub async fn submit_bracket(
     account_id: Uuid,
     req: BracketRequest,
 ) -> anyhow::Result<Bracket> {
-    if !matches!(req.entry_type.as_str(), "market" | "limit") {
-        anyhow::bail!("entry_type must be 'market' or 'limit'");
-    }
-    if req.entry_type == "limit" && req.limit_price.is_none() {
-        anyhow::bail!("limit entry needs limit_price");
-    }
-    let entry_hint = (req.entry_type == "limit")
-        .then_some(req.limit_price)
-        .flatten();
+    let entry_hint = bracket_entry_hint(&req.entry_type, req.limit_price, req.stop_price)
+        .map_err(|e| anyhow::anyhow!(e))?;
     validate_bracket(req.side, entry_hint, req.stop_loss, req.take_profit)
         .map_err(|e| anyhow::anyhow!(e))?;
 
@@ -984,7 +1003,7 @@ pub async fn submit_bracket(
             qty: req.qty,
             order_type: req.entry_type.clone(),
             limit_price: req.limit_price,
-            stop_price: None,
+            stop_price: req.stop_price,
             trail_value: None,
             trail_is_pct: None,
             time_in_force: None,
@@ -1917,6 +1936,29 @@ mod tests {
         // LOC with no limit price is malformed — cancels at the close
         // rather than filling at an unintended price.
         assert_eq!(on_close_action("loc", Side::Buy, d(98), None, close, close), OnCloseAction::Cancel);
+    }
+
+    #[test]
+    fn bracket_entry_hint_pins_all_types() {
+        // Market: no knowable entry price — hint None, prices checked
+        // against the live quote at fill.
+        assert_eq!(bracket_entry_hint("market", None, None), Ok(None));
+        // Limit anchors at its limit; missing price is the caller's bug.
+        assert_eq!(bracket_entry_hint("limit", Some(d(100)), None), Ok(Some(d(100))));
+        assert_eq!(bracket_entry_hint("limit", None, None), Err("limit entry needs limit_price"));
+        // Stop entries anchor at the STOP — where the position comes
+        // alive. stop_limit also anchors at the stop, not its limit.
+        assert_eq!(bracket_entry_hint("stop", None, Some(d(105))), Ok(Some(d(105))));
+        assert_eq!(bracket_entry_hint("stop", None, None), Err("stop entry needs stop_price"));
+        assert_eq!(bracket_entry_hint("stop_limit", Some(d(107)), Some(d(105))), Ok(Some(d(105))));
+        assert_eq!(
+            bracket_entry_hint("stop_limit", None, Some(d(105))),
+            Err("stop_limit entry needs stop_price and limit_price")
+        );
+        assert_eq!(
+            bracket_entry_hint("trailing", None, None),
+            Err("entry_type must be market, limit, stop, or stop_limit")
+        );
     }
 
     #[test]
