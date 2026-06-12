@@ -1580,6 +1580,38 @@ pub fn maintenance_ok(equity: f64, gross: f64, maint_pct: f64) -> bool {
     gross <= 0.0 || equity >= maint_pct * gross
 }
 
+/// Forced-liquidation plan: flatten WHOLE positions largest-gross
+/// first (broker convention) until maintenance is restored. Closing
+/// at the mark is equity-INVARIANT (a position becomes cash at the
+/// same value), so each close only shrinks gross — the ratio can
+/// only improve, and the loop provably terminates. A blown account
+/// (equity ≤ 0) flattens everything: no subset restores it.
+/// positions = (symbol, qty, mark_per_unit_with_multiplier_applied).
+pub fn liquidation_plan(
+    positions: &[(String, f64, f64)],
+    cash: f64,
+    maint_pct: f64,
+) -> Vec<(String, f64)> {
+    let mut legs: Vec<(&str, f64, f64)> = positions
+        .iter()
+        .map(|(s, q, m)| (s.as_str(), *q, q * m))
+        .collect();
+    // Largest gross exposure first.
+    legs.sort_by(|a, b| b.2.abs().total_cmp(&a.2.abs()));
+    let signed: f64 = legs.iter().map(|l| l.2).sum();
+    let mut gross: f64 = legs.iter().map(|l| l.2.abs()).sum();
+    let equity = cash + signed;
+    let mut plan = Vec::new();
+    for (sym, qty, value) in legs {
+        if equity > 0.0 && maintenance_ok(equity, gross, maint_pct) {
+            break;
+        }
+        plan.push((sym.to_string(), qty.abs()));
+        gross -= value.abs();
+    }
+    plan
+}
+
 #[derive(Debug, Clone, serde::Serialize)]
 pub struct MarginCall {
     pub account_id: Uuid,
@@ -1588,6 +1620,12 @@ pub struct MarginCall {
     pub equity: f64,
     pub gross_exposure: f64,
     pub required: f64,
+    /// Marked legs (symbol, qty, mark per unit × multiplier) — the
+    /// liquidation planner's input, carried so the watcher doesn't
+    /// re-mark.
+    pub legs: Vec<(String, f64, f64)>,
+    pub cash: f64,
+    pub auto_liquidate: bool,
 }
 
 /// Accounts below the maintenance requirement at CURRENT marks — the
@@ -1602,13 +1640,13 @@ pub struct MarginCall {
 /// is always the true 25% figure, not the scaled trigger.
 pub async fn margin_calls(pool: &PgPool, headroom: f64) -> anyhow::Result<Vec<MarginCall>> {
     use rust_decimal::prelude::ToPrimitive;
-    let accounts: Vec<(Uuid, String, Uuid, Decimal)> = sqlx::query_as(
-        "SELECT id, name, user_id, cash FROM paper_accounts",
+    let accounts: Vec<(Uuid, String, Uuid, Decimal, bool)> = sqlx::query_as(
+        "SELECT id, name, user_id, cash, auto_liquidate FROM paper_accounts",
     )
     .fetch_all(pool)
     .await?;
     let mut out = Vec::new();
-    for (account_id, name, user_id, cash) in accounts {
+    for (account_id, name, user_id, cash, auto_liquidate) in accounts {
         let positions: Vec<(String, Decimal)> = sqlx::query_as(
             "SELECT symbol, qty FROM paper_positions WHERE paper_account_id = $1",
         )
@@ -1620,6 +1658,7 @@ pub async fn margin_calls(pool: &PgPool, headroom: f64) -> anyhow::Result<Vec<Ma
         }
         let (mut signed, mut gross) = (Decimal::ZERO, Decimal::ZERO);
         let mut all_marked = true;
+        let mut legs: Vec<(String, f64, f64)> = Vec::new();
         for (symbol, qty) in &positions {
             let mark = if let Some(occ) = traderview_core::occ_symbol::parse(symbol) {
                 match crate::paper::option_quote(&occ).await {
@@ -1636,6 +1675,11 @@ pub async fn margin_calls(pool: &PgPool, headroom: f64) -> anyhow::Result<Vec<Ma
                 Some(p) => {
                     signed += p * qty;
                     gross += (p * qty).abs();
+                    legs.push((
+                        symbol.clone(),
+                        qty.to_f64().unwrap_or(0.0),
+                        p.to_f64().unwrap_or(0.0),
+                    ));
                 }
                 None => {
                     all_marked = false;
@@ -1656,6 +1700,9 @@ pub async fn margin_calls(pool: &PgPool, headroom: f64) -> anyhow::Result<Vec<Ma
                 equity,
                 gross_exposure: gross_f,
                 required: MAINTENANCE_PCT * gross_f,
+                legs,
+                cash: cash.to_f64().unwrap_or(0.0),
+                auto_liquidate,
             });
         }
     }
@@ -1665,6 +1712,32 @@ pub async fn margin_calls(pool: &PgPool, headroom: f64) -> anyhow::Result<Vec<Ma
 #[cfg(test)]
 mod maintenance_tests {
     use super::*;
+
+    #[test]
+    fn liquidation_plan_largest_first_stops_when_ok() {
+        // $5k cash, three longs marked 40k/30k/10k: equity 85k, gross
+        // 80k — fine at 25%. Drop cash to −15k: equity 65k... make a
+        // failing case: cash −70k → equity 10k, gross 80k, required
+        // 20k: breach. Closing the 40k leg leaves gross 40k, required
+        // 10k = equity: restored. Plan = exactly the largest leg.
+        let pos = vec![
+            ("B".to_string(), 300.0, 100.0),  // 30k
+            ("A".to_string(), 400.0, 100.0),  // 40k — largest
+            ("C".to_string(), 100.0, 100.0),  // 10k
+        ];
+        let plan = liquidation_plan(&pos, -70_000.0, 0.25);
+        assert_eq!(plan, vec![("A".to_string(), 400.0)]);
+        // Healthy account: empty plan.
+        assert!(liquidation_plan(&pos, 0.0, 0.25).is_empty());
+        // Blown account (equity ≤ 0): everything goes, largest first.
+        let plan = liquidation_plan(&pos, -90_000.0, 0.25);
+        assert_eq!(plan.len(), 3);
+        assert_eq!(plan[0].0, "A");
+        // Shorts: qty negative, plan reports |qty| to cover.
+        let pos = vec![("S".to_string(), -200.0, 100.0)]; // −20k short
+        let plan = liquidation_plan(&pos, 4_000.0, 0.25); // equity −16k? cash 4k + signed −20k = −16k → blown → flatten
+        assert_eq!(plan, vec![("S".to_string(), 200.0)]);
+    }
 
     #[test]
     fn maintenance_pins_boundary_and_shorts() {

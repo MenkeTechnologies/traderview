@@ -258,6 +258,57 @@ fn spawn_margin_call_watch(pool: PgPool, hub: crate::realtime::Hub) {
                             equity: c.equity,
                             required: c.required,
                         });
+                        // Opt-in forced liquidation: flatten whole
+                        // positions largest-gross-first until the
+                        // requirement is restored, through the NORMAL
+                        // submit path (friction, audit, fill events
+                        // all apply). Only on ENTERING the breach —
+                        // the dedup below gates it like the webhook.
+                        if c.auto_liquidate && !called.contains(&c.account_id) {
+                            let plan = traderview_db::paper_equity::liquidation_plan(
+                                &c.legs,
+                                c.cash,
+                                traderview_db::paper_equity::MAINTENANCE_PCT,
+                            );
+                            for (symbol, qty) in &plan {
+                                let qty_dec = match rust_decimal::Decimal::try_from(*qty) {
+                                    Ok(q) if q > rust_decimal::Decimal::ZERO => q,
+                                    _ => continue,
+                                };
+                                let side = if c.legs.iter().any(|(s, q, _)| s == symbol && *q > 0.0) {
+                                    traderview_core::Side::Sell
+                                } else {
+                                    traderview_core::Side::Cover
+                                };
+                                let req = traderview_db::paper::OrderRequest {
+                                    symbol: symbol.clone(),
+                                    side,
+                                    qty: qty_dec,
+                                    order_type: "market".into(),
+                                    limit_price: None,
+                                    stop_price: None,
+                                    trail_value: None,
+                                    trail_is_pct: None,
+                                    time_in_force: None,
+                                    expire_at: None,
+                                    plan_note: Some("auto-liquidation: margin call".into()),
+                                };
+                                match traderview_db::paper::submit(&pool, c.user_id, c.account_id, req).await {
+                                    Ok(o) => tracing::warn!(
+                                        account = %c.name, symbol = %symbol, qty = %qty_dec,
+                                        status = %o.status, "margin auto-liquidation order"
+                                    ),
+                                    Err(e) => tracing::error!(
+                                        account = %c.name, symbol = %symbol, error = %e,
+                                        "margin auto-liquidation failed"
+                                    ),
+                                }
+                            }
+                            hub.publish(crate::realtime::Event::MarginLiquidation {
+                                account: c.name.clone(),
+                                closed: plan.iter().map(|(s, _)| s.clone()).collect(),
+                            });
+                        }
                         if called.insert(c.account_id) {
                             tracing::warn!(account = %c.name, equity = c.equity, "margin call");
                             let payload = traderview_db::webhooks::AlertPayload {

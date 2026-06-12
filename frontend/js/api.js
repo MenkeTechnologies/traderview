@@ -869,6 +869,8 @@ export const api = {
         request(`/paper/accounts/${id}/margin`, { method: 'POST', body: JSON.stringify({ multiplier }) }),
     paperSetMarginApy: (id, apy_pct) =>
         request(`/paper/accounts/${id}/margin-apy`, { method: 'POST', body: JSON.stringify({ apy_pct }) }),
+    paperSetAutoLiquidate: (id, enabled) =>
+        request(`/paper/accounts/${id}/auto-liquidate`, { method: 'POST', body: JSON.stringify({ enabled }) }),
     paperInterest: (id) => request(`/paper/accounts/${id}/interest`),
     paperStatement: (id, month) => request(`/paper/accounts/${id}/statement?month=${encodeURIComponent(month)}`),
     paperHoldings: () => request('/paper/holdings'),

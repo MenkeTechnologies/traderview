@@ -47,6 +47,7 @@ pub fn router() -> Router<AppState> {
         .route("/paper/accounts/:id/borrow-apy", post(set_borrow_apy))
         .route("/paper/accounts/:id/margin", post(set_margin))
         .route("/paper/accounts/:id/margin-apy", post(set_margin_apy))
+        .route("/paper/accounts/:id/auto-liquidate", post(set_auto_liquidate))
         .route("/paper/accounts/:id/interest", get(interest))
         .route("/paper/accounts/:id/statement", get(statement))
         .route("/paper/accounts/:id/pdt", get(pdt))
@@ -929,4 +930,24 @@ async fn pdt(
         .await
         .map(Json)
         .map_err(|e| ApiError::BadRequest(e.to_string()))
+}
+
+/// Opt-in forced liquidation on margin call (default OFF — a forced
+/// sale is destructive and must be chosen).
+async fn set_auto_liquidate(
+    State(s): State<AppState>,
+    user: AuthUser,
+    Path(id): Path<Uuid>,
+    Json(b): Json<DripBody>,
+) -> Result<Json<bool>, ApiError> {
+    let r = sqlx::query(
+        "UPDATE paper_accounts SET auto_liquidate = $3 WHERE id = $1 AND user_id = $2",
+    )
+    .bind(id)
+    .bind(user.id)
+    .bind(b.enabled)
+    .execute(&s.pool)
+    .await
+    .map_err(|e| ApiError::Internal(e.into()))?;
+    Ok(Json(r.rows_affected() > 0))
 }

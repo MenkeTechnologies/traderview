@@ -144,6 +144,13 @@ pub enum Event {
         required: f64,
     },
 
+    /// Opt-in forced liquidation executed after a margin call —
+    /// which positions were flattened.
+    MarginLiquidation {
+        account: String,
+        closed: Vec<String>,
+    },
+
     /// Funding regime watcher: a perp's funding APR crossed the alert
     /// threshold WITH persistence (the regime test, not a one-interval
     /// spike). Live-feed only — global market data, not per-user, so

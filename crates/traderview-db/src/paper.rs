@@ -23,6 +23,7 @@ pub struct PaperAccount {
     pub borrow_apy_pct: Decimal,
     pub margin_multiplier: Decimal,
     pub margin_apy_pct: Decimal,
+    pub auto_liquidate: bool,
     pub created_at: DateTime<Utc>,
     pub reset_at: Option<DateTime<Utc>>,
 }
@@ -65,7 +66,7 @@ pub struct PaperPosition {
 
 pub async fn list_accounts(pool: &PgPool, user_id: Uuid) -> anyhow::Result<Vec<PaperAccount>> {
     Ok(sqlx::query_as::<_, PaperAccount>(
-        "SELECT id, user_id, name, starting_cash, cash, drip, cash_apy_pct, borrow_apy_pct, margin_multiplier, margin_apy_pct, created_at, reset_at
+        "SELECT id, user_id, name, starting_cash, cash, drip, cash_apy_pct, borrow_apy_pct, margin_multiplier, margin_apy_pct, auto_liquidate, created_at, reset_at
            FROM paper_accounts WHERE user_id = $1 ORDER BY created_at",
     )
     .bind(user_id)
@@ -80,7 +81,7 @@ pub async fn ensure_default(pool: &PgPool, user_id: Uuid) -> anyhow::Result<Pape
     Ok(sqlx::query_as::<_, PaperAccount>(
         "INSERT INTO paper_accounts (user_id, name, starting_cash, cash)
               VALUES ($1, 'SimTrader', 200000, 200000)
-         RETURNING id, user_id, name, starting_cash, cash, drip, cash_apy_pct, borrow_apy_pct, margin_multiplier, margin_apy_pct, created_at, reset_at",
+         RETURNING id, user_id, name, starting_cash, cash, drip, cash_apy_pct, borrow_apy_pct, margin_multiplier, margin_apy_pct, auto_liquidate, created_at, reset_at",
     )
     .bind(user_id)
     .fetch_one(pool)
@@ -222,7 +223,7 @@ pub async fn create_account(
     Ok(sqlx::query_as::<_, PaperAccount>(
         "INSERT INTO paper_accounts (user_id, name, starting_cash, cash)
               VALUES ($1, $2, $3, $3)
-         RETURNING id, user_id, name, starting_cash, cash, drip, cash_apy_pct, borrow_apy_pct, margin_multiplier, margin_apy_pct, created_at, reset_at",
+         RETURNING id, user_id, name, starting_cash, cash, drip, cash_apy_pct, borrow_apy_pct, margin_multiplier, margin_apy_pct, auto_liquidate, created_at, reset_at",
     )
     .bind(user_id)
     .bind(name)
