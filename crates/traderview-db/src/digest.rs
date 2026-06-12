@@ -179,6 +179,70 @@ pub async fn for_user(pool: &PgPool, user_id: Uuid) -> anyhow::Result<Digest> {
     Ok(d)
 }
 
+/// Users due a digest at this UTC hour: paper-account holders whose
+/// preferred hour matches (default 12 with no prefs row) and who
+/// haven't been sent today's digest. last_sent_on makes delivery
+/// exactly-once-per-day across restarts.
+pub async fn due_users(pool: &PgPool, hour_utc: u32) -> anyhow::Result<Vec<Uuid>> {
+    let rows: Vec<(Uuid,)> = sqlx::query_as(
+        "SELECT DISTINCT pa.user_id
+           FROM paper_accounts pa
+           LEFT JOIN digest_prefs dp ON dp.user_id = pa.user_id
+          WHERE COALESCE(dp.hour_utc, 12) = $1
+            AND (dp.last_sent_on IS NULL OR dp.last_sent_on < CURRENT_DATE)",
+    )
+    .bind(hour_utc as i32)
+    .fetch_all(pool)
+    .await?;
+    Ok(rows.into_iter().map(|(u,)| u).collect())
+}
+
+pub async fn mark_sent(pool: &PgPool, user_id: Uuid) -> anyhow::Result<()> {
+    sqlx::query(
+        "INSERT INTO digest_prefs (user_id, last_sent_on) VALUES ($1, CURRENT_DATE)
+         ON CONFLICT (user_id) DO UPDATE SET last_sent_on = CURRENT_DATE",
+    )
+    .bind(user_id)
+    .execute(pool)
+    .await?;
+    Ok(())
+}
+
+pub async fn get_hour(pool: &PgPool, user_id: Uuid) -> anyhow::Result<u32> {
+    let row: Option<(i32,)> =
+        sqlx::query_as("SELECT hour_utc FROM digest_prefs WHERE user_id = $1")
+            .bind(user_id)
+            .fetch_optional(pool)
+            .await?;
+    Ok(row.map(|(h,)| h as u32).unwrap_or(12))
+}
+
+pub async fn set_hour(pool: &PgPool, user_id: Uuid, hour_utc: u32) -> anyhow::Result<()> {
+    if hour_utc > 23 {
+        anyhow::bail!("hour must be 0..=23");
+    }
+    sqlx::query(
+        "INSERT INTO digest_prefs (user_id, hour_utc) VALUES ($1, $2)
+         ON CONFLICT (user_id) DO UPDATE SET hour_utc = EXCLUDED.hour_utc",
+    )
+    .bind(user_id)
+    .bind(hour_utc as i32)
+    .execute(pool)
+    .await?;
+    Ok(())
+}
+
+/// Next top-of-hour strictly after `now` — the hourly scheduler tick.
+pub fn next_top_of_hour(now: chrono::DateTime<Utc>) -> chrono::DateTime<Utc> {
+    use chrono::Timelike;
+    let truncated = now
+        .date_naive()
+        .and_hms_opt(now.hour(), 0, 0)
+        .unwrap()
+        .and_utc();
+    truncated + Duration::hours(1)
+}
+
 /// Every user with a paper account — the digest audience.
 pub async fn audience(pool: &PgPool) -> anyhow::Result<Vec<Uuid>> {
     let rows: Vec<(Uuid,)> =
@@ -233,6 +297,19 @@ mod tests {
         // Month boundary rolls correctly.
         let eom = Utc.with_ymd_and_hms(2026, 6, 30, 13, 0, 0).unwrap();
         assert_eq!(next_digest_time(eom, h).day(), 1);
+    }
+
+    #[test]
+    fn next_top_of_hour_pins_strictness() {
+        use chrono::Timelike;
+        let mid = Utc.with_ymd_and_hms(2026, 6, 10, 9, 41, 7).unwrap();
+        assert_eq!(next_top_of_hour(mid), Utc.with_ymd_and_hms(2026, 6, 10, 10, 0, 0).unwrap());
+        // Exactly on the hour: STRICTLY after → next hour.
+        let on = Utc.with_ymd_and_hms(2026, 6, 10, 9, 0, 0).unwrap();
+        assert_eq!(next_top_of_hour(on).hour(), 10);
+        // Day boundary.
+        let late = Utc.with_ymd_and_hms(2026, 6, 10, 23, 30, 0).unwrap();
+        assert_eq!(next_top_of_hour(late), Utc.with_ymd_and_hms(2026, 6, 11, 0, 0, 0).unwrap());
     }
 
     #[test]

@@ -7,7 +7,7 @@ use axum::routing::{get, post};
 use axum::{Json, Router};
 use chrono::Utc;
 use rust_decimal::Decimal;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use traderview_core::models::{AssetClass, TradeSide};
 use traderview_core::risk_gate::{evaluate, ProposedTrade, Severity};
 use traderview_db::paper::{OrderRequest, PaperAccount, PaperOrder, PaperPosition};
@@ -50,6 +50,7 @@ pub fn router() -> Router<AppState> {
         .route("/paper/accounts/:id/correlations", get(correlations))
         .route("/paper/accounts/:id/var", get(portfolio_var))
         .route("/paper/accounts/:id/stress", get(stress))
+        .route("/digest/prefs", get(get_digest_prefs).post(set_digest_prefs))
         .route("/paper/accounts/comparison", get(account_comparison))
         .route("/paper/accounts/create", post(create_account))
         .route("/paper/accounts/:id/rename", post(rename_account))
@@ -213,6 +214,37 @@ async fn stress(
     .await
     .map(Json)
     .map_err(|e| ApiError::BadRequest(e.to_string()))
+}
+
+#[derive(Serialize)]
+struct DigestPrefs {
+    hour_utc: u32,
+}
+
+async fn get_digest_prefs(
+    State(s): State<AppState>,
+    user: AuthUser,
+) -> Result<Json<DigestPrefs>, ApiError> {
+    traderview_db::digest::get_hour(&s.pool, user.id)
+        .await
+        .map(|hour_utc| Json(DigestPrefs { hour_utc }))
+        .map_err(ApiError::Internal)
+}
+
+#[derive(Deserialize)]
+struct DigestPrefsBody {
+    hour_utc: u32,
+}
+
+async fn set_digest_prefs(
+    State(s): State<AppState>,
+    user: AuthUser,
+    Json(b): Json<DigestPrefsBody>,
+) -> Result<Json<bool>, ApiError> {
+    traderview_db::digest::set_hour(&s.pool, user.id, b.hour_utc)
+        .await
+        .map(|_| Json(true))
+        .map_err(|e| ApiError::BadRequest(e.to_string()))
 }
 
 /// Per-symbol realized P&L decomposition: closed trips + dividends − fees.

@@ -55,9 +55,9 @@ pub const REBALANCE_DRIFT_WATCH: Duration = Duration::from_secs(12 * 60 * 60);
 /// Auto-invest pass — cadences are daily+; an hourly pass keeps
 /// catch-up snappy after the app was closed.
 pub const PAPER_RECURRING_TICK: Duration = Duration::from_secs(60 * 60);
-/// Morning digest hour (UTC). 12:00 UTC = pre-market US Eastern
-/// year-round (07:00 EST / 08:00 EDT).
-pub const DIGEST_HOUR_UTC: u32 = 12;
+/// Default morning-digest hour lives in digest_prefs (12:00 UTC =
+/// pre-market US Eastern year-round); the scheduler ticks hourly and
+/// delivers per-user at their configured hour.
 /// Paper dividend crediting — ex-dates are daily-bar data and the pass
 /// is idempotent, so a few runs a day is plenty.
 pub const PAPER_DIVIDEND_CREDIT: Duration = Duration::from_secs(6 * 60 * 60);
@@ -329,10 +329,15 @@ fn spawn_paper_recurring(pool: PgPool) {
 fn spawn_daily_digest(pool: PgPool, hub: crate::realtime::Hub) {
     tokio::spawn(async move {
         loop {
-            let next = traderview_db::digest::next_digest_time(chrono::Utc::now(), DIGEST_HOUR_UTC);
+            // Hourly tick: deliver to users whose preferred hour this
+            // is and who haven't received today's digest — last_sent_on
+            // makes delivery exactly-once-per-day across restarts.
+            let next = traderview_db::digest::next_top_of_hour(chrono::Utc::now());
             let wait = (next - chrono::Utc::now()).num_seconds().max(1) as u64;
             tokio::time::sleep(Duration::from_secs(wait)).await;
-            match traderview_db::digest::audience(&pool).await {
+            use chrono::Timelike;
+            let hour = chrono::Utc::now().hour();
+            match traderview_db::digest::due_users(&pool, hour).await {
                 Ok(users) => {
                     for user_id in users {
                         match traderview_db::digest::for_user(&pool, user_id).await {
@@ -352,8 +357,13 @@ fn spawn_daily_digest(pool: PgPool, hub: crate::realtime::Hub) {
                                 };
                                 traderview_db::webhooks::fan_out_all(&pool, user_id, &payload)
                                     .await;
+                                traderview_db::digest::mark_sent(&pool, user_id).await.ok();
                             }
-                            Ok(_) => {}
+                            // Empty digest still counts as delivered —
+                            // otherwise every later hour re-assembles it.
+                            Ok(_) => {
+                                traderview_db::digest::mark_sent(&pool, user_id).await.ok();
+                            }
                             Err(e) => {
                                 tracing::warn!(user = %user_id, error = %e, "digest failed")
                             }

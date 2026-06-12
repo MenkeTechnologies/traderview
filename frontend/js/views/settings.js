@@ -124,6 +124,8 @@ export async function renderSettings(mount, state) {
                     <select name="base_currency">${currencyOptions(s.base_currency)}</select></label>
                 <label><span data-i18n="view.settings.label.timezone">Timezone</span>
                     <input name="timezone" value="${esc(s.timezone)}"></label>
+                <label><span data-i18n="view.settings.label.digest_hour">Digest hour (UTC)</span>
+                    <input name="digest_hour_utc" type="number" min="0" max="23" id="digest-hour" data-tip="view.settings.tip.digest_hour"></label>
                 <label><span data-i18n="view.settings.label.theme">Theme</span>
                     <select name="theme">
                         <option data-i18n="view.settings.opt.cyberpunk" value="cyberpunk" ${s.theme === 'cyberpunk' ? 'selected' : ''}>Cyberpunk</option>
@@ -393,6 +395,8 @@ export async function renderSettings(mount, state) {
     if (window.tvHud && typeof window.tvHud.remountSchemeGrid === 'function') {
         window.tvHud.remountSchemeGrid();
     }
+    api.request('/digest/prefs').then(p => { const el = mount.querySelector('#digest-hour'); if (el) el.value = p.hour_utc; }).catch(() => {});
+
 
     mount.querySelector('#settings-form').addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -401,6 +405,7 @@ export async function renderSettings(mount, state) {
             default_account_id: fd.get('default_account_id') || null,
             base_currency: fd.get('base_currency'),
             timezone: fd.get('timezone'),
+            __digest_hour: undefined, // handled separately below
             theme: fd.get('theme'),
             starting_cash: Number(fd.get('starting_cash')),
             commission_per_share: Number(fd.get('commission_per_share') || 0),
@@ -425,6 +430,11 @@ export async function renderSettings(mount, state) {
         _revealCache = await api.dataSourcesReveal();
         return _revealCache;
     };
+        const dh = Number(fd.get('digest_hour_utc'));
+        if (Number.isFinite(dh)) {
+            api.request('/digest/prefs', { method: 'POST', body: JSON.stringify({ hour_utc: dh }) }).catch(() => {});
+        }
+        delete body.__digest_hour;
     mount.querySelectorAll('input[data-secret-field]').forEach((input) => {
         const wrap = input.parentElement;
         const btn = document.createElement('button');
