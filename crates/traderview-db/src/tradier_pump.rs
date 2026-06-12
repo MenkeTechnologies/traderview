@@ -280,6 +280,7 @@ async fn handle_one_event(
             .get("order_id")
             .and_then(|x| x.as_i64())
             .map(|n| n.to_string()),
+        broker_order_id: None,
     };
     crate::algo_engine::record_fill(pool, &strategy, &intent, order_id, &fill, event_sink)
         .await

@@ -331,6 +331,7 @@ async fn handle_one_acct_activity(
         fee: Decimal::zero(),
         executed_at: Utc::now(),
         broker_fill_id,
+        broker_order_id: None,
     };
     crate::algo_engine::record_fill(pool, &strategy, &intent, order_id, &fill, event_sink)
         .await

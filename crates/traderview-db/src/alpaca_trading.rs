@@ -620,8 +620,15 @@ pub struct TradeUpdateEvent {
     pub event: String,
     /// Fill price for fill/partial_fill events.
     pub price: Option<Decimal>,
-    /// Fill quantity for fill/partial_fill events.
+    /// Fill quantity for fill/partial_fill events. Per-slice, NOT
+    /// cumulative — the terminal `fill` event carries only the last
+    /// slice (verified against /v2/account/activities/FILL: a 3002-unit
+    /// AVAX/USD buy emitted 14 partial_fill slices and a final `fill`
+    /// of 130.07). `order.filled_qty` is the cumulative number.
     pub qty: Option<Decimal>,
+    /// Per-fill unique id (present on fill/partial_fill events) —
+    /// distinguishes slices of the same order for idempotent replay.
+    pub execution_id: Option<String>,
     /// Position size after this event.
     pub position_qty: Option<Decimal>,
     /// Echoed order — `client_order_id` here is OUR Uuid string.

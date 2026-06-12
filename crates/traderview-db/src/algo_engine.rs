@@ -134,7 +134,17 @@ pub struct ImmediateFill {
     pub qty: Decimal,
     pub fee: Decimal,
     pub executed_at: DateTime<Utc>,
+    /// Per-fill unique id — the `algo_fills.broker_fill_id` UNIQUE
+    /// idempotency key. For brokers that fill one order in many slices
+    /// (Alpaca partial_fill events) this must be the slice id, not the
+    /// order id, or every slice after the first short-circuits as a
+    /// replay.
     pub broker_fill_id: Option<String>,
+    /// Broker order id for the executions row. None falls back to
+    /// `broker_fill_id` (the historical behaviour, correct for brokers
+    /// where one fill == one order). Set it when slices share an order
+    /// so executions stay queryable per broker order.
+    pub broker_order_id: Option<String>,
 }
 
 #[derive(Debug, thiserror::Error)]
@@ -250,6 +260,7 @@ impl BrokerSink for InMemorySink {
                 fee: Decimal::ZERO,
                 executed_at: Utc::now(),
                 broker_fill_id: Some(format!("sim-fill-{id}")),
+                broker_order_id: None,
             };
             submitted.lock().expect("lock").push(intent);
             Ok(SubmittedOrder {
@@ -284,6 +295,7 @@ impl BrokerSink for InMemorySink {
                 fee: Decimal::ZERO,
                 executed_at: Utc::now(),
                 broker_fill_id: Some(format!("sim-close-{id}")),
+                broker_order_id: None,
             };
             submitted.lock().expect("lock").push(OrderIntent {
                 strategy_id: Uuid::nil(),
@@ -1148,7 +1160,7 @@ pub async fn record_fill(
         fee: fill.fee,
         commission: Decimal::ZERO,
         executed_at: fill.executed_at,
-        broker_order_id: fill.broker_fill_id.clone(),
+        broker_order_id: fill.broker_order_id.clone().or_else(|| fill.broker_fill_id.clone()),
         raw: serde_json::json!({
             "source": "algo_engine",
             "strategy_id": strategy.id,

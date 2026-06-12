@@ -34,6 +34,14 @@ pub async fn run_pump(pool: PgPool, client: AlpacaTrading, event_sink: Option<Ev
     let mut backoff = Duration::from_secs(1);
     const MAX_BACKOFF: Duration = Duration::from_secs(60);
     loop {
+        // Repair fills the WS missed before (re)connecting: app closed
+        // while orders filled, reconnect gaps, or rows lost to the old
+        // skip-partials bug. Idempotent — a clean ledger sweeps to zero.
+        match reconcile_recent_fills(&pool, &client, event_sink.as_ref()).await {
+            Ok(0) => {}
+            Ok(n) => tracing::info!(repaired = n, "alpaca fill reconcile inserted missing fills"),
+            Err(e) => tracing::warn!(error = %e, "alpaca fill reconcile failed"),
+        }
         let pool_clone = pool.clone();
         let sink_clone = event_sink.clone();
         let res = client
@@ -74,14 +82,15 @@ pub async fn handle_trade_update(
     event: TradeUpdateEvent,
     event_sink: Option<&EventSink>,
 ) -> anyhow::Result<()> {
-    // Only consume the final `fill` event. Alpaca emits one or more
-    // `partial_fill` events as a multi-leg order works through, then a
-    // terminal `fill` carrying the cumulative aggregate. The
-    // executions_dedupe_idx UNIQUE keys on qty, so partials with
-    // different qtys insert separate rows alongside the final fill —
-    // double-counting through trades::rollup_account. Skipping
-    // partials sidesteps the issue without losing data.
-    if event.event != "fill" {
+    // Consume BOTH `partial_fill` and the terminal `fill`. Each event's
+    // `qty` is that slice only — the terminal `fill` does NOT carry the
+    // cumulative aggregate (verified against the activities ledger: a
+    // 3002-unit AVAX/USD buy emitted 14 partial_fill slices and a final
+    // `fill` of 130.07; the old skip-partials logic ingested just the
+    // 130.07 and the trades rollup closed a position that was 95% still
+    // open at the broker). Replay-idempotency lives in
+    // algo_fills.broker_fill_id keyed on the per-slice execution_id.
+    if event.event != "fill" && event.event != "partial_fill" {
         return Ok(());
     }
     let coid_str = event.order.client_order_id.clone();
@@ -153,17 +162,134 @@ pub async fn handle_trade_update(
         stop_price: Decimal::zero(),
         take_profit_price: Decimal::zero(),
     };
+    // Slice-unique id for algo_fills idempotency; composite fallback if
+    // Alpaca ever omits execution_id. The executions row keeps the order
+    // id so per-order sums (reconcile) see every slice.
+    let slice_id = event.execution_id.clone().unwrap_or_else(|| {
+        format!("{}:{}:{}", event.order.id, event.event, fill_qty)
+    });
     let immediate = ImmediateFill {
         price: fill_price,
         qty: fill_qty,
         fee: Decimal::zero(),
         executed_at,
-        broker_fill_id: Some(event.order.id),
+        broker_fill_id: Some(slice_id),
+        broker_order_id: Some(event.order.id),
     };
     crate::algo_engine::record_fill(pool, &strategy, &intent, order_id, &immediate, event_sink)
         .await
         .map_err(|e| anyhow::anyhow!("record_fill: {e}"))?;
     Ok(())
+}
+
+/// Given a broker order's cumulative fill state and what the executions
+/// ledger already ingested for it, return the missing (qty, price) to
+/// insert — priced so the ledger's total cost matches the broker's
+/// `filled_avg_price × filled_qty` exactly. None when nothing is missing.
+fn remainder_fill(
+    filled_qty: Decimal,
+    filled_avg_price: Decimal,
+    ingested_qty: Decimal,
+    ingested_notional: Decimal,
+) -> Option<(Decimal, Decimal)> {
+    let delta = filled_qty - ingested_qty;
+    if delta <= Decimal::zero() {
+        return None;
+    }
+    let mut price = (filled_avg_price * filled_qty - ingested_notional) / delta;
+    // A negative/zero remainder price means the ingested rows already
+    // over-account the order's notional (bad legacy data) — fall back to
+    // the broker's average rather than writing a nonsense execution.
+    if price <= Decimal::zero() {
+        price = filled_avg_price;
+    }
+    Some((delta, price))
+}
+
+/// One REST sweep over recent Alpaca orders (last 500 closed + all open)
+/// bound to algo_orders rows: compare the broker's cumulative
+/// `filled_qty` against the executions already ingested for that broker
+/// order id and insert the remainder via the standard record_fill
+/// pipeline (executions → rollup → tag → realized P&L). Returns how many
+/// repair fills were inserted.
+pub async fn reconcile_recent_fills(
+    pool: &PgPool,
+    client: &AlpacaTrading,
+    event_sink: Option<&EventSink>,
+) -> anyhow::Result<usize> {
+    let mut orders = client.list_orders("closed", 500).await?;
+    orders.extend(client.list_open_orders().await?);
+    let mut repaired = 0usize;
+    for o in orders {
+        let Some(filled_qty) = o.filled_qty else { continue };
+        let Some(filled_avg) = o.filled_avg_price else { continue };
+        if filled_qty <= Decimal::zero() || filled_avg <= Decimal::zero() {
+            continue;
+        }
+        // Orders not stamped with our UUID client_order_id were placed
+        // outside the app — not ours to ledger.
+        let Ok(coid) = Uuid::from_str(&o.client_order_id) else { continue };
+        let row: Option<(Uuid, Uuid, Uuid, String, String, Decimal)> = sqlx::query_as(
+            "SELECT id, run_id, strategy_id, symbol, side, qty
+               FROM algo_orders WHERE client_order_id = $1",
+        )
+        .bind(coid)
+        .fetch_optional(pool)
+        .await?;
+        let Some((order_id, run_id, strategy_id, symbol, side, qty)) = row else { continue };
+        let Some(strategy) = crate::algo::get_strategy_by_id(pool, strategy_id).await? else {
+            continue;
+        };
+        let (ingested_qty, ingested_notional): (Decimal, Decimal) = sqlx::query_as(
+            "SELECT COALESCE(SUM(qty), 0), COALESCE(SUM(qty * price), 0)
+               FROM executions
+              WHERE account_id = $1 AND broker_order_id = $2 AND symbol = $3",
+        )
+        .bind(strategy.account_id)
+        .bind(&o.id)
+        .bind(&symbol)
+        .fetch_one(pool)
+        .await?;
+        let Some((miss_qty, miss_price)) =
+            remainder_fill(filled_qty, filled_avg, ingested_qty, ingested_notional)
+        else {
+            continue;
+        };
+        tracing::info!(
+            symbol, broker_order_id = %o.id, %miss_qty, %miss_price,
+            "reconcile: inserting fill the WS pump missed"
+        );
+        let intent = crate::algo_engine::OrderIntent {
+            strategy_id,
+            run_id,
+            client_order_id: coid,
+            symbol,
+            side: match side.as_str() {
+                "sell" => traderview_core::algo_strategies::Side::Sell,
+                _ => traderview_core::algo_strategies::Side::Buy,
+            },
+            qty,
+            entry_price: miss_price,
+            stop_price: Decimal::zero(),
+            take_profit_price: Decimal::zero(),
+        };
+        let fill = ImmediateFill {
+            price: miss_price,
+            qty: miss_qty,
+            fee: Decimal::zero(),
+            executed_at: o.updated_at.unwrap_or_else(Utc::now),
+            // Ingested-qty suffix keeps re-sweeps idempotent: the same
+            // gap maps to the same id (algo_fills UNIQUE rejects the
+            // replay); once repaired, delta is zero and no id is minted.
+            broker_fill_id: Some(format!("{}:reconcile:{}", o.id, ingested_qty)),
+            broker_order_id: Some(o.id.clone()),
+        };
+        crate::algo_engine::record_fill(pool, &strategy, &intent, order_id, &fill, event_sink)
+            .await
+            .map_err(|e| anyhow::anyhow!("reconcile record_fill: {e}"))?;
+        repaired += 1;
+    }
+    Ok(repaired)
 }
 
 /// Convenience for the server startup: spawn pumps for every distinct
@@ -282,4 +408,63 @@ pub async fn ensure_pump_for(
         registry_for_drop.lock().await.remove(&key);
     });
     true
+}
+
+#[cfg(test)]
+mod tests {
+    use super::remainder_fill;
+    use rust_decimal::Decimal;
+    use std::str::FromStr;
+
+    fn d(s: &str) -> Decimal {
+        Decimal::from_str(s).unwrap()
+    }
+
+    #[test]
+    fn remainder_fill_full_miss_inserts_whole_order_at_avg() {
+        // Nothing ingested — repair the entire order at the broker avg.
+        let (qty, price) = remainder_fill(d("55"), d("1671.02"), d("0"), d("0")).unwrap();
+        assert_eq!(qty, d("55"));
+        assert_eq!(price, d("1671.02"));
+    }
+
+    #[test]
+    fn remainder_fill_partial_miss_preserves_total_cost() {
+        // The real AVAX case: 3002 filled at avg 6.701838978, but only the
+        // final 130.07112291-unit slice (at 6.742404) was ingested. The
+        // repair row must make ledger cost == broker cost exactly.
+        let filled = d("3002");
+        let avg = d("6.701838978");
+        let ingested_qty = d("130.07112291");
+        let ingested_notional = ingested_qty * d("6.742404");
+        let (qty, price) = remainder_fill(filled, avg, ingested_qty, ingested_notional).unwrap();
+        assert_eq!(qty, filled - ingested_qty);
+        let ledger_cost = ingested_notional + qty * price;
+        let broker_cost = filled * avg;
+        assert!(
+            (ledger_cost - broker_cost).abs() < d("0.0001"),
+            "ledger {ledger_cost} != broker {broker_cost}"
+        );
+    }
+
+    #[test]
+    fn remainder_fill_fully_ingested_is_none() {
+        let n = d("130.07112291") * d("6.58");
+        assert!(remainder_fill(d("130.07112291"), d("6.58"), d("130.07112291"), n).is_none());
+    }
+
+    #[test]
+    fn remainder_fill_over_ingested_is_none() {
+        // Ledger somehow has MORE than the broker reports — never insert
+        // a negative repair.
+        assert!(remainder_fill(d("100"), d("5"), d("120"), d("600")).is_none());
+    }
+
+    #[test]
+    fn remainder_fill_degenerate_price_falls_back_to_avg() {
+        // Ingested notional already exceeds the broker's total cost; the
+        // solved remainder price would be negative. Fall back to avg.
+        let (_qty, price) = remainder_fill(d("100"), d("5"), d("50"), d("9999")).unwrap();
+        assert_eq!(price, d("5"));
+    }
 }
