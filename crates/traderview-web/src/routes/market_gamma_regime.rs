@@ -4,7 +4,7 @@ use crate::auth::AuthUser;
 use crate::error::ApiError;
 use crate::state::AppState;
 use axum::extract::State;
-use axum::routing::get;
+use axum::routing::{get, post};
 use axum::{Json, Router};
 use chrono::Utc;
 use traderview_db::market_gamma_regime;
@@ -12,7 +12,10 @@ use traderview_db::market_gamma_regime;
 pub fn router() -> Router<AppState> {
     Router::new()
         .route("/market-gamma/report", get(report))
-        .route("/market-gamma/refresh", get(refresh))
+        // POST — the frontend sends POST and the handler mutates the
+        // rolling history. As a GET it 405'd and "Refresh Now" was a
+        // silent no-op.
+        .route("/market-gamma/refresh", post(refresh))
 }
 
 async fn report(

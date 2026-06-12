@@ -7,6 +7,7 @@
 import { api } from '../api.js';
 import { esc, fmtDateTime } from '../util.js';
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 
 export async function renderMarketGammaRegime(mount, _state) {
     mount.innerHTML = `
@@ -56,7 +57,10 @@ export async function renderMarketGammaRegime(mount, _state) {
     mount.querySelector('#mg-refresh').addEventListener('click', async () => {
         const meta = mount.querySelector('#mg-meta');
         if (meta) meta.textContent = t('view.market_gamma_regime.status.refreshing');
-        try { await api.marketGammaRefresh(); } catch (_) {}
+        // Surface refresh failures — the silent catch hid the 405 from
+        // the GET/POST route mismatch and the button read as a no-op.
+        try { await api.marketGammaRefresh(); }
+        catch (e) { showToast(t('toast.error.api', { err: e.message }), { level: 'error' }); }
         fetchAndRender(mount);
     });
     fetchAndRender(mount);
