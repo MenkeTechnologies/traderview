@@ -1,6 +1,5 @@
 use crate::auth::AuthUser;
 use crate::error::ApiError;
-use crate::routes::helpers::ensure_account_owner;
 use crate::state::AppState;
 use axum::extract::{Path, Query, State};
 use axum::routing::{get, post};
@@ -70,6 +69,28 @@ pub fn router() -> Router<AppState> {
         .route("/paper/accounts/:id/delete", post(delete_account))
         .route("/paper/accounts/:id/dividends", get(dividends))
         .route("/paper/accounts/:id/splits", get(splits))
+}
+
+/// Ownership guard against PAPER accounts. The shared
+/// ensure_account_owner checks the broker `accounts` table — using it
+/// on paper ids 404s every real paper account (empirically verified
+/// against the live embedded DB: 1 paper account, 0 broker accounts,
+/// join 0), which silently blanked the positions/orders routes.
+async fn ensure_paper_account_owner(
+    s: &AppState,
+    user_id: Uuid,
+    account_id: Uuid,
+) -> Result<(), ApiError> {
+    let row: Option<(Uuid,)> =
+        sqlx::query_as("SELECT user_id FROM paper_accounts WHERE id = $1")
+            .bind(account_id)
+            .fetch_optional(&s.pool)
+            .await?;
+    match row {
+        Some((owner,)) if owner == user_id => Ok(()),
+        Some(_) => Err(ApiError::Forbidden),
+        None => Err(ApiError::NotFound),
+    }
 }
 
 /// Split adjustments applied to the account by the background pass —
@@ -616,7 +637,7 @@ async fn orders(
     Path(id): Path<Uuid>,
     Query(q): Query<OrdersQ>,
 ) -> Result<Json<Vec<PaperOrder>>, ApiError> {
-    ensure_account_owner(&s, user.id, id).await?;
+    ensure_paper_account_owner(&s, user.id, id).await?;
     Ok(Json(
         traderview_db::paper::list_orders(&s.pool, id, q.limit)
             .await
@@ -731,7 +752,7 @@ async fn positions(
     user: AuthUser,
     Path(id): Path<Uuid>,
 ) -> Result<Json<Vec<PaperPosition>>, ApiError> {
-    ensure_account_owner(&s, user.id, id).await?;
+    ensure_paper_account_owner(&s, user.id, id).await?;
     Ok(Json(
         traderview_db::paper::positions(&s.pool, id)
             .await
