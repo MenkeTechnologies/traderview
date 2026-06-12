@@ -111,6 +111,7 @@ export async function renderPaper(mount) {
                     </select>
                     <input name="limit_price" type="number" step="0.01" placeholder="limit" data-i18n-placeholder="common.placeholder.limit" data-tip="view.paper.tip.limit">
                     <input name="stop_price"  type="number" step="0.01" placeholder="stop" data-i18n-placeholder="common.placeholder.stop" data-tip="view.paper.tip.stop">
+                    <button type="button" id="ord-atr" data-tip="view.paper.tip.atr_suggest">ATR</button>
                     <input name="trail_value" type="number" step="0.01" min="0" placeholder="trail" data-i18n-placeholder="common.placeholder.trail" data-tip="view.paper.tip.trail">
                     <select name="trail_unit" data-tip="view.paper.tip.trail_unit">
                         <option value="usd">$</option>
@@ -192,6 +193,7 @@ export async function renderPaper(mount) {
                         <option value="pct">%</option>
                     </select>
                     <input name="take_profit" type="number" step="0.01" placeholder="target" data-i18n-placeholder="common.placeholder.target" data-tip="view.paper.tip.bracket_target" required>
+                    <button type="button" id="bracket-atr" data-tip="view.paper.tip.atr_suggest">ATR</button>
                     <button data-i18n="view.paper.btn.submit_bracket" class="primary" type="submit">BRACKET</button>
                 </form>
                 <button data-i18n="view.paper.btn.reset_account_200k" data-tip="view.paper.tip.reset" class="link" id="reset">Reset account ($200k)</button>
@@ -504,6 +506,28 @@ export async function renderPaper(mount) {
             el.textContent = err.message || 'statement failed';
         }
     }
+    const atrFill = async (formSel, fill) => {
+        const form = mount.querySelector(formSel);
+        const symbol = (new FormData(form).get('symbol') || '').trim().toUpperCase();
+        if (!symbol) { showToast(t('view.paper.err.atr_symbol'), { level: 'error' }); return; }
+        try {
+            const sg = await api.paperStopSuggestion(symbol);
+            fill(form, sg);
+            showToast(t('view.paper.toast.atr_filled', { atr: sg.atr.toFixed(2), period: sg.period }), { level: 'info' });
+        } catch (err) {
+            showToast(t('common.error', { err: err.message }), { level: 'error' });
+        }
+    };
+    mount.querySelector('#bracket-atr').addEventListener('click', () => atrFill('#bracket-form', (form, sg) => {
+        const long = form.querySelector('[name=side]').value === 'buy';
+        form.querySelector('[name=stop_loss]').value = (long ? sg.stop_long : sg.stop_short).toFixed(2);
+        form.querySelector('[name=take_profit]').value = (long ? sg.target_long : sg.target_short).toFixed(2);
+    }));
+    mount.querySelector('#ord-atr').addEventListener('click', () => atrFill('#ord-form', (form, sg) => {
+        const side = form.querySelector('[name=side]').value;
+        const long = side === 'buy' || side === 'cover';
+        form.querySelector('[name=stop_price]').value = (long ? sg.stop_long : sg.stop_short).toFixed(2);
+    }));
     wireProtectButtons(mount, acct.id);
     mount.querySelectorAll('.assign-btn').forEach(btn => {
         btn.addEventListener('click', async () => {
