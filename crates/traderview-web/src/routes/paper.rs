@@ -74,6 +74,7 @@ pub fn router() -> Router<AppState> {
         .route("/digest/prefs", get(get_digest_prefs).post(set_digest_prefs))
         .route("/paper/accounts/comparison", get(account_comparison))
         .route("/paper/holdings", get(holdings))
+        .route("/paper/account-correlations", get(account_correlations))
         .route("/paper/accounts/create", post(create_account))
         .route("/paper/accounts/:id/rename", post(rename_account))
         .route("/paper/accounts/:id/delete", post(delete_account))
@@ -1066,4 +1067,15 @@ async fn transfer_position(
         .await
         .map(|_| Json(true))
         .map_err(|e| ApiError::BadRequest(e.to_string()))
+}
+
+/// Realized strategy correlation across the user's accounts.
+async fn account_correlations(
+    State(s): State<AppState>,
+    user: AuthUser,
+) -> Result<Json<traderview_db::paper_equity::AccountCorrelations>, ApiError> {
+    traderview_db::paper_equity::account_correlations(&s.pool, user.id)
+        .await
+        .map(Json)
+        .map_err(ApiError::Internal)
 }

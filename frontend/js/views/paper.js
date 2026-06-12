@@ -281,6 +281,8 @@ export async function renderPaper(mount) {
         <div class="chart-panel">
             <h2 data-i18n="view.paper.h2.holdings">Consolidated holdings</h2>
             <div id="paper-holdings" class="muted small"></div>
+            <h3 data-i18n="view.paper.h3.acct_corr">Strategy correlation (realized)</h3>
+            <div id="paper-acct-corr" class="muted small"></div>
         </div>
         <div class="chart-panel">
             <h2 data-i18n="view.paper.h2.leaderboard">Strategy leaderboard</h2>
@@ -432,6 +434,9 @@ export async function renderPaper(mount) {
     if (accounts.length > 1) {
         api.paperHoldings()
             .then(h => { if (viewIsCurrent(tok)) renderHoldings(h); })
+            .catch(() => {});
+        api.paperAccountCorrelations()
+            .then(c => { if (viewIsCurrent(tok)) renderAcctCorr(c); })
             .catch(() => {});
     }
     Promise.all([
@@ -1201,6 +1206,18 @@ function renderLedger(interest, flows) {
         </tr>`).join('')}
         </tbody></table>
         <p class="muted small" data-i18n="view.paper.hint.ledger">Every non-trading cash movement, newest first (last 30): sweep interest, short borrow fees, margin loan interest, deposits, withdrawals. Trading cash flows live in the order history; dividends in their own panel.</p>`;
+}
+
+function renderAcctCorr(c) {
+    const el = document.getElementById('paper-acct-corr');
+    if (!el || !c || !Array.isArray(c.accounts) || c.accounts.length < 2) return;
+    el.innerHTML = `
+        <table class="data-table small"><thead><tr><th></th>${c.accounts.map(a => `<th>${esc(a)}</th>`).join('')}</tr></thead>
+        <tbody>${c.matrix.map((row, i) => `<tr><td><strong>${esc(c.accounts[i])}</strong></td>${
+            row.map((v, j) => i === j ? '<td class="muted">—</td>'
+                : `<td class="${v != null && Math.abs(v) > 0.7 ? 'neg' : ''}">${v != null ? v.toFixed(2) : '—'}</td>`).join('')}</tr>`).join('')}
+        </tbody></table>
+        <p class="muted small" data-i18n="view.paper.hint.acct_corr">Pairwise correlation of the accounts’ ACTUAL daily equity returns — diversification in practice, not backtest theory. |ρ| > 0.7 flagged: those strategies are the same bet wearing different names. — means under 10 common days, which is noise wearing units.</p>`;
 }
 
 function renderHoldings(view) {

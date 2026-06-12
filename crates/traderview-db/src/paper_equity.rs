@@ -2037,3 +2037,110 @@ pub async fn pdt_status(
         Utc::now().date_naive(),
     ))
 }
+
+
+#[derive(Debug, serde::Serialize)]
+pub struct AccountCorrelations {
+    pub accounts: Vec<String>,
+    /// Pairwise Pearson of DAILY equity returns (last snapshot per
+    /// day). None where the common overlap is under 10 days — a
+    /// correlation from a week of curves is noise wearing units.
+    pub matrix: Vec<Vec<Option<f64>>>,
+}
+
+/// Daily returns from equity snapshots: last equity per UTC day,
+/// then simple returns — pure, exposed for the pins.
+pub fn daily_equity_returns(snaps: &[(chrono::NaiveDate, f64)]) -> Vec<(chrono::NaiveDate, f64)> {
+    let mut last_per_day: std::collections::BTreeMap<chrono::NaiveDate, f64> = Default::default();
+    for (d, e) in snaps {
+        last_per_day.insert(*d, *e); // BTreeMap + insertion order = last write per day wins
+    }
+    let days: Vec<(chrono::NaiveDate, f64)> = last_per_day.into_iter().collect();
+    days.windows(2)
+        .filter(|w| w[0].1 > 0.0)
+        .map(|w| (w[1].0, w[1].1 / w[0].1 - 1.0))
+        .collect()
+}
+
+/// Realized strategy correlation: pairwise Pearson of the accounts'
+/// ACTUAL daily equity returns — diversification in practice, where
+/// the algo portfolio tool measures it in backtest theory. Returns
+/// align on common days per pair; sub-10-day overlaps are None.
+pub async fn account_correlations(
+    pool: &PgPool,
+    user_id: Uuid,
+) -> anyhow::Result<AccountCorrelations> {
+    use rust_decimal::prelude::ToPrimitive;
+    let accounts: Vec<(Uuid, String)> = sqlx::query_as(
+        "SELECT id, name FROM paper_accounts WHERE user_id = $1 ORDER BY created_at",
+    )
+    .bind(user_id)
+    .fetch_all(pool)
+    .await?;
+    let mut series: Vec<(String, std::collections::BTreeMap<chrono::NaiveDate, f64>)> = Vec::new();
+    for (id, name) in &accounts {
+        let snaps: Vec<(chrono::DateTime<Utc>, Decimal)> = sqlx::query_as(
+            "SELECT taken_at, equity FROM paper_equity_snapshots
+              WHERE paper_account_id = $1 ORDER BY taken_at",
+        )
+        .bind(id)
+        .fetch_all(pool)
+        .await?;
+        let plain: Vec<(chrono::NaiveDate, f64)> = snaps
+            .into_iter()
+            .map(|(t, e)| (t.date_naive(), e.to_f64().unwrap_or(0.0)))
+            .collect();
+        let rets = daily_equity_returns(&plain);
+        series.push((name.clone(), rets.into_iter().collect()));
+    }
+    let n = series.len();
+    let mut matrix = vec![vec![None; n]; n];
+    for i in 0..n {
+        matrix[i][i] = Some(1.0);
+        for j in (i + 1)..n {
+            let common: Vec<(f64, f64)> = series[i]
+                .1
+                .iter()
+                .filter_map(|(d, a)| series[j].1.get(d).map(|b| (*a, *b)))
+                .collect();
+            let rho = if common.len() >= 10 {
+                let a: Vec<f64> = common.iter().map(|(x, _)| *x).collect();
+                let b: Vec<f64> = common.iter().map(|(_, y)| *y).collect();
+                traderview_core::correlation::pearson(&a, &b)
+            } else {
+                None
+            };
+            matrix[i][j] = rho;
+            matrix[j][i] = rho;
+        }
+    }
+    Ok(AccountCorrelations {
+        accounts: series.into_iter().map(|(n, _)| n).collect(),
+        matrix,
+    })
+}
+
+#[cfg(test)]
+mod account_corr_tests {
+    use super::*;
+
+    #[test]
+    fn daily_returns_take_last_snapshot_per_day() {
+        let d = |day: u32| chrono::NaiveDate::from_ymd_opt(2026, 6, day).unwrap();
+        // Two intraday snapshots on the 1st: only the LAST counts —
+        // a daily return off the morning print would mix horizons.
+        let snaps = vec![
+            (d(1), 100_000.0),
+            (d(1), 101_000.0),
+            (d(2), 103_020.0),
+            (d(3), 103_020.0),
+        ];
+        let r = daily_equity_returns(&snaps);
+        assert_eq!(r.len(), 2);
+        assert!((r[0].1 - 0.02).abs() < 1e-12); // 101000 → 103020
+        assert_eq!(r[1].1, 0.0);
+        // Zero-equity days can't divide.
+        let r = daily_equity_returns(&[(d(1), 0.0), (d(2), 5.0)]);
+        assert!(r.is_empty());
+    }
+}
