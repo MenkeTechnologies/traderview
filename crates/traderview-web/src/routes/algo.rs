@@ -47,6 +47,7 @@ pub fn router() -> Router<AppState> {
         .route("/algo/strategies/:id/backtest-regimes", post(post_backtest_regimes))
         .route("/algo/strategies/:id/live-vs-backtest", get(get_live_vs_backtest))
         .route("/algo/strategies/:id/gate-fires", get(get_gate_fires))
+        .route("/algo/strategies/:id/pnl-curve", get(get_pnl_curve))
         .route("/algo/strategies/:id/revisions", get(get_revisions))
         .route(
             "/algo/strategies/:id/revisions/:rev_id/restore",
@@ -1511,4 +1512,18 @@ mod tests {
         // The error enumerates the registry, derived not typed.
         assert!(msg.contains("macd_cross") && msg.contains("pairs"));
     }
+}
+
+/// GET /algo/strategies/:id/pnl-curve — cumulative realized PnL by
+/// trip close time, plus the same current-drawdown figure the
+/// circuit breaker evaluates.
+async fn get_pnl_curve(
+    State(s): State<AppState>,
+    user: AuthUser,
+    Path(id): Path<Uuid>,
+) -> Result<Json<traderview_db::algo::PnlCurve>, ApiError> {
+    traderview_db::algo::pnl_curve(&s.pool, user.id, id)
+        .await
+        .map(Json)
+        .map_err(|e| ApiError::BadRequest(e.to_string()))
 }

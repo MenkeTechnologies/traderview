@@ -1159,6 +1159,7 @@ export const api = {
         }),
     algoLiveVsBacktest: (id) => request(`/algo/strategies/${id}/live-vs-backtest`),
     algoGateFires: (id, windowDays = 7) => request(`/algo/strategies/${id}/gate-fires?window_days=${windowDays}`),
+    algoPnlCurve: (id) => request(`/algo/strategies/${id}/pnl-curve`),
     algoRevisions: (id) => request(`/algo/strategies/${id}/revisions`),
     algoRestoreRevision: (id, revId) =>
         request(`/algo/strategies/${id}/revisions/${revId}/restore`, { method: 'POST' }),

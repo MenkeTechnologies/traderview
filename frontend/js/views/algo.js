@@ -1882,6 +1882,8 @@ async function openMetricsModal(mount, s) {
         <div class="modal-inner" style="max-width:960px">
             <h2>Metrics: ${esc(s.name)}</h2>
             <p class="muted small">Live aggregate over every algo_runs row for this strategy. Equity curve uses settled runs only (in-flight runs are excluded until stopped).</p>
+            <div id="mt-pnl-summary" class="small muted"></div>
+            <div id="mt-pnl-curve"></div>
             <div id="mt-body"><div class="tv-spinner-wrap"><div class="tv-spinner"></div></div></div>
             <div class="row" style="gap:8px;margin-top:8px">
                 <button type="button" id="mt-refresh">Refresh</button>
@@ -1902,9 +1904,38 @@ async function openMetricsModal(mount, s) {
         } catch (e) {
             body.innerHTML = `<p class="error">Metrics failed: ${esc(e.message || String(e))}</p>`;
         }
+        try {
+            renderPnlCurve(wrap, await api.algoPnlCurve(s.id));
+        } catch (e) { /* curve is enrichment — metrics already rendered */ }
     };
     wrap.querySelector('#mt-refresh').addEventListener('click', load);
     load();
+}
+
+// Cumulative realized PnL by trip close — the strategy's own equity
+// curve (realized only). Same uPlot pattern as the paper equity chart.
+function renderPnlCurve(wrap, c) {
+    const el = wrap.querySelector('#mt-pnl-curve');
+    const sumEl = wrap.querySelector('#mt-pnl-summary');
+    if (!el || !window.uPlot || !c || !Array.isArray(c.points)) return;
+    if (sumEl && c.trips > 0) {
+        sumEl.innerHTML = `realized P&L <strong class="${c.total_pnl >= 0 ? 'pos' : 'neg'}">$${c.total_pnl.toFixed(0)}</strong>
+            over ${c.trips} closed trips · peak $${c.peak_pnl.toFixed(0)} · current drawdown <span class="${c.current_drawdown > 0 ? 'neg' : ''}">$${c.current_drawdown.toFixed(0)}</span>`;
+    }
+    if (c.points.length < 2) return;
+    el.innerHTML = '';
+    new window.uPlot({
+        title: '', width: el.clientWidth || 900, height: 160,
+        series: [
+            {},
+            { label: 'cum P&L', stroke: '#00e5ff', width: 1.5, points: { show: false } },
+        ],
+        axes: [
+            { stroke: '#aab' },
+            { stroke: '#aab', size: 70 },
+        ],
+        legend: { show: false },
+    }, [c.points.map(p => p.ts), c.points.map(p => p.cum_pnl)], el);
 }
 
 function renderMetrics(host, m) {

@@ -931,6 +931,53 @@ pub async fn strategy_trips(
     Ok(trips)
 }
 
+#[derive(Debug, serde::Serialize)]
+pub struct PnlPoint {
+    /// Epoch seconds of the trip's CLOSE — realized PnL lands when
+    /// the trip closes, not when it opens.
+    pub ts: i64,
+    pub cum_pnl: f64,
+}
+
+#[derive(Debug, serde::Serialize)]
+pub struct PnlCurve {
+    pub points: Vec<PnlPoint>,
+    pub total_pnl: f64,
+    pub peak_pnl: f64,
+    /// Same realized_drawdown the circuit breaker evaluates.
+    pub current_drawdown: f64,
+    pub trips: usize,
+}
+
+/// Cumulative realized PnL by trip close time — the strategy's own
+/// equity-curve analogue (realized only; open positions don't move
+/// this line until they close).
+pub async fn pnl_curve(
+    pool: &PgPool,
+    user_id: Uuid,
+    strategy_id: Uuid,
+) -> anyhow::Result<PnlCurve> {
+    let trips = strategy_trips(pool, user_id, strategy_id).await?;
+    let pnls: Vec<f64> = trips.iter().map(|t| t.pnl).collect();
+    let mut cum = 0.0;
+    let mut peak = 0.0_f64;
+    let points = trips
+        .iter()
+        .map(|t| {
+            cum += t.pnl;
+            peak = peak.max(cum);
+            PnlPoint { ts: t.closed_ts, cum_pnl: cum }
+        })
+        .collect();
+    Ok(PnlCurve {
+        points,
+        total_pnl: cum,
+        peak_pnl: peak,
+        current_drawdown: traderview_core::live_vs_backtest::realized_drawdown(&pnls),
+        trips: trips.len(),
+    })
+}
+
 pub async fn fills_for_strategy(
     pool: &PgPool,
     user_id: Uuid,
