@@ -1177,22 +1177,34 @@ mod tests {
     }
 }
 
-/// UTC bounds of a "YYYY-MM" month: [first instant, first instant of
-/// the next month). Pure; None for unparsable input.
-pub fn month_bounds(month: &str) -> Option<(chrono::DateTime<Utc>, chrono::DateTime<Utc>)> {
-    let (y, m) = month.split_once('-')?;
-    let y: i32 = y.parse().ok()?;
-    let m: u32 = m.parse().ok()?;
-    let start = chrono::NaiveDate::from_ymd_opt(y, m, 1)?;
-    let end = if m == 12 {
-        chrono::NaiveDate::from_ymd_opt(y + 1, 1, 1)?
-    } else {
-        chrono::NaiveDate::from_ymd_opt(y, m + 1, 1)?
-    };
+/// UTC bounds of a "YYYY-MM" month or a bare "YYYY" year:
+/// [first instant, first instant of the next period). Pure; None for
+/// unparsable input — the annual statement is the same composition
+/// over wider bounds, not separate code.
+pub fn month_bounds(period: &str) -> Option<(chrono::DateTime<Utc>, chrono::DateTime<Utc>)> {
     let at = |d: chrono::NaiveDate| {
         chrono::DateTime::<Utc>::from_naive_utc_and_offset(d.and_hms_opt(0, 0, 0).unwrap(), Utc)
     };
-    Some((at(start), at(end)))
+    if let Some((y, m)) = period.split_once('-') {
+        let y: i32 = y.parse().ok()?;
+        let m: u32 = m.parse().ok()?;
+        let start = chrono::NaiveDate::from_ymd_opt(y, m, 1)?;
+        let end = if m == 12 {
+            chrono::NaiveDate::from_ymd_opt(y + 1, 1, 1)?
+        } else {
+            chrono::NaiveDate::from_ymd_opt(y, m + 1, 1)?
+        };
+        return Some((at(start), at(end)));
+    }
+    // Bare year: the tax-year statement.
+    let y: i32 = period.parse().ok()?;
+    if !(1970..=9999).contains(&y) {
+        return None;
+    }
+    Some((
+        at(chrono::NaiveDate::from_ymd_opt(y, 1, 1)?),
+        at(chrono::NaiveDate::from_ymd_opt(y + 1, 1, 1)?),
+    ))
 }
 
 /// Modified Dietz return (half-weight convention): the flow-aware
@@ -1249,7 +1261,7 @@ pub async fn statement(
         anyhow::bail!("forbidden");
     }
     let (start, end) =
-        month_bounds(month).ok_or_else(|| anyhow::anyhow!("month must be YYYY-MM"))?;
+        month_bounds(month).ok_or_else(|| anyhow::anyhow!("period must be YYYY-MM or YYYY"))?;
 
     let snap = |at: chrono::DateTime<Utc>| async move {
         let r: Option<(Decimal,)> = sqlx::query_as(
@@ -1459,7 +1471,11 @@ mod statement_tests {
         assert_eq!(e.to_rfc3339(), "2024-03-01T00:00:00+00:00");
         assert!(month_bounds("2026-13").is_none());
         assert!(month_bounds("garbage").is_none());
-        assert!(month_bounds("2026").is_none());
+        // Bare year = the tax-year statement: Jan 1 → next Jan 1.
+        let (s, e) = month_bounds("2026").unwrap();
+        assert_eq!(s.to_rfc3339(), "2026-01-01T00:00:00+00:00");
+        assert_eq!(e.to_rfc3339(), "2027-01-01T00:00:00+00:00");
+        assert!(month_bounds("12026").is_none());
     }
 }
 

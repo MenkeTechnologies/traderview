@@ -258,6 +258,7 @@ export async function renderPaper(mount) {
             <form id="stmt-form" class="inline-form">
                 <input name="month" type="month" value="${new Date().toISOString().slice(0, 7)}">
                 <button type="submit" data-i18n="view.paper.btn.statement">VIEW</button>
+                <button type="button" id="stmt-year" data-i18n="view.paper.btn.statement_year" data-tip="view.paper.tip.statement_year">YEAR</button>
             </form>
             <div id="paper-statement" class="muted small"></div>
         </div>
@@ -469,12 +470,20 @@ export async function renderPaper(mount) {
             }
         });
     });
+    mount.querySelector('#stmt-year').addEventListener('click', () => {
+        const f = mount.querySelector('#stmt-form');
+        const m = f.querySelector('[name=month]').value;
+        loadStatement(mount, acct.id, (m || new Date().toISOString()).slice(0, 4));
+    });
     mount.querySelector('#stmt-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         const month = new FormData(e.target).get('month');
+        loadStatement(mount, acct.id, month);
+    });
+    async function loadStatement(mount, acctId, month) {
         const el = mount.querySelector('#paper-statement');
         try {
-            const s = await api.paperStatement(acct.id, month);
+            const s = await api.paperStatement(acctId, month);
             const money = v => (v < 0 ? '-$' : '$') + Math.abs(v).toFixed(2);
             el.innerHTML = `
                 <table class="data-table small"><tbody>
@@ -494,7 +503,7 @@ export async function renderPaper(mount) {
         } catch (err) {
             el.textContent = err.message || 'statement failed';
         }
-    });
+    }
     wireProtectButtons(mount, acct.id);
     mount.querySelectorAll('.assign-btn').forEach(btn => {
         btn.addEventListener('click', async () => {
