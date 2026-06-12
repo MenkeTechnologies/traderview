@@ -407,6 +407,49 @@ pub fn oi_price_quadrant(price_chg_pct: f64, oi_chg_pct: f64) -> &'static str {
 }
 
 #[derive(Debug, Clone, serde::Serialize)]
+pub struct LiquidationPressure {
+    /// Span covered by the venue's recent-liquidations feed, oldest
+    /// record to now — the feed is "most recent N", not a fixed
+    /// window, so the span is reported rather than assumed.
+    pub window_minutes: i64,
+    pub longs_liquidated: usize,
+    pub shorts_liquidated: usize,
+    /// Σ contracts × ctVal × bankruptcy price — USD terms.
+    pub long_notional_usd: f64,
+    pub short_notional_usd: f64,
+}
+
+/// Aggregate the venue's recent filled liquidations. rows = (is_long,
+/// contracts, bankruptcy_px) per order; ct_val converts contracts to
+/// base units. Heavy long liquidations = a cascade down; heavy short
+/// = a squeeze up.
+pub fn liquidation_pressure(
+    rows: &[(bool, f64, f64)],
+    ct_val: f64,
+    oldest_ts_ms: i64,
+    now_ms: i64,
+) -> LiquidationPressure {
+    let (mut lc, mut sc, mut ln, mut sn) = (0usize, 0usize, 0.0, 0.0);
+    for (long, sz, px) in rows {
+        let notional = sz * ct_val * px;
+        if *long {
+            lc += 1;
+            ln += notional;
+        } else {
+            sc += 1;
+            sn += notional;
+        }
+    }
+    LiquidationPressure {
+        window_minutes: ((now_ms - oldest_ts_ms).max(0)) / 60_000,
+        longs_liquidated: lc,
+        shorts_liquidated: sc,
+        long_notional_usd: ln,
+        short_notional_usd: sn,
+    }
+}
+
+#[derive(Debug, Clone, serde::Serialize)]
 pub struct Positioning {
     pub inst_id: String,
     pub price_last: f64,
@@ -426,6 +469,9 @@ pub struct Positioning {
     /// Taker buy share of the last 24 hourly buckets — aggressor flow.
     pub taker_buy_share_24h_pct: Option<f64>,
     pub funding_rate: Option<f64>,
+    /// Recent forced liquidations — who is being carried out. None
+    /// when either the liquidation feed or the contract spec is dark.
+    pub liquidations: Option<LiquidationPressure>,
 }
 
 fn rubik_rows(v: &serde_json::Value) -> Vec<Vec<f64>> {
@@ -468,13 +514,19 @@ pub async fn positioning(base: &str) -> anyhow::Result<Positioning> {
         "https://www.okx.com/api/v5/rubik/stat/taker-volume?ccy={base}&instType=CONTRACTS&period=1H"
     );
     let u_funding = format!("https://www.okx.com/api/v5/public/funding-rate?instId={inst}");
-    let (ticker, oi, oi_hist, ls, taker, funding) = futures_util::join!(
+    let u_liq = format!(
+        "https://www.okx.com/api/v5/public/liquidation-orders?instType=SWAP&uly={base}-USDT&state=filled"
+    );
+    let u_spec = format!("https://www.okx.com/api/v5/public/instruments?instType=SWAP&instId={inst}");
+    let (ticker, oi, oi_hist, ls, taker, funding, liq, spec) = futures_util::join!(
         okx_json(&u_ticker),
         okx_json(&u_oi),
         okx_json(&u_oi_hist),
         okx_json(&u_ls),
         okx_json(&u_taker),
         okx_json(&u_funding),
+        okx_json(&u_liq),
+        okx_json(&u_spec),
     );
     let ticker = ticker?;
     let last = okx_f64(&ticker, &["data", "0", "last"])
@@ -515,12 +567,54 @@ pub async fn positioning(base: &str) -> anyhow::Result<Positioning> {
         long_short_ratio_24h_ago,
         taker_buy_share_24h_pct,
         funding_rate: funding.ok().and_then(|v| okx_f64(&v, &["data", "0", "fundingRate"])),
+        liquidations: (|| {
+            let ct_val = okx_f64(&spec.ok()?, &["data", "0", "ctVal"]).filter(|v| *v > 0.0)?;
+            let liq = liq.ok()?;
+            let details = liq
+                .get("data")
+                .and_then(|d| d.as_array())
+                .and_then(|arr| arr.first())
+                .and_then(|r| r.get("details"))
+                .and_then(|d| d.as_array())?;
+            let mut rows = Vec::new();
+            let mut oldest = i64::MAX;
+            for o in details {
+                let long = o.get("posSide").and_then(|v| v.as_str()) == Some("long");
+                let sz: f64 = o.get("sz").and_then(|v| v.as_str()).and_then(|s| s.parse().ok())?;
+                let px: f64 = o.get("bkPx").and_then(|v| v.as_str()).and_then(|s| s.parse().ok())?;
+                let ts: i64 = o.get("ts").and_then(|v| v.as_str()).and_then(|s| s.parse().ok())?;
+                oldest = oldest.min(ts);
+                rows.push((long, sz, px));
+            }
+            (!rows.is_empty()).then(|| {
+                liquidation_pressure(&rows, ct_val, oldest, chrono::Utc::now().timestamp_millis())
+            })
+        })(),
     })
 }
 
 #[cfg(test)]
 mod positioning_tests {
     use super::*;
+
+    #[test]
+    fn liquidation_pressure_splits_and_converts() {
+        // Two long liqs (1.04 + 3.8 contracts) + one short, ctVal
+        // 0.01 — the live-observed BTC swap spec. Notional = sz ×
+        // 0.01 × bankruptcy px.
+        let rows = [
+            (true, 1.04, 62_912.5),
+            (true, 3.8, 62_810.1),
+            (false, 2.0, 63_000.0),
+        ];
+        let p = liquidation_pressure(&rows, 0.01, 1_781_246_333_927, 1_781_246_933_927);
+        assert_eq!(p.longs_liquidated, 2);
+        assert_eq!(p.shorts_liquidated, 1);
+        assert!((p.long_notional_usd - (1.04 * 0.01 * 62_912.5 + 3.8 * 0.01 * 62_810.1)).abs() < 1e-6);
+        assert!((p.short_notional_usd - 2.0 * 0.01 * 63_000.0).abs() < 1e-6);
+        // 600 000 ms span = 10 minutes.
+        assert_eq!(p.window_minutes, 10);
+    }
 
     #[test]
     fn quadrant_pins_all_five_reads() {

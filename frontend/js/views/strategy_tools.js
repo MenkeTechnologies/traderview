@@ -544,11 +544,16 @@ const TOOLS = {
                 <div class="card"><div class="label">Funding</div>
                     <div class="value">${r.funding_rate != null ? (r.funding_rate * 100).toFixed(4) + '%' : '—'}</div>
                     <div class="small muted">per interval</div></div>
+                <div class="card"><div class="label">Liquidations${r.liquidations ? ` (${r.liquidations.window_minutes}m)` : ''}</div>
+                    <div class="value">${r.liquidations ? `<span class="neg">L $${(r.liquidations.long_notional_usd / 1e3).toFixed(0)}k</span> / <span class="pos">S $${(r.liquidations.short_notional_usd / 1e3).toFixed(0)}k</span>` : '—'}</div>
+                    <div class="small muted">${r.liquidations ? `${r.liquidations.longs_liquidated} longs · ${r.liquidations.shorts_liquidated} shorts carried out` : 'feed dark'}</div></div>
             </div>
             <p class="muted small">Live OKX. Quadrant is the classic OI×price read — new longs (both up: new money
             agreeing), short covering (price up, OI down: shorts closing, not buyers arriving), new shorts (price
             down, OI up), long liquidation (both down); ±0.05% reads flat. Long/short is the ACCOUNT ratio (retail
-            head-count, not notional). Ticker + OI are required; ratio/flow/history each degrade to — independently.</p>`,
+            head-count, not notional). Liquidations are the venue's recent-fills feed (span shown, not a fixed window) at bankruptcy price × ctVal —
+            heavy long liquidations read cascade-down, heavy short read squeeze-up. Ticker + OI are required;
+            ratio/flow/history/liquidations each degrade to — independently.</p>`,
     },
     'funding-arb-live': {
         label: 'Funding Arb (live)',
