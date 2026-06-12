@@ -63,6 +63,28 @@ pub async fn set_cash_apy(
     Ok(r.rows_affected() > 0)
 }
 
+/// Set the margin-loan APY charged on negative cash (0 = off; 25%
+/// covers any retail broker).
+pub async fn set_margin_apy(
+    pool: &PgPool,
+    user_id: Uuid,
+    account_id: Uuid,
+    apy_pct: Decimal,
+) -> anyhow::Result<bool> {
+    if apy_pct < Decimal::ZERO || apy_pct > Decimal::from(25) {
+        anyhow::bail!("apy_pct must be in 0..=25");
+    }
+    let r = sqlx::query(
+        "UPDATE paper_accounts SET margin_apy_pct = $3 WHERE id = $1 AND user_id = $2",
+    )
+    .bind(account_id)
+    .bind(user_id)
+    .bind(apy_pct)
+    .execute(pool)
+    .await?;
+    Ok(r.rows_affected() > 0)
+}
+
 /// Set the account's margin multiplier: 1 = cash, 2 = Reg-T, up to 4.
 pub async fn set_margin_multiplier(
     pool: &PgPool,
@@ -144,18 +166,18 @@ pub async fn list(
 pub async fn tick(pool: &PgPool) -> anyhow::Result<usize> {
     use rust_decimal::prelude::ToPrimitive;
     let today = Utc::now().date_naive();
-    let claimed: Vec<(Uuid, Decimal, Decimal, Decimal)> = sqlx::query_as(
+    let claimed: Vec<(Uuid, Decimal, Decimal, Decimal, Decimal)> = sqlx::query_as(
         "UPDATE paper_accounts
             SET last_interest_on = $1
-          WHERE (cash_apy_pct > 0 OR borrow_apy_pct > 0)
+          WHERE (cash_apy_pct > 0 OR borrow_apy_pct > 0 OR margin_apy_pct > 0)
             AND (last_interest_on IS NULL OR last_interest_on < $1)
-        RETURNING id, cash, cash_apy_pct, borrow_apy_pct",
+        RETURNING id, cash, cash_apy_pct, borrow_apy_pct, margin_apy_pct",
     )
     .bind(today)
     .fetch_all(pool)
     .await?;
     let mut credited = 0;
-    for (id, cash, apy, borrow_apy) in &claimed {
+    for (id, cash, apy, borrow_apy, margin_apy) in &claimed {
         // Gap days come from the AUDIT trail (last credited_on), not
         // the claim stamp — RETURNING sees the new row, and the audit
         // row is what proves a credit happened. Fresh enablement (no
@@ -197,15 +219,25 @@ pub async fn tick(pool: &PgPool) -> anyhow::Result<usize> {
         } else {
             0.0
         };
-        if sweep <= 0.0 && borrow <= 0.0 {
+        // Margin loan interest: ACT/365 on the debit balance. The
+        // accrual fn's base is the loan magnitude — interest_accrual
+        // itself zeroes non-positive bases, so a positive cash
+        // balance charges nothing.
+        let loan = interest_accrual(
+            (-*cash).to_f64().unwrap_or(0.0),
+            margin_apy.to_f64().unwrap_or(0.0),
+            days,
+        );
+        if sweep <= 0.0 && borrow <= 0.0 && loan <= 0.0 {
             continue;
         }
         let sweep = Decimal::try_from(sweep).unwrap_or_default().round_dp(2);
         let borrow = Decimal::try_from(borrow).unwrap_or_default().round_dp(2);
+        let loan = Decimal::try_from(loan).unwrap_or_default().round_dp(2);
         let mut tx = pool.begin().await?;
         sqlx::query("UPDATE paper_accounts SET cash = cash + $2 WHERE id = $1")
             .bind(id)
-            .bind(sweep - borrow)
+            .bind(sweep - borrow - loan)
             .execute(&mut *tx)
             .await?;
         if sweep > Decimal::ZERO {
@@ -226,6 +258,15 @@ pub async fn tick(pool: &PgPool) -> anyhow::Result<usize> {
             .execute(&mut *tx)
             .await?;
         }
+        if loan > Decimal::ZERO {
+            sqlx::query(
+                "INSERT INTO paper_interest (paper_account_id, credited_on, amount, apy_pct, days, kind)
+                 VALUES ($1, $2, $3, $4, $5, 'margin_interest')",
+            )
+            .bind(id).bind(today).bind(-loan).bind(margin_apy).bind(days as i32)
+            .execute(&mut *tx)
+            .await?;
+        }
         tx.commit().await?;
         credited += 1;
     }
@@ -243,8 +284,11 @@ mod tests {
         assert!((one - 100_000.0 * 0.05 / 365.0).abs() < 1e-9);
         // Three missed days credit linearly (no intra-gap compounding).
         assert!((interest_accrual(100_000.0, 5.0, 3) - 3.0 * one).abs() < 1e-9);
-        // Credit-only: margin debits accrue nothing. Zero rate, zero
-        // days, and the 30-day catch-up cap.
+        // Credit-only: margin debits accrue nothing through the SWEEP
+        // (the loan pass charges them via the negated base — same
+        // ACT/365: a $20k loan at 10% for one day).
+        let loan_day = interest_accrual(20_000.0, 10.0, 1);
+        assert!((loan_day - 20_000.0 * 0.10 / 365.0).abs() < 1e-9);
         assert_eq!(interest_accrual(-5_000.0, 5.0, 1), 0.0);
         assert_eq!(interest_accrual(100_000.0, 0.0, 1), 0.0);
         assert_eq!(interest_accrual(100_000.0, 5.0, 0), 0.0);

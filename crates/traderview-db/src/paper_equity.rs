@@ -1228,6 +1228,7 @@ pub struct Statement {
     pub dividends: f64,
     pub interest: f64,
     pub borrow_fees: f64,
+    pub margin_interest: f64,
 }
 
 /// Monthly brokerage-style statement, composed read-only from the
@@ -1310,13 +1311,14 @@ pub async fn statement(
     .bind(end.date_naive())
     .fetch_all(pool)
     .await?;
-    let (mut interest, mut borrow_fees) = (0.0, 0.0);
+    let (mut interest, mut borrow_fees, mut margin_interest) = (0.0, 0.0, 0.0);
     for (kind, amt) in &interest_rows {
         let v = amt.to_f64().unwrap_or(0.0);
-        if kind == "short_borrow" {
-            borrow_fees += -v; // stored negative; report as a positive cost
-        } else {
-            interest += v;
+        match kind.as_str() {
+            // Debits are stored negative; report them as positive costs.
+            "short_borrow" => borrow_fees += -v,
+            "margin_interest" => margin_interest += -v,
+            _ => interest += v,
         }
     }
 
@@ -1384,6 +1386,7 @@ pub async fn statement(
         dividends: dividends.and_then(|(d,)| d.to_f64()).unwrap_or(0.0),
         interest,
         borrow_fees,
+        margin_interest,
     })
 }
 

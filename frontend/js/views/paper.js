@@ -72,6 +72,7 @@ export async function renderPaper(mount) {
                 <option value="2" ${Number(acct.margin_multiplier) === 2 ? 'selected' : ''}>2 (Reg-T)</option>
                 <option value="4" ${Number(acct.margin_multiplier) === 4 ? 'selected' : ''}>4 (day)</option>
             </select></label>
+            <label class="small" data-tip="view.paper.tip.margin_apy"><span data-i18n="view.paper.label.margin_apy">Loan APY %</span> <input type="number" id="acct-margin-apy" min="0" max="25" step="0.25" value="${Number(acct.margin_apy_pct || 0)}" style="width:64px"></label>
         </div>
 
         <div class="cards">
@@ -461,6 +462,7 @@ export async function renderPaper(mount) {
                     <tr><td data-i18n="view.paper.stmt.dividends">Dividends</td><td class="${s.dividends >= 0 ? 'pos' : 'neg'}">${money(s.dividends)}</td></tr>
                     <tr><td data-i18n="view.paper.stmt.interest">Cash sweep interest</td><td class="pos">${money(s.interest)}</td></tr>
                     <tr><td data-i18n="view.paper.stmt.borrow">Short borrow fees</td><td class="neg">${money(s.borrow_fees)}</td></tr>
+                    <tr><td data-i18n="view.paper.stmt.margin_int">Margin loan interest</td><td class="neg">${money(s.margin_interest)}</td></tr>
                 </tbody></table>
                 <p class="muted small" data-i18n="view.paper.hint.statement">Composed from the live stores — equity snapshots bound the period (a mid-month account opening shows — for opening equity, not a fake zero); realized P&L is trips CLOSED in the month from the same FIFO reconstruction as attribution, so a trip closed this month on lots bought earlier lands here.</p>`;
         } catch (err) {
@@ -569,6 +571,14 @@ export async function renderPaper(mount) {
     };
     wireCashFlow('#acct-deposit', 1, 'view.paper.prompt.deposit', 'view.paper.toast.deposited');
     wireCashFlow('#acct-withdraw', -1, 'view.paper.prompt.withdraw', 'view.paper.toast.withdrawn');
+    mount.querySelector('#acct-margin-apy').addEventListener('change', async (e) => {
+        try {
+            await api.paperSetMarginApy(acct.id, Number(e.target.value) || 0);
+            showToast(t('view.paper.toast.margin_apy_set', { apy: Number(e.target.value) || 0 }), { level: 'success' });
+        } catch (err) {
+            showToast(t('common.error', { err: err.message }), { level: 'error' });
+        }
+    });
     mount.querySelector('#acct-margin').addEventListener('change', async (e) => {
         try {
             await api.paperSetMargin(acct.id, Number(e.target.value));

@@ -46,6 +46,7 @@ pub fn router() -> Router<AppState> {
         .route("/paper/accounts/:id/cash-apy", post(set_cash_apy))
         .route("/paper/accounts/:id/borrow-apy", post(set_borrow_apy))
         .route("/paper/accounts/:id/margin", post(set_margin))
+        .route("/paper/accounts/:id/margin-apy", post(set_margin_apy))
         .route("/paper/accounts/:id/interest", get(interest))
         .route("/paper/accounts/:id/statement", get(statement))
         .route(
@@ -898,6 +899,19 @@ async fn set_margin(
     Json(b): Json<MarginBody>,
 ) -> Result<Json<bool>, ApiError> {
     traderview_db::paper_interest::set_margin_multiplier(&s.pool, user.id, id, b.multiplier)
+        .await
+        .map(Json)
+        .map_err(|e| ApiError::BadRequest(e.to_string()))
+}
+
+/// Margin-loan APY charged daily on negative cash (0 = off).
+async fn set_margin_apy(
+    State(s): State<AppState>,
+    user: AuthUser,
+    Path(id): Path<Uuid>,
+    Json(b): Json<CashApyBody>,
+) -> Result<Json<bool>, ApiError> {
+    traderview_db::paper_interest::set_margin_apy(&s.pool, user.id, id, b.apy_pct)
         .await
         .map(Json)
         .map_err(|e| ApiError::BadRequest(e.to_string()))
