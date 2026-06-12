@@ -117,11 +117,22 @@ function rangeLabel(days) {
     return startStr === endStr.split(' ')[0] ? endStr : `${startStr} - ${endStr}`;
 }
 
-function dayStrip(cal) {
+// One tile per calendar day across the selected window, in a horizontally
+// scrollable strip (renderDashboard scrolls it to today on mount). With no
+// rolling window ('All time'), span back to the earliest calendar entry,
+// capped at 365 tiles so a years-deep account doesn't render thousands of
+// empty nodes.
+function dayStrip(cal, windowDays) {
     const map = new Map((cal || []).map(c => [c.day, c]));
     const cells = [];
     const today = new Date();
-    for (let i = 6; i >= 0; i--) {
+    let days = windowDays;
+    if (!days && map.size) {
+        const earliest = [...map.keys()].sort()[0];
+        days = Math.ceil((today - new Date(`${earliest}T00:00:00`)) / 86400000) + 1;
+    }
+    days = Math.max(7, Math.min(days || 7, 365));
+    for (let i = days - 1; i >= 0; i--) {
         const d = new Date(today);
         d.setDate(d.getDate() - i);
         // Use LOCAL date for the lookup key — `toISOString().slice(0,10)`
@@ -140,7 +151,7 @@ function dayStrip(cal) {
                     <span class="dash-tv-day-name">${DAY_NAMES[d.getDay()]}</span>
                 </div>
                 <div class="dash-tv-day-pnl ${pnlClass(pnl)}">${pnl === 0 ? '$0' : fmtMoney(pnl)}</div>
-                <div class="dash-tv-day-trades">${trades} ${trades === 1 ? 'trade' : 'trades'}</div>
+                <div class="dash-tv-day-trades">${trades} ${esc(t(trades === 1 ? 'view.dashboard.day_strip.trade_singular' : 'view.dashboard.day_strip.trade_plural'))}</div>
             </div>
         `);
     }
@@ -1145,7 +1156,7 @@ export async function renderDashboard(mount, state) {
         </div>
         <div class="dash-tv-range">${esc(rangeLabel(interval))}</div>
         ${failedFetches.length > 0 ? `<div class="dash-tv-banner warn" role="alert">${esc(t('view.dashboard.banner.partial_data', { names: failedFetches.map(f => f.name).join(', ') }))}</div>` : ''}
-        <div class="dash-tv-day-strip">${dayStrip(data.cal)}</div>
+        <div class="dash-tv-day-strip">${dayStrip(data.cal, interval)}</div>
 
         <div class="dash-tv-grid" id="dash-tv-grid">
             ${renderLayoutPanels(layout, data)}
@@ -1186,6 +1197,11 @@ export async function renderDashboard(mount, state) {
     // Apply data-bar-pct widths via rAF — Tauri release WebKit strips
     // inline style="width:X%" from innerHTML, so widths land via JS.
     applyBarWidths(mount);
+
+    // Start the day strip at its right end (today). rAF so release WebKit
+    // has resolved layout and scrollWidth is real.
+    const strip = mount.querySelector('.dash-tv-day-strip');
+    if (strip) requestAnimationFrame(() => { strip.scrollLeft = strip.scrollWidth; });
 
     // Mount widgets that need post-DOM init (uPlot, etc). Walk the actual
     // layout — never assume a widget is present.

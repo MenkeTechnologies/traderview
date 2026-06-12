@@ -713,8 +713,11 @@ table.open-trades a:hover { text-decoration:underline }
 .dash-tv-toggle button:hover { background:rgba(0,229,255,0.08); color:var(--cyan) }
 .dash-tv-toggle button.active { background:var(--cyan); color:#000 }
 
-.dash-tv-day-strip { display:grid; grid-template-columns:repeat(7,1fr); gap:8px; margin-bottom:14px }
-.dash-tv-day { background:var(--bg-card); border:1px solid var(--border); border-radius:2px; padding:10px 12px; min-height:84px; display:flex; flex-direction:column; gap:6px }
+/* Horizontally scrollable day tiles — one per day of the selected window,
+   scrolled to today on mount. flex:1 0 150px grows tiles to fill the row
+   when the window is short, scrolls when it overflows. */
+.dash-tv-day-strip { display:flex; overflow-x:auto; gap:8px; margin-bottom:14px; padding-bottom:4px }
+.dash-tv-day { flex:1 0 150px; background:var(--bg-card); border:1px solid var(--border); border-radius:2px; padding:10px 12px; min-height:84px; display:flex; flex-direction:column; gap:6px }
 .dash-tv-day-head { display:flex; justify-content:space-between; align-items:baseline }
 .dash-tv-day-num { font-size:22px; font-weight:700; color:var(--text) }
 .dash-tv-day-name { font-size:11px; color:var(--text-muted); text-transform:lowercase }

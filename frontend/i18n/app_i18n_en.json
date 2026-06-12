@@ -10439,6 +10439,8 @@
   "view.dashboard.chart.trades": "Trades",
   "view.dashboard.chart.win": "Win",
   "view.dashboard.chart.zero": "0",
+  "view.dashboard.day_strip.trade_plural": "trades",
+  "view.dashboard.day_strip.trade_singular": "trade",
   "view.dashboard.discipline.block_plural": "blocks",
   "view.dashboard.discipline.block_singular": "block",
   "view.dashboard.discipline.body": "stop set {stop_set}/100 · stop honored {stop_honored}/100 · plan {plan}/100 · gate restraint {gate_restraint}/100",
