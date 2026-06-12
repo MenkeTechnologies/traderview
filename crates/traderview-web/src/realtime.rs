@@ -136,6 +136,14 @@ pub enum Event {
         signals_emitted: i64,
         seconds_to_next_eval: i64,
     },
+    /// Maintenance margin breached at current marks — the margin
+    /// call. Rare, severe, per-user: fans out to webhooks too.
+    MarginCall {
+        account: String,
+        equity: f64,
+        required: f64,
+    },
+
     /// Funding regime watcher: a perp's funding APR crossed the alert
     /// threshold WITH persistence (the regime test, not a one-interval
     /// spike). Live-feed only — global market data, not per-user, so
@@ -292,6 +300,18 @@ mod tests {
         assert_eq!(v["type"], "sentiment");
         assert_eq!(v["wsb"], 4);
         assert_eq!(v["stocktwits"], 9);
+    }
+
+    #[test]
+    fn margin_call_serializes_snake_case() {
+        let v = serde_json::to_value(Event::MarginCall {
+            account: "SimTrader".into(),
+            equity: 9_000.0,
+            required: 12_500.0,
+        })
+        .unwrap();
+        assert_eq!(v["type"], "margin_call");
+        assert_eq!(v["account"], "SimTrader");
     }
 
     #[test]

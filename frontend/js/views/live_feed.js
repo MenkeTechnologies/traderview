@@ -25,6 +25,7 @@ const EVENT_TYPES = [
     'paper_fill',
     'strategy_drift',
     'funding_regime',
+    'margin_call',
     'rebalance_drift',
     'daily_digest',
     'algo_signal_fired',
@@ -47,6 +48,7 @@ const TYPE_COLOR = {
     paper_fill:          'lf-fill',
     strategy_drift:      'lf-alert',
     funding_regime:      'lf-alert',
+    margin_call:         'lf-alert',
     rebalance_drift:     'lf-alert',
     daily_digest:        'lf-news',
     algo_signal_fired:   'lf-signal',
@@ -262,6 +264,8 @@ function summarize(type, d) {
             return `<strong>${esc(d.symbol)}</strong> rule=${esc(d.rule_id)} — ${esc(d.message)}`;
         case 'paper_fill':
             return `<strong>${esc(d.symbol)}</strong> ${esc(d.side)} ${num(d.qty, 2)} @ ${num(d.price, 4)} (${esc(d.order_type)} filled in background)`;
+        case 'margin_call':
+            return `<strong>${esc(d.account)}</strong> MARGIN CALL — marked equity $${num(d.equity, 0)} below required $${num(d.required, 0)} (25% maintenance)`;
         case 'funding_regime':
             return `<strong>${esc(d.base)}</strong> funding ${num(d.apr_pct, 1)}% APR · ${num(d.same_sign_pct * 100, 0)}% same-sign — persistent carry regime, collect via ${esc(d.collect_via)}`;
         case 'strategy_drift':

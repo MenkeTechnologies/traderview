@@ -52,6 +52,8 @@ pub const STRATEGY_DRIFT_WATCH: Duration = Duration::from_secs(12 * 60 * 60);
 /// Funding regime sweep — hourly; rates settle per interval, so finer
 /// is noise. ~24 OKX calls per pass via the existing concurrent scan.
 pub const FUNDING_REGIME_WATCH: Duration = Duration::from_secs(60 * 60);
+/// Maintenance-margin sweep — hourly against current marks.
+pub const MARGIN_CALL_WATCH: Duration = Duration::from_secs(60 * 60);
 /// Alert floor: |APR| ≥ this AND persistence ≥ FUNDING_ALERT_PERSISTENCE.
 pub const FUNDING_ALERT_APR_PCT: f64 = 15.0;
 /// Same 0.7 regime threshold the scanner UI colors green — one convention.
@@ -136,6 +138,7 @@ pub fn spawn_refreshers(pool: PgPool, cache: TileCache, hub: crate::realtime::Hu
     spawn_paper_twap_ticker(pool.clone(), hub.clone());
     spawn_strategy_drift_watch(pool.clone(), hub.clone());
     spawn_funding_regime_watch(hub.clone());
+    spawn_margin_call_watch(pool.clone(), hub.clone());
     let hub2 = hub.clone();
     spawn_rebalance_drift_watch(pool.clone(), hub);
     spawn_paper_recurring(pool.clone());
@@ -231,6 +234,51 @@ fn spawn_funding_regime_watch(hub: crate::realtime::Hub) {
                 }
             }
             tokio::time::sleep(FUNDING_REGIME_WATCH).await;
+        }
+    });
+}
+
+/// Margin-call watcher: hourly sweep of marked equity vs the 25%
+/// maintenance requirement — the after-the-fill counterpart to the
+/// entry-basis initial-margin check in apply_fill. Transition dedup
+/// like the drift watches: the call fires on ENTERING breach, a
+/// recovered account clears, a relapse re-fires. Rare + severe +
+/// per-user → webhooks too.
+fn spawn_margin_call_watch(pool: PgPool, hub: crate::realtime::Hub) {
+    tokio::spawn(async move {
+        let mut called: std::collections::HashSet<uuid::Uuid> = Default::default();
+        loop {
+            match traderview_db::paper_equity::margin_calls(&pool).await {
+                Ok(calls) => {
+                    let breached: std::collections::HashSet<uuid::Uuid> =
+                        calls.iter().map(|c| c.account_id).collect();
+                    for c in &calls {
+                        hub.publish(crate::realtime::Event::MarginCall {
+                            account: c.name.clone(),
+                            equity: c.equity,
+                            required: c.required,
+                        });
+                        if called.insert(c.account_id) {
+                            tracing::warn!(account = %c.name, equity = c.equity, "margin call");
+                            let payload = traderview_db::webhooks::AlertPayload {
+                                title: format!("Margin call: {}", c.name),
+                                message: format!(
+                                    "marked equity ${:.0} below the 25% maintenance requirement ${:.0} (gross exposure ${:.0})",
+                                    c.equity, c.required, c.gross_exposure
+                                ),
+                                symbol: None,
+                                kind: "margin_call".into(),
+                                url: None,
+                                fired_at: chrono::Utc::now(),
+                            };
+                            traderview_db::webhooks::fan_out_all(&pool, c.user_id, &payload).await;
+                        }
+                    }
+                    called.retain(|id| breached.contains(id));
+                }
+                Err(e) => tracing::warn!(error = %e, "margin-call sweep failed"),
+            }
+            tokio::time::sleep(MARGIN_CALL_WATCH).await;
         }
     });
 }

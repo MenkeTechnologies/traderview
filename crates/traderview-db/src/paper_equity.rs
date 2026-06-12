@@ -1567,3 +1567,114 @@ mod holdings_tests {
         assert!(tsla.weighted_avg_price.is_none());
     }
 }
+
+
+/// Reg-T maintenance requirement: marked equity must cover
+/// maint_pct of GROSS marked exposure. The classic floor is 25%.
+pub const MAINTENANCE_PCT: f64 = 0.25;
+
+/// Pure maintenance check. Gross is Σ|marked value| (shorts count at
+/// magnitude — they're exposure, not collateral); equity is cash +
+/// SIGNED marks. A flat book trivially passes.
+pub fn maintenance_ok(equity: f64, gross: f64, maint_pct: f64) -> bool {
+    gross <= 0.0 || equity >= maint_pct * gross
+}
+
+#[derive(Debug, Clone, serde::Serialize)]
+pub struct MarginCall {
+    pub account_id: Uuid,
+    pub name: String,
+    pub user_id: Uuid,
+    pub equity: f64,
+    pub gross_exposure: f64,
+    pub required: f64,
+}
+
+/// Accounts below the maintenance requirement at CURRENT marks — the
+/// after-the-fill counterpart to the entry-basis initial-margin check
+/// in apply_fill. Same marking sources as the equity sampler (cached
+/// quotes, chain mids × 100 for OCC); a partially-marked book is
+/// SKIPPED, not judged — calling a margin call on stale marks is
+/// worse than calling it one pass late.
+pub async fn margin_calls(pool: &PgPool) -> anyhow::Result<Vec<MarginCall>> {
+    use rust_decimal::prelude::ToPrimitive;
+    let accounts: Vec<(Uuid, String, Uuid, Decimal)> = sqlx::query_as(
+        "SELECT id, name, user_id, cash FROM paper_accounts",
+    )
+    .fetch_all(pool)
+    .await?;
+    let mut out = Vec::new();
+    for (account_id, name, user_id, cash) in accounts {
+        let positions: Vec<(String, Decimal)> = sqlx::query_as(
+            "SELECT symbol, qty FROM paper_positions WHERE paper_account_id = $1",
+        )
+        .bind(account_id)
+        .fetch_all(pool)
+        .await?;
+        if positions.is_empty() {
+            continue;
+        }
+        let (mut signed, mut gross) = (Decimal::ZERO, Decimal::ZERO);
+        let mut all_marked = true;
+        for (symbol, qty) in &positions {
+            let mark = if let Some(occ) = traderview_core::occ_symbol::parse(symbol) {
+                match crate::paper::option_quote(&occ).await {
+                    Ok(Some(p)) => Decimal::try_from(p * 100.0).ok(),
+                    _ => None,
+                }
+            } else {
+                match crate::market_data::quote(pool, symbol).await {
+                    Ok(q) => Decimal::try_from(q.price).ok(),
+                    Err(_) => None,
+                }
+            };
+            match mark {
+                Some(p) => {
+                    signed += p * qty;
+                    gross += (p * qty).abs();
+                }
+                None => {
+                    all_marked = false;
+                    break;
+                }
+            }
+        }
+        if !all_marked {
+            continue;
+        }
+        let equity = (cash + signed).to_f64().unwrap_or(0.0);
+        let gross_f = gross.to_f64().unwrap_or(0.0);
+        if !maintenance_ok(equity, gross_f, MAINTENANCE_PCT) {
+            out.push(MarginCall {
+                account_id,
+                name,
+                user_id,
+                equity,
+                gross_exposure: gross_f,
+                required: MAINTENANCE_PCT * gross_f,
+            });
+        }
+    }
+    Ok(out)
+}
+
+#[cfg(test)]
+mod maintenance_tests {
+    use super::*;
+
+    #[test]
+    fn maintenance_pins_boundary_and_shorts() {
+        // $25k equity supports exactly $100k gross at 25%.
+        assert!(maintenance_ok(25_000.0, 100_000.0, 0.25));
+        assert!(!maintenance_ok(24_999.0, 100_000.0, 0.25));
+        // Shorts are exposure at magnitude: $50k cash, short $40k
+        // marked — equity 10k (cash 50k + signed −40k), gross 40k,
+        // required 10k: exactly at the line.
+        assert!(maintenance_ok(10_000.0, 40_000.0, 0.25));
+        assert!(!maintenance_ok(9_999.0, 40_000.0, 0.25));
+        // Flat book always passes; negative equity never does with
+        // exposure on.
+        assert!(maintenance_ok(-5.0, 0.0, 0.25));
+        assert!(!maintenance_ok(-5.0, 1.0, 0.25));
+    }
+}
