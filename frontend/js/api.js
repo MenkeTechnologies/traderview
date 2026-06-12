@@ -858,6 +858,7 @@ export const api = {
     paperSetDrip: (id, enabled) =>
         request(`/paper/accounts/${id}/drip`, { method: 'POST', body: JSON.stringify({ enabled }) }),
     paperAttribution: (id) => request(`/paper/accounts/${id}/attribution`),
+    paperCorrelations: (id, lookback = 90) => request(`/paper/accounts/${id}/correlations?lookback_days=${lookback}`),
     paperEquityHistory: (id) => request(`/paper/accounts/${id}/equity-history`),
     paperAccountCreate: (name, starting_cash) =>
         request('/paper/accounts/create', { method: 'POST', body: JSON.stringify({ name, starting_cash }) }),

@@ -47,6 +47,7 @@ pub fn router() -> Router<AppState> {
         )
         .route("/paper/accounts/:id/equity-history", get(equity_history))
         .route("/paper/accounts/:id/attribution", get(attribution))
+        .route("/paper/accounts/:id/correlations", get(correlations))
         .route("/paper/accounts/comparison", get(account_comparison))
         .route("/paper/accounts/create", post(create_account))
         .route("/paper/accounts/:id/rename", post(rename_account))
@@ -136,6 +137,28 @@ async fn delete_account(
         .await
         .map(Json)
         .map_err(ApiError::Internal)
+}
+
+#[derive(Deserialize)]
+struct CorrelationsQ {
+    #[serde(default = "default_corr_lookback")]
+    lookback_days: i64,
+}
+fn default_corr_lookback() -> i64 {
+    90
+}
+
+/// Pairwise correlations of current holdings — the diversification lens.
+async fn correlations(
+    State(s): State<AppState>,
+    user: AuthUser,
+    Path(account_id): Path<Uuid>,
+    Query(q): Query<CorrelationsQ>,
+) -> Result<Json<traderview_db::paper_equity::PositionCorrelations>, ApiError> {
+    traderview_db::paper_equity::position_correlations(&s.pool, user.id, account_id, q.lookback_days)
+        .await
+        .map(Json)
+        .map_err(|e| ApiError::BadRequest(e.to_string()))
 }
 
 /// Per-symbol realized P&L decomposition: closed trips + dividends − fees.

@@ -428,6 +428,105 @@ pub async fn attribution(
     })
 }
 
+#[derive(Debug, Clone, Serialize)]
+pub struct CorrelationPair {
+    pub a: String,
+    pub b: String,
+    pub rho: f64,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct PositionCorrelations {
+    /// Held equity symbols in matrix order. OCC option positions are
+    /// EXCLUDED (they correlate through their underlying; correlating
+    /// option marks against stock closes would be noise) — and the
+    /// exclusion is reported, never silent.
+    pub symbols: Vec<String>,
+    pub excluded_options: Vec<String>,
+    /// Symmetric; diagonal 1.0; None where the trailing overlap is
+    /// under 20 sessions.
+    pub matrix: Vec<Vec<Option<f64>>>,
+    /// Pairs with |ρ| > 0.7 — the redundancy warnings, worst first.
+    pub redundant_pairs: Vec<CorrelationPair>,
+}
+
+/// Pairwise daily-return correlations of the account's CURRENT equity
+/// holdings — "is this book five copies of one trade". Same Pearson +
+/// returns math as the algo entry-correlation gate.
+pub async fn position_correlations(
+    pool: &PgPool,
+    user_id: Uuid,
+    account_id: Uuid,
+    lookback_days: i64,
+) -> anyhow::Result<PositionCorrelations> {
+    let owner: Option<(Uuid,)> =
+        sqlx::query_as("SELECT user_id FROM paper_accounts WHERE id = $1")
+            .bind(account_id)
+            .fetch_optional(pool)
+            .await?;
+    if !matches!(owner, Some((u,)) if u == user_id) {
+        anyhow::bail!("forbidden");
+    }
+    let held: Vec<(String,)> = sqlx::query_as(
+        "SELECT symbol FROM paper_positions WHERE paper_account_id = $1 ORDER BY symbol",
+    )
+    .bind(account_id)
+    .fetch_all(pool)
+    .await?;
+    let mut symbols = Vec::new();
+    let mut excluded_options = Vec::new();
+    for (s,) in held {
+        if traderview_core::occ_symbol::is_occ(&s) {
+            excluded_options.push(s);
+        } else {
+            symbols.push(s);
+        }
+    }
+    let to = Utc::now();
+    let from = to - chrono::Duration::days(lookback_days.clamp(30, 365));
+    let mut returns: Vec<Vec<f64>> = Vec::with_capacity(symbols.len());
+    for s in &symbols {
+        use rust_decimal::prelude::ToPrimitive;
+        let bars =
+            crate::prices::get_bars(pool, s, traderview_core::BarInterval::D1, from, to).await?;
+        let closes: Vec<f64> = bars.iter().map(|b| b.close.to_f64().unwrap_or(0.0)).collect();
+        returns.push(traderview_core::correlation_gate::daily_returns(&closes));
+    }
+    let n = symbols.len();
+    let mut matrix = vec![vec![None; n]; n];
+    let mut redundant_pairs = Vec::new();
+    for i in 0..n {
+        matrix[i][i] = Some(1.0);
+        for j in (i + 1)..n {
+            let len = returns[i].len().min(returns[j].len());
+            if len < 20 {
+                continue; // a correlation over days of overlap is noise
+            }
+            let a = &returns[i][returns[i].len() - len..];
+            let b = &returns[j][returns[j].len() - len..];
+            let rho = traderview_core::correlation::pearson(a, b);
+            matrix[i][j] = rho;
+            matrix[j][i] = rho;
+            if let Some(r) = rho {
+                if r.abs() > 0.7 {
+                    redundant_pairs.push(CorrelationPair {
+                        a: symbols[i].clone(),
+                        b: symbols[j].clone(),
+                        rho: r,
+                    });
+                }
+            }
+        }
+    }
+    redundant_pairs.sort_by(|x, y| y.rho.abs().total_cmp(&x.rho.abs()));
+    Ok(PositionCorrelations {
+        symbols,
+        excluded_options,
+        matrix,
+        redundant_pairs,
+    })
+}
+
 /// Equity history for an owned account, oldest first, with summary.
 pub async fn history(
     pool: &PgPool,

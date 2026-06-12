@@ -176,6 +176,11 @@ export async function renderPaper(mount) {
             <div id="recur-list" class="muted small"></div>
         </div>
 
+        <div class="chart-panel" id="paper-corr-panel" style="display:none">
+            <h2 data-i18n="view.paper.h2.correlations">Holdings correlation</h2>
+            <div id="paper-corr" class="muted small"></div>
+        </div>
+
         <div class="chart-panel">
             <h2 data-i18n="view.paper.h2.attribution">P&L attribution</h2>
             <div id="paper-attribution" class="muted small"></div>
@@ -250,6 +255,11 @@ export async function renderPaper(mount) {
     api.paperAttribution(acct.id)
         .then(a => { if (viewIsCurrent(tok)) renderAttribution(a); })
         .catch(() => {});
+    if (positions.filter(p => p.symbol.length <= 15).length >= 2) {
+        api.paperCorrelations(acct.id)
+            .then(c => { if (viewIsCurrent(tok)) renderCorrelations(c); })
+            .catch(() => {});
+    }
     mount.querySelector('#recur-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         const fd = new FormData(e.target);
@@ -436,6 +446,25 @@ export async function renderPaper(mount) {
             renderPaper(mount);
         } catch (err) { showToast(t('toast.error.api', { err: err.message }), { level: 'error' }); }
     });
+}
+
+function renderCorrelations(c) {
+    const panel = document.getElementById('paper-corr-panel');
+    const el = document.getElementById('paper-corr');
+    if (!panel || !el || c.symbols.length < 2) return;
+    panel.style.display = '';
+    const cell = (v) => v == null ? '\u2014'
+        : `<span class="${Math.abs(v) > 0.7 ? 'neg' : (Math.abs(v) < 0.3 ? 'pos' : '')}">${v.toFixed(2)}</span>`;
+    el.innerHTML = `
+        ${c.redundant_pairs.length ? `<p class="neg">${c.redundant_pairs.map(p =>
+            `${esc(p.a)}\u2013${esc(p.b)} \u03c1=${p.rho.toFixed(2)}`).join(' \u00b7 ')} — same trade, extra commissions</p>` : `<p class="pos" data-i18n="view.paper.hint.diversified">${esc(t('view.paper.hint.diversified'))}</p>`}
+        <table class="trades">
+            <thead><tr><th></th>${c.symbols.map(s => `<th class="small">${esc(s.slice(0, 6))}</th>`).join('')}</tr></thead>
+            <tbody>${c.symbols.map((s, i) => `
+                <tr><td>${esc(s)}</td>${c.matrix[i].map(v => `<td>${cell(v)}</td>`).join('')}</tr>`).join('')}
+            </tbody>
+        </table>
+        ${c.excluded_options.length ? `<p class="muted small">options excluded (correlate via their underlying): ${c.excluded_options.map(esc).join(', ')}</p>` : ''}`;
 }
 
 function holdFmt(secs) {
