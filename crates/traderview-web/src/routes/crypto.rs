@@ -84,7 +84,16 @@ async fn funding_arb_live(
 async fn funding_scan(
     _s: State<AppState>,
     _u: AuthUser,
+    Query(q): Query<FundingScanQ>,
 ) -> Result<Json<traderview_db::crypto::FundingScan>, ApiError> {
+    // Custom universes bypass the cache entirely — caching the default
+    // sweep is what protects the venue; a one-off alt list is the
+    // caller's ~4 calls per base, and keying the cache by base list
+    // would just grow an unbounded map.
+    if let Some(bases) = q.bases.as_deref().map(str::trim).filter(|s| !s.is_empty()) {
+        let list: Vec<String> = bases.split(',').map(|s| s.to_string()).collect();
+        return Ok(Json(traderview_db::crypto::funding_scan_for(list).await));
+    }
     {
         let g = FS.lock().await;
         if let Some((t, v)) = g.as_ref() {
@@ -96,6 +105,12 @@ async fn funding_scan(
     let scan = traderview_db::crypto::funding_scan().await;
     *FS.lock().await = Some((Instant::now(), scan.clone()));
     Ok(Json(scan))
+}
+
+#[derive(Deserialize)]
+struct FundingScanQ {
+    #[serde(default)]
+    bases: Option<String>,
 }
 
 /// Perp funding-rate arbitrage ledger — pure compute over the caller's

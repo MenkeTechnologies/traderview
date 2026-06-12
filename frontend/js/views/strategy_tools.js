@@ -467,8 +467,10 @@ const TOOLS = {
     },
     'funding-scan': {
         label: 'Funding Scan',
-        call: () => api.cryptoFundingScan(),
-        fields: [],
+        call: (b) => api.cryptoFundingScan(String(b.bases || '').trim()),
+        fields: [
+            { key: 'bases', label: 'Bases (blank = 12 majors, max 20)', def: '', text: true },
+        ],
         render: (r) => `
             <table class="gs-table">
                 <thead><tr><th>Asset</th><th>Funding /8h</th><th>APR</th><th>Collect via</th><th>Basis</th><th>Regime</th><th>Interval</th></tr></thead>
@@ -485,8 +487,9 @@ const TOOLS = {
                 </tbody>
             </table>
             ${r.failed.length ? `<p class="neg small">failed: ${r.failed.map(esc).join(' \u00b7 ')}</p>` : ''}
-            <p class="muted small">Live OKX funding across the major-perp universe, ranked by |APR| — negative funding
-            pays the LONG side. Regime = share of the last N realized intervals matching the current sign: 70%+
+            <p class="muted small">Live OKX funding — the 12-major default universe or your own comma list (validated,
+            deduped, capped at 20; bad tokens land in failed by name, custom lists bypass the 5-min cache), ranked by
+            |APR| — negative funding pays the LONG side. Regime = share of the last N realized intervals matching the current sign: 70%+
             (green) is a persistent regime, lower is closer to a coin-flip and an equally-rich spike is a trap.
             5-minute cache; rates settle per interval, not per second. Feed a candidate into
             Funding Arb (live) for the full fee/breakeven ledger.</p>`,

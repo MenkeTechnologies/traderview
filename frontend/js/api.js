@@ -776,7 +776,7 @@ export const api = {
     calcImpermanentLoss:     (body) => request('/calc/impermanent-loss', { method: 'POST', body: JSON.stringify(body) }),
     cryptoFundingArb:        (body) => request('/crypto/calc/funding-arb', { method: 'POST', body: JSON.stringify(body) }),
     cryptoFundingArbLive:    (body) => request('/crypto/calc/funding-arb-live', { method: 'POST', body: JSON.stringify(body) }),
-    cryptoFundingScan:       () => request('/crypto/funding-scan'),
+    cryptoFundingScan:       (bases) => request(`/crypto/funding-scan${bases ? `?bases=${encodeURIComponent(bases)}` : ''}`),
     cryptoPositioning: (body) => request('/crypto/positioning', { method: 'POST', body }),
     cryptoCarryBasis: (body) => request('/crypto/carry-basis', { method: 'POST', body }),
     calcFxCarry:             (body) => request('/calc/fx-carry', { method: 'POST', body: JSON.stringify(body) }),

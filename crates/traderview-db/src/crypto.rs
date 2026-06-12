@@ -278,14 +278,37 @@ pub struct FundingScan {
 /// over both, not a second sequential sweep); a failed history
 /// degrades that row's persistence to None rather than failing it.
 pub async fn funding_scan() -> FundingScan {
-    let futs = FUNDING_UNIVERSE.iter().map(|base| async move {
+    funding_scan_for(FUNDING_UNIVERSE.iter().map(|s| s.to_string()).collect()).await
+}
+
+/// Same sweep over a CALLER-CHOSEN universe — the 12 majors miss alt
+/// perps. Bases are validated and deduped; invalid tokens land in
+/// `failed` by name rather than being silently dropped; capped at 20
+/// (each base is ~4 venue calls).
+pub async fn funding_scan_for(bases: Vec<String>) -> FundingScan {
+    let mut seen = std::collections::BTreeSet::new();
+    let mut valid = Vec::new();
+    let mut failed = Vec::new();
+    for b in bases {
+        let b = b.trim().to_uppercase();
+        if b.is_empty() || !seen.insert(b.clone()) {
+            continue;
+        }
+        if b.len() > 10 || !b.bytes().all(|c| c.is_ascii_alphanumeric()) {
+            failed.push(format!("{b}: invalid base asset"));
+        } else if valid.len() < 20 {
+            valid.push(b);
+        } else {
+            failed.push(format!("{b}: over the 20-base cap"));
+        }
+    }
+    let futs = valid.iter().map(|base| async move {
         let (snap, hist) =
             futures_util::future::join(funding_snapshot(base), funding_history(base, 30)).await;
         (base.to_string(), snap, hist)
     });
     let results = futures_util::future::join_all(futs).await;
     let mut rows = Vec::new();
-    let mut failed = Vec::new();
     for (base, res, hist) in results {
         match res {
             Ok(s) => rows.push(FundingScanRow {
