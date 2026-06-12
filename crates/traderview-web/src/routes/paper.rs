@@ -176,12 +176,17 @@ async fn preview_spread(
 
 #[derive(Deserialize)]
 struct RecurringBody {
-    symbol: String,
+    #[serde(default)]
+    symbol: Option<String>,
+    /// Cash-flow rebalancing: buy the target's most underweight
+    /// holding each run instead of a fixed symbol.
+    #[serde(default)]
+    target_id: Option<Uuid>,
     notional_usd: Decimal,
     cadence: String,
 }
 
-/// Auto-invest: "$N of SYMBOL daily/weekly/monthly" on the paper account.
+/// Auto-invest: "$N of SYMBOL" or "$N into TARGET" daily/weekly/monthly.
 async fn create_recurring(
     State(s): State<AppState>,
     user: AuthUser,
@@ -189,7 +194,7 @@ async fn create_recurring(
     Json(b): Json<RecurringBody>,
 ) -> Result<Json<traderview_db::paper_recurring::RecurringOrder>, ApiError> {
     traderview_db::paper_recurring::create(
-        &s.pool, user.id, account_id, &b.symbol, b.notional_usd, &b.cadence,
+        &s.pool, user.id, account_id, b.symbol.as_deref(), b.target_id, b.notional_usd, &b.cadence,
     )
     .await
     .map(Json)

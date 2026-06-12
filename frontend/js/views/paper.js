@@ -162,7 +162,8 @@ export async function renderPaper(mount) {
         <div class="chart-panel">
             <h2 data-i18n="view.paper.h2.auto_invest">Auto-invest</h2>
             <form id="recur-form" class="inline-form">
-                <input name="symbol" placeholder="symbol" data-i18n-placeholder="common.placeholder.symbol" required style="text-transform:uppercase">
+                <input name="symbol" placeholder="symbol — or blank with a target" data-i18n-placeholder="view.paper.placeholder.recur_symbol" style="text-transform:uppercase">
+                <input name="target_id" placeholder="target id (cash-flow rebalance)" data-i18n-placeholder="view.paper.placeholder.recur_target" data-tip="view.paper.tip.recur_target" style="min-width:170px">
                 <input name="notional_usd" type="number" min="1" step="50" value="500" data-tip="view.paper.tip.recur_notional">
                 <select name="cadence">
                     <option value="weekly" selected>weekly</option>
@@ -245,7 +246,8 @@ export async function renderPaper(mount) {
         const fd = new FormData(e.target);
         try {
             await api.paperRecurringCreate(acct.id, {
-                symbol: fd.get('symbol').trim().toUpperCase(),
+                symbol: fd.get('symbol').trim().toUpperCase() || null,
+                target_id: (fd.get('target_id') || '').trim() || null,
                 notional_usd: String(fd.get('notional_usd')),
                 cadence: fd.get('cadence'),
             });
@@ -432,7 +434,7 @@ function renderRecurring(mount, rows) {
         <thead><tr><th>Symbol</th><th>Notional</th><th>Cadence</th><th>Next run</th><th>Last</th><th></th><th></th></tr></thead>
         <tbody>${rows.map(r => `
             <tr class="${r.enabled ? '' : 'muted'}">
-                <td>${esc(r.symbol)}</td>
+                <td>${r.symbol ? esc(r.symbol) : `<em data-i18n="view.paper.label.target_mode">${esc(t('view.paper.label.target_mode'))}</em>`}</td>
                 <td>$${fmt(r.notional_usd)}</td>
                 <td>${esc(r.cadence)}</td>
                 <td class="small">${new Date(r.next_run_at).toLocaleString()}</td>
