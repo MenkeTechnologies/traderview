@@ -118,20 +118,16 @@ function rangeLabel(days) {
 }
 
 // One tile per calendar day across the selected window, in a horizontally
-// scrollable strip (renderDashboard scrolls it to today on mount). With no
-// rolling window ('All time'), span back to the earliest calendar entry,
-// capped at 365 tiles so a years-deep account doesn't render thousands of
-// empty nodes.
+// scrollable strip (renderDashboard scrolls it to today on mount). 'All
+// time' (no rolling window) renders a full year of tiles regardless of how
+// far back the data goes — sizing it to the earliest calendar entry left a
+// young account with 7 tiles and nothing to scroll. 365 is also the cap so
+// a years-deep account doesn't render thousands of nodes.
 function dayStrip(cal, windowDays) {
     const map = new Map((cal || []).map(c => [c.day, c]));
     const cells = [];
     const today = new Date();
-    let days = windowDays;
-    if (!days && map.size) {
-        const earliest = [...map.keys()].sort()[0];
-        days = Math.ceil((today - new Date(`${earliest}T00:00:00`)) / 86400000) + 1;
-    }
-    days = Math.max(7, Math.min(days || 7, 365));
+    const days = Math.max(7, Math.min(windowDays || 365, 365));
     for (let i = days - 1; i >= 0; i--) {
         const d = new Date(today);
         d.setDate(d.getDate() - i);
