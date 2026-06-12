@@ -4051,6 +4051,10 @@ body.no-neon-glow .tv-spinner-inline {
     font-size: 14px; line-height: 1.5; color: #e6f1ff;
     margin-bottom: 14px; white-space: pre-wrap; word-wrap: break-word;
 }
+.tv-dialog-detail {
+    font-size: 12px; line-height: 1.5; color: #aab4c2;
+    margin: -8px 0 14px; white-space: pre-wrap; word-wrap: break-word;
+}
 .tv-dialog-input {
     width: 100%; box-sizing: border-box;
     padding: 8px 10px; margin-bottom: 14px;

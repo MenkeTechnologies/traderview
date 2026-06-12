@@ -58,6 +58,10 @@ function showDialog(kind, messageKey, params, opts) {
         const cancelKey  = opts.cancelKey  || defaults.cancelKey;
         const title    = opts.titleKey ? esc(t(opts.titleKey, params)) : '';
         const message  = esc(t(messageKey, params));
+        // Raw dynamic context under the message (account lists, max qty,
+        // symbol/ATR hints) — content that isn't translatable copy and so
+        // doesn't belong inside the i18n message template.
+        const detail   = opts.detail ? `<div class="tv-dialog-detail">${esc(opts.detail)}</div>` : '';
         const inputHtml = kind === 'prompt'
             ? `<input id="tv-dialog-input"
                       class="tv-dialog-input"
@@ -72,6 +76,7 @@ function showDialog(kind, messageKey, params, opts) {
                 <div class="${classFor(level)}">
                     ${title ? `<div class="tv-dialog-title">${title}</div>` : ''}
                     <div class="tv-dialog-message">${message}</div>
+                    ${detail}
                     ${inputHtml}
                     <div class="tv-dialog-actions">
                         <button type="button"

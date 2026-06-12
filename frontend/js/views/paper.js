@@ -4,7 +4,7 @@ import { esc, fmt, fmtDateTime } from '../util.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import { t } from '../i18n.js';
 import { showToast } from '../toast.js';
-import { tConfirm } from '../dialog.js';
+import { tConfirm, tPrompt } from '../dialog.js';
 
 export async function renderPaper(mount) {
     const tok = currentViewToken();
@@ -538,7 +538,7 @@ export async function renderPaper(mount) {
     mount.querySelectorAll('.trail-btn').forEach(btn => {
         btn.addEventListener('click', async () => {
             const qty = Number(btn.dataset.qty);
-            const v = (prompt(t('view.paper.prompt.trail'), '5%') || '').trim();
+            const v = ((await tPrompt('view.paper.prompt.trail', {}, { defaultValue: '5%' })) || '').trim();
             if (!v) return;
             const isPct = v.endsWith('%');
             const num = Number(v.replace('%', ''));
@@ -569,11 +569,11 @@ export async function renderPaper(mount) {
         btn.addEventListener('click', async () => {
             const others = accounts.filter(a => a.id !== acct.id);
             const names = others.map((a, i) => `${i + 1}. ${a.name}`).join('\n');
-            const pick = Number(prompt(`${t('view.paper.prompt.move_to')}\n${names}`));
+            const pick = Number(await tPrompt('view.paper.prompt.move_to', {}, { detail: names }));
             const dest = others[pick - 1];
             if (!dest) return;
             const max = Math.abs(Number(btn.dataset.qty));
-            const q = Number(prompt(t('view.paper.prompt.move_qty', { max }), String(max)));
+            const q = Number(await tPrompt('view.paper.prompt.move_qty', { max }, { defaultValue: String(max) }));
             if (!q || q <= 0) return;
             try {
                 await api.paperTransferPosition(acct.id, dest.id, btn.dataset.symbol, q);
@@ -672,7 +672,7 @@ export async function renderPaper(mount) {
         btn.addEventListener('click', async () => {
             const symbol = btn.dataset.symbol;
             const max = Math.abs(Number(btn.dataset.qty));
-            const c = Number(prompt(`${t('view.paper.prompt.assign')} (max ${max})`, String(max)));
+            const c = Number(await tPrompt('view.paper.prompt.assign', {}, { detail: `max ${max}`, defaultValue: String(max) }));
             if (!c || c <= 0) return;
             try {
                 const r = await api.paperAssign(acct.id, { symbol, contracts: c });
@@ -687,7 +687,7 @@ export async function renderPaper(mount) {
         btn.addEventListener('click', async () => {
             const symbol = btn.dataset.symbol;
             const max = Math.abs(Number(btn.dataset.qty));
-            const c = Number(prompt(`${t('view.paper.prompt.exercise')} (max ${max})`, String(max)));
+            const c = Number(await tPrompt('view.paper.prompt.exercise', {}, { detail: `max ${max}`, defaultValue: String(max) }));
             if (!c || c <= 0) return;
             try {
                 const r = await api.paperExercise(acct.id, { symbol, contracts: c });
@@ -701,7 +701,7 @@ export async function renderPaper(mount) {
     mount.querySelectorAll('.roll-btn').forEach(btn => {
         btn.addEventListener('click', async () => {
             const from = btn.dataset.symbol;
-            const to = (prompt(`${t('view.paper.prompt.roll_to')} (${from})`) || '').trim().toUpperCase();
+            const to = ((await tPrompt('view.paper.prompt.roll_to', {}, { detail: from })) || '').trim().toUpperCase();
             if (!to) return;
             const qty = Math.abs(Number(btn.dataset.qty));
             try {
@@ -720,21 +720,21 @@ export async function renderPaper(mount) {
             const type = btn.dataset.type;
             const body = {};
             if (type === 'limit' || type === 'stop_limit') {
-                const v = Number(prompt(t('view.paper.prompt.replace_limit')));
+                const v = Number(await tPrompt('view.paper.prompt.replace_limit'));
                 if (!v) return;
                 body.limit_price = v;
             }
             if (type === 'stop' || type === 'stop_limit') {
-                const v = Number(prompt(t('view.paper.prompt.replace_stop')));
+                const v = Number(await tPrompt('view.paper.prompt.replace_stop'));
                 if (!v) return;
                 body.stop_price = v;
             }
             if (type === 'trailing') {
-                const v = Number(prompt(t('view.paper.prompt.replace_trail')));
+                const v = Number(await tPrompt('view.paper.prompt.replace_trail'));
                 if (!v) return;
                 body.trail_value = v;
             }
-            const q = prompt(t('view.paper.prompt.replace_qty'));
+            const q = await tPrompt('view.paper.prompt.replace_qty');
             if (q) body.qty = Number(q);
             try {
                 await api.paperReplace(btn.dataset.id, body);
@@ -786,7 +786,7 @@ export async function renderPaper(mount) {
     });
     const wireCashFlow = (sel, sign, promptKey, toastKey) => {
         mount.querySelector(sel).addEventListener('click', async () => {
-            const v = Number(prompt(t(promptKey)));
+            const v = Number(await tPrompt(promptKey));
             if (!v || v <= 0) return;
             try {
                 await api.paperCashFlow(acct.id, sign * v, null);
@@ -804,10 +804,10 @@ export async function renderPaper(mount) {
         transferBtn.addEventListener('click', async () => {
             const others = accounts.filter(a => a.id !== acct.id);
             const names = others.map((a, i) => `${i + 1}. ${a.name}`).join('\n');
-            const pick = Number(prompt(`${t('view.paper.prompt.transfer_to')}\n${names}`));
+            const pick = Number(await tPrompt('view.paper.prompt.transfer_to', {}, { detail: names }));
             const dest = others[pick - 1];
             if (!dest) return;
-            const v = Number(prompt(t('view.paper.prompt.transfer_amount', { name: dest.name })));
+            const v = Number(await tPrompt('view.paper.prompt.transfer_amount', { name: dest.name }));
             if (!v || v <= 0) return;
             try {
                 await api.paperTransfer(acct.id, dest.id, v);
@@ -1178,9 +1178,12 @@ function wireProtectButtons(mount, acctId) {
             const long = Number(btn.dataset.qty) > 0;
             const defStop = sg ? (long ? sg.stop_long : sg.stop_short).toFixed(2) : '';
             const defTarget = sg ? (long ? sg.target_long : sg.target_short).toFixed(2) : '';
-            const stop = Number(prompt(`${t('view.paper.prompt.protect_stop')} (${symbol}${sg ? `, ATR(${sg.period}) ${sg.atr.toFixed(2)}` : ''})`, defStop));
+            const stop = Number(await tPrompt('view.paper.prompt.protect_stop', {}, {
+                detail: `${symbol}${sg ? `, ATR(${sg.period}) ${sg.atr.toFixed(2)}` : ''}`,
+                defaultValue: defStop,
+            }));
             if (!stop) return;
-            const target = Number(prompt(`${t('view.paper.prompt.protect_target')} (${symbol})`, defTarget));
+            const target = Number(await tPrompt('view.paper.prompt.protect_target', {}, { detail: symbol, defaultValue: defTarget }));
             if (!target) return;
             const qty = Math.abs(Number(btn.dataset.qty));
             try {

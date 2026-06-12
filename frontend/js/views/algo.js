@@ -870,7 +870,7 @@ export async function renderAlgo(mount) {
     mount.querySelector('#algo-new').addEventListener('click', () => openStrategyModal(mount));
     mount.querySelector('#algo-tournament').addEventListener('click', () => openTournamentModal(mount));
     mount.querySelector('#algo-import').addEventListener('click', async () => {
-        const raw = prompt(t('view.algo.prompt.import'));
+        const raw = await tPrompt('view.algo.prompt.import');
         if (!raw) return;
         let cfg;
         try { cfg = JSON.parse(raw); }

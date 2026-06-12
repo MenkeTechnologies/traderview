@@ -26,6 +26,9 @@ export function validateOptions(opts) {
     if (opts.placeholder != null && typeof opts.placeholder !== 'string') {
         return 'placeholder must be a string';
     }
+    if (opts.detail != null && typeof opts.detail !== 'string') {
+        return 'detail must be a string';
+    }
     return null;
 }
 
