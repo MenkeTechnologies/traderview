@@ -287,6 +287,7 @@ export async function renderPaper(mount) {
 
         <div class="chart-panel">
             <h2 data-i18n="view.paper.h2.equity_curve">Equity curve</h2>
+            <label class="small" data-tip="view.paper.tip.benchmark"><span data-i18n="view.paper.label.benchmark">vs</span> <input id="equity-benchmark" value="SPY" style="width:90px;text-transform:uppercase"></label>
             <div id="paper-equity-summary" class="muted small"></div>
             <div id="paper-equity-chart" style="width:100%;height:240px"></div>
             <div id="paper-underwater-chart" style="width:100%;height:90px" data-tip="view.paper.tip.underwater"></div>
@@ -335,9 +336,14 @@ export async function renderPaper(mount) {
 
     renderUnrealizedChart(positions, quotes);
     renderNotionalChart(positions, quotes);
-    api.paperEquityHistory(acct.id)
-        .then(h => { if (viewIsCurrent(tok)) renderEquityCurve(h); })
-        .catch(() => {});
+    const loadEquity = () => {
+        const b = (mount.querySelector('#equity-benchmark')?.value || 'SPY').trim().toUpperCase();
+        api.paperEquityHistory(acct.id, b)
+            .then(h => { if (viewIsCurrent(tok)) renderEquityCurve(h); })
+            .catch(() => {});
+    };
+    loadEquity();
+    mount.querySelector('#equity-benchmark').addEventListener('change', loadEquity);
     api.paperRecurringList()
         .then(rows => { if (viewIsCurrent(tok)) renderRecurring(mount, rows); })
         .catch(() => {});
