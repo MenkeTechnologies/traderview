@@ -139,6 +139,60 @@ pub async fn credit_all(pool: &PgPool) -> anyhow::Result<usize> {
                     written += 1;
                 }
                 tx.commit().await?;
+                // DRIP: a POSITIVE credit on a drip-enabled account
+                // reinvests immediately — a market buy of the credited
+                // cash through the normal fill path, AFTER the credit
+                // commits (a failed buy leaves the cash, honestly).
+                // Short-position dividend DEBITS never reinvest.
+                if inserted == 1 && cash > Decimal::ZERO {
+                    let drip: Option<(bool, Uuid)> = sqlx::query_as(
+                        "SELECT drip, user_id FROM paper_accounts WHERE id = $1",
+                    )
+                    .bind(account_id)
+                    .fetch_optional(pool)
+                    .await?;
+                    if let Some((true, user_id)) = drip {
+                        if let Ok(quote) = crate::market_data::quote(pool, &symbol).await {
+                            if let Ok(price) = Decimal::try_from(quote.price) {
+                                if price > Decimal::ZERO {
+                                    let qty = (cash / price).round_dp(4);
+                                    if qty > Decimal::ZERO {
+                                        let buy = crate::paper::submit(
+                                            pool,
+                                            user_id,
+                                            *account_id,
+                                            crate::paper::OrderRequest {
+                                                symbol: symbol.clone(),
+                                                side: traderview_core::Side::Buy,
+                                                qty,
+                                                order_type: "market".into(),
+                                                limit_price: None,
+                                                stop_price: None,
+                                                trail_value: None,
+                                                trail_is_pct: None,
+                                                time_in_force: None,
+                                                expire_at: None,
+                                            },
+                                        )
+                                        .await;
+                                        if buy.is_ok() {
+                                            sqlx::query(
+                                                "UPDATE paper_dividends SET reinvested = TRUE
+                                                  WHERE paper_account_id = $1 AND symbol = $2 AND ex_date = $3",
+                                            )
+                                            .bind(account_id)
+                                            .bind(&symbol)
+                                            .bind(ev.ex_date)
+                                            .execute(pool)
+                                            .await
+                                            .ok();
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
     }

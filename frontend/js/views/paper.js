@@ -61,6 +61,7 @@ export async function renderPaper(mount) {
             <button id="acct-create" data-i18n="view.paper.btn.new_account" data-tip="view.paper.tip.account_create">NEW ACCOUNT</button>
             <button id="acct-rename" class="link" data-i18n="view.paper.btn.rename_account" data-tip="view.paper.tip.account_rename">Rename</button>
             <button id="acct-delete" class="link" data-i18n="view.paper.btn.delete_account" data-tip="view.paper.tip.account_delete">Delete</button>
+            <label class="small"><input type="checkbox" id="acct-drip" ${acct.drip ? 'checked' : ''} data-tip="view.paper.tip.drip"> <span data-i18n="view.paper.label.drip">DRIP</span></label>
         </div>
 
         <div class="cards">
@@ -309,6 +310,12 @@ export async function renderPaper(mount) {
                 showToast(t('view.paper.toast.submitted', { side: body.side, qty: body.qty, symbol: body.symbol }), { level: 'info' });
             }
             renderPaper(mount);
+        } catch (err) { showToast(t('common.error', { err: err.message }), { level: 'error' }); }
+    });
+    mount.querySelector('#acct-drip').addEventListener('change', async (e) => {
+        try {
+            await api.paperSetDrip(acct.id, e.target.checked);
+            showToast(t(e.target.checked ? 'view.paper.toast.drip_on' : 'view.paper.toast.drip_off'), { level: 'success' });
         } catch (err) { showToast(t('common.error', { err: err.message }), { level: 'error' }); }
     });
     mount.querySelector('#acct-sel').addEventListener('change', (e) => {

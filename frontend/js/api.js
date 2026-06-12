@@ -855,6 +855,8 @@ export const api = {
     paperRecurringToggle: (id, enabled) =>
         request(`/paper/recurring/${id}/toggle`, { method: 'POST', body: JSON.stringify({ enabled }) }),
     paperRecurringDelete: (id) => request(`/paper/recurring/${id}`, { method: 'DELETE' }),
+    paperSetDrip: (id, enabled) =>
+        request(`/paper/accounts/${id}/drip`, { method: 'POST', body: JSON.stringify({ enabled }) }),
     paperEquityHistory: (id) => request(`/paper/accounts/${id}/equity-history`),
     paperAccountCreate: (name, starting_cash) =>
         request('/paper/accounts/create', { method: 'POST', body: JSON.stringify({ name, starting_cash }) }),

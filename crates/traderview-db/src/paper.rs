@@ -18,6 +18,7 @@ pub struct PaperAccount {
     pub name: String,
     pub starting_cash: Decimal,
     pub cash: Decimal,
+    pub drip: bool,
     pub created_at: DateTime<Utc>,
     pub reset_at: Option<DateTime<Utc>>,
 }
@@ -59,7 +60,7 @@ pub struct PaperPosition {
 
 pub async fn list_accounts(pool: &PgPool, user_id: Uuid) -> anyhow::Result<Vec<PaperAccount>> {
     Ok(sqlx::query_as::<_, PaperAccount>(
-        "SELECT id, user_id, name, starting_cash, cash, created_at, reset_at
+        "SELECT id, user_id, name, starting_cash, cash, drip, created_at, reset_at
            FROM paper_accounts WHERE user_id = $1 ORDER BY created_at",
     )
     .bind(user_id)
@@ -74,7 +75,7 @@ pub async fn ensure_default(pool: &PgPool, user_id: Uuid) -> anyhow::Result<Pape
     Ok(sqlx::query_as::<_, PaperAccount>(
         "INSERT INTO paper_accounts (user_id, name, starting_cash, cash)
               VALUES ($1, 'SimTrader', 200000, 200000)
-         RETURNING id, user_id, name, starting_cash, cash, created_at, reset_at",
+         RETURNING id, user_id, name, starting_cash, cash, drip, created_at, reset_at",
     )
     .bind(user_id)
     .fetch_one(pool)
@@ -120,13 +121,31 @@ pub async fn create_account(
     Ok(sqlx::query_as::<_, PaperAccount>(
         "INSERT INTO paper_accounts (user_id, name, starting_cash, cash)
               VALUES ($1, $2, $3, $3)
-         RETURNING id, user_id, name, starting_cash, cash, created_at, reset_at",
+         RETURNING id, user_id, name, starting_cash, cash, drip, created_at, reset_at",
     )
     .bind(user_id)
     .bind(name)
     .bind(starting_cash)
     .fetch_one(pool)
     .await?)
+}
+
+/// Toggle dividend reinvestment for the account.
+pub async fn set_drip(
+    pool: &PgPool,
+    user_id: Uuid,
+    account_id: Uuid,
+    enabled: bool,
+) -> anyhow::Result<bool> {
+    let r = sqlx::query(
+        "UPDATE paper_accounts SET drip = $3 WHERE id = $1 AND user_id = $2",
+    )
+    .bind(account_id)
+    .bind(user_id)
+    .bind(enabled)
+    .execute(pool)
+    .await?;
+    Ok(r.rows_affected() > 0)
 }
 
 pub async fn rename_account(

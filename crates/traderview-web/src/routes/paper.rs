@@ -40,6 +40,7 @@ pub fn router() -> Router<AppState> {
         )
         .route("/paper/recurring", get(list_recurring))
         .route("/paper/recurring/:id/toggle", post(toggle_recurring))
+        .route("/paper/accounts/:id/drip", post(set_drip))
         .route(
             "/paper/recurring/:id",
             axum::routing::delete(delete_recurring),
@@ -172,6 +173,24 @@ async fn preview_spread(
         .await
         .map(Json)
         .map_err(|e| ApiError::BadRequest(e.to_string()))
+}
+
+#[derive(Deserialize)]
+struct DripBody {
+    enabled: bool,
+}
+
+/// Toggle dividend reinvestment for the account.
+async fn set_drip(
+    State(s): State<AppState>,
+    user: AuthUser,
+    Path(id): Path<Uuid>,
+    Json(b): Json<DripBody>,
+) -> Result<Json<bool>, ApiError> {
+    traderview_db::paper::set_drip(&s.pool, user.id, id, b.enabled)
+        .await
+        .map(Json)
+        .map_err(ApiError::Internal)
 }
 
 #[derive(Deserialize)]
