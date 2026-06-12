@@ -1390,6 +1390,7 @@ async function openRegimesModal(s) {
         <div class="modal-inner" style="max-width:900px">
             <h2>Regime attribution: ${esc(s.name)}</h2>
             <p class="muted small" data-i18n="view.algo.hint.regimes">Buckets every backtest trade by the market regime at its ENTRY bar (trend-up / trend-down / range / chop via the efficiency-ratio classifier). A strategy that looks mediocre overall is often excellent in one regime and bleeding in another \u2014 gate it deliberately, not by vibes.</p>
+            <label class="small"><input type="checkbox" name="apply_gates" checked data-tip="view.algo.tip.apply_gates_opt"> <span data-i18n="view.algo.label.apply_gates_sim">Apply risk gates — simulate the system you actually run</span></label>
             <form id="regimes-form" class="inline-form">
                 <input name="symbol" value="${esc(symbol)}" required style="text-transform:uppercase">
                 <select name="interval">
@@ -1419,6 +1420,7 @@ async function openRegimesModal(s) {
                 interval: fd.get('interval'),
                 days_back: Number(fd.get('days_back')),
                 regime_period: Number(fd.get('regime_period')),
+                apply_gates: fd.get('apply_gates') === 'on',
             });
             const a = r.attribution;
             const row = (name, b) => b.trades === 0 ? '' : `
@@ -1456,6 +1458,7 @@ async function openMcModal(s) {
         <div class="modal-inner" style="max-width:900px">
             <h2>Monte Carlo resequencing: ${esc(s.name)}</h2>
             <p class="muted small" data-i18n="view.algo.hint.mc">Runs the backtest, then resamples its ACTUAL trade PnLs into thousands of alternate orderings. The single backtest\u2019s max drawdown is one draw from a distribution \u2014 budget risk off the p95, not the one path you happened to see.</p>
+            <label class="small"><input type="checkbox" name="apply_gates" checked data-tip="view.algo.tip.apply_gates_opt"> <span data-i18n="view.algo.label.apply_gates_sim">Apply risk gates — simulate the system you actually run</span></label>
             <form id="mc-form" class="inline-form">
                 <input name="symbol" value="${esc(symbol)}" required style="text-transform:uppercase">
                 <select name="interval">
@@ -1487,6 +1490,7 @@ async function openMcModal(s) {
                 days_back: Number(fd.get('days_back')),
                 n_curves: Number(fd.get('n_curves')),
                 ruin_fraction: Number(fd.get('ruin_fraction')),
+                apply_gates: fd.get('apply_gates') === 'on',
             });
             const m = r.mc;
             const pct = (v) => (v * 100).toFixed(1) + '%';

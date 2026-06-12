@@ -1114,7 +1114,8 @@ struct BacktestMcBody {
     ruin_fraction: f64,
     /// Fixed seed reproduces the distribution exactly; omitted = time-based.
     #[serde(default)]
-    seed: Option<u64>,
+    seed: Option<u64>,    #[serde(default)]
+    apply_gates: bool,
 }
 
 fn default_mc_curves() -> usize {
@@ -1178,7 +1179,13 @@ async fn post_backtest_mc(
         slippage_bps: body.slippage_bps.unwrap_or(5.0),
         side_mode,
     };
-    let bt = traderview_core::algo_backtest::run(&bars, strat.as_ref(), &sizing, cfg);
+    let bt = traderview_core::algo_backtest::run_with_gates(
+        &bars,
+        strat.as_ref(),
+        &sizing,
+        cfg,
+        bt_gates_for(&strategy, body.apply_gates),
+    );
     let pnls: Vec<f64> = bt.trades.iter().map(|t| t.pnl).collect();
     if pnls.len() < 10 {
         return Err(ApiError::BadRequest(format!(
@@ -1217,7 +1224,8 @@ struct BacktestRegimesBody {
     slippage_bps: Option<f64>,
     /// Regime-classifier efficiency window.
     #[serde(default = "default_regime_period")]
-    regime_period: usize,
+    regime_period: usize,    #[serde(default)]
+    apply_gates: bool,
 }
 
 fn default_regime_period() -> usize {
@@ -1275,7 +1283,13 @@ async fn post_backtest_regimes(
         slippage_bps: body.slippage_bps.unwrap_or(5.0),
         side_mode,
     };
-    let bt = traderview_core::algo_backtest::run(&bars, strat.as_ref(), &sizing, cfg);
+    let bt = traderview_core::algo_backtest::run_with_gates(
+        &bars,
+        strat.as_ref(),
+        &sizing,
+        cfg,
+        bt_gates_for(&strategy, body.apply_gates),
+    );
     let attribution =
         traderview_core::algo_regime_attribution::attribute(&bt.trades, &bars, body.regime_period);
     Ok(Json(BacktestRegimesResult {

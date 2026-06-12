@@ -3925,6 +3925,7 @@
   "view.algo.label.account": "Akun broker",
   "view.algo.label.apply_gates": "Apply risk gates (entry window, daily cap, loss cooldown)",
   "view.algo.label.apply_gates_opt": "Apply risk gates in every grid cell — optimize the system you actually run",
+  "view.algo.label.apply_gates_sim": "Apply risk gates — simulate the system you actually run",
   "view.algo.label.apply_gates_wf": "Apply risk gates in IS optimization AND OOS validation",
   "view.algo.label.asset_class": "Kelas asset",
   "view.algo.label.autoscan_top_n": "Top N autoscan",
