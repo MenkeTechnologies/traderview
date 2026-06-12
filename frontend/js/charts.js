@@ -68,7 +68,38 @@ export function zoomPlugin({ getBounds } = {}) {
                     zoomAt(u.posToVal(left, 'x'), e.deltaY < 0 ? 0.75 : 1 / 0.75);
                 }, { passive: false });
 
+                // Spacebar-hand panning like Photoshop/Figma: holding space
+                // over the chart shows a grab cursor (grabbing while
+                // dragging) and suppresses page scroll. Plain drag still
+                // pans too — space is the affordance, not a gate.
                 let pan = null;
+                let spaceDown = false;
+                let hovering = false;
+                const isTyping = () => {
+                    const a = document.activeElement;
+                    return a && (a.tagName === 'INPUT' || a.tagName === 'TEXTAREA'
+                        || a.isContentEditable);
+                };
+                const setCursor = () => {
+                    over.style.cursor = pan ? 'grabbing'
+                        : (spaceDown && hovering ? 'grab' : '');
+                };
+                const onKeyDown = (e) => {
+                    if (e.code !== 'Space' || isTyping()) return;
+                    if (hovering) e.preventDefault();
+                    spaceDown = true;
+                    setCursor();
+                };
+                const onKeyUp = (e) => {
+                    if (e.code !== 'Space') return;
+                    spaceDown = false;
+                    setCursor();
+                };
+                over.addEventListener('mouseenter', () => { hovering = true; setCursor(); });
+                over.addEventListener('mouseleave', () => { hovering = false; setCursor(); });
+                window.addEventListener('keydown', onKeyDown);
+                window.addEventListener('keyup', onKeyUp);
+
                 const onMove = (e) => {
                     if (!pan) return;
                     const sx = u.scales.x;
@@ -81,12 +112,13 @@ export function zoomPlugin({ getBounds } = {}) {
                     if (min + span > bMax) min = bMax - span;
                     if (min !== sx.min) apply(min, min + span);
                 };
-                const onUp = () => { pan = null; };
+                const onUp = () => { pan = null; setCursor(); };
                 over.addEventListener('mousedown', (e) => {
                     if (e.button !== 0) return;
                     const sx = u.scales.x;
                     if (sx.min == null) return;
                     pan = { x: e.clientX, min: sx.min, max: sx.max };
+                    setCursor();
                 });
                 window.addEventListener('mousemove', onMove);
                 window.addEventListener('mouseup', onUp);
@@ -116,6 +148,8 @@ export function zoomPlugin({ getBounds } = {}) {
                 u._zoomCleanup = () => {
                     window.removeEventListener('mousemove', onMove);
                     window.removeEventListener('mouseup', onUp);
+                    window.removeEventListener('keydown', onKeyDown);
+                    window.removeEventListener('keyup', onKeyUp);
                 };
             },
             destroy: (u) => { if (u._zoomCleanup) u._zoomCleanup(); },
