@@ -61,6 +61,9 @@ pub const PAPER_RECURRING_TICK: Duration = Duration::from_secs(60 * 60);
 /// Paper dividend crediting — ex-dates are daily-bar data and the pass
 /// is idempotent, so a few runs a day is plenty.
 pub const PAPER_DIVIDEND_CREDIT: Duration = Duration::from_secs(6 * 60 * 60);
+/// Cash sweep interest — daily credit; 6h cadence with the exactly-
+/// once claim makes a missed pass self-healing.
+pub const PAPER_INTEREST_TICK: Duration = Duration::from_secs(6 * 60 * 60);
 /// Paper split adjustment — splits are rare daily-bar events; a few
 /// idempotent passes a day also keeps the trade-after-split skip
 /// window small.
@@ -131,6 +134,7 @@ pub fn spawn_refreshers(pool: PgPool, cache: TileCache, hub: crate::realtime::Hu
     spawn_daily_digest(pool.clone(), hub2);
     spawn_paper_equity_snapshots(pool.clone());
     spawn_paper_dividend_credits(pool.clone());
+    spawn_paper_interest(pool.clone());
     spawn_paper_split_adjustments(pool.clone());
     spawn_paper_option_settlement(pool.clone());
     spawn_golden_stars(pool);
@@ -412,6 +416,22 @@ fn spawn_paper_option_settlement(pool: PgPool) {
 /// going into recent ex-dates from the fill ledger and posts the cash
 /// (longs credited, shorts debited). Idempotent via the unique
 /// account × symbol × ex-date constraint.
+/// Cash sweep interest — daily ACT/365 credit on idle cash for
+/// accounts with a configured APY. Exactly-once per day via the
+/// last_interest_on claim UPDATE.
+fn spawn_paper_interest(pool: PgPool) {
+    tokio::spawn(async move {
+        loop {
+            match traderview_db::paper_interest::tick(&pool).await {
+                Ok(0) => {}
+                Ok(n) => tracing::info!(accounts = n, "cash sweep interest credited"),
+                Err(e) => tracing::warn!(error = %e, "cash interest pass failed"),
+            }
+            tokio::time::sleep(PAPER_INTEREST_TICK).await;
+        }
+    });
+}
+
 fn spawn_paper_dividend_credits(pool: PgPool) {
     tokio::spawn(async move {
         loop {

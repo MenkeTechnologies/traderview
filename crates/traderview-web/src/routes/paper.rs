@@ -44,6 +44,8 @@ pub fn router() -> Router<AppState> {
         .route("/paper/recurring", get(list_recurring))
         .route("/paper/recurring/:id/toggle", post(toggle_recurring))
         .route("/paper/accounts/:id/drip", post(set_drip))
+        .route("/paper/accounts/:id/cash-apy", post(set_cash_apy))
+        .route("/paper/accounts/:id/interest", get(interest))
         .route(
             "/paper/recurring/:id",
             axum::routing::delete(delete_recurring),
@@ -745,6 +747,36 @@ async fn roll(
     Json(b): Json<RollBody>,
 ) -> Result<Json<traderview_db::paper::SpreadResult>, ApiError> {
     traderview_db::paper::roll_position(&s.pool, user.id, account_id, &b.from, &b.to, b.qty)
+        .await
+        .map(Json)
+        .map_err(|e| ApiError::BadRequest(e.to_string()))
+}
+
+#[derive(Deserialize)]
+struct CashApyBody {
+    apy_pct: Decimal,
+}
+
+/// Cash sweep APY (0 disables the daily interest credit).
+async fn set_cash_apy(
+    State(s): State<AppState>,
+    user: AuthUser,
+    Path(id): Path<Uuid>,
+    Json(b): Json<CashApyBody>,
+) -> Result<Json<bool>, ApiError> {
+    traderview_db::paper_interest::set_cash_apy(&s.pool, user.id, id, b.apy_pct)
+        .await
+        .map(Json)
+        .map_err(|e| ApiError::BadRequest(e.to_string()))
+}
+
+/// Interest credits posted by the background sweep pass.
+async fn interest(
+    State(s): State<AppState>,
+    user: AuthUser,
+    Path(id): Path<Uuid>,
+) -> Result<Json<Vec<traderview_db::paper_interest::InterestCredit>>, ApiError> {
+    traderview_db::paper_interest::list(&s.pool, user.id, id, 200)
         .await
         .map(Json)
         .map_err(|e| ApiError::BadRequest(e.to_string()))

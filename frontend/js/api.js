@@ -860,6 +860,9 @@ export const api = {
     paperRecurringDelete: (id) => request(`/paper/recurring/${id}`, { method: 'DELETE' }),
     paperSetDrip: (id, enabled) =>
         request(`/paper/accounts/${id}/drip`, { method: 'POST', body: JSON.stringify({ enabled }) }),
+    paperSetCashApy: (id, apy_pct) =>
+        request(`/paper/accounts/${id}/cash-apy`, { method: 'POST', body: JSON.stringify({ apy_pct }) }),
+    paperInterest: (id) => request(`/paper/accounts/${id}/interest`),
     paperAttribution: (id) => request(`/paper/accounts/${id}/attribution`),
     paperWashSales: (id) => request(`/paper/accounts/${id}/wash-sales`),
     paperProtect: (id, body) => request(`/paper/accounts/${id}/protect`, { method: 'POST', body }),

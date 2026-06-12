@@ -62,6 +62,7 @@ export async function renderPaper(mount) {
             <button id="acct-rename" class="link" data-i18n="view.paper.btn.rename_account" data-tip="view.paper.tip.account_rename">Rename</button>
             <button id="acct-delete" class="link" data-i18n="view.paper.btn.delete_account" data-tip="view.paper.tip.account_delete">Delete</button>
             <label class="small"><input type="checkbox" id="acct-drip" ${acct.drip ? 'checked' : ''} data-tip="view.paper.tip.drip"> <span data-i18n="view.paper.label.drip">DRIP</span></label>
+            <label class="small" data-tip="view.paper.tip.cash_apy"><span data-i18n="view.paper.label.cash_apy">Cash APY %</span> <input type="number" id="acct-apy" min="0" max="20" step="0.25" value="${Number(acct.cash_apy_pct || 0)}" style="width:64px"></label>
         </div>
 
         <div class="cards">
@@ -435,6 +436,14 @@ export async function renderPaper(mount) {
             }
             renderPaper(mount);
         } catch (err) { showToast(t('common.error', { err: err.message }), { level: 'error' }); }
+    });
+    mount.querySelector('#acct-apy').addEventListener('change', async (e) => {
+        try {
+            await api.paperSetCashApy(acct.id, Number(e.target.value) || 0);
+            showToast(t('view.paper.toast.apy_set', { apy: Number(e.target.value) || 0 }), { level: 'success' });
+        } catch (err) {
+            showToast(t('common.error', { err: err.message }), { level: 'error' });
+        }
     });
     mount.querySelector('#acct-drip').addEventListener('change', async (e) => {
         try {
