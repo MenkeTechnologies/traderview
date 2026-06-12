@@ -136,6 +136,7 @@ export async function renderPaper(mount) {
                         <option value="butterfly" data-i18n="view.paper.opt.butterfly">butterfly</option>
                         <option value="calendar" data-i18n="view.paper.opt.calendar">calendar</option>
                         <option value="diagonal" data-i18n="view.paper.opt.diagonal">diagonal</option>
+                        <option value="covered_call" data-i18n="view.paper.opt.covered_call">covered call</option>
                     </select>
                     <input name="root" placeholder="underlying" data-i18n-placeholder="view.paper.placeholder.preset_root" required style="text-transform:uppercase;width:90px">
                     <input name="expiry" type="date" required data-tip="view.paper.tip.preset_expiry">
@@ -764,6 +765,21 @@ export async function renderPaper(mount) {
     });
     mount.querySelector('#preset-form').addEventListener('submit', async (e) => {
         e.preventDefault();
+        const pfd = new FormData(e.target);
+        if (pfd.get('preset') === 'covered_call') {
+            // Mixed asset classes — its own atomic endpoint, not the
+            // options-only spread path.
+            try {
+                const root = (pfd.get('root') || '').trim().toUpperCase();
+                const k = Number(pfd.get('k1')) || 0;
+                if (!root || !pfd.get('expiry') || k <= 0) throw new Error(t('view.paper.err.preset_fields'));
+                const call = occSym(root, pfd.get('expiry'), true, k);
+                const r = await api.paperCoveredCall(acct.id, { call, contracts: Number(pfd.get('qty')) || 1 });
+                showToast(t('view.paper.toast.covered_call', { debit: r.net_debit_usd.toFixed(2) }), { level: 'success' });
+                renderPaper(mount);
+            } catch (err) { showToast(t('common.error', { err: err.message }), { level: 'error' }); }
+            return;
+        }
         try {
             const req = presetLegs();
             const r = await api.paperSpreadCreate(acct.id, req);

@@ -1464,6 +1464,111 @@ pub async fn roll_position(
     .await
 }
 
+/// Covered-call sanity, pure: the option must be an OCC CALL (a
+/// covered put is a different structure with different risk), and
+/// each contract covers exactly 100 shares. Returns (underlying,
+/// shares_to_buy).
+pub fn validate_covered_call(
+    call_symbol: &str,
+    contracts: u32,
+) -> Result<(String, Decimal), &'static str> {
+    let occ = traderview_core::occ_symbol::parse(call_symbol)
+        .ok_or("not an OCC option symbol")?;
+    if !occ.call {
+        return Err("covered call needs a CALL leg");
+    }
+    if contracts == 0 || contracts > 1000 {
+        return Err("contracts must be in 1..=1000");
+    }
+    Ok((occ.underlying, Decimal::from(contracts as i64 * 100)))
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct CoveredCallResult {
+    pub stock_order: PaperOrder,
+    pub call_order: PaperOrder,
+    /// Stock cost − call premium collected (positive = net cash out).
+    pub net_debit_usd: f64,
+}
+
+/// Buy-write in ONE transaction: 100×contracts shares + the short
+/// call, both quoted BEFORE the book is touched (the spread
+/// convention — a covered call can never end up half-built). The call
+/// credit posts FIRST so the buying-power check inside each fill sees
+/// the premium before the stock debit. Both legs ride the normal fill
+/// machinery: friction on the shares, per-contract commission on the
+/// call, audit rows, the lot book.
+pub async fn covered_call(
+    pool: &PgPool,
+    user_id: Uuid,
+    account_id: Uuid,
+    call_symbol: &str,
+    contracts: u32,
+) -> anyhow::Result<CoveredCallResult> {
+    let owner: Option<(Uuid,)> = sqlx::query_as("SELECT user_id FROM paper_accounts WHERE id = $1")
+        .bind(account_id)
+        .fetch_optional(pool)
+        .await?;
+    if !matches!(owner, Some((u,)) if u == user_id) {
+        anyhow::bail!("forbidden");
+    }
+    let call_symbol = call_symbol.trim().to_uppercase();
+    let (underlying, shares) =
+        validate_covered_call(&call_symbol, contracts).map_err(|e| anyhow::anyhow!(e))?;
+    // Quote BOTH legs before touching the book.
+    let stock_q = resolve_quote(pool, &underlying).await?;
+    let call_q = resolve_quote(pool, &call_symbol).await?;
+    let contracts_dec = Decimal::from(contracts as i64);
+    let (stock_px, stock_fee) = frictioned_fill(stock_q.last, shares, Side::Buy);
+    let call_px = call_q.last;
+    let call_fee = OPTION_COMMISSION_PER_CONTRACT * contracts as f64;
+
+    let mut tx = pool.begin().await?;
+    let group = Uuid::new_v4();
+    // Credit leg first: the BP check inside each fill is post-state,
+    // and premium-before-stock is the order that reflects the
+    // structure's real margin profile.
+    let call_order = insert_leg(
+        &mut tx, account_id, &call_symbol, "short", contracts_dec,
+        "market", None, None, "filled", group, None, None, None, None,
+    )
+    .await?;
+    sqlx::query(
+        "UPDATE paper_orders SET filled_price = $2, filled_qty = qty, filled_at = now(),
+                plan_note = 'covered call' WHERE id = $1",
+    )
+    .bind(call_order.id)
+    .bind(call_px)
+    .execute(&mut *tx)
+    .await?;
+    apply_fill(&mut tx, account_id, &call_symbol, Side::Short, contracts_dec, call_px, Decimal::from(100)).await?;
+    deduct_fee(&mut tx, account_id, call_fee).await?;
+
+    let stock_order = insert_leg(
+        &mut tx, account_id, &underlying, "buy", shares,
+        "market", None, None, "filled", group, None, None, None, None,
+    )
+    .await?;
+    sqlx::query(
+        "UPDATE paper_orders SET filled_price = $2, filled_qty = qty, filled_at = now(),
+                plan_note = 'covered call' WHERE id = $1",
+    )
+    .bind(stock_order.id)
+    .bind(stock_px)
+    .execute(&mut *tx)
+    .await?;
+    apply_fill(&mut tx, account_id, &underlying, Side::Buy, shares, stock_px, Decimal::ONE).await?;
+    deduct_fee(&mut tx, account_id, stock_fee).await?;
+    tx.commit().await?;
+
+    use rust_decimal::prelude::ToPrimitive;
+    let net_debit_usd = (stock_px * shares).to_f64().unwrap_or(0.0)
+        - (call_px * contracts_dec * Decimal::from(100)).to_f64().unwrap_or(0.0)
+        + stock_fee
+        + call_fee;
+    Ok(CoveredCallResult { stock_order, call_order, net_debit_usd })
+}
+
 #[derive(Debug, Clone, Serialize)]
 pub struct SpreadResult {
     pub orders: Vec<PaperOrder>,
@@ -2178,6 +2283,19 @@ mod tests {
             bracket_entry_hint("trailing", None, None),
             Err("entry_type must be market, limit, stop, or stop_limit")
         );
+    }
+
+    #[test]
+    fn covered_call_validation_pins() {
+        // Live-pinned fixture format from the roll tests.
+        let call = "AAPL260117C00190000";
+        let put = "AAPL260117P00190000";
+        let (und, shares) = validate_covered_call(call, 3).unwrap();
+        assert_eq!(und, "AAPL");
+        assert_eq!(shares, d(300));
+        assert_eq!(validate_covered_call(put, 1), Err("covered call needs a CALL leg"));
+        assert_eq!(validate_covered_call("AAPL", 1), Err("not an OCC option symbol"));
+        assert_eq!(validate_covered_call(call, 0), Err("contracts must be in 1..=1000"));
     }
 
     #[test]

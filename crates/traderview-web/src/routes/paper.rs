@@ -33,6 +33,7 @@ pub fn router() -> Router<AppState> {
         .route("/paper/accounts/:id/brackets", post(submit_bracket))
         .route("/paper/accounts/:id/protect", post(protect))
         .route("/paper/accounts/:id/roll", post(roll))
+        .route("/paper/accounts/:id/covered-call", post(covered_call))
         .route("/paper/accounts/:id/spreads", post(submit_spread))
         .route("/paper/accounts/:id/option-greeks", get(option_greeks))
         .route("/paper/spreads/preview", post(preview_spread))
@@ -950,4 +951,23 @@ async fn set_auto_liquidate(
     .await
     .map_err(|e| ApiError::Internal(e.into()))?;
     Ok(Json(r.rows_affected() > 0))
+}
+
+#[derive(Deserialize)]
+struct CoveredCallBody {
+    call: String,
+    contracts: u32,
+}
+
+/// Buy-write: 100×contracts shares + the short call, one transaction.
+async fn covered_call(
+    State(s): State<AppState>,
+    user: AuthUser,
+    Path(account_id): Path<Uuid>,
+    Json(b): Json<CoveredCallBody>,
+) -> Result<Json<traderview_db::paper::CoveredCallResult>, ApiError> {
+    traderview_db::paper::covered_call(&s.pool, user.id, account_id, &b.call, b.contracts)
+        .await
+        .map(Json)
+        .map_err(|e| ApiError::BadRequest(e.to_string()))
 }
