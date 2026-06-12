@@ -5,6 +5,7 @@
 //! drawdown_episodes core.
 
 use chrono::{DateTime, Utc};
+pub use traderview_core::live_vs_backtest::{hold_stats, trip_stats, HoldStats, TripStats};
 use rust_decimal::Decimal;
 use serde::Serialize;
 use sqlx::PgPool;
@@ -282,122 +283,6 @@ pub fn monthly_rollup(
         row.dividends += amount;
     }
     map.into_values().collect()
-}
-
-#[derive(Debug, Clone, Serialize)]
-pub struct TripStats {
-    pub trades: usize,
-    pub wins: usize,
-    pub win_rate: f64,
-    pub avg_win: f64,
-    pub avg_loss: f64,
-    /// Gross wins / gross losses; None with no losses (infinity is a
-    /// sample-size artifact, not a ratio).
-    pub profit_factor: Option<f64>,
-    /// Mean PnL per trade — the number that must be positive for the
-    /// process to be worth running.
-    pub expectancy: f64,
-    pub largest_win: f64,
-    pub largest_loss: f64,
-    /// Kelly fraction implied by the RECORD: f* = W − (1−W)/R with
-    /// R = avg_win/avg_loss. None without losses or wins (R undefined).
-    /// Practitioners size at half this; the UI says so.
-    pub kelly_fraction: Option<f64>,
-    pub longest_win_streak: usize,
-    pub longest_loss_streak: usize,
-    /// Signed: +n = currently on an n-win streak, −n = n-loss streak.
-    pub current_streak: i64,
-}
-
-#[derive(Debug, Clone, Serialize)]
-pub struct HoldStats {
-    pub avg_hold_secs_winners: f64,
-    pub avg_hold_secs_losers: f64,
-    /// Set when losers are held ≥ 1.5× longer than winners — the
-    /// classic "cutting winners, riding losers" asymmetry. None when
-    /// either side is empty (no asymmetry to measure).
-    pub behavioral_flag: Option<&'static str>,
-}
-
-/// Hold-duration discipline check over (pnl, hold_secs) pairs.
-pub fn hold_stats(trips: &[(f64, i64)]) -> Option<HoldStats> {
-    let winners: Vec<i64> = trips.iter().filter(|(p, _)| *p > 0.0).map(|(_, h)| *h).collect();
-    let losers: Vec<i64> = trips.iter().filter(|(p, _)| *p <= 0.0).map(|(_, h)| *h).collect();
-    if winners.is_empty() && losers.is_empty() {
-        return None;
-    }
-    let avg = |v: &[i64]| {
-        if v.is_empty() { 0.0 } else { v.iter().sum::<i64>() as f64 / v.len() as f64 }
-    };
-    let aw = avg(&winners);
-    let al = avg(&losers);
-    let behavioral_flag = (!winners.is_empty() && !losers.is_empty() && al >= aw * 1.5)
-        .then_some("cutting_winners_riding_losers");
-    Some(HoldStats {
-        avg_hold_secs_winners: aw,
-        avg_hold_secs_losers: al,
-        behavioral_flag,
-    })
-}
-
-/// Trade-quality stats over closed-trip PnLs. None for an empty set.
-/// Zero-PnL trips count as losses (they paid fees for nothing).
-/// Input must be CHRONOLOGICAL (by close time) — the streaks depend
-/// on order; the ratios don't.
-pub fn trip_stats(pnls: &[f64]) -> Option<TripStats> {
-    if pnls.is_empty() {
-        return None;
-    }
-    let n = pnls.len();
-    let wins: Vec<f64> = pnls.iter().copied().filter(|p| *p > 0.0).collect();
-    let losses: Vec<f64> = pnls.iter().copied().filter(|p| *p <= 0.0).collect();
-    let gross_win: f64 = wins.iter().sum();
-    let gross_loss: f64 = -losses.iter().sum::<f64>();
-    // Streaks over the chronological sequence.
-    let (mut longest_win, mut longest_loss, mut run, mut run_is_win) = (0usize, 0usize, 0usize, false);
-    for p in pnls {
-        let is_win = *p > 0.0;
-        if run > 0 && is_win == run_is_win {
-            run += 1;
-        } else {
-            run = 1;
-            run_is_win = is_win;
-        }
-        if is_win {
-            longest_win = longest_win.max(run);
-        } else {
-            longest_loss = longest_loss.max(run);
-        }
-    }
-    let current_streak = if run == 0 {
-        0
-    } else if run_is_win {
-        run as i64
-    } else {
-        -(run as i64)
-    };
-    let win_rate = wins.len() as f64 / n as f64;
-    let avg_win = if wins.is_empty() { 0.0 } else { gross_win / wins.len() as f64 };
-    let avg_loss = if losses.is_empty() { 0.0 } else { gross_loss / losses.len() as f64 };
-    let kelly_fraction = (avg_win > 0.0 && avg_loss > 0.0).then(|| {
-        let r = avg_win / avg_loss;
-        win_rate - (1.0 - win_rate) / r
-    });
-    Some(TripStats {
-        trades: n,
-        wins: wins.len(),
-        win_rate,
-        avg_win,
-        avg_loss,
-        profit_factor: (gross_loss > 0.0).then(|| gross_win / gross_loss),
-        expectancy: pnls.iter().sum::<f64>() / n as f64,
-        largest_win: pnls.iter().copied().fold(f64::MIN, f64::max).max(0.0),
-        largest_loss: pnls.iter().copied().fold(f64::MAX, f64::min).min(0.0),
-        kelly_fraction,
-        longest_win_streak: longest_win,
-        longest_loss_streak: longest_loss,
-        current_streak,
-    })
 }
 
 #[derive(Debug, Clone, Serialize)]

@@ -121,9 +121,9 @@ pub async fn for_user(pool: &PgPool, user_id: Uuid) -> anyhow::Result<Digest> {
             if uid != user_id {
                 continue;
             }
-            if let Ok(Some((report, _, _))) = crate::algo::live_divergence(pool, uid, id).await {
-                if matches!(report.verdict, "degraded" | "watch") {
-                    d.drifting_strategies.push(format!("{name} ({})", report.verdict));
+            if let Ok(Some(div)) = crate::algo::live_divergence(pool, uid, id).await {
+                if matches!(div.report.verdict, "degraded" | "watch") {
+                    d.drifting_strategies.push(format!("{name} ({})", div.report.verdict));
                 }
             }
         }

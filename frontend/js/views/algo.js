@@ -1344,6 +1344,11 @@ async function openDriftModal(s) {
                         <td>${rep.expected.profit_factor.toFixed(2)}</td></tr>
                 </tbody>
             </table>
+            ${r.stats ? `<p class="small"><strong>Live record:</strong>
+                expectancy ${r.stats.expectancy >= 0 ? '+' : ''}$${r.stats.expectancy.toFixed(0)}/trade
+                \u00b7 PF ${r.stats.profit_factor != null ? r.stats.profit_factor.toFixed(2) : '\u2014'}
+                \u00b7 streak ${r.stats.current_streak > 0 ? '+' + r.stats.current_streak : r.stats.current_streak}
+                ${r.hold && r.hold.behavioral_flag ? `\u00b7 <span class="neg">losers held ${(r.hold.avg_hold_secs_losers / r.hold.avg_hold_secs_winners).toFixed(1)}\u00d7 longer than winners</span>` : ''}</p>` : ''}
             <p class="muted small">Expectation from the backtest of ${esc(r.expectation_symbol)} persisted ${new Date(r.expectation_backtest_at).toLocaleString()}.
             Live round trips are reconstructed FIFO from fills; open positions don\u2019t count. Verdicts need \u2265 10 closed trades \u2014 a verdict on 3 trades is astrology.</p>`;
     } catch (err) {

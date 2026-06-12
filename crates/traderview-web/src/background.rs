@@ -188,9 +188,10 @@ fn spawn_strategy_drift_watch(pool: PgPool, hub: crate::realtime::Hub) {
                 Ok(rows) => {
                     for (id, user_id, name) in rows {
                         match traderview_db::algo::live_divergence(&pool, user_id, id).await {
-                            Ok(Some((report, _, _)))
-                                if matches!(report.verdict, "degraded" | "watch") =>
+                            Ok(Some(div))
+                                if matches!(div.report.verdict, "degraded" | "watch") =>
                             {
+                                let report = &div.report;
                                 tracing::warn!(
                                     strategy = %name,
                                     verdict = report.verdict,

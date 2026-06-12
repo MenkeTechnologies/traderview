@@ -1298,6 +1298,8 @@ async fn post_backtest_regimes(
 #[derive(serde::Serialize)]
 struct LiveVsBacktestResult {
     report: traderview_core::live_vs_backtest::DivergenceReport,
+    stats: Option<traderview_core::live_vs_backtest::TripStats>,
+    hold: Option<traderview_core::live_vs_backtest::HoldStats>,
     /// Which persisted backtest supplied the expectation.
     expectation_backtest_at: chrono::DateTime<chrono::Utc>,
     expectation_symbol: String,
@@ -1312,17 +1314,18 @@ async fn get_live_vs_backtest(
     u: AuthUser,
     Path(id): Path<Uuid>,
 ) -> Result<Json<LiveVsBacktestResult>, ApiError> {
-    let (report, expectation_backtest_at, expectation_symbol) =
-        traderview_db::algo::live_divergence(&s.pool, u.id, id)
-            .await
-            .map_err(ApiError::Internal)?
-            .ok_or_else(|| {
-                ApiError::BadRequest("no persisted backtest — run a backtest first so there's an expectation to test against".into())
-            })?;
+    let div = traderview_db::algo::live_divergence(&s.pool, u.id, id)
+        .await
+        .map_err(ApiError::Internal)?
+        .ok_or_else(|| {
+            ApiError::BadRequest("no persisted backtest — run a backtest first so there's an expectation to test against".into())
+        })?;
     Ok(Json(LiveVsBacktestResult {
-        report,
-        expectation_backtest_at,
-        expectation_symbol,
+        report: div.report,
+        stats: div.stats,
+        hold: div.hold,
+        expectation_backtest_at: div.backtest_at,
+        expectation_symbol: div.backtest_symbol,
     }))
 }
 
