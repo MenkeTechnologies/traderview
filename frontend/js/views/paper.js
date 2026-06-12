@@ -251,7 +251,7 @@ export async function renderPaper(mount) {
                         <td class="${o.status === 'filled' ? 'pos' : (o.status === 'rejected' ? 'neg' : '')}">${o.status}${(o.status === 'pending' || o.status === 'held') && o.cancel_at ? ' · exp ' + fmtDateTime(o.cancel_at) : ''}</td>
                         <td>${o.filled_price != null ? fmt(o.filled_price) : '—'}</td>
                         <td>${o.filled_at ? fmtDateTime(o.filled_at) : '—'}</td>
-                        <td>${(o.status === 'pending' || o.status === 'held') ? `<button class="ord-cancel" data-id="${esc(o.id)}" data-i18n="common.btn.cancel">${esc(t('common.btn.cancel'))}</button>` : ''}</td>
+                        <td>${o.status === 'pending' ? `<button class="ord-replace" data-id="${esc(o.id)}" data-type="${esc(o.order_type)}" title="${esc(t('view.paper.tip.replace'))}">✎</button> ` : ''}${(o.status === 'pending' || o.status === 'held') ? `<button class="ord-cancel" data-id="${esc(o.id)}" data-i18n="common.btn.cancel">${esc(t('common.btn.cancel'))}</button>` : ''}</td>
                     </tr>`).join('')}</tbody></table>` : '<p data-i18n="view.paper.hint.no_orders_yet" class="muted">No orders yet.</p>'}
         </div>
     `;
@@ -348,6 +348,36 @@ export async function renderPaper(mount) {
         }
     });
     wireProtectButtons(mount, acct.id);
+    mount.querySelectorAll('.ord-replace').forEach(btn => {
+        btn.addEventListener('click', async () => {
+            const type = btn.dataset.type;
+            const body = {};
+            if (type === 'limit' || type === 'stop_limit') {
+                const v = Number(prompt(t('view.paper.prompt.replace_limit')));
+                if (!v) return;
+                body.limit_price = v;
+            }
+            if (type === 'stop' || type === 'stop_limit') {
+                const v = Number(prompt(t('view.paper.prompt.replace_stop')));
+                if (!v) return;
+                body.stop_price = v;
+            }
+            if (type === 'trailing') {
+                const v = Number(prompt(t('view.paper.prompt.replace_trail')));
+                if (!v) return;
+                body.trail_value = v;
+            }
+            const q = prompt(t('view.paper.prompt.replace_qty'));
+            if (q) body.qty = Number(q);
+            try {
+                await api.paperReplace(btn.dataset.id, body);
+                showToast(t('view.paper.toast.replaced'), { level: 'success' });
+                renderPaper(mount);
+            } catch (err) {
+                showToast(t('common.error', { err: err.message }), { level: 'error' });
+            }
+        });
+    });
     mount.querySelector('#ord-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         const fd = new FormData(e.target);

@@ -30,6 +30,7 @@ pub fn router() -> Router<AppState> {
             post(cancel_parent_order),
         )
         .route("/paper/orders/:id/cancel", post(cancel_order))
+        .route("/paper/orders/:id/replace", post(replace_order))
         .route("/paper/accounts/:id/brackets", post(submit_bracket))
         .route("/paper/accounts/:id/protect", post(protect))
         .route("/paper/accounts/:id/spreads", post(submit_spread))
@@ -484,6 +485,19 @@ async fn cancel_order(
         .await
         .map(Json)
         .map_err(ApiError::Internal)
+}
+
+/// Cancel/replace: amend a resting order's qty/prices in place.
+async fn replace_order(
+    State(s): State<AppState>,
+    user: AuthUser,
+    Path(order_id): Path<Uuid>,
+    Json(b): Json<traderview_db::paper::ReplaceRequest>,
+) -> Result<Json<PaperOrder>, ApiError> {
+    traderview_db::paper::replace_order(&s.pool, user.id, order_id, b)
+        .await
+        .map(Json)
+        .map_err(|e| ApiError::BadRequest(e.to_string()))
 }
 
 /// TWAP/VWAP parent order: child market slices submitted by the

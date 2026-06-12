@@ -243,6 +243,28 @@ pub struct OrderRequest {
     pub plan_note: Option<String>,
 }
 
+/// Does this order carry the price/trail its type requires? A
+/// trailing trail is dollars > 0, or a fraction in (0, 1) of the
+/// ratcheting extreme when trail_is_pct. Market is NOT well-formed
+/// for RESTING purposes — it always fills at submit and can never
+/// rest. Shared by submit (reject malformed) and replace_order
+/// (refuse an amendment that would strand the order).
+pub fn order_well_formed(
+    order_type: &str,
+    limit_price: Option<Decimal>,
+    stop_price: Option<Decimal>,
+    trail_value: Option<Decimal>,
+    trail_is_pct: Option<bool>,
+) -> bool {
+    let trail_ok = trail_value.is_some_and(|v| {
+        v > Decimal::ZERO && (!trail_is_pct.unwrap_or(false) || v < Decimal::ONE)
+    });
+    matches!(
+        (order_type, limit_price, stop_price),
+        ("limit", Some(_), _) | ("stop", _, Some(_)) | ("stop_limit", Some(_), Some(_))
+    ) || (order_type == "trailing" && trail_ok)
+}
+
 /// Price at which an order triggers against the current quote: market
 /// always at last; limit when last is at-or-better than the limit;
 /// stop when last has crossed the stop. None = does not trigger now
@@ -443,17 +465,16 @@ pub async fn submit(
 
     // Untriggered but well-formed limit/stop/trailing orders REST; only
     // orders missing the price/trail their type requires (or an unknown
-    // type) reject. A trailing trail is dollars > 0, or a fraction in
-    // (0, 1) of the ratcheting extreme when trail_is_pct.
-    let trail_ok = req.trail_value.is_some_and(|v| {
-        v > Decimal::ZERO && (!req.trail_is_pct.unwrap_or(false) || v < Decimal::ONE)
-    });
-    let well_formed = matches!(
-        (req.order_type.as_str(), req.limit_price, req.stop_price),
-        ("limit", Some(_), _) | ("stop", _, Some(_)) | ("stop_limit", Some(_), Some(_))
-    ) || (req.order_type == "trailing" && trail_ok);
+    // type) reject.
+    let well_formed = order_well_formed(
+        &req.order_type,
+        req.limit_price,
+        req.stop_price,
+        req.trail_value,
+        req.trail_is_pct,
+    );
     // A resting trailing stop starts its ratchet at the current price.
-    let trail_extreme = (req.order_type == "trailing" && trail_ok).then_some(last);
+    let trail_extreme = (req.order_type == "trailing" && well_formed).then_some(last);
     // Time in force → cancel_at. Only meaningful on orders that rest.
     let cancel_at = match req.time_in_force.as_deref().unwrap_or("gtc") {
         "gtc" => None,
@@ -760,6 +781,84 @@ pub async fn cancel_order(pool: &PgPool, user_id: Uuid, order_id: Uuid) -> anyho
         .await?;
     }
     Ok(cancelled)
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct ReplaceRequest {
+    #[serde(default)]
+    pub qty: Option<Decimal>,
+    #[serde(default)]
+    pub limit_price: Option<Decimal>,
+    #[serde(default)]
+    pub stop_price: Option<Decimal>,
+    #[serde(default)]
+    pub trail_value: Option<Decimal>,
+    #[serde(default)]
+    pub trail_is_pct: Option<bool>,
+}
+
+/// Cancel/replace in one step: amend a RESTING order's qty/prices
+/// without losing the order row or its submitted_at audit trail.
+/// None fields keep their current values (no way to clear a price —
+/// that would change the order's type). Held bracket legs are
+/// deliberately not replaceable: amending a leg's qty would desync it
+/// from its entry. The claim UPDATE re-checks status='pending' so a
+/// fill racing this call wins cleanly.
+pub async fn replace_order(
+    pool: &PgPool,
+    user_id: Uuid,
+    order_id: Uuid,
+    req: ReplaceRequest,
+) -> anyhow::Result<PaperOrder> {
+    let cur: Option<PaperOrder> = sqlx::query_as(
+        "SELECT o.id, o.paper_account_id, o.symbol, o.side::text, o.qty, o.order_type::text,
+                o.limit_price, o.stop_price, o.status::text,
+                o.trail_value, o.trail_is_pct, o.trail_extreme, o.oco_group, o.parent_order_id,
+                o.filled_price, o.filled_qty, o.fee, o.submitted_at, o.filled_at, o.cancel_at,
+                o.reject_reason, o.plan_note
+           FROM paper_orders o JOIN paper_accounts a ON a.id = o.paper_account_id
+          WHERE o.id = $1 AND a.user_id = $2",
+    )
+    .bind(order_id)
+    .bind(user_id)
+    .fetch_optional(pool)
+    .await?;
+    let Some(cur) = cur else {
+        anyhow::bail!("order not found");
+    };
+    if cur.status != "pending" {
+        anyhow::bail!("only resting (pending) orders can be replaced");
+    }
+    let qty = req.qty.unwrap_or(cur.qty);
+    if qty <= Decimal::ZERO {
+        anyhow::bail!("qty must be positive");
+    }
+    let limit_price = req.limit_price.or(cur.limit_price);
+    let stop_price = req.stop_price.or(cur.stop_price);
+    let trail_value = req.trail_value.or(cur.trail_value);
+    let trail_is_pct = req.trail_is_pct.or(cur.trail_is_pct);
+    if !order_well_formed(&cur.order_type, limit_price, stop_price, trail_value, trail_is_pct) {
+        anyhow::bail!("replacement would strand the order: its type still needs its limit/stop price or trail value");
+    }
+    let updated: Option<PaperOrder> = sqlx::query_as(
+        "UPDATE paper_orders
+            SET qty = $2, limit_price = $3, stop_price = $4, trail_value = $5, trail_is_pct = $6
+          WHERE id = $1 AND status = 'pending'
+         RETURNING id, paper_account_id, symbol, side::text, qty, order_type::text,
+                   limit_price, stop_price, status::text,
+                   trail_value, trail_is_pct, trail_extreme, oco_group, parent_order_id,
+                   filled_price, filled_qty, fee, submitted_at, filled_at, cancel_at,
+                   reject_reason, plan_note",
+    )
+    .bind(order_id)
+    .bind(qty)
+    .bind(limit_price)
+    .bind(stop_price)
+    .bind(trail_value)
+    .bind(trail_is_pct)
+    .fetch_optional(pool)
+    .await?;
+    updated.ok_or_else(|| anyhow::anyhow!("order filled or cancelled while replacing"))
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -1598,6 +1697,26 @@ mod tests {
         assert_eq!(validate_protection(d(100), d(101)), Err("qty exceeds position size"));
         assert_eq!(validate_protection(d(0), d(1)), Err("no position to protect"));
         assert_eq!(validate_protection(d(100), d(0)), Err("qty must be positive"));
+    }
+
+    #[test]
+    fn well_formed_pins_every_resting_type() {
+        // Each type demands exactly its own prices.
+        assert!(order_well_formed("limit", Some(d(100)), None, None, None));
+        assert!(!order_well_formed("limit", None, Some(d(95)), None, None));
+        assert!(order_well_formed("stop", None, Some(d(95)), None, None));
+        assert!(!order_well_formed("stop", Some(d(100)), None, None, None));
+        assert!(order_well_formed("stop_limit", Some(d(93)), Some(d(95)), None, None));
+        assert!(!order_well_formed("stop_limit", Some(d(93)), None, None, None));
+        assert!(!order_well_formed("stop_limit", None, Some(d(95)), None, None));
+        // Trailing: dollars > 0, or pct strictly inside (0, 1).
+        assert!(order_well_formed("trailing", None, None, Some(d(2)), Some(false)));
+        assert!(order_well_formed("trailing", None, None, Some(d(1) / d(20)), Some(true)));
+        assert!(!order_well_formed("trailing", None, None, Some(d(2)), Some(true)));
+        assert!(!order_well_formed("trailing", None, None, Some(d(0)), None));
+        // Market never rests; unknown types never pass.
+        assert!(!order_well_formed("market", Some(d(1)), Some(d(1)), Some(d(1)), None));
+        assert!(!order_well_formed("iceberg", Some(d(1)), Some(d(1)), None, None));
     }
 
     #[test]
