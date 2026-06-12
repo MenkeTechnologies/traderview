@@ -10,11 +10,6 @@ on:
 permissions:
   contents: read
 
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  # false: rapid pushes queue; avoids cancelling release-build mid-matrix
-  cancel-in-progress: false
-
 env:
   CARGO_TERM_COLOR: always
   RUSTFLAGS: "-Dwarnings"
@@ -94,6 +89,14 @@ jobs:
     name: Release Build
     needs: [check, test]
     runs-on: ${{ matrix.os }}
+    # Concurrency lives here, not at workflow level: a workflow-level group
+    # holds one pending run max, so rapid pushes silently cancelled queued
+    # runs (tests never ran) and the survivor queued behind a 60-90 min
+    # release build. Scoped per-target so matrix legs don't serialize each
+    # other; cancel-in-progress drops superseded builds of stale commits.
+    concurrency:
+      group: ${{ github.workflow }}-release-${{ github.ref }}-${{ matrix.target }}
+      cancel-in-progress: true
     # macos aarch64 release build sits near 60 min on the hosted
     # runner — 1h0m22s on c6d535eadb tipped it past the previous
     # 60-min cap. 90 buys headroom while the workspace keeps growing.
