@@ -82,7 +82,12 @@ pub async fn snapshot(pool: &PgPool, account_id: Uuid) -> anyhow::Result<LiveSna
                     quote_cache.insert(symbol.clone(), q.clone());
                     q
                 }
-                Err(_) => continue,
+                Err(e) => {
+                    // A quoteless position silently vanishing from Live P/L
+                    // reads as "0 open positions" — leave a trail.
+                    tracing::warn!(symbol, error = %e, "live_positions: quote failed; position skipped");
+                    continue;
+                }
             },
         };
         let qty_f = dec(qty);

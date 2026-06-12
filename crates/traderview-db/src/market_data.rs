@@ -540,7 +540,11 @@ fn dec_f64(d: Decimal) -> f64 {
     d.to_string().parse().unwrap_or(0.0)
 }
 fn enc(s: &str) -> String {
-    s.replace('^', "%5E").replace('=', "%3D")
+    // '/' is symbology translation, not escaping: brokers write slash pairs
+    // (crypto ETH/USD, class shares BRK/B) where Yahoo uses a dash
+    // (ETH-USD, BRK-B). Percent-encoding the slash instead made Yahoo 404,
+    // and live_positions dropped every open crypto position as quoteless.
+    s.replace('^', "%5E").replace('=', "%3D").replace('/', "-")
 }
 
 // ===========================================================================
@@ -772,6 +776,16 @@ mod tests {
         // Pathological but valid — caret AND equals in the same symbol must
         // both be escaped independently.
         assert_eq!(enc("^FOO=BAR"), "%5EFOO%3DBAR");
+    }
+
+    #[test]
+    fn enc_maps_slash_pairs_to_yahoo_dash() {
+        // Broker slash symbology (crypto pairs, class shares) maps to
+        // Yahoo's dash form — translation, not percent-encoding. ETH%2FUSD
+        // 404s on Yahoo and Live P/L dropped the position entirely.
+        assert_eq!(enc("ETH/USD"), "ETH-USD");
+        assert_eq!(enc("ADA/USD"), "ADA-USD");
+        assert_eq!(enc("BRK/B"), "BRK-B");
     }
 
     #[test]
