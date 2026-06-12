@@ -54,6 +54,7 @@ pub fn router() -> Router<AppState> {
         .route("/paper/accounts/:id/interest", get(interest))
         .route("/paper/accounts/:id/statement", get(statement))
         .route("/paper/accounts/:id/pdt", get(pdt))
+        .route("/paper/stop-suggestion", get(stop_suggestion))
         .route(
             "/paper/accounts/:id/cash-flows",
             get(cash_flows).post(post_cash_flow),
@@ -1003,6 +1004,24 @@ async fn assign(
     Json(b): Json<ExerciseBody>,
 ) -> Result<Json<traderview_db::paper::ExerciseResult>, ApiError> {
     traderview_db::paper::assign(&s.pool, user.id, account_id, &b.symbol, b.contracts)
+        .await
+        .map(Json)
+        .map_err(|e| ApiError::BadRequest(e.to_string()))
+}
+
+#[derive(Deserialize)]
+struct StopSuggestQ {
+    symbol: String,
+}
+
+/// ATR-scaled stop/target suggestion (2×ATR stop, 3×ATR target —
+/// 1.5R by construction) from daily bars; equities and crypto alike.
+async fn stop_suggestion(
+    State(s): State<AppState>,
+    _user: AuthUser,
+    Query(q): Query<StopSuggestQ>,
+) -> Result<Json<traderview_db::paper::StopSuggestion>, ApiError> {
+    traderview_db::paper::stop_suggestion(&s.pool, &q.symbol)
         .await
         .map(Json)
         .map_err(|e| ApiError::BadRequest(e.to_string()))

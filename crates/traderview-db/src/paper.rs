@@ -2182,6 +2182,58 @@ pub async fn simple_spot(pool: &PgPool, symbol: &str) -> anyhow::Result<f64> {
     }
 }
 
+#[derive(Debug, Serialize)]
+pub struct StopSuggestion {
+    pub last: f64,
+    pub atr: f64,
+    pub period: usize,
+    pub bars_used: usize,
+    /// Long protection: stop 2×ATR below last, target 3×ATR above —
+    /// a 1.5R structure by construction.
+    pub stop_long: f64,
+    pub target_long: f64,
+    pub stop_short: f64,
+    pub target_short: f64,
+}
+
+/// Volatility-scaled stop/target suggestion from daily bars (the
+/// bars store serves equities AND crypto pairs through one seam).
+/// Wilder ATR(14) via the shared core indicator; refuses under 15
+/// bars — an ATR off a week of data is noise wearing units.
+pub async fn stop_suggestion(pool: &PgPool, symbol: &str) -> anyhow::Result<StopSuggestion> {
+    use rust_decimal::prelude::ToPrimitive;
+    const PERIOD: usize = 14;
+    let symbol = symbol.trim().to_uppercase();
+    let to = Utc::now();
+    let from = to - chrono::Duration::days(60);
+    let bars = crate::prices::get_bars(pool, &symbol, traderview_core::BarInterval::D1, from, to)
+        .await?;
+    if bars.len() < PERIOD + 1 {
+        anyhow::bail!("only {} daily bars — need at least {}", bars.len(), PERIOD + 1);
+    }
+    let f = |d: Decimal| d.to_f64().unwrap_or(0.0);
+    let highs: Vec<f64> = bars.iter().map(|b| f(b.high)).collect();
+    let lows: Vec<f64> = bars.iter().map(|b| f(b.low)).collect();
+    let closes: Vec<f64> = bars.iter().map(|b| f(b.close)).collect();
+    let atr = traderview_core::indicators::atr(&highs, &lows, &closes, PERIOD)
+        .last()
+        .copied()
+        .flatten()
+        .filter(|a| *a > 0.0)
+        .ok_or_else(|| anyhow::anyhow!("no ATR from {} bars", bars.len()))?;
+    let last = simple_spot(pool, &symbol).await?;
+    Ok(StopSuggestion {
+        last,
+        atr,
+        period: PERIOD,
+        bars_used: bars.len(),
+        stop_long: last - 2.0 * atr,
+        target_long: last + 3.0 * atr,
+        stop_short: last + 2.0 * atr,
+        target_short: last - 3.0 * atr,
+    })
+}
+
 /// Crypto taker fee, percent of notional — the taker fee IS the
 /// friction model for crypto (no per-share slippage tier, no SEC fee).
 pub const CRYPTO_TAKER_FEE_PCT: f64 = 0.1;

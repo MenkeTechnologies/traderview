@@ -965,9 +965,16 @@ function wireProtectButtons(mount, acctId) {
     mount.querySelectorAll('.protect-btn').forEach(btn => {
         btn.addEventListener('click', async () => {
             const symbol = btn.dataset.symbol;
-            const stop = Number(prompt(`${t('view.paper.prompt.protect_stop')} (${symbol})`));
+            // ATR-scaled defaults (2×ATR stop / 3×ATR target — 1.5R);
+            // suggestion failure just means blank prompts, as before.
+            let sg = null;
+            try { sg = await api.paperStopSuggestion(symbol); } catch (e) { /* no defaults */ }
+            const long = Number(btn.dataset.qty) > 0;
+            const defStop = sg ? (long ? sg.stop_long : sg.stop_short).toFixed(2) : '';
+            const defTarget = sg ? (long ? sg.target_long : sg.target_short).toFixed(2) : '';
+            const stop = Number(prompt(`${t('view.paper.prompt.protect_stop')} (${symbol}${sg ? `, ATR(${sg.period}) ${sg.atr.toFixed(2)}` : ''})`, defStop));
             if (!stop) return;
-            const target = Number(prompt(`${t('view.paper.prompt.protect_target')} (${symbol})`));
+            const target = Number(prompt(`${t('view.paper.prompt.protect_target')} (${symbol})`, defTarget));
             if (!target) return;
             const qty = Math.abs(Number(btn.dataset.qty));
             try {
