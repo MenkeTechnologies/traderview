@@ -17,7 +17,7 @@ concurrency:
 
 env:
   CARGO_TERM_COLOR: always
-  RUSTFLAGS: "-Dwarnings=0"  # keep warnings non-fatal in CI
+  # Warnings stay non-fatal in CI (rustc default — no -Dwarnings).
 
 jobs:
   check:
