@@ -63,6 +63,8 @@ export async function renderPaper(mount) {
             <button id="acct-delete" class="link" data-i18n="view.paper.btn.delete_account" data-tip="view.paper.tip.account_delete">Delete</button>
             <label class="small"><input type="checkbox" id="acct-drip" ${acct.drip ? 'checked' : ''} data-tip="view.paper.tip.drip"> <span data-i18n="view.paper.label.drip">DRIP</span></label>
             <label class="small" data-tip="view.paper.tip.cash_apy"><span data-i18n="view.paper.label.cash_apy">Cash APY %</span> <input type="number" id="acct-apy" min="0" max="20" step="0.25" value="${Number(acct.cash_apy_pct || 0)}" style="width:64px"></label>
+            <button class="small" id="acct-deposit" data-i18n="view.paper.btn.deposit" data-tip="view.paper.tip.deposit">DEPOSIT</button>
+            <button class="small" id="acct-withdraw" data-i18n="view.paper.btn.withdraw" data-tip="view.paper.tip.withdraw">WITHDRAW</button>
             <label class="small" data-tip="view.paper.tip.borrow_apy"><span data-i18n="view.paper.label.borrow_apy">Borrow APY %</span> <input type="number" id="acct-borrow-apy" min="0" max="50" step="0.25" value="${Number(acct.borrow_apy_pct || 0)}" style="width:64px"></label>
         </div>
 
@@ -406,6 +408,7 @@ export async function renderPaper(mount) {
                     <tr><td data-i18n="view.paper.stmt.opening">Opening equity</td><td>${s.opening_equity != null ? money(s.opening_equity) : '—'}</td></tr>
                     <tr><td data-i18n="view.paper.stmt.closing">Closing equity</td><td>${s.closing_equity != null ? money(s.closing_equity) : '—'}</td></tr>
                     <tr><td data-i18n="view.paper.stmt.return">Period return</td><td class="${(s.period_return_pct ?? 0) >= 0 ? 'pos' : 'neg'}">${s.period_return_pct != null ? s.period_return_pct.toFixed(2) + '%' : '—'}</td></tr>
+                    <tr><td data-i18n="view.paper.stmt.deposits">Net deposits</td><td>${money(s.net_deposits)}</td></tr>
                     <tr><td data-i18n="view.paper.stmt.realized">Realized P&L (${s.trips_closed} trips)</td><td class="${s.realized_pnl >= 0 ? 'pos' : 'neg'}">${money(s.realized_pnl)}</td></tr>
                     <tr><td data-i18n="view.paper.stmt.fills">Fills</td><td>${s.fills}</td></tr>
                     <tr><td data-i18n="view.paper.stmt.fees">Fees & commissions</td><td class="neg">${money(s.fees)}</td></tr>
@@ -505,6 +508,21 @@ export async function renderPaper(mount) {
             renderPaper(mount);
         } catch (err) { showToast(t('common.error', { err: err.message }), { level: 'error' }); }
     });
+    const wireCashFlow = (sel, sign, promptKey, toastKey) => {
+        mount.querySelector(sel).addEventListener('click', async () => {
+            const v = Number(prompt(t(promptKey)));
+            if (!v || v <= 0) return;
+            try {
+                await api.paperCashFlow(acct.id, sign * v, null);
+                showToast(t(toastKey, { amount: v.toFixed(2) }), { level: 'success' });
+                renderPaper(mount);
+            } catch (err) {
+                showToast(t('common.error', { err: err.message }), { level: 'error' });
+            }
+        });
+    };
+    wireCashFlow('#acct-deposit', 1, 'view.paper.prompt.deposit', 'view.paper.toast.deposited');
+    wireCashFlow('#acct-withdraw', -1, 'view.paper.prompt.withdraw', 'view.paper.toast.withdrawn');
     mount.querySelector('#acct-borrow-apy').addEventListener('change', async (e) => {
         try {
             await api.paperSetBorrowApy(acct.id, Number(e.target.value) || 0);

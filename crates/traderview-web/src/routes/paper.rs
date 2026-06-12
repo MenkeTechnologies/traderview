@@ -49,6 +49,10 @@ pub fn router() -> Router<AppState> {
         .route("/paper/accounts/:id/interest", get(interest))
         .route("/paper/accounts/:id/statement", get(statement))
         .route(
+            "/paper/accounts/:id/cash-flows",
+            get(cash_flows).post(post_cash_flow),
+        )
+        .route(
             "/paper/recurring/:id",
             axum::routing::delete(delete_recurring),
         )
@@ -811,6 +815,37 @@ async fn statement(
     Query(q): Query<StatementQ>,
 ) -> Result<Json<traderview_db::paper_equity::Statement>, ApiError> {
     traderview_db::paper_equity::statement(&s.pool, user.id, id, &q.month)
+        .await
+        .map(Json)
+        .map_err(|e| ApiError::BadRequest(e.to_string()))
+}
+
+#[derive(Deserialize)]
+struct CashFlowBody {
+    amount: Decimal,
+    #[serde(default)]
+    note: Option<String>,
+}
+
+/// Deposit (positive) / withdraw (negative); withdrawals capped by cash.
+async fn post_cash_flow(
+    State(s): State<AppState>,
+    user: AuthUser,
+    Path(id): Path<Uuid>,
+    Json(b): Json<CashFlowBody>,
+) -> Result<Json<traderview_db::paper::CashFlow>, ApiError> {
+    traderview_db::paper::cash_flow(&s.pool, user.id, id, b.amount, b.note.as_deref())
+        .await
+        .map(Json)
+        .map_err(|e| ApiError::BadRequest(e.to_string()))
+}
+
+async fn cash_flows(
+    State(s): State<AppState>,
+    user: AuthUser,
+    Path(id): Path<Uuid>,
+) -> Result<Json<Vec<traderview_db::paper::CashFlow>>, ApiError> {
+    traderview_db::paper::list_cash_flows(&s.pool, user.id, id, 200)
         .await
         .map(Json)
         .map_err(|e| ApiError::BadRequest(e.to_string()))

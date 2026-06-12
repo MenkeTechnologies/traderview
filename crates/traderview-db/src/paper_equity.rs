@@ -1122,6 +1122,17 @@ pub fn month_bounds(month: &str) -> Option<(chrono::DateTime<Utc>, chrono::DateT
     Some((at(start), at(end)))
 }
 
+/// Modified Dietz return (half-weight convention): the flow-aware
+/// period return — a mid-month deposit is capital, not gain, and a
+/// withdrawal is not a loss. (close − open − flow) / (open + flow/2),
+/// None when the denominator isn't positive. Half-weighting is the
+/// stated approximation (flows assumed mid-period) — day-weighting
+/// needs per-flow timing the statement deliberately aggregates away.
+pub fn modified_dietz(opening: f64, closing: f64, net_flow: f64) -> Option<f64> {
+    let denom = opening + 0.5 * net_flow;
+    (denom > 0.0).then(|| (closing - opening - net_flow) / denom * 100.0)
+}
+
 #[derive(Debug, serde::Serialize)]
 pub struct Statement {
     pub month: String,
@@ -1131,8 +1142,10 @@ pub struct Statement {
     pub opening_equity: Option<f64>,
     /// Last snapshot inside the period.
     pub closing_equity: Option<f64>,
-    /// closing/opening − 1, only when both ends exist.
+    /// Flow-aware modified-Dietz return, only when both ends exist.
     pub period_return_pct: Option<f64>,
+    /// Net deposits − withdrawals inside the period.
+    pub net_deposits: f64,
     /// Trips CLOSED in the period (FIFO, fees netted) — same shared
     /// reconstruction as attribution.
     pub realized_pnl: f64,
@@ -1234,6 +1247,17 @@ pub async fn statement(
         }
     }
 
+    let flows: Option<(Decimal,)> = sqlx::query_as(
+        "SELECT COALESCE(SUM(amount), 0) FROM paper_cash_flows
+          WHERE paper_account_id = $1 AND created_at >= $2 AND created_at < $3",
+    )
+    .bind(account_id)
+    .bind(start)
+    .bind(end)
+    .fetch_optional(pool)
+    .await?;
+    let net_deposits = flows.and_then(|(d,)| d.to_f64()).unwrap_or(0.0);
+
     // Realized P&L: trips closed inside the period, from the same
     // full-history FIFO reconstruction attribution uses (a trip can
     // close this month on lots bought months ago).
@@ -1276,9 +1300,10 @@ pub async fn statement(
         opening_equity,
         closing_equity,
         period_return_pct: match (opening_equity, closing_equity) {
-            (Some(o), Some(c)) if o > 0.0 => Some((c / o - 1.0) * 100.0),
+            (Some(o), Some(c)) => modified_dietz(o, c, net_deposits),
             _ => None,
         },
+        net_deposits,
         realized_pnl,
         trips_closed,
         fills,
@@ -1292,6 +1317,23 @@ pub async fn statement(
 #[cfg(test)]
 mod statement_tests {
     use super::*;
+
+    #[test]
+    fn dietz_flows_are_capital_not_performance() {
+        // No flows: reduces to the simple return.
+        assert!((modified_dietz(100_000.0, 110_000.0, 0.0).unwrap() - 10.0).abs() < 1e-9);
+        // A 20k deposit with zero trading gain: return 0, not +20%.
+        assert!(modified_dietz(100_000.0, 120_000.0, 20_000.0).unwrap().abs() < 1e-9);
+        // A withdrawal is not a loss.
+        assert!(modified_dietz(100_000.0, 80_000.0, -20_000.0).unwrap().abs() < 1e-9);
+        // Gain on top of a deposit: 10k gain over (100k + half the
+        // 20k flow) = 10/110.
+        let r = modified_dietz(100_000.0, 130_000.0, 20_000.0).unwrap();
+        assert!((r - 10_000.0 / 110_000.0 * 100.0).abs() < 1e-9);
+        // Degenerate denominator (huge withdrawal): None, not a
+        // nonsense percentage.
+        assert!(modified_dietz(10_000.0, 0.0, -25_000.0).is_none());
+    }
 
     #[test]
     fn month_bounds_pins_wrap_and_garbage() {

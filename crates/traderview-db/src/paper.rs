@@ -85,6 +85,78 @@ pub async fn ensure_default(pool: &PgPool, user_id: Uuid) -> anyhow::Result<Pape
     .await?)
 }
 
+#[derive(Debug, Serialize, sqlx::FromRow)]
+pub struct CashFlow {
+    pub amount: Decimal,
+    pub note: Option<String>,
+    pub created_at: DateTime<Utc>,
+}
+
+/// Deposit (positive) or withdraw (negative). Withdrawals are capped
+/// by CASH, not equity — you can't wire out money that's currently
+/// stock. The flow is recorded for the statement's flow-aware return.
+pub async fn cash_flow(
+    pool: &PgPool,
+    user_id: Uuid,
+    account_id: Uuid,
+    amount: Decimal,
+    note: Option<&str>,
+) -> anyhow::Result<CashFlow> {
+    if amount == Decimal::ZERO {
+        anyhow::bail!("amount must be nonzero");
+    }
+    if amount.abs() > Decimal::from(100_000_000) {
+        anyhow::bail!("amount exceeds sanity bound");
+    }
+    let mut tx = pool.begin().await?;
+    // Claim guards ownership AND the no-overdraw rule in one UPDATE.
+    let updated: Option<(Decimal,)> = sqlx::query_as(
+        "UPDATE paper_accounts SET cash = cash + $3
+          WHERE id = $1 AND user_id = $2 AND cash + $3 >= 0
+        RETURNING cash",
+    )
+    .bind(account_id)
+    .bind(user_id)
+    .bind(amount)
+    .fetch_optional(&mut *tx)
+    .await?;
+    if updated.is_none() {
+        anyhow::bail!("account not found or withdrawal exceeds cash");
+    }
+    let row: CashFlow = sqlx::query_as(
+        "INSERT INTO paper_cash_flows (paper_account_id, amount, note)
+         VALUES ($1, $2, $3)
+         RETURNING amount, note, created_at",
+    )
+    .bind(account_id)
+    .bind(amount)
+    .bind(note.map(str::trim).filter(|s| !s.is_empty()))
+    .fetch_one(&mut *tx)
+    .await?;
+    tx.commit().await?;
+    Ok(row)
+}
+
+pub async fn list_cash_flows(
+    pool: &PgPool,
+    user_id: Uuid,
+    account_id: Uuid,
+    limit: i64,
+) -> anyhow::Result<Vec<CashFlow>> {
+    Ok(sqlx::query_as(
+        "SELECT f.amount, f.note, f.created_at
+           FROM paper_cash_flows f
+           JOIN paper_accounts a ON a.id = f.paper_account_id
+          WHERE f.paper_account_id = $1 AND a.user_id = $2
+          ORDER BY f.created_at DESC LIMIT $3",
+    )
+    .bind(account_id)
+    .bind(user_id)
+    .bind(limit)
+    .fetch_all(pool)
+    .await?)
+}
+
 /// Cap so a runaway client can't mint unbounded accounts.
 const MAX_ACCOUNTS_PER_USER: i64 = 12;
 
