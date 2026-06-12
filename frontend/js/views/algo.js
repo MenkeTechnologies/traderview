@@ -772,6 +772,7 @@ export async function renderAlgo(mount) {
                 <h2 data-i18n="view.algo.h2.strategies">Strategies</h2>
                 <button id="algo-portfolio" data-i18n="view.algo.btn.portfolio" data-tip="view.algo.tip.portfolio">Portfolio</button>
                 <button id="algo-tournament" data-i18n="view.algo.btn.tournament" data-tip="view.algo.tip.tournament">Tournament</button>
+                <button id="algo-import" data-i18n="view.algo.btn.import" data-tip="view.algo.tip.import">Import</button>
                 <button id="algo-new" class="primary" data-i18n="view.algo.btn.new_strategy">New strategy</button>
             </div>
             <table class="trades" id="algo-strats-table">
@@ -868,6 +869,20 @@ export async function renderAlgo(mount) {
 
     mount.querySelector('#algo-new').addEventListener('click', () => openStrategyModal(mount));
     mount.querySelector('#algo-tournament').addEventListener('click', () => openTournamentModal(mount));
+    mount.querySelector('#algo-import').addEventListener('click', async () => {
+        const raw = prompt(t('view.algo.prompt.import'));
+        if (!raw) return;
+        let cfg;
+        try { cfg = JSON.parse(raw); }
+        catch (e) { showToast(t('view.algo.toast.import_bad_json'), { level: 'error' }); return; }
+        try {
+            const s = await api.algoImportStrategy(cfg);
+            showToast(t('view.algo.toast.imported', { name: s.name }), { level: 'success' });
+            await refreshStrategies(mount);
+        } catch (err) {
+            showToast(t('common.error', { err: err.message }), { level: 'error' });
+        }
+    });
     mount.querySelector('#algo-portfolio').addEventListener('click', () => openPortfolioModal());
     // Strategy reference tabs — clicking a button swaps the rendered doc.
     mount.querySelectorAll('.algo-docs-tab').forEach(btn => {
@@ -1023,6 +1038,7 @@ async function refreshStrategies(mount) {
                 <button class="link" data-act="gates" data-i18n="view.algo.btn.gates">gates</button>
                 <button class="link" data-act="history" data-i18n="view.algo.btn.history">history</button>
                 <button class="link" data-act="fork" data-i18n="view.algo.btn.fork">fork</button>
+                <button class="link" data-act="export" data-i18n="view.algo.btn.export">export</button>
                 <button class="link" data-act="kill" data-i18n="view.algo.btn.kill">${s.kill_switch ? 'release' : 'kill'}</button>
                 <button class="link" data-act="edit" data-i18n="view.algo.btn.edit">edit</button>
                 <button class="link" data-act="del" data-i18n="view.algo.btn.delete">delete</button>
@@ -1048,6 +1064,16 @@ async function refreshStrategies(mount) {
             if (act === 'drift') return openDriftModal(s);
             if (act === 'gates') return openGatesModal(s);
             if (act === 'history') return openRevisionsModal(s);
+            if (act === 'export') {
+                try {
+                    const cfg = await api.algoExportStrategy(s.id);
+                    await navigator.clipboard.writeText(JSON.stringify(cfg, null, 2));
+                    showToast(t('view.algo.toast.exported'), { level: 'success' });
+                } catch (err) {
+                    showToast(t('common.error', { err: err.message }), { level: 'error' });
+                }
+                return;
+            }
             if (act === 'fork') {
                 try {
                     await api.algoForkStrategy(s.id);

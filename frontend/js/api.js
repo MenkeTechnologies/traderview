@@ -1171,6 +1171,8 @@ export const api = {
         request(`/algo/strategies/${id}/revisions/${revId}/restore`, { method: 'POST' }),
     algoForkStrategy: (id, name) =>
         request(`/algo/strategies/${id}/fork`, { method: 'POST', body: JSON.stringify(name ? { name } : {}) }),
+    algoExportStrategy: (id) => request(`/algo/strategies/${id}/export`),
+    algoImportStrategy: (body) => request('/algo/strategies/import', { method: 'POST', body }),
 
     // Correlation matrix (pairwise Pearson on cached daily-bar log-returns)
     corrWatchlist: (wid, days = 90) =>

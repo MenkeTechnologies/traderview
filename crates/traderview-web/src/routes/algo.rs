@@ -54,6 +54,8 @@ pub fn router() -> Router<AppState> {
             post(post_restore_revision),
         )
         .route("/algo/strategies/:id/fork", post(post_fork_strategy))
+        .route("/algo/strategies/:id/export", get(export_strategy))
+        .route("/algo/strategies/import", post(import_strategy))
         .route("/algo/strategies/:id/backtests", get(list_backtest_history))
         .route(
             "/algo/backtests/:id",
@@ -1468,6 +1470,125 @@ async fn post_fork_strategy(
         exit_rules: src.exit_rules.clone(),
         sizing: src.sizing.clone(),
         risk_gates: src.risk_gates.clone(),
+        broker_mode: "internal_sim".into(),
+    };
+    traderview_db::algo::create_strategy(&s.pool, u.id, input)
+        .await
+        .map(Json)
+        .map_err(ApiError::Internal)
+}
+
+pub const STRATEGY_EXPORT_FORMAT: &str = "traderview-strategy-v1";
+
+/// GET /algo/strategies/:id/export — the strategy's portable config.
+/// Environment-specific identity is deliberately excluded: no ids, no
+/// watchlist_id, no account_id, no broker_mode — an export describes
+/// WHAT the strategy does, not where it runs.
+async fn export_strategy(
+    State(s): State<AppState>,
+    u: AuthUser,
+    Path(id): Path<Uuid>,
+) -> Result<Json<serde_json::Value>, ApiError> {
+    let src = traderview_db::algo::get_strategy(&s.pool, u.id, id)
+        .await
+        .map_err(ApiError::Internal)?
+        .ok_or_else(|| ApiError::BadRequest("strategy not found".into()))?;
+    Ok(Json(serde_json::json!({
+        "format": STRATEGY_EXPORT_FORMAT,
+        "name": src.name,
+        "timeframe": src.timeframe,
+        "universe_mode": src.universe_mode,
+        "autoscan_top_n": src.autoscan_top_n,
+        "side_mode": src.side_mode,
+        "strategy_type": src.strategy_type,
+        "entry_rules": src.entry_rules,
+        "exit_rules": src.exit_rules,
+        "sizing": src.sizing,
+        "risk_gates": src.risk_gates,
+    })))
+}
+
+#[derive(serde::Deserialize)]
+struct ImportBody {
+    format: String,
+    name: String,
+    #[serde(default = "default_import_timeframe")]
+    timeframe: String,
+    #[serde(default)]
+    universe_mode: Option<String>,
+    #[serde(default)]
+    autoscan_top_n: Option<i32>,
+    #[serde(default)]
+    side_mode: Option<String>,
+    strategy_type: String,
+    #[serde(default)]
+    entry_rules: serde_json::Value,
+    #[serde(default)]
+    exit_rules: serde_json::Value,
+    #[serde(default)]
+    sizing: serde_json::Value,
+    #[serde(default)]
+    risk_gates: serde_json::Value,
+    /// Optional override; defaults to the user's first broker account.
+    #[serde(default)]
+    account_id: Option<Uuid>,
+}
+fn default_import_timeframe() -> String {
+    "1d".into()
+}
+
+/// POST /algo/strategies/import — create a strategy from an export.
+/// Same safety posture as fork: imports start DISABLED in
+/// internal_sim regardless of what the source ran as, and a
+/// watchlist universe arrives without its watchlist (the runner
+/// reports no_universe until one is picked — visible, not silent).
+async fn import_strategy(
+    State(s): State<AppState>,
+    u: AuthUser,
+    Json(b): Json<ImportBody>,
+) -> Result<Json<AlgoStrategy>, ApiError> {
+    if b.format != STRATEGY_EXPORT_FORMAT {
+        return Err(ApiError::BadRequest(format!(
+            "unsupported format '{}' (expected {STRATEGY_EXPORT_FORMAT})",
+            b.format
+        )));
+    }
+    let account_id = match b.account_id {
+        Some(id) => {
+            if !user_owns_account(&s.pool, u.id, id).await? {
+                return Err(ApiError::BadRequest("account not found".into()));
+            }
+            id
+        }
+        None => {
+            let first: Option<(Uuid,)> = sqlx::query_as(
+                "SELECT id FROM accounts WHERE user_id = $1 ORDER BY created_at LIMIT 1",
+            )
+            .bind(u.id)
+            .fetch_optional(&s.pool)
+            .await
+            .map_err(|e| ApiError::Internal(e.into()))?;
+            first
+                .map(|(id,)| id)
+                .ok_or_else(|| ApiError::BadRequest(
+                    "no broker account — add one before importing (Settings → Accounts)".into(),
+                ))?
+        }
+    };
+    let input = AlgoStrategyInput {
+        name: b.name.trim().to_string(),
+        enabled: false,
+        timeframe: b.timeframe,
+        universe_mode: b.universe_mode.unwrap_or_else(|| "watchlist".into()),
+        watchlist_id: None,
+        autoscan_top_n: b.autoscan_top_n.unwrap_or(25),
+        side_mode: b.side_mode.unwrap_or_else(|| "long".into()),
+        strategy_type: b.strategy_type,
+        account_id: Some(account_id),
+        entry_rules: b.entry_rules,
+        exit_rules: b.exit_rules,
+        sizing: b.sizing,
+        risk_gates: b.risk_gates,
         broker_mode: "internal_sim".into(),
     };
     traderview_db::algo::create_strategy(&s.pool, u.id, input)
