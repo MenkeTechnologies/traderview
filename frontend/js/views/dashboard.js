@@ -1,6 +1,6 @@
 import { api } from '../api.js';
 import { fmtMoney, fmtSecs, pnlClass, applyBarWidths } from '../util.js';
-import { equityChart, barChart, zoomPlugin } from '../charts.js';
+import { equityChart, barChart, zoomPlugin, idxAxisValues } from '../charts.js';
 import { renderWorldMarkets } from './world_map.js';
 import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
@@ -422,7 +422,7 @@ function drawdownChart(elId, equity) {
             ],
             axes: [
                 { stroke: '#aab', size: 60, rotate: -45,
-                  values: (_u, splits) => splits.map(v => labels[Math.round(v)] || '') },
+                  values: idxAxisValues(labels) },
                 { stroke: '#aab', size: 64,
                   values: (_u, ticks) => ticks.map(v => {
                       const a = Math.abs(v); const sgn = v < 0 ? '-' : '';
@@ -500,7 +500,7 @@ function lineChart(elId, daily, valueKey, color) {
             ],
             axes: [
                 { stroke: '#aab', size: 60, rotate: -45,
-                  values: (_u, splits) => splits.map(v => labels[Math.round(v)] || '') },
+                  values: idxAxisValues(labels) },
                 { stroke: '#aab', size: 64,
                   values: (_u, ticks) => ticks.map(v => {
                       if (valueKey === 'running_win_rate') return `${(v * 100).toFixed(0)}%`;

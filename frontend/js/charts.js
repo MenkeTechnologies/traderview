@@ -300,6 +300,17 @@ export function ohlcChart(el, bars, marks = [], opts = {}) {
     return plot;
 }
 
+// X-axis values fn for index-scaled charts (one slot per label). Label
+// only (near-)integer splits: on short ranges (1-bar daily volume) and
+// zoomed views uPlot emits fractional splits, and rounding them all
+// repeated the same date across the whole axis.
+export function idxAxisValues(labels) {
+    return (_u, splits) => splits.map(v => {
+        const r = Math.round(v);
+        return Math.abs(v - r) < 1e-6 ? (labels[r] ?? '') : '';
+    });
+}
+
 export function barChart(el, labels, values, opts = {}) {
     el.innerHTML = '';
     if (!window.uPlot) { el.textContent = t('chart.error.uplot_missing_short'); return; }
@@ -389,14 +400,13 @@ export function barChart(el, labels, values, opts = {}) {
             },
         ],
         axes: [{
-            // Match dashboard.dailyVolumeChart's axis config verbatim —
-            // it renders rotated tenor labels correctly. Any extra config
-            // here (splits, incrs, space) made uPlot drop the entire
-            // x-axis label render on the 4-point VIX/Treasury panels.
+            // Keep this axis config minimal — any extra config (splits,
+            // incrs, space) made uPlot drop the entire x-axis label render
+            // on the 4-point VIX/Treasury panels.
             stroke: '#aab',
             size: 60,
             rotate: -45,
-            values: (_u, ticks) => ticks.map(v => labels[Math.round(v)] || ''),
+            values: idxAxisValues(labels),
         }, {
             stroke: '#aab',
             size: 64,
