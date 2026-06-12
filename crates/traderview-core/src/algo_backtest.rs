@@ -58,6 +58,11 @@ pub struct BtGates {
     pub max_entries_per_day: Option<usize>,
     /// Minutes after a losing trade closes before the next entry.
     pub loss_cooldown_minutes: Option<i64>,
+    /// Drawdown circuit breaker: once cumulative trade PnL falls this
+    /// many dollars below its peak, ALL later entries are blocked —
+    /// a latch, mirroring the live kill switch, which stays tripped
+    /// until a human re-enables the strategy.
+    pub max_drawdown_usd: Option<f64>,
 }
 
 /// Entries each gate blocked during the run — quantifies what the
@@ -67,6 +72,7 @@ pub struct GateSkips {
     pub entry_window: usize,
     pub daily_entry_cap: usize,
     pub loss_cooldown: usize,
+    pub max_drawdown: usize,
 }
 
 /// Replay-state for the gates. Pinned directly by unit tests so the
@@ -77,6 +83,9 @@ pub struct GateState {
     cur_day: Option<chrono::NaiveDate>,
     entries_today: usize,
     last_loss_at: Option<DateTime<Utc>>,
+    cum_pnl: f64,
+    peak_pnl: f64,
+    dd_breached: bool,
     pub skips: GateSkips,
 }
 
@@ -87,6 +96,9 @@ impl GateState {
             cur_day: None,
             entries_today: 0,
             last_loss_at: None,
+            cum_pnl: 0.0,
+            peak_pnl: 0.0,
+            dd_breached: false,
             skips: GateSkips::default(),
         }
     }
@@ -120,6 +132,13 @@ impl GateState {
                 }
             }
         }
+        if let Some(cap) = self.gates.max_drawdown_usd {
+            if self.dd_breached || self.peak_pnl - self.cum_pnl >= cap {
+                self.dd_breached = true;
+                self.skips.max_drawdown += 1;
+                return Some("max_drawdown");
+            }
+        }
         None
     }
 
@@ -136,6 +155,8 @@ impl GateState {
         if pnl < 0.0 {
             self.last_loss_at = Some(exit_time);
         }
+        self.cum_pnl += pnl;
+        self.peak_pnl = self.peak_pnl.max(self.cum_pnl);
     }
 }
 
@@ -929,6 +950,37 @@ mod gate_state_tests {
         let day2 = Utc.with_ymd_and_hms(2026, 6, 11, 14, 0, 0).unwrap();
         assert_eq!(g.blocks_entry(day2), None);
         assert_eq!(g.skips.daily_entry_cap, 1);
+    }
+
+    #[test]
+    fn drawdown_latch_blocks_forever_after_breach() {
+        use chrono::TimeZone;
+        let t0 = Utc.with_ymd_and_hms(2025, 6, 2, 14, 0, 0).unwrap();
+        let mut g = GateState::new(BtGates {
+            max_drawdown_usd: Some(100.0),
+            ..Default::default()
+        });
+        // Below the cap: dd 60 after one loss — entries still allowed.
+        g.on_trade_closed(-60.0, t0);
+        assert_eq!(g.blocks_entry(t0), None);
+        // Second loss takes dd to 110 ≥ 100 — blocked and counted.
+        g.on_trade_closed(-50.0, t0);
+        assert_eq!(g.blocks_entry(t0), Some("max_drawdown"));
+        // A later monster win lifts cum PnL above the old peak, but
+        // the latch holds: live, the kill switch stays tripped until
+        // a human re-enables — the replay must not quietly resume.
+        g.on_trade_closed(200.0, t0);
+        assert_eq!(g.blocks_entry(t0), Some("max_drawdown"));
+        assert_eq!(g.skips.max_drawdown, 2);
+        // Peak-relative, not loss-from-zero: +500 then -110 breaches
+        // a 100 cap even though cum PnL is still positive.
+        let mut g = GateState::new(BtGates {
+            max_drawdown_usd: Some(100.0),
+            ..Default::default()
+        });
+        g.on_trade_closed(500.0, t0);
+        g.on_trade_closed(-110.0, t0);
+        assert_eq!(g.blocks_entry(t0), Some("max_drawdown"));
     }
 
     #[test]
