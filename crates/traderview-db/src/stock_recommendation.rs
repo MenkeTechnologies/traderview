@@ -521,6 +521,8 @@ fn score_rsi(closes: &[f64]) -> Component {
     let rsi = series.iter().rev().find_map(|x| *x).unwrap_or(50.0);
     // Tent function: oversold (≤30) → bullish; overbought (≥70) → bearish.
     // Center of the tent at 50 = neutral hold.
+    // Slopes written as rise/run to mirror the endpoint comments, even when = 1.
+    #[allow(clippy::eq_op)]
     let score = if rsi <= 30.0 {
         // 30 → 70 (mild buy), 0 → 90 (strong buy)
         70.0 + (30.0 - rsi) * (20.0 / 30.0)
