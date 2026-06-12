@@ -396,6 +396,10 @@ pub struct EngineConfig {
     /// disable the gate rather than silently trading an excluded day.
     /// Exits never blocked. None = all days.
     pub entry_days: Option<u8>,
+    /// Time stop: force-exit any position held at least this many
+    /// minutes, regardless of the strategy's own exit opinion — the
+    /// universal "no position lives forever" overlay. None = off.
+    pub max_hold_minutes: Option<i64>,
     /// Overtrading gate: cap on entry orders per UTC day. Exits are
     /// never blocked. None = unlimited.
     pub max_entries_per_day: Option<i64>,
@@ -488,6 +492,11 @@ impl EngineConfig {
             .get("entry_days")
             .and_then(|v| v.as_str())
             .and_then(traderview_core::risk_gate::parse_entry_days);
+        let max_hold_minutes = s
+            .risk_gates
+            .get("max_hold_minutes")
+            .and_then(|v| v.as_i64())
+            .filter(|n| *n > 0);
         let max_entries_per_day = s
             .risk_gates
             .get("max_entries_per_day")
@@ -531,6 +540,7 @@ impl EngineConfig {
             earnings_blackout_days,
             entry_window,
             entry_days,
+            max_hold_minutes,
             max_entries_per_day,
             loss_cooldown_minutes,
             max_entry_correlation,
@@ -688,6 +698,16 @@ pub fn parse_entry_window(s: &str) -> Option<(u32, u32)> {
 
 /// Is `now` inside the Eastern wall-clock window? Start inclusive,
 /// end exclusive; offset via the shared chrono-tz-free approximation.
+/// Time-stop check: has the position been open at least cap minutes?
+/// Inclusive at the boundary — a 60-minute cap fires ON minute 60.
+pub fn time_stop_due(
+    opened_at: chrono::DateTime<chrono::Utc>,
+    now: chrono::DateTime<chrono::Utc>,
+    cap_minutes: i64,
+) -> bool {
+    (now - opened_at).num_minutes() >= cap_minutes
+}
+
 pub fn in_entry_window(now: chrono::DateTime<chrono::Utc>, window: (u32, u32)) -> bool {
     let minutes = traderview_core::risk_gate::us_eastern_minutes(now);
     (window.0..window.1).contains(&minutes)
@@ -1577,8 +1597,27 @@ async fn run_exit_pass(
                 anchor_low = l;
             }
         }
-        let Some(exit_sig) = strat.evaluate_exit(bars, entry_side, anchor_high, anchor_low) else {
-            continue;
+        // Time stop overlays the strategy's exit opinion: a position
+        // past its max hold flattens at the last close no matter what
+        // evaluate_exit thinks. Exits are forced here, never blocked.
+        let cfg = EngineConfig::from_strategy(strategy);
+        let time_stopped = cfg
+            .max_hold_minutes
+            .is_some_and(|cap| time_stop_due(pos.opened_at, chrono::Utc::now(), cap));
+        let exit_sig = if time_stopped {
+            traderview_core::algo_strategies::ExitSignal {
+                reason: "time_stop",
+                exit_price: bars
+                    .last()
+                    .and_then(|b| b.close.to_f64())
+                    .unwrap_or(entry_price),
+                trigger_index: bars.len().saturating_sub(1),
+            }
+        } else {
+            match strat.evaluate_exit(bars, entry_side, anchor_high, anchor_low) {
+                Some(s) => s,
+                None => continue,
+            }
         };
         let close_side = match entry_side {
             Side::Buy => Side::Sell,
@@ -1764,6 +1803,17 @@ mod earnings_blackout_tests {
         // Yesterday's print is history — the gate is forward-looking.
         assert!(!in_earnings_blackout(Some(d(2026, 6, 9)), today, 5));
         assert!(!in_earnings_blackout(None, today, 5));
+    }
+
+    #[test]
+    fn time_stop_boundary_is_inclusive() {
+        use chrono::TimeZone;
+        let opened = chrono::Utc.with_ymd_and_hms(2026, 6, 12, 14, 0, 0).unwrap();
+        // 59 minutes in: not due. Exactly 60: due — the cap means
+        // "at least", not "strictly more than".
+        assert!(!time_stop_due(opened, opened + chrono::Duration::minutes(59), 60));
+        assert!(time_stop_due(opened, opened + chrono::Duration::minutes(60), 60));
+        assert!(time_stop_due(opened, opened + chrono::Duration::days(3), 60));
     }
 
     #[test]

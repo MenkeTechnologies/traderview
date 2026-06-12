@@ -2402,6 +2402,9 @@ async function openStrategyModal(mount, existing = null, prefill = null) {
                     <label><span data-i18n="view.algo.label.max_drawdown">Max drawdown $ (0 = off)</span>
                         <input type="number" name="max_drawdown_usd" min="0" step="50" value="${Number(s.risk_gates?.max_drawdown_usd ?? 0)}" data-tip="view.algo.tip.max_drawdown">
                     </label>
+                    <label><span data-i18n="view.algo.label.max_hold">Max hold (min, 0 = off)</span>
+                        <input type="number" name="max_hold_minutes" min="0" value="${Number(s.risk_gates?.max_hold_minutes ?? 0)}" data-tip="view.algo.tip.max_hold">
+                    </label>
                     <label><span data-i18n="view.algo.label.max_corr">Max entry correlation (0 = off)</span>
                         <input type="number" name="max_entry_correlation" min="0" max="0.99" step="0.05" value="${Number(s.risk_gates?.max_entry_correlation ?? 0)}" data-tip="view.algo.tip.max_corr">
                     </label>
@@ -2491,6 +2494,7 @@ async function openStrategyModal(mount, existing = null, prefill = null) {
                 max_entries_per_day: Number(f.get('max_entries_per_day')) || 0,
                 loss_cooldown_minutes: Number(f.get('loss_cooldown_minutes')) || 0,
                 max_drawdown_usd: Number(f.get('max_drawdown_usd')) || 0,
+                max_hold_minutes: Number(f.get('max_hold_minutes')) || 0,
                 max_entry_correlation: Number(f.get('max_entry_correlation')) || 0,
                 htf_interval: f.get('htf_interval') || null,
                 htf_ema_period: Number(f.get('htf_ema_period')) || 50,
