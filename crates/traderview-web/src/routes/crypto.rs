@@ -17,6 +17,53 @@ pub fn router() -> Router<AppState> {
         .route("/crypto/global", get(global_stats))
         .route("/crypto/btc/chain", get(btc_chain))
         .route("/crypto/calc/funding-arb", post(funding_arb))
+        .route("/crypto/calc/funding-arb-live", post(funding_arb_live))
+}
+
+#[derive(Deserialize)]
+struct FundingArbLiveBody {
+    base: String,
+    notional_usd: f64,
+    #[serde(default = "default_taker_fee")]
+    taker_fee_pct: f64,
+    #[serde(default = "default_days_held")]
+    days_held: f64,
+}
+fn default_taker_fee() -> f64 {
+    0.05
+}
+fn default_days_held() -> f64 {
+    30.0
+}
+
+#[derive(serde::Serialize)]
+struct FundingArbLive {
+    snapshot: traderview_db::crypto::FundingSnapshot,
+    report: traderview_core::funding_rate_arb::Report,
+}
+
+/// Funding arb with LIVE OKX inputs: spot/perp/funding fetched fresh,
+/// the venue's variable funding interval normalized to the 8h
+/// convention, then the same pure ledger. Returns the snapshot used so
+/// the numbers are auditable.
+async fn funding_arb_live(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<FundingArbLiveBody>,
+) -> Result<Json<FundingArbLive>, ApiError> {
+    let snapshot = traderview_db::crypto::funding_snapshot(&b.base)
+        .await
+        .map_err(|e| ApiError::BadRequest(e.to_string()))?;
+    let report = traderview_core::funding_rate_arb::compute(&traderview_core::funding_rate_arb::Input {
+        spot_price: snapshot.spot,
+        perp_price: snapshot.perp,
+        funding_rate_8h: snapshot.funding_rate_8h,
+        notional_usd: b.notional_usd,
+        taker_fee_pct: b.taker_fee_pct,
+        days_held: b.days_held,
+    })
+    .ok_or_else(|| ApiError::BadRequest("invalid inputs".into()))?;
+    Ok(Json(FundingArbLive { snapshot, report }))
 }
 
 /// Perp funding-rate arbitrage ledger — pure compute over the caller's

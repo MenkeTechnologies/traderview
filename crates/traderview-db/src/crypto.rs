@@ -143,3 +143,100 @@ pub async fn btc_onchain() -> anyhow::Result<OnChainBtc> {
     }
     Ok(out)
 }
+
+
+// ─── OKX perp funding (live) ────────────────────────────────────────────────
+
+#[derive(Debug, Clone, serde::Serialize)]
+pub struct FundingSnapshot {
+    pub inst_id: String,
+    pub spot: f64,
+    pub perp: f64,
+    /// Raw rate for the venue's CURRENT funding interval.
+    pub funding_rate_interval: f64,
+    pub interval_hours: f64,
+    /// Normalized to the 8h convention the arb calculator uses:
+    /// rate × (8 / interval_hours). OKX runs variable intervals.
+    pub funding_rate_8h: f64,
+    pub next_funding_time_ms: i64,
+}
+
+async fn okx_json(url: &str) -> anyhow::Result<serde_json::Value> {
+    let v: serde_json::Value = reqwest::Client::builder()
+        .user_agent("traderview")
+        .timeout(std::time::Duration::from_secs(10))
+        .build()?
+        .get(url)
+        .send()
+        .await?
+        .json()
+        .await?;
+    if v.get("code").and_then(|c| c.as_str()) != Some("0") {
+        anyhow::bail!("okx error: {}", v.get("msg").and_then(|m| m.as_str()).unwrap_or("?"));
+    }
+    Ok(v)
+}
+
+fn okx_f64(v: &serde_json::Value, path: &[&str]) -> Option<f64> {
+    let mut cur = v;
+    for p in path {
+        cur = cur.get(p)?;
+    }
+    cur.as_str()?.parse().ok()
+}
+
+/// Live funding snapshot for one base asset (e.g. "BTC") from OKX
+/// public endpoints — spot ticker, perp ticker, current funding rate.
+/// Verified reachable from this deployment; Binance/Bybit are not.
+pub async fn funding_snapshot(base: &str) -> anyhow::Result<FundingSnapshot> {
+    let base = base.trim().to_uppercase();
+    if base.is_empty() || base.len() > 10 || !base.bytes().all(|b| b.is_ascii_alphanumeric()) {
+        anyhow::bail!("invalid base asset");
+    }
+    let spot_id = format!("{base}-USDT");
+    let swap_id = format!("{base}-USDT-SWAP");
+    let spot = okx_json(&format!(
+        "https://www.okx.com/api/v5/market/ticker?instId={spot_id}"
+    ))
+    .await?;
+    let perp = okx_json(&format!(
+        "https://www.okx.com/api/v5/market/ticker?instId={swap_id}"
+    ))
+    .await?;
+    let funding = okx_json(&format!(
+        "https://www.okx.com/api/v5/public/funding-rate?instId={swap_id}"
+    ))
+    .await?;
+    let d0 = |v: &serde_json::Value| v.get("data").and_then(|d| d.get(0)).cloned();
+    let (Some(spot_d), Some(perp_d), Some(fund_d)) = (d0(&spot), d0(&perp), d0(&funding)) else {
+        anyhow::bail!("{base}: empty OKX response (unlisted asset?)");
+    };
+    let spot_px = okx_f64(&spot_d, &["last"]).ok_or_else(|| anyhow::anyhow!("no spot last"))?;
+    let perp_px = okx_f64(&perp_d, &["last"]).ok_or_else(|| anyhow::anyhow!("no perp last"))?;
+    let rate = okx_f64(&fund_d, &["fundingRate"]).ok_or_else(|| anyhow::anyhow!("no funding rate"))?;
+    let t0: i64 = fund_d
+        .get("fundingTime")
+        .and_then(|x| x.as_str())
+        .and_then(|s| s.parse().ok())
+        .unwrap_or(0);
+    let t1: i64 = fund_d
+        .get("nextFundingTime")
+        .and_then(|x| x.as_str())
+        .and_then(|s| s.parse().ok())
+        .unwrap_or(0);
+    // Interval from the venue's own timestamps; 8h fallback when absent.
+    let interval_hours = if t1 > t0 {
+        (t1 - t0) as f64 / 3_600_000.0
+    } else {
+        8.0
+    };
+    Ok(FundingSnapshot {
+        inst_id: swap_id,
+        spot: spot_px,
+        perp: perp_px,
+        funding_rate_interval: rate,
+        interval_hours,
+        funding_rate_8h: rate * 8.0 / interval_hours,
+        next_funding_time_ms: t1,
+    })
+}

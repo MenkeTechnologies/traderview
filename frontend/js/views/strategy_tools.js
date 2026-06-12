@@ -465,6 +465,35 @@ const TOOLS = {
             with that forward locks the QUOTE rate and nothing more. The unhedged carry is real but is
             compensation for depreciation risk; the breakeven is the spot move that erases it.</p>`,
     },
+    'funding-arb-live': {
+        label: 'Funding Arb (live)',
+        call: (b) => api.cryptoFundingArbLive({
+            base: String(b.base).trim().toUpperCase(),
+            notional_usd: b.notional_usd,
+            taker_fee_pct: b.taker_fee_pct,
+            days_held: b.days_held,
+        }),
+        fields: [
+            { key: 'base', label: 'Base asset (BTC, ETH, SOL…)', def: 'BTC', text: true },
+            { key: 'notional_usd', label: 'Notional (USD)', def: 100000 },
+            { key: 'taker_fee_pct', label: 'Taker fee per leg (%)', def: 0.05 },
+            { key: 'days_held', label: 'Days held', def: 30, int: true },
+        ],
+        render: (r) => `
+            <div class="cards">
+                <div class="card"><div class="label">${esc(r.snapshot.inst_id)} live</div>
+                    <div class="value">${(r.snapshot.funding_rate_8h * 100).toFixed(4)}%/8h</div>
+                    <div class="small muted">spot ${r.snapshot.spot} · perp ${r.snapshot.perp} · ${r.snapshot.interval_hours.toFixed(0)}h interval normalized</div></div>
+                <div class="card"><div class="label">Direction</div>
+                    <div class="value">${esc(r.report.direction.replace(/_/g, ' '))}</div>
+                    <div class="small muted">funding APR ${r.report.funding_apr_pct.toFixed(2)}%</div></div>
+                <div class="card"><div class="label">Net PnL (funding − fees)</div>
+                    <div class="value ${r.report.net_pnl_usd >= 0 ? 'pos' : 'neg'}">$${r.report.net_pnl_usd.toFixed(0)}</div>
+                    <div class="small muted">breakeven ${r.report.breakeven_days != null ? r.report.breakeven_days.toFixed(1) + 'd' : '—'} · basis ${r.report.basis_pct.toFixed(3)}%</div></div>
+            </div>
+            <p class="muted small">Live OKX inputs (spot/perp last + current funding, the venue's variable interval
+            normalized to 8h) through the same ledger as the manual tool — the snapshot is shown so the numbers are auditable.</p>`,
+    },
     'funding-arb': {
         label: 'Funding Arb',
         call: (b) => api.cryptoFundingArb({
