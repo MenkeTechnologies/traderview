@@ -749,6 +749,7 @@ import { renderRuleOf40 } from './views/rule_of_40.js';
 import { renderWacc } from './views/wacc.js';
 import { renderDupontRoe } from './views/dupont_roe.js';
 import { renderSsTaxation } from './views/ss_taxation.js';
+import { renderNpvIrr } from './views/npv_irr.js';
 import { renderNetWorthTracker } from './views/net_worth_tracker.js';
 import { renderPersonalBalanceSheet } from './views/personal_balance_sheet.js';
 import { renderPersonalCashFlow } from './views/personal_cash_flow.js';
@@ -3133,6 +3134,7 @@ export async function dispatch() {
             case 'wacc': await renderWacc(mount, state); break;
             case 'dupont-roe': await renderDupontRoe(mount, state); break;
             case 'ss-taxation': await renderSsTaxation(mount, state); break;
+            case 'npv-irr': await renderNpvIrr(mount, state); break;
             case 'net-worth-tracker': await renderNetWorthTracker(mount, state); break;
             case 'personal-balance-sheet': await renderPersonalBalanceSheet(mount, state); break;
             case 'personal-cash-flow': await renderPersonalCashFlow(mount, state); break;
@@ -4439,6 +4441,7 @@ export const viewRenderers = {
     'wacc': (m, s) => renderWacc(m, s),
     'dupont-roe': (m, s) => renderDupontRoe(m, s),
     'ss-taxation': (m, s) => renderSsTaxation(m, s),
+    'npv-irr': (m, s) => renderNpvIrr(m, s),
     'envelope-budget': (m, s) => renderEnvelopeBudget(m, s),
     'fafsa-efc': (m, s) => renderFafsaEfc(m, s),
     'fifty-thirty-twenty': (m, s) => renderFiftyThirtyTwenty(m, s),

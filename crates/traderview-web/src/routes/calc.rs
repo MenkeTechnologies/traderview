@@ -105,6 +105,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/wacc", post(wacc_route))
         .route("/calc/dupont-roe", post(dupont_roe_route))
         .route("/calc/ss-taxation", post(ss_taxation_route))
+        .route("/calc/npv-irr", post(npv_irr_route))
         .route("/calc/wash-sale", post(wash_sale_route))
         .route("/calc/cost-basis", post(cost_basis_route))
         .route("/calc/section-1244", post(section_1244_route))
@@ -11874,4 +11875,12 @@ async fn ss_taxation_route(
     Json(b): Json<traderview_core::ss_taxation::SsTaxInput>,
 ) -> Json<traderview_core::ss_taxation::SsTaxResult> {
     Json(traderview_core::ss_taxation::analyze(&b))
+}
+
+/// NPV / IRR for a cash-flow series, with payback and profitability index.
+async fn npv_irr_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::npv_irr::NpvIrrInput>,
+) -> Json<traderview_core::npv_irr::NpvIrrResult> {
+    Json(traderview_core::npv_irr::analyze(&b))
 }

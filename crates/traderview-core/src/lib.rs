@@ -144,6 +144,7 @@ pub mod monte_carlo;
 pub mod mortgage_points;
 pub mod mtm_reconciliation;
 pub mod news_event_handler;
+pub mod npv_irr;
 pub mod oi_change;
 pub mod open_type;
 pub mod opening_range;
