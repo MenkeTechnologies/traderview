@@ -123,7 +123,7 @@ export const TILES = [
     ['covered-call', 'Covered Call', '📞', 'Write OTM calls against long stock — premium yield, breakeven cushion, scenario P&L, opportunity cost', 'NEW'],
     ['real-estate-cap-rate', 'Rental Underwriting', '🏘️', 'Cap rate, cash-on-cash, 1% rule, GRM, DSCR + full P&L breakdown for rental property analysis', 'NEW'],
     ['lease-generator', 'Lease Generator', '📄', 'Residential lease agreement generator — prorated first month, move-in total, printable/copyable document', 'NEW'],
-    ['landlord-notice', 'Landlord Notice', '⚖️', 'Michigan landlord-tenant notices — DC 100a nonpayment demand + DC 100c notice to quit, comply-by date, printable/copyable', 'NEW'],
+    ['landlord-notice', 'Landlord Notice', '⚖️', 'Landlord-tenant notices for any state — Pay Rent or Quit + Notice to Quit, names your jurisdiction, comply-by date, live preview, printable/copyable', 'NEW'],
     ['house-hacking', 'House Hacking', '🏠', 'Live in one unit, rent the rest — net housing cost, savings vs renting, and cash flow once you move out', 'NEW'],
     ['brrrr', 'BRRRR', '🔁', 'Buy-Rehab-Rent-Refinance-Repeat — cash recovered at refi, cash left in the deal, post-refi cash flow + cash-on-cash', 'NEW'],
     ['live-dashboard', 'Live Dashboard', '📡', 'Live broker state — equity, BP, positions, orders. Pulls directly from Alpaca every 15s. No CSV, no closed-trade dependency.', 'LIVE'],

@@ -6,6 +6,7 @@ import { api } from '../api.js';
 import { applyUiI18n, t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import { showToast } from '../toast.js';
+import { debounce } from '../util.js';
 
 const TEXT = [
     ['landlord_name', 'Landlord name', 'Jane Owner'],
@@ -39,6 +40,7 @@ export async function renderLeaseGenerator(mount, _appState) {
             renders a printable agreement you can copy or download. Drafting aid, not legal
             advice — deposit caps and required disclosures vary by state.
         </p>
+        <div class="lpv-split">
         <div class="chart-panel">
             <h2 data-i18n="view.lease.h2.inputs">Lease terms</h2>
             <form id="lease-form" class="inline-form">
@@ -58,14 +60,14 @@ export async function renderLeaseGenerator(mount, _appState) {
                 <button class="primary" type="submit" data-i18n="view.lease.btn.run">Generate lease</button>
             </form>
         </div>
-        <div id="lease-result"></div>
+        <div id="lease-result" class="lpv-preview"></div>
+        </div>
     `;
     applyUiI18n(mount);
 
     const form = mount.querySelector('#lease-form');
-    form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const fd = new FormData(e.target);
+    const generate = async () => {
+        const fd = new FormData(form);
         const body = { last_month_required: fd.get('last_month_required') != null };
         for (const [key] of TEXT) body[key] = (fd.get(key) || '').trim();
         body.lease_start = fd.get('lease_start');
@@ -80,8 +82,11 @@ export async function renderLeaseGenerator(mount, _appState) {
         } catch (err) {
             showToast(err.message || t('view.lease.toast.error'), { level: 'error' });
         }
-    });
-    form.dispatchEvent(new Event('submit'));
+    };
+    const live = debounce(generate, 250);
+    form.addEventListener('input', () => { live(); });
+    form.addEventListener('submit', (e) => { e.preventDefault(); generate(); });
+    generate();
 }
 
 function docToText(doc) {

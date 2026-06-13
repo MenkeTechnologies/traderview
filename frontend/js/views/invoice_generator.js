@@ -6,6 +6,7 @@ import { api } from '../api.js';
 import { applyUiI18n, t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import { showToast } from '../toast.js';
+import { debounce } from '../util.js';
 
 const TEXT = [
     ['business_name', 'Your business', 'Acme LLC'],
@@ -45,6 +46,7 @@ export async function renderInvoiceGenerator(mount, _appState) {
             reconcile — plus the due date from your net-N payment terms. Copy or download
             the finished invoice.
         </p>
+        <div class="lpv-split">
         <div class="chart-panel">
             <h2 data-i18n="view.invoice.h2.inputs">Invoice details</h2>
             <form id="inv-form" class="inline-form">
@@ -78,21 +80,27 @@ export async function renderInvoiceGenerator(mount, _appState) {
                 <button type="button" class="btn" id="inv-gen" data-i18n="view.invoice.btn.run">Generate invoice</button>
             </p>
         </div>
-        <div id="inv-result"></div>
+        <div id="inv-result" class="lpv-preview"></div>
+        </div>
     `;
     applyUiI18n(mount);
 
     const linesBody = mount.querySelector('#inv-lines tbody');
+    const live = debounce(() => submit(mount, tok), 250);
     mount.querySelector('#inv-add').addEventListener('click', () => {
         linesBody.insertAdjacentHTML('beforeend', lineRow());
         applyUiI18n(linesBody.lastElementChild);
+        submit(mount, tok);
     });
     linesBody.addEventListener('click', (e) => {
         if (e.target.classList.contains('inv-del')) {
             const rows = linesBody.querySelectorAll('.inv-line');
-            if (rows.length > 1) e.target.closest('tr').remove();
+            if (rows.length > 1) { e.target.closest('tr').remove(); submit(mount, tok); }
         }
     });
+    // Live preview as any field or line item changes.
+    mount.querySelector('#inv-form').addEventListener('input', live);
+    linesBody.addEventListener('input', live);
 
     mount.querySelector('#inv-gen').addEventListener('click', () => submit(mount, tok));
     submit(mount, tok);

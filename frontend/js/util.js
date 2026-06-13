@@ -81,6 +81,16 @@ export function applyBarWidths(root = document) {
     });
 }
 
+// Debounce: coalesce rapid calls (e.g. live-preview on every keystroke) into
+// one call after `wait` ms of quiet. Used by the document generators.
+export function debounce(fn, wait = 250) {
+    let timer = null;
+    return (...args) => {
+        if (timer) clearTimeout(timer);
+        timer = setTimeout(() => { timer = null; fn(...args); }, wait);
+    };
+}
+
 export const fmtDate = (iso) => (iso || '').slice(0, 10);
 export const fmtDateTime = (iso) => {
     if (!iso) return '—';
