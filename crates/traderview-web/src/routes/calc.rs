@@ -51,6 +51,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/landlord-notice", post(landlord_notice_route))
         .route("/calc/fix-and-flip", post(fix_and_flip_route))
         .route("/calc/cash-conversion-cycle", post(cash_conversion_cycle_route))
+        .route("/calc/profit-first", post(profit_first_route))
         .route("/calc/wash-sale", post(wash_sale_route))
         .route("/calc/cost-basis", post(cost_basis_route))
         .route("/calc/section-1244", post(section_1244_route))
@@ -11355,4 +11356,13 @@ async fn cash_conversion_cycle_route(
     Json(b): Json<traderview_core::cash_conversion_cycle::CccInput>,
 ) -> Json<traderview_core::cash_conversion_cycle::CccResult> {
     Json(traderview_core::cash_conversion_cycle::analyze(&b))
+}
+
+/// Profit First: splits real revenue across Profit / Owner's Pay / Tax /
+/// OpEx by the target allocation band (or custom percentages).
+async fn profit_first_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::profit_first::ProfitFirstInput>,
+) -> Json<traderview_core::profit_first::ProfitFirstResult> {
+    Json(traderview_core::profit_first::analyze(&b))
 }

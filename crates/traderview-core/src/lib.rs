@@ -141,6 +141,7 @@ pub mod position_size;
 pub mod premium_discount;
 pub mod probability_of_touch;
 pub mod profit_factor;
+pub mod profit_first;
 pub mod put_call_ratio;
 pub mod pyramid;
 pub mod pyramid_rules;
