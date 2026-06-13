@@ -127,5 +127,9 @@ debug = 0
 
 [profile.release]
 lto = "thin"
-codegen-units = 1
+# 16, not 1: traderview-web's codegen is the long pole (86 min
+# single-threaded on the hosted macOS runner — past the 90-min CI cap).
+# Parallel units cut that ~Ncores×; thin LTO recovers the cross-unit
+# inlining that splitting gives up.
+codegen-units = 16
 strip = "symbols"
