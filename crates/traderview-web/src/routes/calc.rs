@@ -131,6 +131,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/solar-payback", post(solar_payback_route))
         .route("/calc/portfolio-longevity", post(portfolio_longevity_route))
         .route("/calc/second-income", post(second_income_route))
+        .route("/calc/breakeven-occupancy", post(breakeven_occupancy_route))
         .route("/calc/wash-sale", post(wash_sale_route))
         .route("/calc/cost-basis", post(cost_basis_route))
         .route("/calc/section-1244", post(section_1244_route))
@@ -12108,4 +12109,12 @@ async fn second_income_route(
     Json(b): Json<traderview_core::second_income::SecondIncomeInput>,
 ) -> Json<traderview_core::second_income::SecondIncomeResult> {
     Json(traderview_core::second_income::analyze(&b))
+}
+
+/// Break-even occupancy — occupancy needed to cover opex + debt service.
+async fn breakeven_occupancy_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::breakeven_occupancy::BreakevenOccupancyInput>,
+) -> Json<traderview_core::breakeven_occupancy::BreakevenOccupancyResult> {
+    Json(traderview_core::breakeven_occupancy::analyze(&b))
 }

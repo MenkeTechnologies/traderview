@@ -775,6 +775,7 @@ import { renderOvertimePay } from './views/overtime_pay.js';
 import { renderSolarPayback } from './views/solar_payback.js';
 import { renderPortfolioLongevity } from './views/portfolio_longevity.js';
 import { renderSecondIncome } from './views/second_income.js';
+import { renderBreakevenOccupancy } from './views/breakeven_occupancy.js';
 import { renderNetWorthTracker } from './views/net_worth_tracker.js';
 import { renderPersonalBalanceSheet } from './views/personal_balance_sheet.js';
 import { renderPersonalCashFlow } from './views/personal_cash_flow.js';
@@ -3185,6 +3186,7 @@ export async function dispatch() {
             case 'solar-payback': await renderSolarPayback(mount, state); break;
             case 'portfolio-longevity': await renderPortfolioLongevity(mount, state); break;
             case 'second-income': await renderSecondIncome(mount, state); break;
+            case 'breakeven-occupancy': await renderBreakevenOccupancy(mount, state); break;
             case 'net-worth-tracker': await renderNetWorthTracker(mount, state); break;
             case 'personal-balance-sheet': await renderPersonalBalanceSheet(mount, state); break;
             case 'personal-cash-flow': await renderPersonalCashFlow(mount, state); break;
@@ -4517,6 +4519,7 @@ export const viewRenderers = {
     'solar-payback': (m, s) => renderSolarPayback(m, s),
     'portfolio-longevity': (m, s) => renderPortfolioLongevity(m, s),
     'second-income': (m, s) => renderSecondIncome(m, s),
+    'breakeven-occupancy': (m, s) => renderBreakevenOccupancy(m, s),
     'envelope-budget': (m, s) => renderEnvelopeBudget(m, s),
     'fafsa-efc': (m, s) => renderFafsaEfc(m, s),
     'fifty-thirty-twenty': (m, s) => renderFiftyThirtyTwenty(m, s),
