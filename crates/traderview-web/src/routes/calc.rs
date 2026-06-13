@@ -142,6 +142,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/estate-tax", post(estate_tax_route))
         .route("/calc/marriage-penalty", post(marriage_penalty_route))
         .route("/calc/standard-vs-itemized", post(standard_vs_itemized_route))
+        .route("/calc/capture-ratio", post(capture_ratio_route))
         .route("/calc/wash-sale", post(wash_sale_route))
         .route("/calc/cost-basis", post(cost_basis_route))
         .route("/calc/section-1244", post(section_1244_route))
@@ -12207,4 +12208,12 @@ async fn standard_vs_itemized_route(
     Json(b): Json<traderview_core::standard_vs_itemized::StdVsItemizedInput>,
 ) -> Json<traderview_core::standard_vs_itemized::StdVsItemizedResult> {
     Json(traderview_core::standard_vs_itemized::analyze(&b))
+}
+
+/// Up / down capture ratio — gains captured in up markets vs losses in down.
+async fn capture_ratio_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::capture_ratio::CaptureRatioInput>,
+) -> Json<traderview_core::capture_ratio::CaptureRatioResult> {
+    Json(traderview_core::capture_ratio::analyze(&b))
 }

@@ -42,6 +42,7 @@ pub mod calendar_bias;
 pub mod calmar_ratio;
 pub mod candlestick_patterns;
 pub mod capital_gains_tax;
+pub mod capture_ratio;
 pub mod car_affordability;
 pub mod carry_score;
 pub mod cash_conversion_cycle;
