@@ -832,6 +832,7 @@ export const api = {
     calcLifeInsuranceNeeds:  (body) => request('/calc/life-insurance-needs', { method: 'POST', body: JSON.stringify(body) }),
     calcCarAffordability:    (body) => request('/calc/car-affordability', { method: 'POST', body: JSON.stringify(body) }),
     calcDisabilityInsuranceNeeds: (body) => request('/calc/disability-insurance-needs', { method: 'POST', body: JSON.stringify(body) }),
+    calcTrueHourlyWage:      (body) => request('/calc/true-hourly-wage', { method: 'POST', body: JSON.stringify(body) }),
     calcMergerArb:           (body) => request('/calc/merger-arb', { method: 'POST', body: JSON.stringify(body) }),
     calcBuybackAccretion:    (body) => request('/calc/buyback-accretion', { method: 'POST', body: JSON.stringify(body) }),
     calcCefDiscount:         (body) => request('/calc/cef-discount', { method: 'POST', body: JSON.stringify(body) }),

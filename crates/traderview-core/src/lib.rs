@@ -273,6 +273,7 @@ pub mod triple_screen;
 pub mod trix;
 pub mod twap;
 pub mod two_asset_portfolio;
+pub mod true_hourly_wage;
 pub mod ulcer_index;
 pub mod var_estimator;
 pub mod vix_term_structure;

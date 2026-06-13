@@ -123,6 +123,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/life-insurance-needs", post(life_insurance_needs_route))
         .route("/calc/car-affordability", post(car_affordability_route))
         .route("/calc/disability-insurance-needs", post(disability_insurance_needs_route))
+        .route("/calc/true-hourly-wage", post(true_hourly_wage_route))
         .route("/calc/wash-sale", post(wash_sale_route))
         .route("/calc/cost-basis", post(cost_basis_route))
         .route("/calc/section-1244", post(section_1244_route))
@@ -12036,4 +12037,12 @@ async fn disability_insurance_needs_route(
     Json(b): Json<traderview_core::disability_insurance_needs::DisabilityInput>,
 ) -> Json<traderview_core::disability_insurance_needs::DisabilityResult> {
     Json(traderview_core::disability_insurance_needs::analyze(&b))
+}
+
+/// True hourly wage — net pay after job costs over all job-related hours.
+async fn true_hourly_wage_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::true_hourly_wage::TrueWageInput>,
+) -> Json<traderview_core::true_hourly_wage::TrueWageResult> {
+    Json(traderview_core::true_hourly_wage::analyze(&b))
 }
