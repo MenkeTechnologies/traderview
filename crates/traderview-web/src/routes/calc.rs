@@ -69,6 +69,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/age-allocation", post(age_allocation_route))
         .route("/calc/roth-bracket-fill", post(roth_bracket_fill_route))
         .route("/calc/mortgage-points", post(mortgage_points_route))
+        .route("/calc/apr-apy", post(apr_apy_route))
         .route("/calc/wash-sale", post(wash_sale_route))
         .route("/calc/cost-basis", post(cost_basis_route))
         .route("/calc/section-1244", post(section_1244_route))
@@ -11535,4 +11536,13 @@ async fn mortgage_points_route(
     Json(b): Json<traderview_core::mortgage_points::PointsInput>,
 ) -> Json<traderview_core::mortgage_points::PointsResult> {
     Json(traderview_core::mortgage_points::analyze(&b))
+}
+
+/// APR ↔ APY: nominal vs effective annual rate at a compounding frequency,
+/// plus the continuous-compounding ceiling.
+async fn apr_apy_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::apr_apy::AprApyInput>,
+) -> Json<traderview_core::apr_apy::AprApyResult> {
+    Json(traderview_core::apr_apy::analyze(&b))
 }

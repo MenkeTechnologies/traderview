@@ -7,6 +7,7 @@
 pub mod acceleration_deceleration;
 pub mod adx;
 pub mod age_based_allocation;
+pub mod apr_apy;
 pub mod algo_backtest;
 pub mod algo_backtest_mc;
 pub mod algo_regime_attribution;
