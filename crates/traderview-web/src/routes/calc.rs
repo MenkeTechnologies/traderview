@@ -85,6 +85,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/yield-on-cost", post(yield_on_cost_route))
         .route("/calc/trade-expectancy", post(trade_expectancy_route))
         .route("/calc/wage-converter", post(wage_converter_route))
+        .route("/calc/sales-tax", post(sales_tax_route))
         .route("/calc/wash-sale", post(wash_sale_route))
         .route("/calc/cost-basis", post(cost_basis_route))
         .route("/calc/section-1244", post(section_1244_route))
@@ -11694,4 +11695,12 @@ async fn wage_converter_route(
     Json(b): Json<traderview_core::wage_converter::WageInput>,
 ) -> Json<traderview_core::wage_converter::WageResult> {
     Json(traderview_core::wage_converter::analyze(&b))
+}
+
+/// Sales tax / VAT: add tax to a net price or extract it from a gross total.
+async fn sales_tax_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::sales_tax::SalesTaxInput>,
+) -> Json<traderview_core::sales_tax::SalesTaxResult> {
+    Json(traderview_core::sales_tax::analyze(&b))
 }
