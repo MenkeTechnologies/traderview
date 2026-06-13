@@ -183,6 +183,7 @@ pub mod signals;
 pub mod sip_simulator;
 pub mod slug;
 pub mod sortino;
+pub mod spousal_ira;
 pub mod spread_attribution;
 pub mod spread_payoff;
 pub mod spread_tracker;

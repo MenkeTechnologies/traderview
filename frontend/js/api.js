@@ -771,6 +771,7 @@ export const api = {
     calcLtvCac:              (body) => request('/calc/ltv-cac', { method: 'POST', body: JSON.stringify(body) }),
     calcBurnRate:            (body) => request('/calc/burn-rate', { method: 'POST', body: JSON.stringify(body) }),
     calcQlac:                (body) => request('/calc/qlac', { method: 'POST', body: JSON.stringify(body) }),
+    calcSpousalIra:          (body) => request('/calc/spousal-ira', { method: 'POST', body: JSON.stringify(body) }),
     calcMergerArb:           (body) => request('/calc/merger-arb', { method: 'POST', body: JSON.stringify(body) }),
     calcBuybackAccretion:    (body) => request('/calc/buyback-accretion', { method: 'POST', body: JSON.stringify(body) }),
     calcCefDiscount:         (body) => request('/calc/cef-discount', { method: 'POST', body: JSON.stringify(body) }),

@@ -62,6 +62,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/ltv-cac", post(ltv_cac_route))
         .route("/calc/burn-rate", post(burn_rate_route))
         .route("/calc/qlac", post(qlac_route))
+        .route("/calc/spousal-ira", post(spousal_ira_route))
         .route("/calc/wash-sale", post(wash_sale_route))
         .route("/calc/cost-basis", post(cost_basis_route))
         .route("/calc/section-1244", post(section_1244_route))
@@ -11465,4 +11466,13 @@ async fn qlac_route(
     Json(b): Json<traderview_core::qlac::QlacInput>,
 ) -> Json<traderview_core::qlac::QlacResult> {
     Json(traderview_core::qlac::analyze(&b))
+}
+
+/// Spousal IRA: per-spouse contribution limits (with catch-up) and whether
+/// the couple's combined earned income covers both contributions.
+async fn spousal_ira_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::spousal_ira::SpousalIraInput>,
+) -> Json<traderview_core::spousal_ira::SpousalIraResult> {
+    Json(traderview_core::spousal_ira::analyze(&b))
 }
