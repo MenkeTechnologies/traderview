@@ -55,6 +55,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/demand-for-payment", post(demand_for_payment_route))
         .route("/calc/lease-renewal", post(lease_renewal_route))
         .route("/calc/bill-of-sale", post(bill_of_sale_route))
+        .route("/calc/rent-receipt", post(rent_receipt_route))
         .route("/calc/fix-and-flip", post(fix_and_flip_route))
         .route("/calc/cash-conversion-cycle", post(cash_conversion_cycle_route))
         .route("/calc/profit-first", post(profit_first_route))
@@ -11494,6 +11495,15 @@ async fn bill_of_sale_route(
     Json(b): Json<traderview_core::bill_of_sale::BillOfSaleInput>,
 ) -> Json<traderview_core::bill_of_sale::BillOfSale> {
     Json(traderview_core::bill_of_sale::generate(&b))
+}
+
+/// Rent receipt: records a payment against rent due, computing any balance or
+/// overpayment credit and the paid-in-full flag.
+async fn rent_receipt_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::rent_receipt::ReceiptInput>,
+) -> Json<traderview_core::rent_receipt::RentReceipt> {
+    Json(traderview_core::rent_receipt::generate(&b))
 }
 
 /// Fix-and-flip: the 70% rule max-allowable-offer plus the full deal P&L
