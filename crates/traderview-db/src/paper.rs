@@ -845,6 +845,11 @@ pub async fn submit(
             let notional = (p * req.qty).to_string().parse::<f64>().unwrap_or(0.0);
             (Some(p), notional * CRYPTO_TAKER_FEE_PCT / 100.0)
         }
+        Some(p) if rq.is_forex => {
+            // Spread cost in pips; price unadjusted — the spread IS
+            // forex's friction model.
+            (Some(p), forex_spread_fee(&req.symbol, req.qty))
+        }
         Some(p) => {
             let (adjusted, fee) = frictioned_fill(p, req.qty, req.side);
             (Some(adjusted), fee)
@@ -1154,6 +1159,8 @@ pub async fn check_pending(pool: &PgPool) -> anyhow::Result<Vec<BackgroundFill>>
         } else if crate::crypto::is_crypto_pair(&o.symbol) {
             let notional = (p * o.qty).to_string().parse::<f64>().unwrap_or(0.0);
             (p, notional * CRYPTO_TAKER_FEE_PCT / 100.0)
+        } else if crate::forex::is_forex_pair(&o.symbol) {
+            (p, forex_spread_fee(&o.symbol, o.qty))
         } else {
             frictioned_fill(p, o.qty, side)
         };
@@ -2413,6 +2420,7 @@ struct ResolvedQuote {
     multiplier: Decimal,
     is_option: bool,
     is_crypto: bool,
+    is_forex: bool,
 }
 
 /// Quote + contract economics for any tradeable symbol: equities from
@@ -2487,6 +2495,21 @@ pub async fn stop_suggestion(pool: &PgPool, symbol: &str) -> anyhow::Result<Stop
 /// friction model for crypto (no per-share slippage tier, no SEC fee).
 pub const CRYPTO_TAKER_FEE_PCT: f64 = 0.1;
 
+/// Round-trip-equivalent spread charged per FX fill, in pips. Retail
+/// majors trade ~0.1–1 pip on ECN; 0.5 is a conservative all-in
+/// assumption. The spread IS forex's friction model — no commission,
+/// no SEC fee, no per-share slippage tier.
+pub const FOREX_SPREAD_PIPS: f64 = 0.5;
+
+/// Spread cost for an FX fill: `spread_pips × pip_size × |units|`, in
+/// the quote currency. The USD-denominated engine treats it as USD —
+/// exact for USD-quoted majors (EURUSD, GBPUSD), an approximation for
+/// USD-base and cross pairs whose pip is denominated elsewhere.
+fn forex_spread_fee(symbol: &str, qty: Decimal) -> f64 {
+    let units = qty.to_string().parse::<f64>().unwrap_or(0.0).abs();
+    FOREX_SPREAD_PIPS * crate::forex::pip_size(symbol) * units
+}
+
 async fn resolve_quote(pool: &PgPool, symbol: &str) -> anyhow::Result<ResolvedQuote> {
     if traderview_core::occ_symbol::is_occ(symbol) {
         // handled below
@@ -2499,6 +2522,19 @@ async fn resolve_quote(pool: &PgPool, symbol: &str) -> anyhow::Result<ResolvedQu
             multiplier: Decimal::ONE,
             is_option: false,
             is_crypto: true,
+            is_forex: false,
+        });
+    } else if crate::forex::is_forex_pair(symbol) {
+        // FX spot: same Yahoo-backed quote seam as equities (the `=X`
+        // translation lives in market_data::quote). Multiplier 1 —
+        // qty is base-currency units; the spread is the friction model.
+        let q = crate::market_data::quote(pool, symbol).await?;
+        return Ok(ResolvedQuote {
+            last: Decimal::try_from(q.price)?,
+            multiplier: Decimal::ONE,
+            is_option: false,
+            is_crypto: false,
+            is_forex: true,
         });
     }
     if let Some(occ) = traderview_core::occ_symbol::parse(symbol) {
@@ -2513,6 +2549,7 @@ async fn resolve_quote(pool: &PgPool, symbol: &str) -> anyhow::Result<ResolvedQu
             multiplier: Decimal::from(100),
             is_option: true,
             is_crypto: false,
+            is_forex: false,
         })
     } else {
         let q = crate::market_data::quote(pool, symbol).await?;
@@ -2521,6 +2558,7 @@ async fn resolve_quote(pool: &PgPool, symbol: &str) -> anyhow::Result<ResolvedQu
             multiplier: Decimal::ONE,
             is_option: false,
             is_crypto: false,
+            is_forex: false,
         })
     }
 }
@@ -2689,6 +2727,30 @@ mod tests {
 
     fn d(v: i64) -> Decimal {
         Decimal::from(v)
+    }
+
+    #[test]
+    fn forex_spread_fee_standard_lot_eurusd() {
+        // 0.5 pip × 0.0001 pip-size × 100_000 units = $5.00 on a
+        // standard lot of a USD-quoted major.
+        let fee = forex_spread_fee("EURUSD", d(100_000));
+        assert!((fee - 5.0).abs() < 1e-9, "got {fee}");
+    }
+
+    #[test]
+    fn forex_spread_fee_jpy_pair_uses_two_decimal_pip() {
+        // USDJPY pip is 0.01: 0.5 × 0.01 × 10_000 = $50 (quote-ccy).
+        let fee = forex_spread_fee("USDJPY", d(10_000));
+        assert!((fee - 50.0).abs() < 1e-9, "got {fee}");
+    }
+
+    #[test]
+    fn forex_spread_fee_is_sign_independent() {
+        // A short (negative qty) costs the same spread as a long.
+        assert_eq!(
+            forex_spread_fee("GBPUSD", d(50_000)),
+            forex_spread_fee("GBPUSD", d(-50_000))
+        );
     }
 
     #[test]
