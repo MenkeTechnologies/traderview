@@ -60,6 +60,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/notice-of-entry", post(notice_of_entry_route))
         .route("/calc/lease-termination", post(lease_termination_route))
         .route("/calc/nda", post(nda_route))
+        .route("/calc/pet-addendum", post(pet_addendum_route))
         .route("/calc/fix-and-flip", post(fix_and_flip_route))
         .route("/calc/cash-conversion-cycle", post(cash_conversion_cycle_route))
         .route("/calc/profit-first", post(profit_first_route))
@@ -11544,6 +11545,15 @@ async fn nda_route(
     Json(b): Json<traderview_core::nda_agreement::NdaInput>,
 ) -> Json<traderview_core::nda_agreement::NdaAgreement> {
     Json(traderview_core::nda_agreement::generate(&b))
+}
+
+/// Pet addendum: up-front charges total and the new monthly rent with pet rent,
+/// assembled into a lease addendum.
+async fn pet_addendum_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::pet_addendum::PetAddendumInput>,
+) -> Json<traderview_core::pet_addendum::PetAddendum> {
+    Json(traderview_core::pet_addendum::generate(&b))
 }
 
 /// Fix-and-flip: the 70% rule max-allowable-offer plus the full deal P&L
