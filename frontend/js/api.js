@@ -825,6 +825,7 @@ export const api = {
     calcBondPricing:         (body) => request('/calc/bond-pricing', { method: 'POST', body: JSON.stringify(body) }),
     calcCashOutRefinance:    (body) => request('/calc/cash-out-refinance', { method: 'POST', body: JSON.stringify(body) }),
     calcMarginAnalysis:      (body) => request('/calc/margin-analysis', { method: 'POST', body: JSON.stringify(body) }),
+    calcBonusGrossup:        (body) => request('/calc/bonus-grossup', { method: 'POST', body: JSON.stringify(body) }),
     calcMergerArb:           (body) => request('/calc/merger-arb', { method: 'POST', body: JSON.stringify(body) }),
     calcBuybackAccretion:    (body) => request('/calc/buyback-accretion', { method: 'POST', body: JSON.stringify(body) }),
     calcCefDiscount:         (body) => request('/calc/cef-discount', { method: 'POST', body: JSON.stringify(body) }),

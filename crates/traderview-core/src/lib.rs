@@ -27,6 +27,7 @@ pub mod bb_squeeze;
 pub mod beta;
 pub mod beta_hedge;
 pub mod blended_debt;
+pub mod bonus_grossup;
 pub mod bond_duration;
 pub mod bond_pricing;
 pub mod bracket_order;
