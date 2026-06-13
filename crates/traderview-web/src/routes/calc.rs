@@ -106,6 +106,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/dupont-roe", post(dupont_roe_route))
         .route("/calc/ss-taxation", post(ss_taxation_route))
         .route("/calc/npv-irr", post(npv_irr_route))
+        .route("/calc/leverage", post(leverage_route))
         .route("/calc/wash-sale", post(wash_sale_route))
         .route("/calc/cost-basis", post(cost_basis_route))
         .route("/calc/section-1244", post(section_1244_route))
@@ -11883,4 +11884,12 @@ async fn npv_irr_route(
     Json(b): Json<traderview_core::npv_irr::NpvIrrInput>,
 ) -> Json<traderview_core::npv_irr::NpvIrrResult> {
     Json(traderview_core::npv_irr::analyze(&b))
+}
+
+/// Degree of operating, financial, and combined leverage.
+async fn leverage_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::leverage_dol_dfl::LeverageInput>,
+) -> Json<traderview_core::leverage_dol_dfl::LeverageResult> {
+    Json(traderview_core::leverage_dol_dfl::analyze(&b))
 }
