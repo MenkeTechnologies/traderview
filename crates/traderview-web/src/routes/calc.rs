@@ -111,6 +111,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/mortgage-recast", post(mortgage_recast_route))
         .route("/calc/tax-equivalent-yield", post(tax_equivalent_yield_route))
         .route("/calc/pmi-removal", post(pmi_removal_route))
+        .route("/calc/free-cash-flow", post(free_cash_flow_route))
         .route("/calc/wash-sale", post(wash_sale_route))
         .route("/calc/cost-basis", post(cost_basis_route))
         .route("/calc/section-1244", post(section_1244_route))
@@ -11928,4 +11929,12 @@ async fn pmi_removal_route(
     Json(b): Json<traderview_core::pmi_removal::PmiInput>,
 ) -> Json<traderview_core::pmi_removal::PmiResult> {
     Json(traderview_core::pmi_removal::analyze(&b))
+}
+
+/// Free cash flow + FCF margin, yield, and cash-conversion quality.
+async fn free_cash_flow_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::free_cash_flow::FcfInput>,
+) -> Json<traderview_core::free_cash_flow::FcfResult> {
+    Json(traderview_core::free_cash_flow::analyze(&b))
 }
