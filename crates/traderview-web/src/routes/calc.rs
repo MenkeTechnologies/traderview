@@ -59,6 +59,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/like-kind-exchange", post(like_kind_exchange_route))
         .route("/calc/cost-of-hire", post(cost_of_hire_route))
         .route("/calc/invoice-factoring", post(invoice_factoring_route))
+        .route("/calc/ltv-cac", post(ltv_cac_route))
         .route("/calc/wash-sale", post(wash_sale_route))
         .route("/calc/cost-basis", post(cost_basis_route))
         .route("/calc/section-1244", post(section_1244_route))
@@ -11435,4 +11436,13 @@ async fn invoice_factoring_route(
     Json(b): Json<traderview_core::invoice_factoring::FactoringInput>,
 ) -> Json<traderview_core::invoice_factoring::FactoringResult> {
     Json(traderview_core::invoice_factoring::analyze(&b))
+}
+
+/// LTV:CAC — customer lifetime value, acquisition cost, the ratio (3:1 rule),
+/// and CAC payback months.
+async fn ltv_cac_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::ltv_cac::LtvCacInput>,
+) -> Json<traderview_core::ltv_cac::LtvCacResult> {
+    Json(traderview_core::ltv_cac::analyze(&b))
 }
