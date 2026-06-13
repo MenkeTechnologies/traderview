@@ -90,6 +90,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/stock-split", post(stock_split_route))
         .route("/calc/tbill-yield", post(tbill_yield_route))
         .route("/calc/dscr", post(dscr_route))
+        .route("/calc/graham-number", post(graham_number_route))
         .route("/calc/wash-sale", post(wash_sale_route))
         .route("/calc/cost-basis", post(cost_basis_route))
         .route("/calc/section-1244", post(section_1244_route))
@@ -11739,4 +11740,12 @@ async fn dscr_route(
     Json(b): Json<traderview_core::dscr::DscrInput>,
 ) -> Json<traderview_core::dscr::DscrResult> {
     Json(traderview_core::dscr::analyze(&b))
+}
+
+/// Graham number, margin of safety, P/E×P/B test, and net-net screen.
+async fn graham_number_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::graham_number::GrahamInput>,
+) -> Json<traderview_core::graham_number::GrahamResult> {
+    Json(traderview_core::graham_number::analyze(&b))
 }

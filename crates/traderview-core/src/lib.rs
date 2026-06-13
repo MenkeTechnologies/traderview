@@ -90,6 +90,7 @@ pub mod gap_analysis;
 pub mod gap_fill_stats;
 pub mod gex;
 pub mod goal_tracker;
+pub mod graham_number;
 pub mod greeks;
 pub mod gross_rent_multiplier;
 pub mod guyton_klinger;
