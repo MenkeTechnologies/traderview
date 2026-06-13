@@ -64,6 +64,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/qlac", post(qlac_route))
         .route("/calc/spousal-ira", post(spousal_ira_route))
         .route("/calc/pension-survivor", post(pension_survivor_route))
+        .route("/calc/ss-pia", post(ss_pia_route))
         .route("/calc/wash-sale", post(wash_sale_route))
         .route("/calc/cost-basis", post(cost_basis_route))
         .route("/calc/section-1244", post(section_1244_route))
@@ -11485,4 +11486,13 @@ async fn pension_survivor_route(
     Json(b): Json<traderview_core::pension_survivor::PensionSurvivorInput>,
 ) -> Json<traderview_core::pension_survivor::PensionSurvivorResult> {
     Json(traderview_core::pension_survivor::analyze(&b))
+}
+
+/// Social Security PIA: the progressive 90/32/15 bend-point formula turning
+/// AIME into the full-retirement-age benefit, with the tier breakdown.
+async fn ss_pia_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::social_security_pia::PiaInput>,
+) -> Json<traderview_core::social_security_pia::PiaResult> {
+    Json(traderview_core::social_security_pia::analyze(&b))
 }

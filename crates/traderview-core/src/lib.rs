@@ -183,6 +183,7 @@ pub mod sharpe_by_window;
 pub mod signals;
 pub mod sip_simulator;
 pub mod slug;
+pub mod social_security_pia;
 pub mod sortino;
 pub mod spousal_ira;
 pub mod spread_attribution;
