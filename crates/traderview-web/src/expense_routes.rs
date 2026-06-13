@@ -369,7 +369,8 @@ async fn import_csv(
     mut mp: Multipart,
 ) -> Result<Json<ImportResult>, ApiError> {
     let mut account_id: Option<Uuid> = None;
-    let mut source: Option<ExpenseSource> = None;
+    let mut source_raw: Option<String> = None;
+    let mut mapping_json: Option<String> = None;
     let mut filename: String = String::new();
     let mut file_bytes: Vec<u8> = Vec::new();
 
@@ -388,14 +389,20 @@ async fn import_csv(
                     Some(Uuid::parse_str(&v).map_err(|e| ApiError::BadRequest(e.to_string()))?);
             }
             "source" => {
-                let v = field
-                    .text()
-                    .await
-                    .map_err(|e| ApiError::BadRequest(e.to_string()))?;
-                source = ExpenseSource::parse_str(&v);
-                if source.is_none() {
-                    return Err(ApiError::BadRequest(format!("unknown source: {v}")));
-                }
+                source_raw = Some(
+                    field
+                        .text()
+                        .await
+                        .map_err(|e| ApiError::BadRequest(e.to_string()))?,
+                );
+            }
+            "mapping" => {
+                mapping_json = Some(
+                    field
+                        .text()
+                        .await
+                        .map_err(|e| ApiError::BadRequest(e.to_string()))?,
+                );
             }
             "file" => {
                 filename = field.file_name().unwrap_or("upload.csv").to_string();
@@ -410,7 +417,7 @@ async fn import_csv(
     }
 
     let account_id = account_id.ok_or_else(|| ApiError::BadRequest("missing account_id".into()))?;
-    let source = source.ok_or_else(|| ApiError::BadRequest("missing source".into()))?;
+    let source_raw = source_raw.ok_or_else(|| ApiError::BadRequest("missing source".into()))?;
     if file_bytes.is_empty() {
         return Err(ApiError::BadRequest("missing file".into()));
     }
@@ -439,14 +446,29 @@ async fn import_csv(
         }));
     }
 
-    // Parse via the source-specific parser. All four parsers are stubs that
-    // return Unsupported until a real redacted sample is provided — matches
-    // the existing Webull discipline.
-    let parsed = traderview_expense::parse(source, &file_bytes).map_err(|e| match e {
+    // Parse: "generic" routes through the column-mapped sheet importer with a
+    // user-supplied `mapping`; every other source dispatches to its
+    // fixed-schema parser.
+    let map_err = |e: traderview_expense::ImportError| match e {
         traderview_expense::ImportError::Unsupported(m) => ApiError::BadRequest(m),
         traderview_expense::ImportError::Parse(m) => ApiError::BadRequest(m),
         other => ApiError::Internal(anyhow::anyhow!("{other}")),
-    })?;
+    };
+    let (parsed, source_label) = if source_raw == "generic" {
+        let mapping_json = mapping_json
+            .ok_or_else(|| ApiError::BadRequest("generic import requires a column mapping".into()))?;
+        let mapping: traderview_expense::generic_sheet::GenericMapping =
+            serde_json::from_str(&mapping_json)
+                .map_err(|e| ApiError::BadRequest(format!("bad mapping: {e}")))?;
+        let parsed = traderview_expense::generic_sheet::parse_generic(&file_bytes, &mapping)
+            .map_err(map_err)?;
+        (parsed, "generic".to_string())
+    } else {
+        let source = ExpenseSource::parse_str(&source_raw)
+            .ok_or_else(|| ApiError::BadRequest(format!("unknown source: {source_raw}")))?;
+        let parsed = traderview_expense::parse(source, &file_bytes).map_err(map_err)?;
+        (parsed, source.as_str().to_string())
+    };
 
     let row_count = parsed.len();
     let import_id: Uuid = {
@@ -455,7 +477,7 @@ async fn import_csv(
                   VALUES ($1, $2, $3, $4, $5) RETURNING id",
         )
         .bind(account_id)
-        .bind(source.as_str())
+        .bind(&source_label)
         .bind(&filename)
         .bind(&sha)
         .bind(row_count as i32)

@@ -154,6 +154,7 @@ function drawShell(mount) {
         ['bofa', t('view.expenses.source.bofa')],
         ['chase', t('view.expenses.source.chase')],
         ['apple_card', t('view.expenses.source.apple_card')],
+        ['generic', t('view.expenses.source.generic')],
     ].map(([v, l]) => `<option value="${v}">${esc(l)}</option>`).join('');
 
     const catOpts = state.categories
@@ -311,6 +312,13 @@ function drawShell(mount) {
             <button data-i18n="view.expenses.btn.account" class="primary" id="exp-new-account">+ Account</button>
             <span class="sep"></span>
             <select id="exp-source">${sourceOpts}</select>
+            <span id="exp-generic-map" class="hidden">
+                <label class="inl">${esc(t('view.expenses.generic.date_col'))}<input type="number" min="0" step="1" id="gm-date" value="0"></label>
+                <label class="inl">${esc(t('view.expenses.generic.amount_col'))}<input type="number" min="0" step="1" id="gm-amount" value="1"></label>
+                <label class="inl">${esc(t('view.expenses.generic.desc_col'))}<input type="number" min="0" step="1" id="gm-desc" value="2"></label>
+                <label class="inl"><input type="checkbox" id="gm-header" checked> ${esc(t('view.expenses.generic.has_header'))}</label>
+                <label class="inl"><input type="checkbox" id="gm-negate"> ${esc(t('view.expenses.generic.negate'))}</label>
+            </span>
             <button data-i18n="view.expenses.btn.upload_statement" class="primary" id="exp-upload">Upload statement</button>
             <span class="sep"></span>
             <button data-i18n="view.expenses.btn.seed_default_rules" id="exp-seed-rules">Seed default rules</button>
@@ -357,6 +365,11 @@ function drawShell(mount) {
         refresh();
     });
     mount.querySelector('#exp-new-account').addEventListener('click', createAccountFlow);
+    const srcSel = mount.querySelector('#exp-source');
+    const genMap = mount.querySelector('#exp-generic-map');
+    const syncGenericMap = () => genMap.classList.toggle('hidden', srcSel.value !== 'generic');
+    srcSel.addEventListener('change', syncGenericMap);
+    syncGenericMap();
     mount.querySelector('#exp-upload').addEventListener('click', () => {
         mount.querySelector('#exp-file').click();
     });
@@ -1573,10 +1586,21 @@ async function handleUpload(ev) {
         return;
     }
     const source = state.mount.querySelector('#exp-source').value;
+    let mapping = null;
+    if (source === 'generic') {
+        const num = (id) => Math.max(0, Math.round(Number(state.mount.querySelector(id).value) || 0));
+        mapping = {
+            date_col: num('#gm-date'),
+            amount_col: num('#gm-amount'),
+            description_col: num('#gm-desc'),
+            has_header: state.mount.querySelector('#gm-header').checked,
+            negate_amount: state.mount.querySelector('#gm-negate').checked,
+        };
+    }
     const status = state.mount.querySelector('#exp-status');
     if (status) status.textContent = t('view.expenses.status.uploading', { name: file.name });
     try {
-        const res = await api.importExpense(state.currentAccountId, source, file);
+        const res = await api.importExpense(state.currentAccountId, source, file, mapping);
         if (!viewIsCurrent(state.tok)) return;
         const status2 = state.mount.querySelector('#exp-status');
         if (res.duplicate) {

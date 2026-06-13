@@ -303,11 +303,12 @@ export const api = {
     },
     updateExpenseTransaction: (id, patch) =>
         request(`/expense/transactions/${id}`, { method: 'PATCH', body: JSON.stringify(patch) }),
-    importExpense: (account_id, source, file) => {
+    importExpense: (account_id, source, file, mapping) => {
         const fd = new FormData();
         fd.append('account_id', account_id);
         fd.append('source', source);
         fd.append('file', file, file.name);
+        if (mapping) fd.append('mapping', JSON.stringify(mapping));
         return request('/expense/import', { method: 'POST', body: fd });
     },
     expenseRules: () => request('/expense/rules'),
