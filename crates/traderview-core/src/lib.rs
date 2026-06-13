@@ -51,6 +51,7 @@ pub mod cumulative_delta;
 pub mod currency_exposure;
 pub mod cusum;
 pub mod daily_loss_limit;
+pub mod depreciation_recapture;
 pub mod discipline_score;
 pub mod displacement;
 pub mod donchian;

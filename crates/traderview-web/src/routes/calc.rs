@@ -55,6 +55,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/markup-margin", post(markup_margin_route))
         .route("/calc/inventory-eoq", post(inventory_eoq_route))
         .route("/calc/rent-vs-sell", post(rent_vs_sell_route))
+        .route("/calc/depreciation-recapture", post(depreciation_recapture_route))
         .route("/calc/wash-sale", post(wash_sale_route))
         .route("/calc/cost-basis", post(cost_basis_route))
         .route("/calc/section-1244", post(section_1244_route))
@@ -11395,4 +11396,13 @@ async fn rent_vs_sell_route(
     Json(b): Json<traderview_core::rent_vs_sell::RentVsSellInput>,
 ) -> Json<traderview_core::rent_vs_sell::RentVsSellResult> {
     Json(traderview_core::rent_vs_sell::analyze(&b))
+}
+
+/// Depreciation recapture: splits a rental's gain into unrecaptured § 1250
+/// gain (max 25%) and LTCG, with the tax on each and the effective rate.
+async fn depreciation_recapture_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::depreciation_recapture::RecaptureInput>,
+) -> Json<traderview_core::depreciation_recapture::RecaptureResult> {
+    Json(traderview_core::depreciation_recapture::analyze(&b))
 }
