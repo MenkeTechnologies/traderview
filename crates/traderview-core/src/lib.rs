@@ -184,6 +184,7 @@ pub mod nda_agreement;
 pub mod news_event_handler;
 pub mod notice_of_entry;
 pub mod npv_irr;
+pub mod offer_letter;
 pub mod oi_change;
 pub mod open_type;
 pub mod opening_range;

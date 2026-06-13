@@ -715,6 +715,7 @@ import { renderGuaranty } from './views/guaranty_agreement.js';
 import { renderEquipmentRental } from './views/equipment_rental.js';
 import { renderLlcOperatingAgreement } from './views/llc_operating_agreement.js';
 import { renderLeadPaintDisclosure } from './views/lead_paint_disclosure.js';
+import { renderOfferLetter } from './views/offer_letter.js';
 import { renderFixAndFlip } from './views/fix_and_flip.js';
 import { renderCashConversionCycle } from './views/cash_conversion_cycle.js';
 import { renderProfitFirst } from './views/profit_first.js';
@@ -3171,6 +3172,7 @@ export async function dispatch() {
             case 'equipment-rental': await renderEquipmentRental(mount, state); break;
             case 'llc-operating-agreement': await renderLlcOperatingAgreement(mount, state); break;
             case 'lead-paint-disclosure': await renderLeadPaintDisclosure(mount, state); break;
+            case 'offer-letter': await renderOfferLetter(mount, state); break;
             case 'fix-and-flip': await renderFixAndFlip(mount, state); break;
             case 'cash-conversion-cycle': await renderCashConversionCycle(mount, state); break;
             case 'profit-first': await renderProfitFirst(mount, state); break;
@@ -4541,6 +4543,7 @@ export const viewRenderers = {
     'equipment-rental': (m, s) => renderEquipmentRental(m, s),
     'llc-operating-agreement': (m, s) => renderLlcOperatingAgreement(m, s),
     'lead-paint-disclosure': (m, s) => renderLeadPaintDisclosure(m, s),
+    'offer-letter': (m, s) => renderOfferLetter(m, s),
     'fix-and-flip': (m, s) => renderFixAndFlip(m, s),
     'cash-conversion-cycle': (m, s) => renderCashConversionCycle(m, s),
     'profit-first': (m, s) => renderProfitFirst(m, s),

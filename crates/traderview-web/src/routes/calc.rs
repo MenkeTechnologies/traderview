@@ -71,6 +71,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/equipment-rental", post(equipment_rental_route))
         .route("/calc/llc-operating-agreement", post(llc_operating_agreement_route))
         .route("/calc/lead-paint-disclosure", post(lead_paint_disclosure_route))
+        .route("/calc/offer-letter", post(offer_letter_route))
         .route("/calc/fix-and-flip", post(fix_and_flip_route))
         .route("/calc/cash-conversion-cycle", post(cash_conversion_cycle_route))
         .route("/calc/profit-first", post(profit_first_route))
@@ -11646,6 +11647,14 @@ async fn lead_paint_disclosure_route(
     Json(b): Json<traderview_core::lead_paint_disclosure::LeadPaintInput>,
 ) -> Json<traderview_core::lead_paint_disclosure::LeadPaintDisclosure> {
     Json(traderview_core::lead_paint_disclosure::generate(&b))
+}
+
+/// Employment offer letter: per-paycheck breakdown + offer clauses.
+async fn offer_letter_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::offer_letter::OfferInput>,
+) -> Json<traderview_core::offer_letter::OfferLetter> {
+    Json(traderview_core::offer_letter::generate(&b))
 }
 
 /// Fix-and-flip: the 70% rule max-allowable-offer plus the full deal P&L
