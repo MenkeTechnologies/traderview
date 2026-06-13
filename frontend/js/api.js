@@ -805,6 +805,7 @@ export const api = {
     calcHoldingPeriodReturn: (body) => request('/calc/holding-period-return', { method: 'POST', body: JSON.stringify(body) }),
     calcAltmanZScore:        (body) => request('/calc/altman-z-score', { method: 'POST', body: JSON.stringify(body) }),
     calcPiotroskiFScore:     (body) => request('/calc/piotroski-f-score', { method: 'POST', body: JSON.stringify(body) }),
+    calcGmroi:               (body) => request('/calc/gmroi', { method: 'POST', body: JSON.stringify(body) }),
     calcMergerArb:           (body) => request('/calc/merger-arb', { method: 'POST', body: JSON.stringify(body) }),
     calcBuybackAccretion:    (body) => request('/calc/buyback-accretion', { method: 'POST', body: JSON.stringify(body) }),
     calcCefDiscount:         (body) => request('/calc/cef-discount', { method: 'POST', body: JSON.stringify(body) }),

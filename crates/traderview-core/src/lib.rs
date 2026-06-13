@@ -91,6 +91,7 @@ pub mod futures_roll;
 pub mod gap_analysis;
 pub mod gap_fill_stats;
 pub mod gex;
+pub mod gmroi;
 pub mod goal_tracker;
 pub mod graham_number;
 pub mod greeks;
