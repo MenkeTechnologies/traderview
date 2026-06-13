@@ -83,6 +83,7 @@ pub mod dupont_roe;
 pub mod dynamic_kelly;
 pub mod earnings_calendar;
 pub mod earnings_move;
+pub mod economic_value_added;
 pub mod efficiency_ratio;
 pub mod emotion_tags;
 pub mod equal_levels;

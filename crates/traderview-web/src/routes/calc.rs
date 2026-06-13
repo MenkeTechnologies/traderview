@@ -144,6 +144,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/standard-vs-itemized", post(standard_vs_itemized_route))
         .route("/calc/capture-ratio", post(capture_ratio_route))
         .route("/calc/rental-total-return", post(rental_total_return_route))
+        .route("/calc/economic-value-added", post(economic_value_added_route))
         .route("/calc/wash-sale", post(wash_sale_route))
         .route("/calc/cost-basis", post(cost_basis_route))
         .route("/calc/section-1244", post(section_1244_route))
@@ -12225,4 +12226,12 @@ async fn rental_total_return_route(
     Json(b): Json<traderview_core::rental_total_return::RentalReturnInput>,
 ) -> Json<traderview_core::rental_total_return::RentalReturnResult> {
     Json(traderview_core::rental_total_return::analyze(&b))
+}
+
+/// Economic Value Added — economic profit above the capital charge.
+async fn economic_value_added_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::economic_value_added::EvaInput>,
+) -> Json<traderview_core::economic_value_added::EvaResult> {
+    Json(traderview_core::economic_value_added::analyze(&b))
 }
