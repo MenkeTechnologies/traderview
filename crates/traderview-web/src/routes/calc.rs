@@ -43,6 +43,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/house-hacking", post(house_hacking_route))
         .route("/calc/brrrr", post(brrrr_route))
         .route("/calc/paycheck-401k", post(paycheck_401k_route))
+        .route("/calc/guyton-klinger", post(guyton_klinger_route))
         .route("/calc/wash-sale", post(wash_sale_route))
         .route("/calc/cost-basis", post(cost_basis_route))
         .route("/calc/section-1244", post(section_1244_route))
@@ -11275,4 +11276,13 @@ async fn paycheck_401k_route(
     Json(b): Json<traderview_core::paycheck_401k::Paycheck401kInput>,
 ) -> Json<traderview_core::paycheck_401k::Paycheck401kResult> {
     Json(traderview_core::paycheck_401k::compute(&b))
+}
+
+/// Guyton-Klinger guardrails: one year's dynamic-withdrawal decision —
+/// inflation raise, capital-preservation cut, or prosperity raise.
+async fn guyton_klinger_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::guyton_klinger::GuardrailInput>,
+) -> Json<traderview_core::guyton_klinger::GuardrailDecision> {
+    Json(traderview_core::guyton_klinger::decide(&b))
 }

@@ -76,6 +76,7 @@ pub mod gap_fill_stats;
 pub mod gex;
 pub mod goal_tracker;
 pub mod greeks;
+pub mod guyton_klinger;
 pub mod halt_risk;
 pub mod hedge_ratio;
 pub mod heikin_ashi;

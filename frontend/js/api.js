@@ -751,6 +751,7 @@ export const api = {
     calcHouseHacking:        (body) => request('/calc/house-hacking', { method: 'POST', body: JSON.stringify(body) }),
     calcBrrrr:               (body) => request('/calc/brrrr', { method: 'POST', body: JSON.stringify(body) }),
     calcPaycheck401k:        (body) => request('/calc/paycheck-401k', { method: 'POST', body: JSON.stringify(body) }),
+    calcGuytonKlinger:       (body) => request('/calc/guyton-klinger', { method: 'POST', body: JSON.stringify(body) }),
     calcMergerArb:           (body) => request('/calc/merger-arb', { method: 'POST', body: JSON.stringify(body) }),
     calcBuybackAccretion:    (body) => request('/calc/buyback-accretion', { method: 'POST', body: JSON.stringify(body) }),
     calcCefDiscount:         (body) => request('/calc/cef-discount', { method: 'POST', body: JSON.stringify(body) }),
