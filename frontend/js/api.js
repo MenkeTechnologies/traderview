@@ -809,6 +809,7 @@ export const api = {
     calcRothContribution:    (body) => request('/calc/roth-contribution', { method: 'POST', body: JSON.stringify(body) }),
     calcInterestCoverage:    (body) => request('/calc/interest-coverage', { method: 'POST', body: JSON.stringify(body) }),
     calcCapitalGainsTax:     (body) => request('/calc/capital-gains-tax', { method: 'POST', body: JSON.stringify(body) }),
+    calcTraditionalIraDeduction: (body) => request('/calc/traditional-ira-deduction', { method: 'POST', body: JSON.stringify(body) }),
     calcMergerArb:           (body) => request('/calc/merger-arb', { method: 'POST', body: JSON.stringify(body) }),
     calcBuybackAccretion:    (body) => request('/calc/buyback-accretion', { method: 'POST', body: JSON.stringify(body) }),
     calcCefDiscount:         (body) => request('/calc/cef-discount', { method: 'POST', body: JSON.stringify(body) }),

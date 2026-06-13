@@ -744,6 +744,7 @@ import { renderGmroi } from './views/gmroi.js';
 import { renderRothContribution } from './views/roth_contribution.js';
 import { renderInterestCoverage } from './views/interest_coverage.js';
 import { renderCapitalGainsTax } from './views/capital_gains_tax.js';
+import { renderTraditionalIraDeduction } from './views/traditional_ira_deduction.js';
 import { renderNetWorthTracker } from './views/net_worth_tracker.js';
 import { renderPersonalBalanceSheet } from './views/personal_balance_sheet.js';
 import { renderPersonalCashFlow } from './views/personal_cash_flow.js';
@@ -3123,6 +3124,7 @@ export async function dispatch() {
             case 'roth-contribution': await renderRothContribution(mount, state); break;
             case 'interest-coverage': await renderInterestCoverage(mount, state); break;
             case 'capital-gains-tax': await renderCapitalGainsTax(mount, state); break;
+            case 'traditional-ira-deduction': await renderTraditionalIraDeduction(mount, state); break;
             case 'net-worth-tracker': await renderNetWorthTracker(mount, state); break;
             case 'personal-balance-sheet': await renderPersonalBalanceSheet(mount, state); break;
             case 'personal-cash-flow': await renderPersonalCashFlow(mount, state); break;
@@ -4424,6 +4426,7 @@ export const viewRenderers = {
     'roth-contribution': (m, s) => renderRothContribution(m, s),
     'interest-coverage': (m, s) => renderInterestCoverage(m, s),
     'capital-gains-tax': (m, s) => renderCapitalGainsTax(m, s),
+    'traditional-ira-deduction': (m, s) => renderTraditionalIraDeduction(m, s),
     'envelope-budget': (m, s) => renderEnvelopeBudget(m, s),
     'fafsa-efc': (m, s) => renderFafsaEfc(m, s),
     'fifty-thirty-twenty': (m, s) => renderFiftyThirtyTwenty(m, s),

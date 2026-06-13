@@ -100,6 +100,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/roth-contribution", post(roth_contribution_route))
         .route("/calc/interest-coverage", post(interest_coverage_route))
         .route("/calc/capital-gains-tax", post(capital_gains_tax_route))
+        .route("/calc/traditional-ira-deduction", post(traditional_ira_deduction_route))
         .route("/calc/wash-sale", post(wash_sale_route))
         .route("/calc/cost-basis", post(cost_basis_route))
         .route("/calc/section-1244", post(section_1244_route))
@@ -11829,4 +11830,12 @@ async fn capital_gains_tax_route(
     Json(b): Json<traderview_core::capital_gains_tax::CapGainsInput>,
 ) -> Json<traderview_core::capital_gains_tax::CapGainsResult> {
     Json(traderview_core::capital_gains_tax::analyze(&b))
+}
+
+/// Traditional IRA deduction after the MAGI phase-out.
+async fn traditional_ira_deduction_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::traditional_ira_deduction::TradIraInput>,
+) -> Json<traderview_core::traditional_ira_deduction::TradIraResult> {
+    Json(traderview_core::traditional_ira_deduction::analyze(&b))
 }
