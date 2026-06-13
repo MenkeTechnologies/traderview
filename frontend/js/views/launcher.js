@@ -56,7 +56,7 @@ export const TILES = [
     ['break-even', 'Break-Even', '⚖️', 'Cost-volume-profit analysis — break-even units + revenue, contribution margin, target-profit volume, margin of safety', 'NEW'],
     ['invoice-generator', 'Invoice Generator', '🧾', 'Business invoice generator — line items, discount, tax, net-N due date, printable/copyable invoice', 'NEW'],
     ['cash-conversion-cycle', 'Cash Conversion Cycle', '🔄', 'Working-capital cycle — DSO + DIO − DPO and the operating cycle, the days cash is tied up between paying suppliers and collecting from customers', 'NEW'],
-    ['profit-first', 'Profit First', '💰', 'Profit First allocation — splits real revenue across Profit / Owner\\'s Pay / Tax / OpEx by the target band (or custom %), profit taken off the top', 'NEW'],
+    ['profit-first', 'Profit First', '💰', 'Profit First allocation — splits real revenue across Profit / Owner\'s Pay / Tax / OpEx by the target band (or custom %), profit taken off the top', 'NEW'],
     ['markup-margin', 'Markup vs Margin', '🏷️', 'Markup/margin converter — from cost + price/markup%/margin%, shows price, profit, and both markup (of cost) and margin (of price)', 'NEW'],
     ['savings-rate', 'Savings Rate / FI', '🎯', 'MMM math: years to FI from savings rate at 5% real + 4% SWR, FI number, 10-70% sensitivity', 'NEW'],
     ['sinking-fund', 'Sinking Fund', '🪣', 'Multi-goal monthly allocator — required/mo, months-to-target, shortfall, on-track per goal + aggregate', 'NEW'],
