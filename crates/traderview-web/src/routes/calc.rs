@@ -80,6 +80,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/seller-financing", post(seller_financing_route))
         .route("/calc/expense-drag", post(expense_drag_route))
         .route("/calc/lease-payment", post(lease_payment_route))
+        .route("/calc/real-return", post(real_return_route))
         .route("/calc/wash-sale", post(wash_sale_route))
         .route("/calc/cost-basis", post(cost_basis_route))
         .route("/calc/section-1244", post(section_1244_route))
@@ -11645,4 +11646,13 @@ async fn lease_payment_route(
     Json(b): Json<traderview_core::lease_money_factor::LeaseInput>,
 ) -> Json<traderview_core::lease_money_factor::LeaseResult> {
     Json(traderview_core::lease_money_factor::analyze(&b))
+}
+
+/// Real return: the Fisher inflation-adjusted return (exact + shortcut),
+/// after-tax real return, and the principal's purchasing power over time.
+async fn real_return_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::real_return::RealReturnInput>,
+) -> Json<traderview_core::real_return::RealReturnResult> {
+    Json(traderview_core::real_return::analyze(&b))
 }

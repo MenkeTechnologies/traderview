@@ -168,6 +168,7 @@ pub mod pyramid_rules;
 pub mod random_walk_index;
 pub mod range_contraction;
 pub mod range_expansion;
+pub mod real_return;
 pub mod rebalance;
 pub mod reconcile_1099b;
 pub mod renko;
