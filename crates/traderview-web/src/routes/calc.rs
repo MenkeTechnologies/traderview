@@ -71,6 +71,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/mortgage-points", post(mortgage_points_route))
         .route("/calc/apr-apy", post(apr_apy_route))
         .route("/calc/blended-debt", post(blended_debt_route))
+        .route("/calc/dividend-coverage", post(dividend_coverage_route))
         .route("/calc/wash-sale", post(wash_sale_route))
         .route("/calc/cost-basis", post(cost_basis_route))
         .route("/calc/section-1244", post(section_1244_route))
@@ -11555,4 +11556,13 @@ async fn blended_debt_route(
     Json(b): Json<traderview_core::blended_debt::BlendedDebtInput>,
 ) -> Json<traderview_core::blended_debt::BlendedDebtResult> {
     Json(traderview_core::blended_debt::analyze(&b))
+}
+
+/// Dividend coverage: payout ratio, earnings coverage, retention, and an
+/// optional FCF payout — whether a stock's dividend is sustainable.
+async fn dividend_coverage_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::dividend_coverage::DividendInput>,
+) -> Json<traderview_core::dividend_coverage::DividendResult> {
+    Json(traderview_core::dividend_coverage::analyze(&b))
 }
