@@ -714,6 +714,7 @@ import { renderAgeAllocation } from './views/age_based_allocation.js';
 import { renderRothBracketFill } from './views/roth_bracket_fill.js';
 import { renderMortgagePoints } from './views/mortgage_points.js';
 import { renderAprApy } from './views/apr_apy.js';
+import { renderBlendedDebt } from './views/blended_debt.js';
 import { renderNetWorthTracker } from './views/net_worth_tracker.js';
 import { renderPersonalBalanceSheet } from './views/personal_balance_sheet.js';
 import { renderPersonalCashFlow } from './views/personal_cash_flow.js';
@@ -3063,6 +3064,7 @@ export async function dispatch() {
             case 'roth-bracket-fill': await renderRothBracketFill(mount, state); break;
             case 'mortgage-points': await renderMortgagePoints(mount, state); break;
             case 'apr-apy': await renderAprApy(mount, state); break;
+            case 'blended-debt': await renderBlendedDebt(mount, state); break;
             case 'net-worth-tracker': await renderNetWorthTracker(mount, state); break;
             case 'personal-balance-sheet': await renderPersonalBalanceSheet(mount, state); break;
             case 'personal-cash-flow': await renderPersonalCashFlow(mount, state); break;
@@ -4334,6 +4336,7 @@ export const viewRenderers = {
     'roth-bracket-fill': (m, s) => renderRothBracketFill(m, s),
     'mortgage-points': (m, s) => renderMortgagePoints(m, s),
     'apr-apy': (m, s) => renderAprApy(m, s),
+    'blended-debt': (m, s) => renderBlendedDebt(m, s),
     'envelope-budget': (m, s) => renderEnvelopeBudget(m, s),
     'fafsa-efc': (m, s) => renderFafsaEfc(m, s),
     'fifty-thirty-twenty': (m, s) => renderFiftyThirtyTwenty(m, s),

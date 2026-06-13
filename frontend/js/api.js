@@ -779,6 +779,7 @@ export const api = {
     calcRothBracketFill:     (body) => request('/calc/roth-bracket-fill', { method: 'POST', body: JSON.stringify(body) }),
     calcMortgagePoints:      (body) => request('/calc/mortgage-points', { method: 'POST', body: JSON.stringify(body) }),
     calcAprApy:              (body) => request('/calc/apr-apy', { method: 'POST', body: JSON.stringify(body) }),
+    calcBlendedDebt:         (body) => request('/calc/blended-debt', { method: 'POST', body: JSON.stringify(body) }),
     calcMergerArb:           (body) => request('/calc/merger-arb', { method: 'POST', body: JSON.stringify(body) }),
     calcBuybackAccretion:    (body) => request('/calc/buyback-accretion', { method: 'POST', body: JSON.stringify(body) }),
     calcCefDiscount:         (body) => request('/calc/cef-discount', { method: 'POST', body: JSON.stringify(body) }),

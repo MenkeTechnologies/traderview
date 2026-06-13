@@ -70,6 +70,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/roth-bracket-fill", post(roth_bracket_fill_route))
         .route("/calc/mortgage-points", post(mortgage_points_route))
         .route("/calc/apr-apy", post(apr_apy_route))
+        .route("/calc/blended-debt", post(blended_debt_route))
         .route("/calc/wash-sale", post(wash_sale_route))
         .route("/calc/cost-basis", post(cost_basis_route))
         .route("/calc/section-1244", post(section_1244_route))
@@ -11545,4 +11546,13 @@ async fn apr_apy_route(
     Json(b): Json<traderview_core::apr_apy::AprApyInput>,
 ) -> Json<traderview_core::apr_apy::AprApyResult> {
     Json(traderview_core::apr_apy::analyze(&b))
+}
+
+/// Blended debt rate: the balance-weighted average APR across debts, total
+/// monthly interest, and a consolidation-loan comparison.
+async fn blended_debt_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::blended_debt::BlendedDebtInput>,
+) -> Json<traderview_core::blended_debt::BlendedDebtResult> {
+    Json(traderview_core::blended_debt::analyze(&b))
 }

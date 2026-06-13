@@ -24,6 +24,7 @@ pub mod backtest;
 pub mod bb_squeeze;
 pub mod beta;
 pub mod beta_hedge;
+pub mod blended_debt;
 pub mod bond_duration;
 pub mod bracket_order;
 pub mod break_even;
