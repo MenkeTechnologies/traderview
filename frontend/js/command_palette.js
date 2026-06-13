@@ -62,7 +62,10 @@ function paint() {
     const hadFocus = prevInput && document.activeElement === prevInput;
     const caret = prevInput ? prevInput.selectionStart : null;
     const items = buildAllItems();
-    _results = filterAndRank(items, _query, 50);
+    // No result cap — every tile must be reachable from the palette, so the
+    // full ranked match set renders (the results list is scrollable). With a
+    // query the match set is naturally small; an empty query lists everything.
+    _results = filterAndRank(items, _query, items.length);
     if (_selected >= _results.length) _selected = 0;
     root.innerHTML = `
         <div class="palette-overlay" role="dialog" aria-modal="true" aria-label="${esc(t('palette.title'))}">
