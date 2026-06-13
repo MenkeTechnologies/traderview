@@ -249,6 +249,7 @@ pub mod vsa;
 pub mod vwap_bands;
 pub mod vwap_slippage;
 pub mod vwmacd;
+pub mod wage_converter;
 pub mod wash_sale;
 pub mod williams_r;
 pub mod winloss_asymmetry;

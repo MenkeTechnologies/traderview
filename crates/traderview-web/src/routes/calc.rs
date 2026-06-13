@@ -84,6 +84,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/cd-penalty", post(cd_penalty_route))
         .route("/calc/yield-on-cost", post(yield_on_cost_route))
         .route("/calc/trade-expectancy", post(trade_expectancy_route))
+        .route("/calc/wage-converter", post(wage_converter_route))
         .route("/calc/wash-sale", post(wash_sale_route))
         .route("/calc/cost-basis", post(cost_basis_route))
         .route("/calc/section-1244", post(section_1244_route))
@@ -11685,4 +11686,12 @@ async fn trade_expectancy_route(
     Json(b): Json<traderview_core::trade_expectancy::ExpectancyInput>,
 ) -> Json<traderview_core::trade_expectancy::ExpectancyResult> {
     Json(traderview_core::trade_expectancy::analyze(&b))
+}
+
+/// Wage converter: hourly ↔ salary across week / two weeks / month / year.
+async fn wage_converter_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::wage_converter::WageInput>,
+) -> Json<traderview_core::wage_converter::WageResult> {
+    Json(traderview_core::wage_converter::analyze(&b))
 }
