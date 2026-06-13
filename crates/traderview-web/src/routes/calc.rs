@@ -51,6 +51,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/landlord-notice", post(landlord_notice_route))
         .route("/calc/security-deposit-itemization", post(security_deposit_itemization_route))
         .route("/calc/promissory-note", post(promissory_note_route))
+        .route("/calc/rent-increase-notice", post(rent_increase_notice_route))
         .route("/calc/fix-and-flip", post(fix_and_flip_route))
         .route("/calc/cash-conversion-cycle", post(cash_conversion_cycle_route))
         .route("/calc/profit-first", post(profit_first_route))
@@ -11454,6 +11455,15 @@ async fn promissory_note_route(
     Json(b): Json<traderview_core::promissory_note::NoteInput>,
 ) -> Json<traderview_core::promissory_note::PromissoryNote> {
     Json(traderview_core::promissory_note::generate(&b))
+}
+
+/// Rent increase notice: new rent (percent or flat), change amount/percent,
+/// and the effective date from the service date + notice period.
+async fn rent_increase_notice_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::rent_increase_notice::RentIncreaseInput>,
+) -> Json<traderview_core::rent_increase_notice::RentIncreaseNotice> {
+    Json(traderview_core::rent_increase_notice::generate(&b))
 }
 
 /// Fix-and-flip: the 70% rule max-allowable-offer plus the full deal P&L

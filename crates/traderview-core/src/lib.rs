@@ -219,6 +219,7 @@ pub mod reconcile_1099b;
 pub mod renko;
 pub mod rent_affordability;
 pub mod rent_escalation;
+pub mod rent_increase_notice;
 pub mod rental_noi;
 pub mod rental_total_return;
 pub mod rent_vs_sell;
