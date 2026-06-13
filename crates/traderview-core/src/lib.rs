@@ -134,6 +134,7 @@ pub mod leverage_dol_dfl;
 pub mod like_kind_exchange;
 pub mod liquidity;
 pub mod liquidity_grab;
+pub mod loan_apr;
 pub mod mae_stop_tuning;
 pub mod margin_analysis;
 pub mod margin_call;

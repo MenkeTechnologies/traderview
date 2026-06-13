@@ -118,6 +118,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/margin-analysis", post(margin_analysis_route))
         .route("/calc/bonus-grossup", post(bonus_grossup_route))
         .route("/calc/rent-escalation", post(rent_escalation_route))
+        .route("/calc/loan-apr", post(loan_apr_route))
         .route("/calc/wash-sale", post(wash_sale_route))
         .route("/calc/cost-basis", post(cost_basis_route))
         .route("/calc/section-1244", post(section_1244_route))
@@ -11991,4 +11992,12 @@ async fn rent_escalation_route(
     Json(b): Json<traderview_core::rent_escalation::RentEscalationInput>,
 ) -> Json<traderview_core::rent_escalation::RentEscalationResult> {
     Json(traderview_core::rent_escalation::analyze(&b))
+}
+
+/// True loan APR including upfront fees.
+async fn loan_apr_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::loan_apr::LoanAprInput>,
+) -> Json<traderview_core::loan_apr::LoanAprResult> {
+    Json(traderview_core::loan_apr::analyze(&b))
 }
