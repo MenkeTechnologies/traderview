@@ -140,6 +140,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/margin-interest", post(margin_interest_route))
         .route("/calc/qbi-deduction", post(qbi_deduction_route))
         .route("/calc/estate-tax", post(estate_tax_route))
+        .route("/calc/marriage-penalty", post(marriage_penalty_route))
         .route("/calc/wash-sale", post(wash_sale_route))
         .route("/calc/cost-basis", post(cost_basis_route))
         .route("/calc/section-1244", post(section_1244_route))
@@ -12189,4 +12190,12 @@ async fn estate_tax_route(
     Json(b): Json<traderview_core::estate_tax::EstateTaxInput>,
 ) -> Json<traderview_core::estate_tax::EstateTaxResult> {
     Json(traderview_core::estate_tax::analyze(&b))
+}
+
+/// Marriage penalty / bonus — joint tax vs two single filers.
+async fn marriage_penalty_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::marriage_penalty::MarriagePenaltyInput>,
+) -> Json<traderview_core::marriage_penalty::MarriagePenaltyResult> {
+    Json(traderview_core::marriage_penalty::analyze(&b))
 }

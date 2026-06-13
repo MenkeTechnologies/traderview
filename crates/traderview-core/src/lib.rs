@@ -150,6 +150,7 @@ pub mod margin_runway;
 pub mod market_impact;
 pub mod market_profile;
 pub mod markup_margin;
+pub mod marriage_penalty;
 pub mod mass_index;
 pub mod max_pain;
 pub mod mcclellan_oscillator;
