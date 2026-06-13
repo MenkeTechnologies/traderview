@@ -712,6 +712,7 @@ import { renderSsPia } from './views/ss_pia.js';
 import { renderHsaTripleTax } from './views/hsa_triple_tax.js';
 import { renderAgeAllocation } from './views/age_based_allocation.js';
 import { renderRothBracketFill } from './views/roth_bracket_fill.js';
+import { renderMortgagePoints } from './views/mortgage_points.js';
 import { renderNetWorthTracker } from './views/net_worth_tracker.js';
 import { renderPersonalBalanceSheet } from './views/personal_balance_sheet.js';
 import { renderPersonalCashFlow } from './views/personal_cash_flow.js';
@@ -3059,6 +3060,7 @@ export async function dispatch() {
             case 'hsa-triple-tax': await renderHsaTripleTax(mount, state); break;
             case 'age-allocation': await renderAgeAllocation(mount, state); break;
             case 'roth-bracket-fill': await renderRothBracketFill(mount, state); break;
+            case 'mortgage-points': await renderMortgagePoints(mount, state); break;
             case 'net-worth-tracker': await renderNetWorthTracker(mount, state); break;
             case 'personal-balance-sheet': await renderPersonalBalanceSheet(mount, state); break;
             case 'personal-cash-flow': await renderPersonalCashFlow(mount, state); break;
@@ -4328,6 +4330,7 @@ export const viewRenderers = {
     'hsa-triple-tax': (m, s) => renderHsaTripleTax(m, s),
     'age-allocation': (m, s) => renderAgeAllocation(m, s),
     'roth-bracket-fill': (m, s) => renderRothBracketFill(m, s),
+    'mortgage-points': (m, s) => renderMortgagePoints(m, s),
     'envelope-budget': (m, s) => renderEnvelopeBudget(m, s),
     'fafsa-efc': (m, s) => renderFafsaEfc(m, s),
     'fifty-thirty-twenty': (m, s) => renderFiftyThirtyTwenty(m, s),

@@ -68,6 +68,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/hsa-triple-tax", post(hsa_triple_tax_route))
         .route("/calc/age-allocation", post(age_allocation_route))
         .route("/calc/roth-bracket-fill", post(roth_bracket_fill_route))
+        .route("/calc/mortgage-points", post(mortgage_points_route))
         .route("/calc/wash-sale", post(wash_sale_route))
         .route("/calc/cost-basis", post(cost_basis_route))
         .route("/calc/section-1244", post(section_1244_route))
@@ -11525,4 +11526,13 @@ async fn roth_bracket_fill_route(
     Json(b): Json<traderview_core::roth_bracket_fill::BracketFillInput>,
 ) -> Json<traderview_core::roth_bracket_fill::BracketFillResult> {
     Json(traderview_core::roth_bracket_fill::analyze(&b))
+}
+
+/// Mortgage points: the bought-down rate, points cost, payment savings, and
+/// the months to break even on buying discount points.
+async fn mortgage_points_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::mortgage_points::PointsInput>,
+) -> Json<traderview_core::mortgage_points::PointsResult> {
+    Json(traderview_core::mortgage_points::analyze(&b))
 }

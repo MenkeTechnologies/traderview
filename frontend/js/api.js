@@ -777,6 +777,7 @@ export const api = {
     calcHsaTripleTax:        (body) => request('/calc/hsa-triple-tax', { method: 'POST', body: JSON.stringify(body) }),
     calcAgeAllocation:       (body) => request('/calc/age-allocation', { method: 'POST', body: JSON.stringify(body) }),
     calcRothBracketFill:     (body) => request('/calc/roth-bracket-fill', { method: 'POST', body: JSON.stringify(body) }),
+    calcMortgagePoints:      (body) => request('/calc/mortgage-points', { method: 'POST', body: JSON.stringify(body) }),
     calcMergerArb:           (body) => request('/calc/merger-arb', { method: 'POST', body: JSON.stringify(body) }),
     calcBuybackAccretion:    (body) => request('/calc/buyback-accretion', { method: 'POST', body: JSON.stringify(body) }),
     calcCefDiscount:         (body) => request('/calc/cef-discount', { method: 'POST', body: JSON.stringify(body) }),
