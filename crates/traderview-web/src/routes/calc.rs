@@ -66,6 +66,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/pension-survivor", post(pension_survivor_route))
         .route("/calc/ss-pia", post(ss_pia_route))
         .route("/calc/hsa-triple-tax", post(hsa_triple_tax_route))
+        .route("/calc/age-allocation", post(age_allocation_route))
         .route("/calc/wash-sale", post(wash_sale_route))
         .route("/calc/cost-basis", post(cost_basis_route))
         .route("/calc/section-1244", post(section_1244_route))
@@ -11505,4 +11506,13 @@ async fn hsa_triple_tax_route(
     Json(b): Json<traderview_core::hsa_triple_tax::HsaInput>,
 ) -> Json<traderview_core::hsa_triple_tax::HsaResult> {
     Json(traderview_core::hsa_triple_tax::analyze(&b))
+}
+
+/// Age-based allocation: the rule-of-N equity glidepath (equity % = N − age),
+/// the dollar split, and the glidepath at 10-year steps.
+async fn age_allocation_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::age_based_allocation::AllocationInput>,
+) -> Json<traderview_core::age_based_allocation::AllocationResult> {
+    Json(traderview_core::age_based_allocation::analyze(&b))
 }
