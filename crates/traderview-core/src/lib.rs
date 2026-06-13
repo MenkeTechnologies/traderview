@@ -76,6 +76,7 @@ pub mod equity_forecast;
 pub mod equity_regime;
 pub mod excursion;
 pub mod exit_timing;
+pub mod expense_ratio_drag;
 pub mod fair_value_gap;
 pub mod fibonacci;
 pub mod fix_and_flip;

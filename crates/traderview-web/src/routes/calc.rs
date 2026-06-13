@@ -78,6 +78,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/years-to-fi", post(years_to_fi_route))
         .route("/calc/grm", post(grm_route))
         .route("/calc/seller-financing", post(seller_financing_route))
+        .route("/calc/expense-drag", post(expense_drag_route))
         .route("/calc/wash-sale", post(wash_sale_route))
         .route("/calc/cost-basis", post(cost_basis_route))
         .route("/calc/section-1244", post(section_1244_route))
@@ -11625,4 +11626,13 @@ async fn seller_financing_route(
     Json(b): Json<traderview_core::seller_financing::SellerFinancingInput>,
 ) -> Json<traderview_core::seller_financing::SellerFinancingResult> {
     Json(traderview_core::seller_financing::analyze(&b))
+}
+
+/// Expense ratio drag: the dollars a fund's expense ratio costs over a
+/// horizon vs a zero-fee fund (gross vs net-return future value).
+async fn expense_drag_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::expense_ratio_drag::ExpenseDragInput>,
+) -> Json<traderview_core::expense_ratio_drag::ExpenseDragResult> {
+    Json(traderview_core::expense_ratio_drag::analyze(&b))
 }
