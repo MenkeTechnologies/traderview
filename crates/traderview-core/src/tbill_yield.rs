@@ -11,10 +11,10 @@
 //! * Price from discount:  P = 100 × (1 − d × r/360)
 //! * Money-market yield:   (100 − P)/P × 360/r   (CD-equivalent, 360-day)
 //! * Investment rate (coupon-equivalent), per 31 CFR 356 Appendix B:
-//!     - r ≤ y/2:  i = (100 − P)/P × y/r
-//!     - r >  y/2:  quadratic a·i² + b·i + c = 0 with
-//!         a = r/(2y) − 0.25,  b = r/y,  c = 1 − 100/P,
-//!         i = (−b + √(b² − 4ac)) / (2a)
+//!   - r ≤ y/2:  i = (100 − P)/P × y/r
+//!   - r >  y/2:  quadratic a·i² + b·i + c = 0 with
+//!     a = r/(2y) − 0.25,  b = r/y,  c = 1 − 100/P,
+//!     i = (−b + √(b² − 4ac)) / (2a)
 //! * Effective annual yield: (100/P)^(y/r) − 1
 
 use serde::{Deserialize, Serialize};

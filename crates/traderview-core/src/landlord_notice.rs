@@ -256,7 +256,7 @@ mod tests {
         let d = generate(&base());
         let rent = d.clauses.iter().find(|c| c.heading.starts_with("1.")).unwrap();
         assert!(rent.body.contains("$1500.00"));
-        assert!(rent.body.contains("Taurean Collins") == false); // tenant is in "To"
+        assert!(!rent.body.contains("Taurean Collins")); // tenant is in "To"
         assert!(rent.body.contains("Jacob Menke"));
     }
 

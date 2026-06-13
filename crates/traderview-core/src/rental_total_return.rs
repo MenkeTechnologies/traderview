@@ -5,7 +5,7 @@
 //!   2. Appreciation   — the property's market-value gain.
 //!   3. Loan paydown   — the first-year principal the tenant's rent retires.
 //!   4. Tax shield     — depreciation (27.5-yr straight line on the building)
-//!                       times the marginal rate, the tax the paper loss saves.
+//!      times the marginal rate, the tax the paper loss saves.
 //!
 //! Their sum over cash invested (down payment + closing costs) is the total
 //! return, far above the cap rate because leverage, appreciation, amortization,

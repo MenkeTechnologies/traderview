@@ -624,7 +624,7 @@ pub fn order_well_formed(
         // a negative offset is malformed.
         || (order_type == "trailing_stop_limit"
             && trail_ok
-            && stop_price.map_or(true, |o| o >= Decimal::ZERO))
+            && stop_price.is_none_or(|o| o >= Decimal::ZERO))
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]

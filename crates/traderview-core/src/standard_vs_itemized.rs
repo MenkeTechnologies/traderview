@@ -1,10 +1,10 @@
 //! Standard vs itemized deduction — whether a taxpayer is better off taking the
 //! standard deduction or itemizing on Schedule A.
 //!
-//! Itemized total = SALT (state/local income or sales tax + property tax, capped)
-//! + home mortgage interest + charitable contributions + medical expenses above
-//! the 7.5%-of-AGI floor. The taxpayer takes the larger of that and the standard
-//! deduction.
+//! Itemized total = SALT (state/local income or sales tax plus property tax,
+//! capped) plus home mortgage interest, charitable contributions, and medical
+//! expenses above the 7.5%-of-AGI floor. The taxpayer takes the larger of that
+//! and the standard deduction.
 //!
 //! 2026 defaults (web-verified, OBBBA, overridable): standard deduction $16,100
 //! single / $32,200 MFJ; SALT cap $40,400, reduced 30% of MAGI over $505,000 and
