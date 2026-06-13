@@ -45,6 +45,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/paycheck-401k", post(paycheck_401k_route))
         .route("/calc/guyton-klinger", post(guyton_klinger_route))
         .route("/calc/irmaa", post(irmaa_route))
+        .route("/calc/break-even", post(break_even_route))
         .route("/calc/wash-sale", post(wash_sale_route))
         .route("/calc/cost-basis", post(cost_basis_route))
         .route("/calc/section-1244", post(section_1244_route))
@@ -11295,4 +11296,13 @@ async fn irmaa_route(
     Json(b): Json<traderview_core::irmaa::IrmaaInput>,
 ) -> Json<traderview_core::irmaa::IrmaaResult> {
     Json(traderview_core::irmaa::compute(&b))
+}
+
+/// Break-even / CVP: contribution margin, break-even units + revenue,
+/// target-profit volume, and margin of safety for a small business.
+async fn break_even_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::break_even::BreakEvenInput>,
+) -> Json<traderview_core::break_even::BreakEvenResult> {
+    Json(traderview_core::break_even::analyze(&b))
 }

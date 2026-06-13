@@ -689,6 +689,7 @@ import { renderBrrrr } from './views/brrrr.js';
 import { renderPaycheck401k } from './views/paycheck_401k.js';
 import { renderGuytonKlinger } from './views/guyton_klinger.js';
 import { renderIrmaa } from './views/irmaa.js';
+import { renderBreakEven } from './views/break_even.js';
 import { renderNetWorthTracker } from './views/net_worth_tracker.js';
 import { renderPersonalBalanceSheet } from './views/personal_balance_sheet.js';
 import { renderPersonalCashFlow } from './views/personal_cash_flow.js';
@@ -3013,6 +3014,7 @@ export async function dispatch() {
             case 'paycheck-401k': await renderPaycheck401k(mount, state); break;
             case 'guyton-klinger': await renderGuytonKlinger(mount, state); break;
             case 'irmaa': await renderIrmaa(mount, state); break;
+            case 'break-even': await renderBreakEven(mount, state); break;
             case 'net-worth-tracker': await renderNetWorthTracker(mount, state); break;
             case 'personal-balance-sheet': await renderPersonalBalanceSheet(mount, state); break;
             case 'personal-cash-flow': await renderPersonalCashFlow(mount, state); break;
@@ -4259,6 +4261,7 @@ export const viewRenderers = {
     'paycheck-401k': (m, s) => renderPaycheck401k(m, s),
     'guyton-klinger': (m, s) => renderGuytonKlinger(m, s),
     'irmaa': (m, s) => renderIrmaa(m, s),
+    'break-even': (m, s) => renderBreakEven(m, s),
     'envelope-budget': (m, s) => renderEnvelopeBudget(m, s),
     'fafsa-efc': (m, s) => renderFafsaEfc(m, s),
     'fifty-thirty-twenty': (m, s) => renderFiftyThirtyTwenty(m, s),

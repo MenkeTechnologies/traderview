@@ -753,6 +753,7 @@ export const api = {
     calcPaycheck401k:        (body) => request('/calc/paycheck-401k', { method: 'POST', body: JSON.stringify(body) }),
     calcGuytonKlinger:       (body) => request('/calc/guyton-klinger', { method: 'POST', body: JSON.stringify(body) }),
     calcIrmaa:               (body) => request('/calc/irmaa', { method: 'POST', body: JSON.stringify(body) }),
+    calcBreakEven:           (body) => request('/calc/break-even', { method: 'POST', body: JSON.stringify(body) }),
     calcMergerArb:           (body) => request('/calc/merger-arb', { method: 'POST', body: JSON.stringify(body) }),
     calcBuybackAccretion:    (body) => request('/calc/buyback-accretion', { method: 'POST', body: JSON.stringify(body) }),
     calcCefDiscount:         (body) => request('/calc/cef-discount', { method: 'POST', body: JSON.stringify(body) }),
