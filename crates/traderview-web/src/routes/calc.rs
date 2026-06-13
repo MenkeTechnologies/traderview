@@ -39,6 +39,7 @@ pub fn router() -> Router<AppState> {
         // ── Tax / fees ────────────────────────────────────────────────
         .route("/calc/tax-loss-harvest", post(tax_loss_harvest_route))
         .route("/calc/tax-aware-rebalance", post(tax_aware_rebalance_route))
+        .route("/calc/savings-waterfall", post(savings_waterfall_route))
         .route("/calc/wash-sale", post(wash_sale_route))
         .route("/calc/cost-basis", post(cost_basis_route))
         .route("/calc/section-1244", post(section_1244_route))
@@ -11234,4 +11235,14 @@ async fn tax_aware_rebalance_route(
         b.tax_rate,
         b.band,
     ))
+}
+
+/// Financial order of operations: allocate a month's available savings
+/// down the priority ladder (match, debt, emergency, tax-advantaged…),
+/// remainder to taxable.
+async fn savings_waterfall_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::savings_waterfall::WaterfallInput>,
+) -> Json<traderview_core::savings_waterfall::WaterfallPlan> {
+    Json(traderview_core::savings_waterfall::plan(&b))
 }

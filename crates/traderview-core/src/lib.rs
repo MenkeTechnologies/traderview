@@ -152,6 +152,7 @@ pub mod rolling_zscore;
 pub mod rollup;
 pub mod round_levels;
 pub mod rsi_divergence;
+pub mod savings_waterfall;
 pub mod scale_order;
 pub mod scan;
 pub mod schaff_trend;
