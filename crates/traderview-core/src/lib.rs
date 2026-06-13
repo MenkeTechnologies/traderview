@@ -144,6 +144,7 @@ pub mod loan_apr;
 pub mod mae_stop_tuning;
 pub mod margin_analysis;
 pub mod margin_call;
+pub mod margin_interest;
 pub mod margin_runway;
 pub mod market_impact;
 pub mod market_profile;

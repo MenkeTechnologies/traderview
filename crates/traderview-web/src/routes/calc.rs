@@ -137,6 +137,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/sde-valuation", post(sde_valuation_route))
         .route("/calc/freelance-rate", post(freelance_rate_route))
         .route("/calc/preferred-stock", post(preferred_stock_route))
+        .route("/calc/margin-interest", post(margin_interest_route))
         .route("/calc/wash-sale", post(wash_sale_route))
         .route("/calc/cost-basis", post(cost_basis_route))
         .route("/calc/section-1244", post(section_1244_route))
@@ -12162,4 +12163,12 @@ async fn preferred_stock_route(
     Json(b): Json<traderview_core::preferred_stock::PreferredInput>,
 ) -> Json<traderview_core::preferred_stock::PreferredResult> {
     Json(traderview_core::preferred_stock::analyze(&b))
+}
+
+/// Margin interest — carry cost of a margin loan + break-even return.
+async fn margin_interest_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::margin_interest::MarginInterestInput>,
+) -> Json<traderview_core::margin_interest::MarginInterestResult> {
+    Json(traderview_core::margin_interest::analyze(&b))
 }
