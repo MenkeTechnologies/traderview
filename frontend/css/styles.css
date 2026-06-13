@@ -4346,3 +4346,6 @@ mark.fzf-hl {
 }
 .mpb-head { font-size: 12px; opacity: 0.7; }
 .mpb-row input { width: 100%; }
+
+.sdi-head,
+.sdi-row { grid-template-columns: minmax(120px, 2fr) 1fr auto; }

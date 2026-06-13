@@ -49,6 +49,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/lease-generator", post(lease_generator_route))
         .route("/calc/invoice-generator", post(invoice_generator_route))
         .route("/calc/landlord-notice", post(landlord_notice_route))
+        .route("/calc/security-deposit-itemization", post(security_deposit_itemization_route))
         .route("/calc/fix-and-flip", post(fix_and_flip_route))
         .route("/calc/cash-conversion-cycle", post(cash_conversion_cycle_route))
         .route("/calc/profit-first", post(profit_first_route))
@@ -11434,6 +11435,15 @@ async fn landlord_notice_route(
     Json(b): Json<traderview_core::landlord_notice::NoticeInput>,
 ) -> Json<traderview_core::landlord_notice::NoticeDocument> {
     Json(traderview_core::landlord_notice::generate(&b))
+}
+
+/// Security-deposit itemization: deductions, balance returned or owed, and the
+/// statutory return deadline, assembled into a printable statement.
+async fn security_deposit_itemization_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::security_deposit_itemization::DepositInput>,
+) -> Json<traderview_core::security_deposit_itemization::DepositStatement> {
+    Json(traderview_core::security_deposit_itemization::generate(&b))
 }
 
 /// Fix-and-flip: the 70% rule max-allowable-offer plus the full deal P&L
