@@ -58,6 +58,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/rent-receipt", post(rent_receipt_route))
         .route("/calc/contractor-agreement", post(contractor_agreement_route))
         .route("/calc/notice-of-entry", post(notice_of_entry_route))
+        .route("/calc/lease-termination", post(lease_termination_route))
         .route("/calc/fix-and-flip", post(fix_and_flip_route))
         .route("/calc/cash-conversion-cycle", post(cash_conversion_cycle_route))
         .route("/calc/profit-first", post(profit_first_route))
@@ -11524,6 +11525,15 @@ async fn notice_of_entry_route(
     Json(b): Json<traderview_core::notice_of_entry::EntryInput>,
 ) -> Json<traderview_core::notice_of_entry::EntryNotice> {
     Json(traderview_core::notice_of_entry::generate(&b))
+}
+
+/// Lease termination letter: move-out date from the service date + notice
+/// period, with wording for the landlord or the tenant.
+async fn lease_termination_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::lease_termination::TerminationInput>,
+) -> Json<traderview_core::lease_termination::TerminationLetter> {
+    Json(traderview_core::lease_termination::generate(&b))
 }
 
 /// Fix-and-flip: the 70% rule max-allowable-offer plus the full deal P&L
