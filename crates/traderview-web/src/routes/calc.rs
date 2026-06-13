@@ -120,6 +120,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/rent-escalation", post(rent_escalation_route))
         .route("/calc/loan-apr", post(loan_apr_route))
         .route("/calc/home-sale-exclusion", post(home_sale_exclusion_route))
+        .route("/calc/life-insurance-needs", post(life_insurance_needs_route))
         .route("/calc/wash-sale", post(wash_sale_route))
         .route("/calc/cost-basis", post(cost_basis_route))
         .route("/calc/section-1244", post(section_1244_route))
@@ -12009,4 +12010,12 @@ async fn home_sale_exclusion_route(
     Json(b): Json<traderview_core::home_sale_exclusion::HomeSaleInput>,
 ) -> Json<traderview_core::home_sale_exclusion::HomeSaleResult> {
     Json(traderview_core::home_sale_exclusion::analyze(&b))
+}
+
+/// Life-insurance needs analysis (DIME) — coverage gap net of existing.
+async fn life_insurance_needs_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::life_insurance_needs::LifeInsuranceInput>,
+) -> Json<traderview_core::life_insurance_needs::LifeInsuranceResult> {
+    Json(traderview_core::life_insurance_needs::analyze(&b))
 }
