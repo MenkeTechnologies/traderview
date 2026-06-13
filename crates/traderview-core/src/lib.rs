@@ -67,6 +67,7 @@ pub mod cusum;
 pub mod daily_loss_limit;
 pub mod depreciation_recapture;
 pub mod debt_yield;
+pub mod disability_insurance_needs;
 pub mod discipline_score;
 pub mod displacement;
 pub mod dscr;

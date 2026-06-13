@@ -122,6 +122,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/home-sale-exclusion", post(home_sale_exclusion_route))
         .route("/calc/life-insurance-needs", post(life_insurance_needs_route))
         .route("/calc/car-affordability", post(car_affordability_route))
+        .route("/calc/disability-insurance-needs", post(disability_insurance_needs_route))
         .route("/calc/wash-sale", post(wash_sale_route))
         .route("/calc/cost-basis", post(cost_basis_route))
         .route("/calc/section-1244", post(section_1244_route))
@@ -12027,4 +12028,12 @@ async fn car_affordability_route(
     Json(b): Json<traderview_core::car_affordability::CarAffordInput>,
 ) -> Json<traderview_core::car_affordability::CarAffordResult> {
     Json(traderview_core::car_affordability::analyze(&b))
+}
+
+/// Disability-insurance needs — monthly benefit gap net of group LTD.
+async fn disability_insurance_needs_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::disability_insurance_needs::DisabilityInput>,
+) -> Json<traderview_core::disability_insurance_needs::DisabilityResult> {
+    Json(traderview_core::disability_insurance_needs::analyze(&b))
 }
