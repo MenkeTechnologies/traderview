@@ -83,6 +83,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/real-return", post(real_return_route))
         .route("/calc/cd-penalty", post(cd_penalty_route))
         .route("/calc/yield-on-cost", post(yield_on_cost_route))
+        .route("/calc/trade-expectancy", post(trade_expectancy_route))
         .route("/calc/wash-sale", post(wash_sale_route))
         .route("/calc/cost-basis", post(cost_basis_route))
         .route("/calc/section-1244", post(section_1244_route))
@@ -11675,4 +11676,13 @@ async fn yield_on_cost_route(
     Json(b): Json<traderview_core::yield_on_cost::YieldOnCostInput>,
 ) -> Json<traderview_core::yield_on_cost::YieldOnCostResult> {
     Json(traderview_core::yield_on_cost::analyze(&b))
+}
+
+/// Trade expectancy: the per-trade edge from win rate + avg win/loss, the
+/// reward:risk ratio, the break-even win rate, and expectancy in R.
+async fn trade_expectancy_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::trade_expectancy::ExpectancyInput>,
+) -> Json<traderview_core::trade_expectancy::ExpectancyResult> {
+    Json(traderview_core::trade_expectancy::analyze(&b))
 }
