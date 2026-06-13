@@ -76,6 +76,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/debt-yield", post(debt_yield_route))
         .route("/calc/price-to-rent", post(price_to_rent_route))
         .route("/calc/years-to-fi", post(years_to_fi_route))
+        .route("/calc/grm", post(grm_route))
         .route("/calc/wash-sale", post(wash_sale_route))
         .route("/calc/cost-basis", post(cost_basis_route))
         .route("/calc/section-1244", post(section_1244_route))
@@ -11605,4 +11606,13 @@ async fn years_to_fi_route(
     Json(b): Json<traderview_core::years_to_fi::YearsToFiInput>,
 ) -> Json<traderview_core::years_to_fi::YearsToFiResult> {
     Json(traderview_core::years_to_fi::analyze(&b))
+}
+
+/// Gross rent multiplier: price ÷ gross annual rent, with vacancy/credit loss
+/// and other income rolled into effective gross income and an effective GRM.
+async fn grm_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::gross_rent_multiplier::GrmInput>,
+) -> Json<traderview_core::gross_rent_multiplier::GrmResult> {
+    Json(traderview_core::gross_rent_multiplier::analyze(&b))
 }
