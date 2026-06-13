@@ -41,6 +41,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/tax-aware-rebalance", post(tax_aware_rebalance_route))
         .route("/calc/savings-waterfall", post(savings_waterfall_route))
         .route("/calc/house-hacking", post(house_hacking_route))
+        .route("/calc/brrrr", post(brrrr_route))
         .route("/calc/wash-sale", post(wash_sale_route))
         .route("/calc/cost-basis", post(cost_basis_route))
         .route("/calc/section-1244", post(section_1244_route))
@@ -11255,4 +11256,13 @@ async fn house_hacking_route(
     Json(b): Json<traderview_db::house_hacking::HouseHackInput>,
 ) -> Json<traderview_db::house_hacking::HouseHackResult> {
     Json(traderview_db::house_hacking::compute(&b))
+}
+
+/// BRRRR: net the cash-out refinance against total cash invested to show
+/// the cash left in the deal, post-refi cash flow, and cash-on-cash.
+async fn brrrr_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_db::brrrr::BrrrrInput>,
+) -> Json<traderview_db::brrrr::BrrrrResult> {
+    Json(traderview_db::brrrr::compute(&b))
 }

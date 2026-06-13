@@ -20,6 +20,7 @@ pub mod beneish;
 pub mod bond_tent;
 pub mod breadth;
 pub mod breadth_divergence;
+pub mod brrrr;
 pub mod broker_dispatcher;
 pub mod candidates;
 pub mod cape_indicator;

@@ -685,6 +685,7 @@ import { renderRealEstateCapRate } from './views/real_estate_cap_rate.js';
 import { renderEmergencyFund } from './views/emergency_fund.js';
 import { renderSavingsWaterfall } from './views/savings_waterfall.js';
 import { renderHouseHacking } from './views/house_hacking.js';
+import { renderBrrrr } from './views/brrrr.js';
 import { renderNetWorthTracker } from './views/net_worth_tracker.js';
 import { renderPersonalBalanceSheet } from './views/personal_balance_sheet.js';
 import { renderPersonalCashFlow } from './views/personal_cash_flow.js';
@@ -3005,6 +3006,7 @@ export async function dispatch() {
             case 'emergency-fund': await renderEmergencyFund(mount, state); break;
             case 'savings-waterfall': await renderSavingsWaterfall(mount, state); break;
             case 'house-hacking': await renderHouseHacking(mount, state); break;
+            case 'brrrr': await renderBrrrr(mount, state); break;
             case 'net-worth-tracker': await renderNetWorthTracker(mount, state); break;
             case 'personal-balance-sheet': await renderPersonalBalanceSheet(mount, state); break;
             case 'personal-cash-flow': await renderPersonalCashFlow(mount, state); break;
@@ -4247,6 +4249,7 @@ export const viewRenderers = {
     'emergency-fund': (m, s) => renderEmergencyFund(m, s),
     'savings-waterfall': (m, s) => renderSavingsWaterfall(m, s),
     'house-hacking': (m, s) => renderHouseHacking(m, s),
+    'brrrr': (m, s) => renderBrrrr(m, s),
     'envelope-budget': (m, s) => renderEnvelopeBudget(m, s),
     'fafsa-efc': (m, s) => renderFafsaEfc(m, s),
     'fifty-thirty-twenty': (m, s) => renderFiftyThirtyTwenty(m, s),
