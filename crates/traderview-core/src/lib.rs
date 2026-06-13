@@ -155,6 +155,7 @@ pub mod life_insurance_needs;
 pub mod like_kind_exchange;
 pub mod liquidity;
 pub mod liquidity_grab;
+pub mod llc_operating_agreement;
 pub mod loan_apr;
 pub mod mae_stop_tuning;
 pub mod margin_analysis;

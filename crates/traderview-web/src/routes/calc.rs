@@ -69,6 +69,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/commercial-lease", post(commercial_lease_route))
         .route("/calc/guaranty", post(guaranty_route))
         .route("/calc/equipment-rental", post(equipment_rental_route))
+        .route("/calc/llc-operating-agreement", post(llc_operating_agreement_route))
         .route("/calc/fix-and-flip", post(fix_and_flip_route))
         .route("/calc/cash-conversion-cycle", post(cash_conversion_cycle_route))
         .route("/calc/profit-first", post(profit_first_route))
@@ -11628,6 +11629,14 @@ async fn equipment_rental_route(
     Json(b): Json<traderview_core::equipment_rental::EquipmentRentalInput>,
 ) -> Json<traderview_core::equipment_rental::EquipmentRental> {
     Json(traderview_core::equipment_rental::generate(&b))
+}
+
+/// LLC operating agreement: member ownership-% split from capital + clauses.
+async fn llc_operating_agreement_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::llc_operating_agreement::LlcInput>,
+) -> Json<traderview_core::llc_operating_agreement::LlcOperatingAgreement> {
+    Json(traderview_core::llc_operating_agreement::generate(&b))
 }
 
 /// Fix-and-flip: the 70% rule max-allowable-offer plus the full deal P&L

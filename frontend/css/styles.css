@@ -4354,4 +4354,6 @@ mark.fzf-hl {
 .ick-row { grid-template-columns: minmax(120px, 1.5fr) 1fr minmax(120px, 1.5fr) auto; }
 
 .rma-head,
-.rma-row { grid-template-columns: minmax(120px, 2fr) 1fr auto; }
+.rma-row,
+.llc-head,
+.llc-row { grid-template-columns: minmax(120px, 2fr) 1fr auto; }
