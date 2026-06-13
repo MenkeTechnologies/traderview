@@ -55,6 +55,7 @@ pub mod correlation;
 pub mod correlation_gate;
 pub mod correlation_clusters;
 pub mod cost_basis;
+pub mod credit_card_payoff;
 pub mod crossover;
 pub mod cumulative_delta;
 pub mod currency_exposure;

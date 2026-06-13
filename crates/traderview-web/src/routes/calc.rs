@@ -112,6 +112,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/tax-equivalent-yield", post(tax_equivalent_yield_route))
         .route("/calc/pmi-removal", post(pmi_removal_route))
         .route("/calc/free-cash-flow", post(free_cash_flow_route))
+        .route("/calc/credit-card-payoff", post(credit_card_payoff_route))
         .route("/calc/wash-sale", post(wash_sale_route))
         .route("/calc/cost-basis", post(cost_basis_route))
         .route("/calc/section-1244", post(section_1244_route))
@@ -11937,4 +11938,12 @@ async fn free_cash_flow_route(
     Json(b): Json<traderview_core::free_cash_flow::FcfInput>,
 ) -> Json<traderview_core::free_cash_flow::FcfResult> {
     Json(traderview_core::free_cash_flow::analyze(&b))
+}
+
+/// Credit-card minimum-payment trap vs a fixed payment.
+async fn credit_card_payoff_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::credit_card_payoff::CardInput>,
+) -> Json<traderview_core::credit_card_payoff::CardResult> {
+    Json(traderview_core::credit_card_payoff::analyze(&b))
 }
