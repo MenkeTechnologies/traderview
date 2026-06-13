@@ -807,6 +807,7 @@ export const api = {
     calcPiotroskiFScore:     (body) => request('/calc/piotroski-f-score', { method: 'POST', body: JSON.stringify(body) }),
     calcGmroi:               (body) => request('/calc/gmroi', { method: 'POST', body: JSON.stringify(body) }),
     calcRothContribution:    (body) => request('/calc/roth-contribution', { method: 'POST', body: JSON.stringify(body) }),
+    calcInterestCoverage:    (body) => request('/calc/interest-coverage', { method: 'POST', body: JSON.stringify(body) }),
     calcMergerArb:           (body) => request('/calc/merger-arb', { method: 'POST', body: JSON.stringify(body) }),
     calcBuybackAccretion:    (body) => request('/calc/buyback-accretion', { method: 'POST', body: JSON.stringify(body) }),
     calcCefDiscount:         (body) => request('/calc/cef-discount', { method: 'POST', body: JSON.stringify(body) }),
