@@ -63,6 +63,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/pet-addendum", post(pet_addendum_route))
         .route("/calc/inspection-checklist", post(inspection_checklist_route))
         .route("/calc/estimate", post(estimate_route))
+        .route("/calc/purchase-order", post(purchase_order_route))
         .route("/calc/fix-and-flip", post(fix_and_flip_route))
         .route("/calc/cash-conversion-cycle", post(cash_conversion_cycle_route))
         .route("/calc/profit-first", post(profit_first_route))
@@ -11573,6 +11574,14 @@ async fn estimate_route(
     Json(b): Json<traderview_core::estimate::EstimateInput>,
 ) -> Json<traderview_core::estimate::EstimateDocument> {
     Json(traderview_core::estimate::generate(&b))
+}
+
+/// Purchase order: shared line-item math + shipping + expected delivery date.
+async fn purchase_order_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::purchase_order::PurchaseOrderInput>,
+) -> Json<traderview_core::purchase_order::PurchaseOrder> {
+    Json(traderview_core::purchase_order::generate(&b))
 }
 
 /// Fix-and-flip: the 70% rule max-allowable-offer plus the full deal P&L
