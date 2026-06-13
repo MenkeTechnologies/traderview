@@ -25,14 +25,15 @@ pub fn router() -> Router<AppState> {
         .route("/forex/position-size", post(position_size))
 }
 
-/// Live quotes for the major USD pairs, through the same cache equities
-/// use. Empty entries (transient fetch failures) are simply absent.
+/// Quotes for the major USD pairs, served from the background-refreshed
+/// snapshot (see background.rs spawn_forex_majors) so the panel opens
+/// instantly and survives a transient Yahoo failure. Cold cache fetches
+/// once inline.
 async fn pairs(
     State(s): State<AppState>,
     _u: AuthUser,
 ) -> Json<Vec<traderview_db::market_data::QuoteSnapshot>> {
-    let syms: Vec<String> = traderview_db::forex::MAJORS.iter().map(|m| m.to_string()).collect();
-    Json(traderview_db::market_data::quotes(&s.pool, &syms).await)
+    Json(traderview_db::forex::cached_majors(&s.pool).await)
 }
 
 /// Which FX centers are open right now, and whether the cash market is

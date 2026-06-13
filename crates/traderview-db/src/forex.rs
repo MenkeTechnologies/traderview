@@ -81,6 +81,47 @@ pub fn pip_size(canonical: &str) -> f64 {
     traderview_core::forex_calc::pip_size(canonical)
 }
 
+// ── Prepopulated majors snapshot ──────────────────────────────────────────
+//
+// The Forex Desk's majors panel used to fetch live on every open, fanning out
+// seven Yahoo `=X` quotes through `quote()`'s 60s DB cache — fast when warm but
+// empty (and slow) on a cold cache or a transient Yahoo hiccup, which read as
+// "no data". Instead a background refresher keeps a warm snapshot here and the
+// route serves it, the same model as the world-markets snapshot and the
+// dividend calendar: the last good snapshot survives a failed refresh, so the
+// panel never blanks on a transient error.
+
+use crate::market_data::QuoteSnapshot;
+use once_cell::sync::Lazy;
+use sqlx::PgPool;
+use tokio::sync::Mutex;
+
+static MAJORS_CACHE: Lazy<Mutex<Option<Vec<QuoteSnapshot>>>> = Lazy::new(|| Mutex::new(None));
+
+/// Recompute the majors snapshot and park it in the cache. Called by the
+/// background refresher on a fixed interval. An empty result (every quote
+/// failed) is NOT stored, so the last good snapshot survives. Returns the
+/// number of pairs fetched.
+pub async fn refresh_majors(pool: &PgPool) -> usize {
+    let syms: Vec<String> = MAJORS.iter().map(|m| m.to_string()).collect();
+    let quotes = crate::market_data::quotes(pool, &syms).await;
+    let n = quotes.len();
+    if !quotes.is_empty() {
+        *MAJORS_CACHE.lock().await = Some(quotes);
+    }
+    n
+}
+
+/// Serve the majors snapshot from the cache. On a cold cache (the boot race
+/// before the first refresh lands) it fetches once inline.
+pub async fn cached_majors(pool: &PgPool) -> Vec<QuoteSnapshot> {
+    if let Some(v) = MAJORS_CACHE.lock().await.clone() {
+        return v;
+    }
+    let syms: Vec<String> = MAJORS.iter().map(|m| m.to_string()).collect();
+    crate::market_data::quotes(pool, &syms).await
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

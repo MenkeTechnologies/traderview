@@ -44,6 +44,10 @@ pub const SCREENER_REFRESH: Duration = Duration::from_secs(12 * 60 * 60);
 /// daily-bar data, so a few times a day keeps the prepopulated 90-day
 /// window fresh without re-fetching on every view open.
 pub const DIVIDEND_CALENDAR_REFRESH: Duration = Duration::from_secs(6 * 60 * 60);
+/// FX majors snapshot refresh — seven Yahoo `=X` quotes for the Forex Desk,
+/// kept warm so the panel opens instantly and never blanks on a cold cache
+/// or a transient fetch failure. Matches the 60s quote-cache cadence.
+pub const FOREX_MAJORS_REFRESH: Duration = Duration::from_secs(60);
 /// Paper TWAP ticker — child-order submission resolution. 5s gives
 /// per-slice timing error well under any allowed interval.
 pub const PAPER_TWAP_TICK: Duration = Duration::from_secs(5);
@@ -143,6 +147,7 @@ pub fn spawn_refreshers(pool: PgPool, cache: TileCache, hub: crate::realtime::Hu
     spawn_markets_snapshot();
     spawn_screener_snapshots(pool.clone());
     spawn_dividend_calendar(pool.clone());
+    spawn_forex_majors(pool.clone());
     spawn_paper_twap_ticker(pool.clone(), hub.clone());
     spawn_strategy_drift_watch(pool.clone(), hub.clone());
     spawn_funding_regime_watch(hub.clone());
@@ -760,6 +765,20 @@ fn spawn_dividend_calendar(pool: PgPool) {
                 Err(e) => tracing::warn!(error = %e, "dividend calendar refresh failed"),
             }
             tokio::time::sleep(DIVIDEND_CALENDAR_REFRESH).await;
+        }
+    });
+}
+
+/// FX majors snapshot refresh. The Forex Desk's seven-quote fan-out runs
+/// here on interval; the route serves the warm snapshot so opening the view
+/// never pays the fetch or blanks on a transient failure. Runs immediately
+/// on boot, then on interval.
+fn spawn_forex_majors(pool: PgPool) {
+    tokio::spawn(async move {
+        loop {
+            let n = traderview_db::forex::refresh_majors(&pool).await;
+            tracing::debug!(pairs = n, "forex majors refreshed");
+            tokio::time::sleep(FOREX_MAJORS_REFRESH).await;
         }
     });
 }
