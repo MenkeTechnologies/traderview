@@ -50,7 +50,16 @@ pub async fn quote(pool: &PgPool, symbol: &str) -> anyhow::Result<QuoteSnapshot>
             return Ok(q);
         }
     }
-    let fresh = fetch_quote_yahoo(symbol).await?;
+    // FX quotes come from the same Yahoo endpoint as equities, with the
+    // `=X` suffix on the outbound symbol; relabel the snapshot to the
+    // canonical pair so the quote cache stays keyed on `EURUSD`.
+    let fresh = if crate::forex::is_forex_pair(symbol) {
+        let mut q = fetch_quote_yahoo(&crate::forex::yahoo_symbol(symbol)).await?;
+        q.symbol = symbol.to_string();
+        q
+    } else {
+        fetch_quote_yahoo(symbol).await?
+    };
     write_quote_cache(pool, &fresh).await?;
     Ok(fresh)
 }

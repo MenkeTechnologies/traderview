@@ -33,6 +33,19 @@ pub async fn get_bars(
         // same way regardless of source.
         let fetched = if crate::crypto::is_crypto_pair(symbol) {
             crate::crypto::fetch_okx_bars(symbol, interval, from, to).await
+        } else if crate::forex::is_forex_pair(symbol) {
+            // FX rides the same Yahoo fetcher as equities; the only
+            // difference is the `=X` suffix on the outbound symbol. Bars
+            // return stamped `EURUSD=X`; relabel to canonical so the bar
+            // store stays keyed on `EURUSD` like every other consumer.
+            fetch_yahoo(&crate::forex::yahoo_symbol(symbol), interval, from, to)
+                .await
+                .map(|mut bars| {
+                    for b in &mut bars {
+                        b.symbol = symbol.to_string();
+                    }
+                    bars
+                })
         } else {
             fetch_yahoo(symbol, interval, from, to).await
         };

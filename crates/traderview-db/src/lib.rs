@@ -73,6 +73,7 @@ pub mod fill_quality;
 pub mod financial_ratios;
 pub mod finnhub_rest;
 pub mod fire_calculator;
+pub mod forex;
 pub mod forum;
 pub mod friction;
 pub mod fundamental_health;
