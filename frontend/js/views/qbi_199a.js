@@ -1,35 +1,39 @@
 // QBI § 199A 20% Deduction Calculator — pass-through business income deduction.
 // Traders with TTS (Trader Tax Status) election get QBI; standard investors don't.
-// Phase-out: SSTB exclusion for service businesses begins at taxable income
-// $241,950 single / $483,900 MFJ (2024), fully phased out at $291,950 / $583,900.
+// Computation is server-side via /calc/qbi-deduction (tested core); this view
+// supplies the year-specific thresholds and renders the result.
+//
+// Verified taxable-income thresholds (web-checked):
+//   2024  single 191,950 / MFJ 383,900   phase-out end 241,950 / 483,900  (±50k/100k)
+//   2025  single 197,300 / MFJ 394,600   phase-out end 247,300 / 494,600  (±50k/100k)
+//   2026  single 201,750 / MFJ 403,500   phase-out end 276,750 / 553,500  (OBBBA ±75k/150k)
+// The 2025 OBBBA made § 199A permanent (no sunset) and added a $400 minimum
+// deduction for active QBI ≥ $1,000 beginning 2026.
 
 import { esc } from '../util.js';
-import { t } from '../i18n.js';
+import { api } from '../api.js';
+import { applyUiI18n, t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
+import { showToast } from '../toast.js';
 
 const LIMITS = {
-    2024: {
-        single_threshold: 241_950,
-        single_phaseout_end: 291_950,
-        mfj_threshold: 483_900,
-        mfj_phaseout_end: 583_900,
-    },
-    2025: {
-        single_threshold: 250_000,
-        single_phaseout_end: 300_000,
-        mfj_threshold: 500_000,
-        mfj_phaseout_end: 600_000,
-    },
-    2026: {
-        single_threshold: 257_000,
-        single_phaseout_end: 307_000,
-        mfj_threshold: 514_000,
-        mfj_phaseout_end: 614_000,
-    },
+    2024: { single_t: 191_950, single_end: 241_950, mfj_t: 383_900, mfj_end: 483_900, min_ded: 0 },
+    2025: { single_t: 197_300, single_end: 247_300, mfj_t: 394_600, mfj_end: 494_600, min_ded: 0 },
+    2026: { single_t: 201_750, single_end: 276_750, mfj_t: 403_500, mfj_end: 553_500, min_ded: 400 },
+};
+
+const LATEST_YEAR = Math.max(...Object.keys(LIMITS).map(Number));
+
+const REGIME = {
+    below: 'view.qbi.regime.below',
+    phased_out: 'view.qbi.regime.phased_out',
+    above_wage_limited: 'view.qbi.regime.above_wage_limited',
+    phasing_sstb: 'view.qbi.regime.phasing_sstb',
+    phasing_non_sstb: 'view.qbi.regime.phasing_non_sstb',
 };
 
 let state = {
-    year: new Date().getFullYear(),
+    year: LATEST_YEAR,
     filing: 'single',
     qbi_income: 0,
     total_taxable_income: 0,
@@ -45,8 +49,8 @@ export async function renderQbi199A(mount, _appState) {
         <h1 class="view-title"><span data-i18n="view.qbi.h1.title">// QBI § 199A CALCULATOR</span></h1>
         <p class="muted small" data-i18n="view.qbi.hint.intro">
             IRC § 199A — 20% pass-through deduction. <strong>Day-traders with TTS election</strong>
-            qualify. Trading is a "specified service trade or business" (SSTB) — deduction
-            phases out + disappears at high income (single $291k / MFJ $584k, 2024).
+            qualify. Trading is a "specified service trade or business" (SSTB) — the deduction
+            phases out and disappears at high income (2026: single $276,750 / MFJ $553,500).
         </p>
         <div class="chart-panel">
             <h2 data-i18n="view.qbi.h2.inputs">Inputs</h2>
@@ -87,75 +91,73 @@ export async function renderQbi199A(mount, _appState) {
         state.w2_wages_paid = Number(fd.get('w2_wages_paid')) || 0;
         state.qualified_property_basis = Number(fd.get('qualified_property_basis')) || 0;
         state.is_sstb = !!fd.get('is_sstb');
-        renderOutput();
+        renderOutput(tok);
     });
-    renderOutput();
+    renderOutput(tok);
 }
 
-function renderOutput() {
+function regimeFor(status, isSstb) {
+    if (status === 'below_threshold') return 'below';
+    if (status === 'fully_phased_in') return isSstb ? 'phased_out' : 'above_wage_limited';
+    return isSstb ? 'phasing_sstb' : 'phasing_non_sstb';
+}
+
+async function renderOutput(tok) {
     const el = document.getElementById('qbi-output');
     if (!el) return;
-    const limits = LIMITS[state.year] || LIMITS[2024];
-    const threshold = state.filing === 'mfj' ? limits.mfj_threshold : limits.single_threshold;
-    const phaseoutEnd = state.filing === 'mfj' ? limits.mfj_phaseout_end : limits.single_phaseout_end;
+    const limits = LIMITS[state.year] || LIMITS[LATEST_YEAR];
+    const threshold = state.filing === 'mfj' ? limits.mfj_t : limits.single_t;
+    const end = state.filing === 'mfj' ? limits.mfj_end : limits.single_end;
     const ti = state.total_taxable_income;
-    const tentative = Math.max(0, state.qbi_income) * 0.20;
-    // Below threshold: full deduction. Limited to 20% of (taxable income - net cap gain).
-    // Simplifies here (ignores net cap gain reduction).
-    const taxableIncomeCap = ti * 0.20;
-    let finalDeduction = 0;
-    let regime;
-    if (ti <= threshold) {
-        regime = 'below';
-        finalDeduction = Math.min(tentative, taxableIncomeCap);
-    } else if (state.is_sstb && ti >= phaseoutEnd) {
-        regime = 'phased_out';
-        finalDeduction = 0;
-    } else if (ti >= phaseoutEnd) {
-        // Above phase-out, non-SSTB: full deduction subject to W-2/UBIA limit.
-        regime = 'above_wage_limited';
-        const wageLimit1 = state.w2_wages_paid * 0.50;
-        const wageLimit2 = state.w2_wages_paid * 0.25 + state.qualified_property_basis * 0.025;
-        const wageLimit = Math.max(wageLimit1, wageLimit2);
-        finalDeduction = Math.min(tentative, wageLimit, taxableIncomeCap);
-    } else {
-        // In phase-out range.
-        const phaseoutPct = (ti - threshold) / (phaseoutEnd - threshold);
-        if (state.is_sstb) {
-            const reduced_qbi = state.qbi_income * (1 - phaseoutPct);
-            regime = 'phasing_sstb';
-            finalDeduction = Math.min(Math.max(0, reduced_qbi) * 0.20, taxableIncomeCap);
-        } else {
-            const wageLimit = state.w2_wages_paid * 0.50;
-            const wageLimitedAmount = tentative - (tentative - Math.min(tentative, wageLimit)) * phaseoutPct;
-            regime = 'phasing_non_sstb';
-            finalDeduction = Math.min(wageLimitedAmount, taxableIncomeCap);
-        }
+
+    let r;
+    try {
+        r = await api.calcQbiDeduction({
+            qbi_usd: state.qbi_income,
+            taxable_income_usd: ti,
+            net_capital_gain_usd: 0,
+            filing_status: state.filing === 'mfj' ? 'married_joint' : 'single',
+            w2_wages_usd: state.w2_wages_paid,
+            ubia_usd: state.qualified_property_basis,
+            is_sstb: state.is_sstb,
+            rate_pct: 20,
+            threshold_usd: threshold,
+            phase_in_usd: end - threshold,
+            min_deduction_usd: limits.min_ded,
+            min_qbi_floor_usd: 1000,
+        });
+    } catch (err) {
+        showToast(err.message || t('view.qbi.toast.error'), { level: 'error' });
+        return;
     }
-    const taxSavings = finalDeduction * 0.24;  // assume 24% marginal
+    if (!viewIsCurrent(tok)) return;
+
+    const regime = regimeFor(r.phase_in_status, state.is_sstb);
+    const taxSavings = r.deduction_usd * 0.24;  // assume 24% marginal
+    const fmt0 = (n) => Number(n).toLocaleString(undefined, { maximumFractionDigits: 0 });
     el.innerHTML = `
         <div class="chart-panel">
             <h2 data-i18n="view.qbi.h2.result">Deduction</h2>
             <div class="cards">
                 <div class="card pos">
                     <div class="label" data-i18n="view.qbi.card.deduction">QBI deduction</div>
-                    <div class="value">$${finalDeduction.toLocaleString(undefined, { maximumFractionDigits: 0 })}</div>
+                    <div class="value">$${fmt0(r.deduction_usd)}</div>
                 </div>
                 <div class="card">
                     <div class="label" data-i18n="view.qbi.card.tentative">Tentative (20% QBI)</div>
-                    <div class="value">$${tentative.toLocaleString(undefined, { maximumFractionDigits: 0 })}</div>
+                    <div class="value">$${fmt0(r.tentative_deduction_usd)}</div>
                 </div>
                 <div class="card">
                     <div class="label" data-i18n="view.qbi.card.ti_cap">Taxable income cap (20%)</div>
-                    <div class="value">$${taxableIncomeCap.toLocaleString(undefined, { maximumFractionDigits: 0 })}</div>
+                    <div class="value">$${fmt0(r.overall_limit_usd)}</div>
                 </div>
                 <div class="card pos">
                     <div class="label" data-i18n="view.qbi.card.tax_savings">Tax savings @ 24%</div>
-                    <div class="value">$${taxSavings.toLocaleString(undefined, { maximumFractionDigits: 0 })}</div>
+                    <div class="value">$${fmt0(taxSavings)}</div>
                 </div>
             </div>
             <p style="margin-top:10px">
-                <strong>${esc(t('view.qbi.regime.' + regime))}</strong>
+                <strong>${esc(t(REGIME[regime]))}</strong>
             </p>
             <table class="trades" style="margin-top:10px">
                 <thead><tr>
@@ -166,13 +168,13 @@ function renderOutput() {
                     <tr><td data-i18n="view.qbi.row.threshold">${state.filing.toUpperCase()} threshold</td>
                         <td>$${threshold.toLocaleString()}</td></tr>
                     <tr><td data-i18n="view.qbi.row.phaseout_end">Phase-out end</td>
-                        <td>$${phaseoutEnd.toLocaleString()}</td></tr>
+                        <td>$${end.toLocaleString()}</td></tr>
                     <tr><td data-i18n="view.qbi.row.your_income">Your taxable income</td>
                         <td>$${ti.toLocaleString()}</td></tr>
                     <tr><td data-i18n="view.qbi.row.position">Position</td>
                         <td>${ti < threshold
                             ? esc(t('view.qbi.position.below'))
-                            : ti >= phaseoutEnd
+                            : ti >= end
                                 ? esc(t('view.qbi.position.above'))
                                 : esc(t('view.qbi.position.in_range'))}</td></tr>
                 </tbody>
@@ -184,8 +186,11 @@ function renderOutput() {
                 Traders without TTS election: NO QBI. Investment income (capital gains, dividends,
                 interest) is explicitly excluded from QBI by statute. TTS election + § 475(f)
                 mark-to-market converts trading P&L to ordinary income, which CAN be QBI but is
-                SSTB-limited at high income. § 199A SUNSETS after 2025 unless extended.
+                SSTB-limited at high income. The 2025 OBBBA made § 199A permanent (no sunset) and
+                added a $400 minimum deduction for active QBI of at least $1,000 starting in 2026.
             </p>
         </div>
     `;
+    // The recompute path re-injects markup, so re-translate the new subtree.
+    applyUiI18n(el);
 }

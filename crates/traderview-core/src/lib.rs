@@ -197,6 +197,7 @@ pub mod profit_factor;
 pub mod profit_first;
 pub mod property_tax;
 pub mod put_call_ratio;
+pub mod qbi_deduction;
 pub mod qlac;
 pub mod pyramid;
 pub mod pyramid_rules;
