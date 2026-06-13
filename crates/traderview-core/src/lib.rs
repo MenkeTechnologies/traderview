@@ -93,6 +93,7 @@ pub mod emotion_tags;
 pub mod equal_levels;
 pub mod equity_forecast;
 pub mod equity_regime;
+pub mod equipment_rental;
 pub mod equivalent_annual_cost;
 pub mod estate_tax;
 pub mod estimate;

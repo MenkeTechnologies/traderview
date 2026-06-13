@@ -68,6 +68,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/roommate-agreement", post(roommate_agreement_route))
         .route("/calc/commercial-lease", post(commercial_lease_route))
         .route("/calc/guaranty", post(guaranty_route))
+        .route("/calc/equipment-rental", post(equipment_rental_route))
         .route("/calc/fix-and-flip", post(fix_and_flip_route))
         .route("/calc/cash-conversion-cycle", post(cash_conversion_cycle_route))
         .route("/calc/profit-first", post(profit_first_route))
@@ -11619,6 +11620,14 @@ async fn guaranty_route(
     Json(b): Json<traderview_core::guaranty_agreement::GuarantyInput>,
 ) -> Json<traderview_core::guaranty_agreement::GuarantyAgreement> {
     Json(traderview_core::guaranty_agreement::generate(&b))
+}
+
+/// Equipment rental: rental total + deposit + return date.
+async fn equipment_rental_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::equipment_rental::EquipmentRentalInput>,
+) -> Json<traderview_core::equipment_rental::EquipmentRental> {
+    Json(traderview_core::equipment_rental::generate(&b))
 }
 
 /// Fix-and-flip: the 70% rule max-allowable-offer plus the full deal P&L
