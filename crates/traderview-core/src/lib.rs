@@ -150,6 +150,7 @@ pub mod probability_of_touch;
 pub mod profit_factor;
 pub mod profit_first;
 pub mod put_call_ratio;
+pub mod qlac;
 pub mod pyramid;
 pub mod pyramid_rules;
 pub mod random_walk_index;

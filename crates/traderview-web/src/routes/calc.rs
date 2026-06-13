@@ -61,6 +61,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/invoice-factoring", post(invoice_factoring_route))
         .route("/calc/ltv-cac", post(ltv_cac_route))
         .route("/calc/burn-rate", post(burn_rate_route))
+        .route("/calc/qlac", post(qlac_route))
         .route("/calc/wash-sale", post(wash_sale_route))
         .route("/calc/cost-basis", post(cost_basis_route))
         .route("/calc/section-1244", post(section_1244_route))
@@ -11455,4 +11456,13 @@ async fn burn_rate_route(
     Json(b): Json<traderview_core::burn_rate::BurnInput>,
 ) -> Json<traderview_core::burn_rate::BurnResult> {
     Json(traderview_core::burn_rate::analyze(&b))
+}
+
+/// QLAC: caps the premium at the SECURE 2.0 limit and computes the RMD
+/// reduction from excluding it from the account's RMD base.
+async fn qlac_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::qlac::QlacInput>,
+) -> Json<traderview_core::qlac::QlacResult> {
+    Json(traderview_core::qlac::analyze(&b))
 }
