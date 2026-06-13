@@ -197,6 +197,21 @@ export async function renderPaper(mount) {
                     <button type="button" id="bracket-atr" data-tip="view.paper.tip.atr_suggest">ATR</button>
                     <button data-i18n="view.paper.btn.submit_bracket" class="primary" type="submit">BRACKET</button>
                 </form>
+
+                <h2 data-i18n="view.paper.h2.scale_ticket">Scale (ladder) ticket</h2>
+                <form id="scale-form" class="inline-form">
+                    <input name="symbol" placeholder="symbol" data-i18n-placeholder="common.placeholder.symbol" data-tip="view.paper.tip.symbol" required style="text-transform:uppercase">
+                    <select name="side" data-tip="view.paper.tip.scale_side">
+                        <option data-i18n="view.paper.opt.buy" value="buy">BUY</option>
+                        <option data-i18n="view.paper.opt.short" value="short">SHORT</option>
+                    </select>
+                    <input name="total_qty" type="number" step="0.01" placeholder="total qty" data-i18n-placeholder="view.paper.placeholder.total_qty" data-tip="view.paper.tip.scale_total_qty" required>
+                    <input name="price_low" type="number" step="0.01" placeholder="price low" data-i18n-placeholder="view.paper.placeholder.price_low" data-tip="view.paper.tip.scale_band" required>
+                    <input name="price_high" type="number" step="0.01" placeholder="price high" data-i18n-placeholder="view.paper.placeholder.price_high" data-tip="view.paper.tip.scale_band" required>
+                    <input name="rungs" type="number" step="1" min="2" max="50" value="5" placeholder="rungs" data-i18n-placeholder="view.paper.placeholder.rungs" data-tip="view.paper.tip.scale_rungs" required style="width:70px">
+                    <label class="small" data-tip="view.paper.tip.scale_whole_units"><input name="whole_units" type="checkbox" checked> <span data-i18n="view.paper.label.whole_units">whole units</span></label>
+                    <button data-i18n="view.paper.btn.submit_scale" class="primary" type="submit">SCALE</button>
+                </form>
                 <button data-i18n="view.paper.btn.reset_account_200k" data-tip="view.paper.tip.reset" class="link" id="reset">Reset account ($200k)</button>
             </div>
 
@@ -1078,6 +1093,26 @@ export async function renderPaper(mount) {
             });
             if (!viewIsCurrent(tok)) return;
             showToast(t('view.paper.toast.bracket_submitted'), { level: 'success' });
+            renderPaper(mount);
+        } catch (err) { showToast(t('common.error', { err: err.message }), { level: 'error' }); }
+    });
+    mount.querySelector('#scale-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const fd = new FormData(e.target);
+        try {
+            const r = await api.paperScaleCreate(acct.id, {
+                symbol: fd.get('symbol').trim().toUpperCase(),
+                side: fd.get('side'),
+                total_qty: Number(fd.get('total_qty')),
+                price_low: Number(fd.get('price_low')),
+                price_high: Number(fd.get('price_high')),
+                rungs: Number(fd.get('rungs')),
+                whole_units: fd.get('whole_units') != null,
+            });
+            if (!viewIsCurrent(tok)) return;
+            const placed = (r.orders || []).length - (r.rejected || 0);
+            showToast(t('view.paper.toast.scale_submitted', { placed, rejected: r.rejected || 0 }),
+                { level: r.rejected ? 'warning' : 'success' });
             renderPaper(mount);
         } catch (err) { showToast(t('common.error', { err: err.message }), { level: 'error' }); }
     });

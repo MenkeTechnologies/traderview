@@ -851,6 +851,8 @@ export const api = {
     paperOrderCancel: (id) => request(`/paper/orders/${encodeURIComponent(id)}/cancel`, { method: 'POST' }),
     paperBracketCreate: (id, req) =>
         request(`/paper/accounts/${id}/brackets`, { method: 'POST', body: JSON.stringify(req) }),
+    paperScaleCreate: (id, req) =>
+        request(`/paper/accounts/${id}/scale-orders`, { method: 'POST', body: JSON.stringify(req) }),
     paperSpreadCreate: (id, req) =>
         request(`/paper/accounts/${id}/spreads`, { method: 'POST', body: JSON.stringify(req) }),
     paperOptionGreeks: (id) => request(`/paper/accounts/${id}/option-greeks`),

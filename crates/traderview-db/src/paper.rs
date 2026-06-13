@@ -1413,6 +1413,87 @@ pub struct Bracket {
 /// entry fills (the ticker promotes them), or 'pending' immediately
 /// when the entry filled on the spot. First leg to fill cancels the
 /// other.
+#[derive(Debug, Clone, Deserialize)]
+pub struct ScaleRequest {
+    pub symbol: String,
+    pub side: Side,
+    pub total_qty: Decimal,
+    pub price_low: Decimal,
+    pub price_high: Decimal,
+    pub rungs: usize,
+    /// Whole-number share quantities (equities); false splits fractional
+    /// size (crypto / FX, where fractional is native).
+    #[serde(default)]
+    pub whole_units: bool,
+    #[serde(default)]
+    pub time_in_force: Option<String>,
+    #[serde(default)]
+    pub expire_at: Option<DateTime<Utc>>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct ScaleResult {
+    /// The limit orders created, ordered low price to high.
+    pub orders: Vec<PaperOrder>,
+    /// Rungs the risk gate rejected (e.g. buying power ran out on the
+    /// later, larger-cumulative rungs); the accepted rungs still rest.
+    pub rejected: usize,
+}
+
+/// Submit a scale (ladder) order: `rungs` evenly-priced limit orders
+/// across `[price_low, price_high]`. Each rung is an independent limit
+/// order through the normal submit path, so the Risk Gate and buying
+/// power apply per rung and the ladder simply stops filling when capital
+/// runs out — no special-case engine code. 2..=50 rungs.
+pub async fn submit_scale(
+    pool: &PgPool,
+    user_id: Uuid,
+    account_id: Uuid,
+    req: ScaleRequest,
+) -> anyhow::Result<ScaleResult> {
+    if !(2..=50).contains(&req.rungs) {
+        anyhow::bail!("rungs must be between 2 and 50");
+    }
+    let to_f = |d: Decimal| d.to_string().parse::<f64>().unwrap_or(0.0);
+    let rungs = traderview_core::scale_order::ladder(
+        to_f(req.total_qty),
+        to_f(req.price_low),
+        to_f(req.price_high),
+        req.rungs,
+        req.whole_units,
+    )
+    .ok_or_else(|| anyhow::anyhow!("invalid scale parameters (check qty, band, and rungs)"))?;
+
+    let mut orders = Vec::with_capacity(rungs.len());
+    let mut rejected = 0;
+    for r in rungs {
+        let order = submit(
+            pool,
+            user_id,
+            account_id,
+            OrderRequest {
+                symbol: req.symbol.clone(),
+                side: req.side,
+                qty: Decimal::try_from(r.qty)?,
+                order_type: "limit".into(),
+                limit_price: Some(Decimal::try_from(r.price)?.round_dp(6)),
+                stop_price: None,
+                trail_value: None,
+                trail_is_pct: None,
+                time_in_force: req.time_in_force.clone(),
+                expire_at: req.expire_at,
+                plan_note: None,
+            },
+        )
+        .await?;
+        if order.status == "rejected" {
+            rejected += 1;
+        }
+        orders.push(order);
+    }
+    Ok(ScaleResult { orders, rejected })
+}
+
 pub async fn submit_bracket(
     pool: &PgPool,
     user_id: Uuid,

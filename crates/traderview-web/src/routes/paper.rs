@@ -31,6 +31,7 @@ pub fn router() -> Router<AppState> {
         .route("/paper/orders/:id/cancel", post(cancel_order))
         .route("/paper/orders/:id/replace", post(replace_order))
         .route("/paper/accounts/:id/brackets", post(submit_bracket))
+        .route("/paper/accounts/:id/scale-orders", post(submit_scale))
         .route("/paper/accounts/:id/protect", post(protect))
         .route("/paper/accounts/:id/roll", post(roll))
         .route("/paper/accounts/:id/covered-call", post(covered_call))
@@ -491,6 +492,22 @@ async fn submit_bracket(
     )
     .await?;
     traderview_db::paper::submit_bracket(&s.pool, user.id, account_id, req)
+        .await
+        .map(Json)
+        .map_err(|e| ApiError::BadRequest(e.to_string()))
+}
+
+/// Submit a scale (ladder) order. Each rung is an independent limit
+/// order through the normal submit path, so the Risk Gate runs per rung
+/// — no separate pre-gate here (unlike brackets, whose exit legs bypass
+/// submit and need their own gate check).
+async fn submit_scale(
+    State(s): State<AppState>,
+    user: AuthUser,
+    Path(account_id): Path<Uuid>,
+    Json(req): Json<traderview_db::paper::ScaleRequest>,
+) -> Result<Json<traderview_db::paper::ScaleResult>, ApiError> {
+    traderview_db::paper::submit_scale(&s.pool, user.id, account_id, req)
         .await
         .map(Json)
         .map_err(|e| ApiError::BadRequest(e.to_string()))
