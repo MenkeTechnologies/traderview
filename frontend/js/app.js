@@ -521,6 +521,7 @@ import { renderRiskParity } from './views/risk_parity.js';
 import { renderRiskOnOff } from './views/risk_on_off.js';
 import { renderRiskReward } from './views/risk_reward.js';
 import { renderTaxLossHarvest } from './views/tax_loss_harvest.js';
+import { renderTaxAwareRebalance } from './views/tax_aware_rebalance.js';
 import { renderWashSale } from './views/wash_sale.js';
 import { renderBuyingPower } from './views/buying_power.js';
 import { renderMarginCall } from './views/margin_call.js';
@@ -2849,6 +2850,7 @@ export async function dispatch() {
             case 'risk-on-off':        await renderRiskOnOff(mount, state); break;
             case 'risk-reward':        await renderRiskReward(mount, state); break;
             case 'tax-loss-harvest':   await renderTaxLossHarvest(mount, state); break;
+            case 'tax-aware-rebalance': await renderTaxAwareRebalance(mount, state); break;
             case 'wash-sale':          await renderWashSale(mount, state); break;
             case 'buying-power':       await renderBuyingPower(mount, state); break;
             case 'margin-call':        await renderMarginCall(mount, state); break;
@@ -3582,6 +3584,7 @@ export const viewRenderers = {
     'risk-on-off':         (m, s) => renderRiskOnOff(m, s),
     'risk-reward':         (m, s) => renderRiskReward(m, s),
     'tax-loss-harvest':    (m, s) => renderTaxLossHarvest(m, s),
+    'tax-aware-rebalance': (m, s) => renderTaxAwareRebalance(m, s),
     'wash-sale':           (m, s) => renderWashSale(m, s),
     'buying-power':        (m, s) => renderBuyingPower(m, s),
     'margin-call':         (m, s) => renderMarginCall(m, s),

@@ -180,6 +180,7 @@ pub mod stress_test;
 pub mod supertrend;
 pub mod swing_points;
 pub mod symbol_filter;
+pub mod tax_aware_rebalance;
 pub mod tax_loss_harvest;
 pub mod tax_lot_optimizer;
 pub mod three_bar_reversal;

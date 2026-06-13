@@ -38,6 +38,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/buying-power", post(buying_power_route))
         // ── Tax / fees ────────────────────────────────────────────────
         .route("/calc/tax-loss-harvest", post(tax_loss_harvest_route))
+        .route("/calc/tax-aware-rebalance", post(tax_aware_rebalance_route))
         .route("/calc/wash-sale", post(wash_sale_route))
         .route("/calc/cost-basis", post(cost_basis_route))
         .route("/calc/section-1244", post(section_1244_route))
@@ -11210,4 +11211,27 @@ async fn section_132_route(
         ));
     }
     Ok(Json(traderview_expense::section_132::compute(&b)))
+}
+
+#[derive(Deserialize)]
+struct TaxRebalanceBody {
+    holdings: Vec<traderview_core::tax_aware_rebalance::Holding>,
+    strategy: traderview_core::tax_lot_optimizer::LotStrategy,
+    tax_rate: Decimal,
+    band: Decimal,
+}
+
+/// Tax-aware rebalance: trade toward target weights while choosing sell
+/// lots to minimize realized gain (or harvest losses), reporting the gain
+/// and estimated tax the rebalance triggers.
+async fn tax_aware_rebalance_route(
+    _u: AuthUser,
+    Json(b): Json<TaxRebalanceBody>,
+) -> Json<traderview_core::tax_aware_rebalance::Plan> {
+    Json(traderview_core::tax_aware_rebalance::plan(
+        &b.holdings,
+        b.strategy,
+        b.tax_rate,
+        b.band,
+    ))
 }
