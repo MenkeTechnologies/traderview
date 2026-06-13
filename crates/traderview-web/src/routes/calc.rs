@@ -141,6 +141,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/qbi-deduction", post(qbi_deduction_route))
         .route("/calc/estate-tax", post(estate_tax_route))
         .route("/calc/marriage-penalty", post(marriage_penalty_route))
+        .route("/calc/standard-vs-itemized", post(standard_vs_itemized_route))
         .route("/calc/wash-sale", post(wash_sale_route))
         .route("/calc/cost-basis", post(cost_basis_route))
         .route("/calc/section-1244", post(section_1244_route))
@@ -12198,4 +12199,12 @@ async fn marriage_penalty_route(
     Json(b): Json<traderview_core::marriage_penalty::MarriagePenaltyInput>,
 ) -> Json<traderview_core::marriage_penalty::MarriagePenaltyResult> {
     Json(traderview_core::marriage_penalty::analyze(&b))
+}
+
+/// Standard vs itemized deduction — whichever deduction is larger.
+async fn standard_vs_itemized_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::standard_vs_itemized::StdVsItemizedInput>,
+) -> Json<traderview_core::standard_vs_itemized::StdVsItemizedResult> {
+    Json(traderview_core::standard_vs_itemized::analyze(&b))
 }

@@ -784,6 +784,7 @@ import { renderPreferredStock } from './views/preferred_stock.js';
 import { renderMarginInterest } from './views/margin_interest.js';
 import { renderEstateTax } from './views/estate_tax.js';
 import { renderMarriagePenalty } from './views/marriage_penalty.js';
+import { renderStdVsItemized } from './views/standard_vs_itemized.js';
 import { renderNetWorthTracker } from './views/net_worth_tracker.js';
 import { renderPersonalBalanceSheet } from './views/personal_balance_sheet.js';
 import { renderPersonalCashFlow } from './views/personal_cash_flow.js';
@@ -3203,6 +3204,7 @@ export async function dispatch() {
             case 'margin-interest': await renderMarginInterest(mount, state); break;
             case 'estate-tax': await renderEstateTax(mount, state); break;
             case 'marriage-penalty': await renderMarriagePenalty(mount, state); break;
+            case 'standard-vs-itemized': await renderStdVsItemized(mount, state); break;
             case 'net-worth-tracker': await renderNetWorthTracker(mount, state); break;
             case 'personal-balance-sheet': await renderPersonalBalanceSheet(mount, state); break;
             case 'personal-cash-flow': await renderPersonalCashFlow(mount, state); break;

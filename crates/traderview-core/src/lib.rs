@@ -253,6 +253,7 @@ pub mod spia;
 pub mod spread_attribution;
 pub mod spread_payoff;
 pub mod spread_tracker;
+pub mod standard_vs_itemized;
 pub mod stats;
 pub mod stochastic;
 pub mod stock_split;
