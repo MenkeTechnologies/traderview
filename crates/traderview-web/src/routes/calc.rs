@@ -146,6 +146,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/rental-total-return", post(rental_total_return_route))
         .route("/calc/economic-value-added", post(economic_value_added_route))
         .route("/calc/mirr", post(mirr_route))
+        .route("/calc/equivalent-annual-cost", post(equivalent_annual_cost_route))
         .route("/calc/wash-sale", post(wash_sale_route))
         .route("/calc/cost-basis", post(cost_basis_route))
         .route("/calc/section-1244", post(section_1244_route))
@@ -12243,4 +12244,12 @@ async fn mirr_route(
     Json(b): Json<traderview_core::mirr::MirrInput>,
 ) -> Json<traderview_core::mirr::MirrResult> {
     Json(traderview_core::mirr::analyze(&b))
+}
+
+/// Equivalent annual cost — level annual cost over an asset's life.
+async fn equivalent_annual_cost_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::equivalent_annual_cost::EacInput>,
+) -> Json<traderview_core::equivalent_annual_cost::EacResult> {
+    Json(traderview_core::equivalent_annual_cost::analyze(&b))
 }

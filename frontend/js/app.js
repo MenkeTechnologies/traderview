@@ -789,6 +789,7 @@ import { renderCaptureRatio } from './views/capture_ratio.js';
 import { renderRentalTotalReturn } from './views/rental_total_return.js';
 import { renderEconomicValueAdded } from './views/economic_value_added.js';
 import { renderMirr } from './views/mirr.js';
+import { renderEquivalentAnnualCost } from './views/equivalent_annual_cost.js';
 import { renderNetWorthTracker } from './views/net_worth_tracker.js';
 import { renderPersonalBalanceSheet } from './views/personal_balance_sheet.js';
 import { renderPersonalCashFlow } from './views/personal_cash_flow.js';
@@ -3213,6 +3214,7 @@ export async function dispatch() {
             case 'rental-total-return': await renderRentalTotalReturn(mount, state); break;
             case 'economic-value-added': await renderEconomicValueAdded(mount, state); break;
             case 'mirr': await renderMirr(mount, state); break;
+            case 'equivalent-annual-cost': await renderEquivalentAnnualCost(mount, state); break;
             case 'net-worth-tracker': await renderNetWorthTracker(mount, state); break;
             case 'personal-balance-sheet': await renderPersonalBalanceSheet(mount, state); break;
             case 'personal-cash-flow': await renderPersonalCashFlow(mount, state); break;
