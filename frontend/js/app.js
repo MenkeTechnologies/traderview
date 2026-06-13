@@ -723,6 +723,7 @@ import { renderYearsToFi } from './views/years_to_fi.js';
 import { renderGrm } from './views/gross_rent_multiplier.js';
 import { renderSellerFinancing } from './views/seller_financing.js';
 import { renderExpenseDrag } from './views/expense_ratio_drag.js';
+import { renderLeasePayment } from './views/lease_money_factor.js';
 import { renderNetWorthTracker } from './views/net_worth_tracker.js';
 import { renderPersonalBalanceSheet } from './views/personal_balance_sheet.js';
 import { renderPersonalCashFlow } from './views/personal_cash_flow.js';
@@ -3081,6 +3082,7 @@ export async function dispatch() {
             case 'grm': await renderGrm(mount, state); break;
             case 'seller-financing': await renderSellerFinancing(mount, state); break;
             case 'expense-drag': await renderExpenseDrag(mount, state); break;
+            case 'lease-payment': await renderLeasePayment(mount, state); break;
             case 'net-worth-tracker': await renderNetWorthTracker(mount, state); break;
             case 'personal-balance-sheet': await renderPersonalBalanceSheet(mount, state); break;
             case 'personal-cash-flow': await renderPersonalCashFlow(mount, state); break;
@@ -4361,6 +4363,7 @@ export const viewRenderers = {
     'grm': (m, s) => renderGrm(m, s),
     'seller-financing': (m, s) => renderSellerFinancing(m, s),
     'expense-drag': (m, s) => renderExpenseDrag(m, s),
+    'lease-payment': (m, s) => renderLeasePayment(m, s),
     'envelope-budget': (m, s) => renderEnvelopeBudget(m, s),
     'fafsa-efc': (m, s) => renderFafsaEfc(m, s),
     'fifty-thirty-twenty': (m, s) => renderFiftyThirtyTwenty(m, s),
