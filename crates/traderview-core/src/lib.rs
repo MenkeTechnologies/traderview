@@ -254,6 +254,7 @@ pub mod winloss_asymmetry;
 pub mod wyckoff;
 pub mod years_to_fi;
 pub mod yield_curve;
+pub mod yield_on_cost;
 
 // 10 canonical indicators added in one batch — Hull MA / TEMA / DEMA /
 // KAMA (moving averages), Stochastic RSI / Ultimate Oscillator / TSI /

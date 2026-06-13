@@ -82,6 +82,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/lease-payment", post(lease_payment_route))
         .route("/calc/real-return", post(real_return_route))
         .route("/calc/cd-penalty", post(cd_penalty_route))
+        .route("/calc/yield-on-cost", post(yield_on_cost_route))
         .route("/calc/wash-sale", post(wash_sale_route))
         .route("/calc/cost-basis", post(cost_basis_route))
         .route("/calc/section-1244", post(section_1244_route))
@@ -11665,4 +11666,13 @@ async fn cd_penalty_route(
     Json(b): Json<traderview_core::cd_early_withdrawal::CdInput>,
 ) -> Json<traderview_core::cd_early_withdrawal::CdResult> {
     Json(traderview_core::cd_early_withdrawal::analyze(&b))
+}
+
+/// Yield on cost: a dividend against your cost basis vs the current price,
+/// with a projected YOC at the dividend growth rate.
+async fn yield_on_cost_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::yield_on_cost::YieldOnCostInput>,
+) -> Json<traderview_core::yield_on_cost::YieldOnCostResult> {
+    Json(traderview_core::yield_on_cost::analyze(&b))
 }

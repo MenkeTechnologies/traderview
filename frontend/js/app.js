@@ -726,6 +726,7 @@ import { renderExpenseDrag } from './views/expense_ratio_drag.js';
 import { renderLeasePayment } from './views/lease_money_factor.js';
 import { renderRealReturn } from './views/real_return.js';
 import { renderCdPenalty } from './views/cd_early_withdrawal.js';
+import { renderYieldOnCost } from './views/yield_on_cost.js';
 import { renderNetWorthTracker } from './views/net_worth_tracker.js';
 import { renderPersonalBalanceSheet } from './views/personal_balance_sheet.js';
 import { renderPersonalCashFlow } from './views/personal_cash_flow.js';
@@ -3087,6 +3088,7 @@ export async function dispatch() {
             case 'lease-payment': await renderLeasePayment(mount, state); break;
             case 'real-return': await renderRealReturn(mount, state); break;
             case 'cd-penalty': await renderCdPenalty(mount, state); break;
+            case 'yield-on-cost': await renderYieldOnCost(mount, state); break;
             case 'net-worth-tracker': await renderNetWorthTracker(mount, state); break;
             case 'personal-balance-sheet': await renderPersonalBalanceSheet(mount, state); break;
             case 'personal-cash-flow': await renderPersonalCashFlow(mount, state); break;
@@ -4370,6 +4372,7 @@ export const viewRenderers = {
     'lease-payment': (m, s) => renderLeasePayment(m, s),
     'real-return': (m, s) => renderRealReturn(m, s),
     'cd-penalty': (m, s) => renderCdPenalty(m, s),
+    'yield-on-cost': (m, s) => renderYieldOnCost(m, s),
     'envelope-budget': (m, s) => renderEnvelopeBudget(m, s),
     'fafsa-efc': (m, s) => renderFafsaEfc(m, s),
     'fifty-thirty-twenty': (m, s) => renderFiftyThirtyTwenty(m, s),
