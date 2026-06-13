@@ -48,6 +48,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/break-even", post(break_even_route))
         .route("/calc/lease-generator", post(lease_generator_route))
         .route("/calc/invoice-generator", post(invoice_generator_route))
+        .route("/calc/landlord-notice", post(landlord_notice_route))
         .route("/calc/wash-sale", post(wash_sale_route))
         .route("/calc/cost-basis", post(cost_basis_route))
         .route("/calc/section-1244", post(section_1244_route))
@@ -11325,4 +11326,13 @@ async fn invoice_generator_route(
     Json(b): Json<traderview_core::invoice_generator::InvoiceInput>,
 ) -> Json<traderview_core::invoice_generator::InvoiceDocument> {
     Json(traderview_core::invoice_generator::generate(&b))
+}
+
+/// Landlord notice: generates a Michigan SCAO landlord-tenant notice
+/// (DC 100a nonpayment demand / DC 100c notice to quit) with the comply-by date.
+async fn landlord_notice_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::landlord_notice::NoticeInput>,
+) -> Json<traderview_core::landlord_notice::NoticeDocument> {
+    Json(traderview_core::landlord_notice::generate(&b))
 }
