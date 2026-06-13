@@ -121,6 +121,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/loan-apr", post(loan_apr_route))
         .route("/calc/home-sale-exclusion", post(home_sale_exclusion_route))
         .route("/calc/life-insurance-needs", post(life_insurance_needs_route))
+        .route("/calc/car-affordability", post(car_affordability_route))
         .route("/calc/wash-sale", post(wash_sale_route))
         .route("/calc/cost-basis", post(cost_basis_route))
         .route("/calc/section-1244", post(section_1244_route))
@@ -12018,4 +12019,12 @@ async fn life_insurance_needs_route(
     Json(b): Json<traderview_core::life_insurance_needs::LifeInsuranceInput>,
 ) -> Json<traderview_core::life_insurance_needs::LifeInsuranceResult> {
     Json(traderview_core::life_insurance_needs::analyze(&b))
+}
+
+/// Car affordability — the 20/4/10 rule worked back to a max car price.
+async fn car_affordability_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::car_affordability::CarAffordInput>,
+) -> Json<traderview_core::car_affordability::CarAffordResult> {
+    Json(traderview_core::car_affordability::analyze(&b))
 }
