@@ -789,6 +789,7 @@ export const api = {
     calcPayStub:             (body) => request('/calc/pay-stub', { method: 'POST', body: JSON.stringify(body) }),
     calcRentalApplication:   (body) => request('/calc/rental-application', { method: 'POST', body: JSON.stringify(body) }),
     calcCeaseDesist:         (body) => request('/calc/cease-desist', { method: 'POST', body: JSON.stringify(body) }),
+    calcEmployeeWriteup:     (body) => request('/calc/employee-writeup', { method: 'POST', body: JSON.stringify(body) }),
     calcFixAndFlip:          (body) => request('/calc/fix-and-flip', { method: 'POST', body: JSON.stringify(body) }),
     calcCashConversionCycle: (body) => request('/calc/cash-conversion-cycle', { method: 'POST', body: JSON.stringify(body) }),
     calcProfitFirst:         (body) => request('/calc/profit-first', { method: 'POST', body: JSON.stringify(body) }),

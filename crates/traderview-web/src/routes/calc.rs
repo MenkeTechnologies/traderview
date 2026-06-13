@@ -80,6 +80,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/pay-stub", post(pay_stub_route))
         .route("/calc/rental-application", post(rental_application_route))
         .route("/calc/cease-desist", post(cease_desist_route))
+        .route("/calc/employee-writeup", post(employee_writeup_route))
         .route("/calc/fix-and-flip", post(fix_and_flip_route))
         .route("/calc/cash-conversion-cycle", post(cash_conversion_cycle_route))
         .route("/calc/profit-first", post(profit_first_route))
@@ -11727,6 +11728,14 @@ async fn cease_desist_route(
     Json(b): Json<traderview_core::cease_desist::CeaseDesistInput>,
 ) -> Json<traderview_core::cease_desist::CeaseDesistLetter> {
     Json(traderview_core::cease_desist::generate(&b))
+}
+
+/// Employee disciplinary write-up: level → consequence + escalation.
+async fn employee_writeup_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::employee_writeup::WriteupInput>,
+) -> Json<traderview_core::employee_writeup::EmployeeWriteup> {
+    Json(traderview_core::employee_writeup::generate(&b))
 }
 
 /// Fix-and-flip: the 70% rule max-allowable-offer plus the full deal P&L
