@@ -32,11 +32,11 @@ export async function renderForex(mount, _appState) {
         </p>
         <div class="chart-panel">
             <h2 data-i18n="view.forex.h2.sessions">Trading sessions (UTC)</h2>
-            <div id="fx-sessions" class="muted small" data-i18n="view.forex.loading">Loading…</div>
+            <div id="fx-sessions" class="muted small">${esc(t('view.forex.loading'))}</div>
         </div>
         <div class="chart-panel">
             <h2 data-i18n="view.forex.h2.majors">Major pairs</h2>
-            <div id="fx-majors" data-i18n="view.forex.loading">Loading…</div>
+            <div id="fx-majors">${esc(t('view.forex.loading'))}</div>
         </div>
         <div class="chart-panel">
             <h2 data-i18n="view.forex.h2.position_size">Position size (risk-based)</h2>
