@@ -8,6 +8,7 @@ pub mod accrued_interest;
 pub mod acceleration_deceleration;
 pub mod adx;
 pub mod age_based_allocation;
+pub mod altman_z_score;
 pub mod apr_apy;
 pub mod algo_backtest;
 pub mod algo_backtest_mc;

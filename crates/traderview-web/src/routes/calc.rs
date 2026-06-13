@@ -94,6 +94,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/take-home-paycheck", post(take_home_paycheck_route))
         .route("/calc/ev-ebitda", post(ev_ebitda_route))
         .route("/calc/holding-period-return", post(holding_period_return_route))
+        .route("/calc/altman-z-score", post(altman_z_score_route))
         .route("/calc/wash-sale", post(wash_sale_route))
         .route("/calc/cost-basis", post(cost_basis_route))
         .route("/calc/section-1244", post(section_1244_route))
@@ -11775,4 +11776,12 @@ async fn holding_period_return_route(
     Json(b): Json<traderview_core::holding_period_return::HprInput>,
 ) -> Json<traderview_core::holding_period_return::HprResult> {
     Json(traderview_core::holding_period_return::analyze(&b))
+}
+
+/// Altman Z-Score — five-ratio bankruptcy-distress model + zone.
+async fn altman_z_score_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::altman_z_score::AltmanInput>,
+) -> Json<traderview_core::altman_z_score::AltmanResult> {
+    Json(traderview_core::altman_z_score::analyze(&b))
 }
