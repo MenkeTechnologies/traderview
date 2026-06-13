@@ -92,6 +92,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/dscr", post(dscr_route))
         .route("/calc/graham-number", post(graham_number_route))
         .route("/calc/take-home-paycheck", post(take_home_paycheck_route))
+        .route("/calc/ev-ebitda", post(ev_ebitda_route))
         .route("/calc/wash-sale", post(wash_sale_route))
         .route("/calc/cost-basis", post(cost_basis_route))
         .route("/calc/section-1244", post(section_1244_route))
@@ -11757,4 +11758,12 @@ async fn take_home_paycheck_route(
     Json(b): Json<traderview_core::take_home_paycheck::PaycheckInput>,
 ) -> Json<traderview_core::take_home_paycheck::PaycheckResult> {
     Json(traderview_core::take_home_paycheck::analyze(&b))
+}
+
+/// Enterprise value + EV/EBITDA, EV/Sales, and EBITDA margin.
+async fn ev_ebitda_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::ev_ebitda::EvEbitdaInput>,
+) -> Json<traderview_core::ev_ebitda::EvEbitdaResult> {
+    Json(traderview_core::ev_ebitda::analyze(&b))
 }

@@ -77,6 +77,7 @@ pub mod emotion_tags;
 pub mod equal_levels;
 pub mod equity_forecast;
 pub mod equity_regime;
+pub mod ev_ebitda;
 pub mod excursion;
 pub mod exit_timing;
 pub mod expense_ratio_drag;
