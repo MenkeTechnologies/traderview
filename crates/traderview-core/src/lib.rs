@@ -193,6 +193,7 @@ pub mod slug;
 pub mod social_security_pia;
 pub mod sortino;
 pub mod spousal_ira;
+pub mod spia;
 pub mod spread_attribution;
 pub mod spread_payoff;
 pub mod spread_tracker;

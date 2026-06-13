@@ -72,6 +72,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/apr-apy", post(apr_apy_route))
         .route("/calc/blended-debt", post(blended_debt_route))
         .route("/calc/dividend-coverage", post(dividend_coverage_route))
+        .route("/calc/spia", post(spia_route))
         .route("/calc/wash-sale", post(wash_sale_route))
         .route("/calc/cost-basis", post(cost_basis_route))
         .route("/calc/section-1244", post(section_1244_route))
@@ -11565,4 +11566,13 @@ async fn dividend_coverage_route(
     Json(b): Json<traderview_core::dividend_coverage::DividendInput>,
 ) -> Json<traderview_core::dividend_coverage::DividendResult> {
     Json(traderview_core::dividend_coverage::analyze(&b))
+}
+
+/// SPIA: the guaranteed monthly income a single-premium immediate annuity
+/// pays from a lump sum, with the payout rate and total received.
+async fn spia_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::spia::SpiaInput>,
+) -> Json<traderview_core::spia::SpiaResult> {
+    Json(traderview_core::spia::analyze(&b))
 }
