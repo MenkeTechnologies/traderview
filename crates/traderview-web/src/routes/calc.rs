@@ -54,6 +54,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/profit-first", post(profit_first_route))
         .route("/calc/markup-margin", post(markup_margin_route))
         .route("/calc/inventory-eoq", post(inventory_eoq_route))
+        .route("/calc/rent-vs-sell", post(rent_vs_sell_route))
         .route("/calc/wash-sale", post(wash_sale_route))
         .route("/calc/cost-basis", post(cost_basis_route))
         .route("/calc/section-1244", post(section_1244_route))
@@ -11385,4 +11386,13 @@ async fn inventory_eoq_route(
     Json(b): Json<traderview_core::inventory_eoq::EoqInput>,
 ) -> Json<traderview_core::inventory_eoq::EoqResult> {
     Json(traderview_core::inventory_eoq::analyze(&b))
+}
+
+/// Rent vs sell: end-of-horizon wealth from selling now and investing the
+/// proceeds vs holding the rental (appreciation + reinvested cash flow).
+async fn rent_vs_sell_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::rent_vs_sell::RentVsSellInput>,
+) -> Json<traderview_core::rent_vs_sell::RentVsSellResult> {
+    Json(traderview_core::rent_vs_sell::analyze(&b))
 }

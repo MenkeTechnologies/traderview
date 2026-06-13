@@ -153,6 +153,7 @@ pub mod range_expansion;
 pub mod rebalance;
 pub mod reconcile_1099b;
 pub mod renko;
+pub mod rent_vs_sell;
 pub mod risk;
 pub mod risk_gate;
 pub mod risk_metrics;
