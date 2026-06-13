@@ -53,6 +53,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/cash-conversion-cycle", post(cash_conversion_cycle_route))
         .route("/calc/profit-first", post(profit_first_route))
         .route("/calc/markup-margin", post(markup_margin_route))
+        .route("/calc/inventory-eoq", post(inventory_eoq_route))
         .route("/calc/wash-sale", post(wash_sale_route))
         .route("/calc/cost-basis", post(cost_basis_route))
         .route("/calc/section-1244", post(section_1244_route))
@@ -11375,4 +11376,13 @@ async fn markup_margin_route(
     Json(b): Json<traderview_core::markup_margin::MarkupInput>,
 ) -> Json<traderview_core::markup_margin::MarkupResult> {
     Json(traderview_core::markup_margin::analyze(&b))
+}
+
+/// Economic order quantity: the Wilson EOQ, order cadence, ordering/holding
+/// cost split, and the reorder point for an inventory item.
+async fn inventory_eoq_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::inventory_eoq::EoqInput>,
+) -> Json<traderview_core::inventory_eoq::EoqResult> {
+    Json(traderview_core::inventory_eoq::analyze(&b))
 }

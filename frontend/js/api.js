@@ -762,6 +762,7 @@ export const api = {
     calcCashConversionCycle: (body) => request('/calc/cash-conversion-cycle', { method: 'POST', body: JSON.stringify(body) }),
     calcProfitFirst:         (body) => request('/calc/profit-first', { method: 'POST', body: JSON.stringify(body) }),
     calcMarkupMargin:        (body) => request('/calc/markup-margin', { method: 'POST', body: JSON.stringify(body) }),
+    calcInventoryEoq:        (body) => request('/calc/inventory-eoq', { method: 'POST', body: JSON.stringify(body) }),
     calcMergerArb:           (body) => request('/calc/merger-arb', { method: 'POST', body: JSON.stringify(body) }),
     calcBuybackAccretion:    (body) => request('/calc/buyback-accretion', { method: 'POST', body: JSON.stringify(body) }),
     calcCefDiscount:         (body) => request('/calc/cef-discount', { method: 'POST', body: JSON.stringify(body) }),

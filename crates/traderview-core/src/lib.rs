@@ -91,6 +91,7 @@ pub mod implementation_shortfall;
 pub mod indicators;
 pub mod inside_bar_breakout;
 pub mod intraday_heatmap;
+pub mod inventory_eoq;
 pub mod invoice_generator;
 pub mod irmaa;
 pub mod iv_backtest;
