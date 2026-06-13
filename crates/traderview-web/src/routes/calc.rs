@@ -64,6 +64,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/inspection-checklist", post(inspection_checklist_route))
         .route("/calc/estimate", post(estimate_route))
         .route("/calc/purchase-order", post(purchase_order_route))
+        .route("/calc/sublease", post(sublease_route))
         .route("/calc/fix-and-flip", post(fix_and_flip_route))
         .route("/calc/cash-conversion-cycle", post(cash_conversion_cycle_route))
         .route("/calc/profit-first", post(profit_first_route))
@@ -11582,6 +11583,14 @@ async fn purchase_order_route(
     Json(b): Json<traderview_core::purchase_order::PurchaseOrderInput>,
 ) -> Json<traderview_core::purchase_order::PurchaseOrder> {
     Json(traderview_core::purchase_order::generate(&b))
+}
+
+/// Sublease agreement: end date, rent markup/discount vs the master lease.
+async fn sublease_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::sublease_agreement::SubleaseInput>,
+) -> Json<traderview_core::sublease_agreement::SubleaseAgreement> {
+    Json(traderview_core::sublease_agreement::generate(&b))
 }
 
 /// Fix-and-flip: the 70% rule max-allowable-offer plus the full deal P&L

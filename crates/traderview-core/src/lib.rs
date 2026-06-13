@@ -282,6 +282,7 @@ pub mod stock_split;
 pub mod stop_hunt;
 pub mod stop_loss_backtest;
 pub mod stops;
+pub mod sublease_agreement;
 pub mod strategy_alert;
 pub mod strategy_correlation;
 pub mod live_vs_backtest;
