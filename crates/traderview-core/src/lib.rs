@@ -25,6 +25,7 @@ pub mod beta_hedge;
 pub mod bond_duration;
 pub mod bracket_order;
 pub mod break_even;
+pub mod burn_rate;
 pub mod break_of_structure;
 pub mod breakout_detector;
 pub mod buying_power;

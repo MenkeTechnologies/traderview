@@ -704,6 +704,7 @@ import { renderLikeKindExchange } from './views/like_kind_exchange.js';
 import { renderCostOfHire } from './views/cost_of_hire.js';
 import { renderInvoiceFactoring } from './views/invoice_factoring.js';
 import { renderLtvCac } from './views/ltv_cac.js';
+import { renderBurnRate } from './views/burn_rate.js';
 import { renderNetWorthTracker } from './views/net_worth_tracker.js';
 import { renderPersonalBalanceSheet } from './views/personal_balance_sheet.js';
 import { renderPersonalCashFlow } from './views/personal_cash_flow.js';
@@ -3043,6 +3044,7 @@ export async function dispatch() {
             case 'cost-of-hire': await renderCostOfHire(mount, state); break;
             case 'invoice-factoring': await renderInvoiceFactoring(mount, state); break;
             case 'ltv-cac': await renderLtvCac(mount, state); break;
+            case 'burn-rate': await renderBurnRate(mount, state); break;
             case 'net-worth-tracker': await renderNetWorthTracker(mount, state); break;
             case 'personal-balance-sheet': await renderPersonalBalanceSheet(mount, state); break;
             case 'personal-cash-flow': await renderPersonalCashFlow(mount, state); break;
@@ -4304,6 +4306,7 @@ export const viewRenderers = {
     'cost-of-hire': (m, s) => renderCostOfHire(m, s),
     'invoice-factoring': (m, s) => renderInvoiceFactoring(m, s),
     'ltv-cac': (m, s) => renderLtvCac(m, s),
+    'burn-rate': (m, s) => renderBurnRate(m, s),
     'envelope-budget': (m, s) => renderEnvelopeBudget(m, s),
     'fafsa-efc': (m, s) => renderFafsaEfc(m, s),
     'fifty-thirty-twenty': (m, s) => renderFiftyThirtyTwenty(m, s),

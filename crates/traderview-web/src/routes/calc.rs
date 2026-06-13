@@ -60,6 +60,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/cost-of-hire", post(cost_of_hire_route))
         .route("/calc/invoice-factoring", post(invoice_factoring_route))
         .route("/calc/ltv-cac", post(ltv_cac_route))
+        .route("/calc/burn-rate", post(burn_rate_route))
         .route("/calc/wash-sale", post(wash_sale_route))
         .route("/calc/cost-basis", post(cost_basis_route))
         .route("/calc/section-1244", post(section_1244_route))
@@ -11445,4 +11446,13 @@ async fn ltv_cac_route(
     Json(b): Json<traderview_core::ltv_cac::LtvCacInput>,
 ) -> Json<traderview_core::ltv_cac::LtvCacResult> {
     Json(traderview_core::ltv_cac::analyze(&b))
+}
+
+/// Burn rate & runway: gross/net burn, how many months the cash lasts, and
+/// months to break-even given revenue growth.
+async fn burn_rate_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::burn_rate::BurnInput>,
+) -> Json<traderview_core::burn_rate::BurnResult> {
+    Json(traderview_core::burn_rate::analyze(&b))
 }
