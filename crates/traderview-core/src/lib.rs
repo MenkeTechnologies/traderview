@@ -165,6 +165,7 @@ pub mod pension_survivor;
 pub mod per_symbol_slippage;
 pub mod piotroski_f_score;
 pub mod pivots;
+pub mod pmi_removal;
 pub mod pnl;
 pub mod portfolio_greeks;
 pub mod portfolio_heat;

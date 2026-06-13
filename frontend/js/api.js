@@ -819,6 +819,7 @@ export const api = {
     calcTwoAssetPortfolio:   (body) => request('/calc/two-asset-portfolio', { method: 'POST', body: JSON.stringify(body) }),
     calcMortgageRecast:      (body) => request('/calc/mortgage-recast', { method: 'POST', body: JSON.stringify(body) }),
     calcTaxEquivalentYield:  (body) => request('/calc/tax-equivalent-yield', { method: 'POST', body: JSON.stringify(body) }),
+    calcPmiRemoval:          (body) => request('/calc/pmi-removal', { method: 'POST', body: JSON.stringify(body) }),
     calcMergerArb:           (body) => request('/calc/merger-arb', { method: 'POST', body: JSON.stringify(body) }),
     calcBuybackAccretion:    (body) => request('/calc/buyback-accretion', { method: 'POST', body: JSON.stringify(body) }),
     calcCefDiscount:         (body) => request('/calc/cef-discount', { method: 'POST', body: JSON.stringify(body) }),

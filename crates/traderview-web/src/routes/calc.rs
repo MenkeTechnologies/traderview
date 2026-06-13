@@ -110,6 +110,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/two-asset-portfolio", post(two_asset_portfolio_route))
         .route("/calc/mortgage-recast", post(mortgage_recast_route))
         .route("/calc/tax-equivalent-yield", post(tax_equivalent_yield_route))
+        .route("/calc/pmi-removal", post(pmi_removal_route))
         .route("/calc/wash-sale", post(wash_sale_route))
         .route("/calc/cost-basis", post(cost_basis_route))
         .route("/calc/section-1244", post(section_1244_route))
@@ -11919,4 +11920,12 @@ async fn tax_equivalent_yield_route(
     Json(b): Json<traderview_core::tax_equivalent_yield::TeyInput>,
 ) -> Json<traderview_core::tax_equivalent_yield::TeyResult> {
     Json(traderview_core::tax_equivalent_yield::analyze(&b))
+}
+
+/// PMI removal timeline — months until the balance reaches 80% / 78% LTV.
+async fn pmi_removal_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::pmi_removal::PmiInput>,
+) -> Json<traderview_core::pmi_removal::PmiResult> {
+    Json(traderview_core::pmi_removal::analyze(&b))
 }
