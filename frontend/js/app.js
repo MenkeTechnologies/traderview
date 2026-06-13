@@ -735,6 +735,7 @@ import { renderStockSplit } from './views/stock_split.js';
 import { renderTbillYield } from './views/tbill_yield.js';
 import { renderDscr } from './views/dscr.js';
 import { renderGrahamNumber } from './views/graham_number.js';
+import { renderTakeHomePaycheck } from './views/take_home_paycheck.js';
 import { renderNetWorthTracker } from './views/net_worth_tracker.js';
 import { renderPersonalBalanceSheet } from './views/personal_balance_sheet.js';
 import { renderPersonalCashFlow } from './views/personal_cash_flow.js';
@@ -3105,6 +3106,7 @@ export async function dispatch() {
             case 'tbill-yield': await renderTbillYield(mount, state); break;
             case 'dscr': await renderDscr(mount, state); break;
             case 'graham-number': await renderGrahamNumber(mount, state); break;
+            case 'take-home-paycheck': await renderTakeHomePaycheck(mount, state); break;
             case 'net-worth-tracker': await renderNetWorthTracker(mount, state); break;
             case 'personal-balance-sheet': await renderPersonalBalanceSheet(mount, state); break;
             case 'personal-cash-flow': await renderPersonalCashFlow(mount, state); break;
@@ -4397,6 +4399,7 @@ export const viewRenderers = {
     'tbill-yield': (m, s) => renderTbillYield(m, s),
     'dscr': (m, s) => renderDscr(m, s),
     'graham-number': (m, s) => renderGrahamNumber(m, s),
+    'take-home-paycheck': (m, s) => renderTakeHomePaycheck(m, s),
     'envelope-budget': (m, s) => renderEnvelopeBudget(m, s),
     'fafsa-efc': (m, s) => renderFafsaEfc(m, s),
     'fifty-thirty-twenty': (m, s) => renderFiftyThirtyTwenty(m, s),

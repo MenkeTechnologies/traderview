@@ -228,6 +228,7 @@ pub mod symbol_filter;
 pub mod tax_aware_rebalance;
 pub mod tax_loss_harvest;
 pub mod tax_lot_optimizer;
+pub mod take_home_paycheck;
 pub mod tbill_yield;
 pub mod three_bar_reversal;
 pub mod tilt_detector;

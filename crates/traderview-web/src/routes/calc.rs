@@ -91,6 +91,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/tbill-yield", post(tbill_yield_route))
         .route("/calc/dscr", post(dscr_route))
         .route("/calc/graham-number", post(graham_number_route))
+        .route("/calc/take-home-paycheck", post(take_home_paycheck_route))
         .route("/calc/wash-sale", post(wash_sale_route))
         .route("/calc/cost-basis", post(cost_basis_route))
         .route("/calc/section-1244", post(section_1244_route))
@@ -11748,4 +11749,12 @@ async fn graham_number_route(
     Json(b): Json<traderview_core::graham_number::GrahamInput>,
 ) -> Json<traderview_core::graham_number::GrahamResult> {
     Json(traderview_core::graham_number::analyze(&b))
+}
+
+/// Take-home pay: gross paycheck to net, per period and per year.
+async fn take_home_paycheck_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::take_home_paycheck::PaycheckInput>,
+) -> Json<traderview_core::take_home_paycheck::PaycheckResult> {
+    Json(traderview_core::take_home_paycheck::analyze(&b))
 }
