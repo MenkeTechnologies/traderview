@@ -733,6 +733,7 @@ import { renderSalesTax } from './views/sales_tax.js';
 import { renderAccruedInterest } from './views/accrued_interest.js';
 import { renderStockSplit } from './views/stock_split.js';
 import { renderTbillYield } from './views/tbill_yield.js';
+import { renderDscr } from './views/dscr.js';
 import { renderNetWorthTracker } from './views/net_worth_tracker.js';
 import { renderPersonalBalanceSheet } from './views/personal_balance_sheet.js';
 import { renderPersonalCashFlow } from './views/personal_cash_flow.js';
@@ -3101,6 +3102,7 @@ export async function dispatch() {
             case 'accrued-interest': await renderAccruedInterest(mount, state); break;
             case 'stock-split': await renderStockSplit(mount, state); break;
             case 'tbill-yield': await renderTbillYield(mount, state); break;
+            case 'dscr': await renderDscr(mount, state); break;
             case 'net-worth-tracker': await renderNetWorthTracker(mount, state); break;
             case 'personal-balance-sheet': await renderPersonalBalanceSheet(mount, state); break;
             case 'personal-cash-flow': await renderPersonalCashFlow(mount, state); break;
@@ -4391,6 +4393,7 @@ export const viewRenderers = {
     'accrued-interest': (m, s) => renderAccruedInterest(m, s),
     'stock-split': (m, s) => renderStockSplit(m, s),
     'tbill-yield': (m, s) => renderTbillYield(m, s),
+    'dscr': (m, s) => renderDscr(m, s),
     'envelope-budget': (m, s) => renderEnvelopeBudget(m, s),
     'fafsa-efc': (m, s) => renderFafsaEfc(m, s),
     'fifty-thirty-twenty': (m, s) => renderFiftyThirtyTwenty(m, s),

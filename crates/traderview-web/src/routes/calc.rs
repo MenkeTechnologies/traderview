@@ -89,6 +89,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/accrued-interest", post(accrued_interest_route))
         .route("/calc/stock-split", post(stock_split_route))
         .route("/calc/tbill-yield", post(tbill_yield_route))
+        .route("/calc/dscr", post(dscr_route))
         .route("/calc/wash-sale", post(wash_sale_route))
         .route("/calc/cost-basis", post(cost_basis_route))
         .route("/calc/section-1244", post(section_1244_route))
@@ -11730,4 +11731,12 @@ async fn tbill_yield_route(
     Json(b): Json<traderview_core::tbill_yield::TbillInput>,
 ) -> Json<traderview_core::tbill_yield::TbillResult> {
     Json(traderview_core::tbill_yield::analyze(&b))
+}
+
+/// Debt-service coverage ratio + max loan that clears a target DSCR.
+async fn dscr_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::dscr::DscrInput>,
+) -> Json<traderview_core::dscr::DscrResult> {
+    Json(traderview_core::dscr::analyze(&b))
 }
