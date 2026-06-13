@@ -156,6 +156,7 @@ pub mod paycheck_401k;
 pub mod pead;
 pub mod pension_survivor;
 pub mod per_symbol_slippage;
+pub mod piotroski_f_score;
 pub mod pivots;
 pub mod pnl;
 pub mod portfolio_greeks;

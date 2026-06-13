@@ -95,6 +95,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/ev-ebitda", post(ev_ebitda_route))
         .route("/calc/holding-period-return", post(holding_period_return_route))
         .route("/calc/altman-z-score", post(altman_z_score_route))
+        .route("/calc/piotroski-f-score", post(piotroski_f_score_route))
         .route("/calc/wash-sale", post(wash_sale_route))
         .route("/calc/cost-basis", post(cost_basis_route))
         .route("/calc/section-1244", post(section_1244_route))
@@ -11784,4 +11785,12 @@ async fn altman_z_score_route(
     Json(b): Json<traderview_core::altman_z_score::AltmanInput>,
 ) -> Json<traderview_core::altman_z_score::AltmanResult> {
     Json(traderview_core::altman_z_score::analyze(&b))
+}
+
+/// Piotroski F-Score — 9-point financial-strength test.
+async fn piotroski_f_score_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::piotroski_f_score::PiotroskiInput>,
+) -> Json<traderview_core::piotroski_f_score::PiotroskiResult> {
+    Json(traderview_core::piotroski_f_score::analyze(&b))
 }
