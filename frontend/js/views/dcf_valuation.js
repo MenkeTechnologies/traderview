@@ -76,6 +76,10 @@ export async function renderDcfValuation(mount, _state, sym) {
             }
         }
         const out = mount.querySelector('#dcf-result');
+        // Drop the placeholder's data-i18n: once this container holds a result,
+        // a later applyUiI18n pass must not reset it to the "fill the form" hint
+        // (the clobber that bit the Forex Desk's loaded panels).
+        out.removeAttribute('data-i18n');
         out.textContent = '…';
         try {
             const r = await api.calcDcf(body);
