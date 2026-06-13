@@ -842,6 +842,7 @@ export const api = {
     calcSecondIncome:        (body) => request('/calc/second-income', { method: 'POST', body: JSON.stringify(body) }),
     calcBreakevenOccupancy:  (body) => request('/calc/breakeven-occupancy', { method: 'POST', body: JSON.stringify(body) }),
     calcRentAffordability:   (body) => request('/calc/rent-affordability', { method: 'POST', body: JSON.stringify(body) }),
+    calcRealRaise:           (body) => request('/calc/real-raise', { method: 'POST', body: JSON.stringify(body) }),
     calcMergerArb:           (body) => request('/calc/merger-arb', { method: 'POST', body: JSON.stringify(body) }),
     calcBuybackAccretion:    (body) => request('/calc/buyback-accretion', { method: 'POST', body: JSON.stringify(body) }),
     calcCefDiscount:         (body) => request('/calc/cef-discount', { method: 'POST', body: JSON.stringify(body) }),

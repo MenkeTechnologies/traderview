@@ -777,6 +777,7 @@ import { renderPortfolioLongevity } from './views/portfolio_longevity.js';
 import { renderSecondIncome } from './views/second_income.js';
 import { renderBreakevenOccupancy } from './views/breakeven_occupancy.js';
 import { renderRentAffordability } from './views/rent_affordability.js';
+import { renderRealRaise } from './views/real_raise.js';
 import { renderNetWorthTracker } from './views/net_worth_tracker.js';
 import { renderPersonalBalanceSheet } from './views/personal_balance_sheet.js';
 import { renderPersonalCashFlow } from './views/personal_cash_flow.js';
@@ -3189,6 +3190,7 @@ export async function dispatch() {
             case 'second-income': await renderSecondIncome(mount, state); break;
             case 'breakeven-occupancy': await renderBreakevenOccupancy(mount, state); break;
             case 'rent-affordability': await renderRentAffordability(mount, state); break;
+            case 'real-raise': await renderRealRaise(mount, state); break;
             case 'net-worth-tracker': await renderNetWorthTracker(mount, state); break;
             case 'personal-balance-sheet': await renderPersonalBalanceSheet(mount, state); break;
             case 'personal-cash-flow': await renderPersonalCashFlow(mount, state); break;
@@ -4523,6 +4525,7 @@ export const viewRenderers = {
     'second-income': (m, s) => renderSecondIncome(m, s),
     'breakeven-occupancy': (m, s) => renderBreakevenOccupancy(m, s),
     'rent-affordability': (m, s) => renderRentAffordability(m, s),
+    'real-raise': (m, s) => renderRealRaise(m, s),
     'envelope-budget': (m, s) => renderEnvelopeBudget(m, s),
     'fafsa-efc': (m, s) => renderFafsaEfc(m, s),
     'fifty-thirty-twenty': (m, s) => renderFiftyThirtyTwenty(m, s),
