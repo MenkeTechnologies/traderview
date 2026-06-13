@@ -70,6 +70,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/guaranty", post(guaranty_route))
         .route("/calc/equipment-rental", post(equipment_rental_route))
         .route("/calc/llc-operating-agreement", post(llc_operating_agreement_route))
+        .route("/calc/lead-paint-disclosure", post(lead_paint_disclosure_route))
         .route("/calc/fix-and-flip", post(fix_and_flip_route))
         .route("/calc/cash-conversion-cycle", post(cash_conversion_cycle_route))
         .route("/calc/profit-first", post(profit_first_route))
@@ -11637,6 +11638,14 @@ async fn llc_operating_agreement_route(
     Json(b): Json<traderview_core::llc_operating_agreement::LlcInput>,
 ) -> Json<traderview_core::llc_operating_agreement::LlcOperatingAgreement> {
     Json(traderview_core::llc_operating_agreement::generate(&b))
+}
+
+/// Lead-based paint disclosure: pre-1978 applicability + lessor disclosure.
+async fn lead_paint_disclosure_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::lead_paint_disclosure::LeadPaintInput>,
+) -> Json<traderview_core::lead_paint_disclosure::LeadPaintDisclosure> {
+    Json(traderview_core::lead_paint_disclosure::generate(&b))
 }
 
 /// Fix-and-flip: the 70% rule max-allowable-offer plus the full deal P&L

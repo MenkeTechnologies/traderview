@@ -145,6 +145,7 @@ pub mod iv_skew;
 pub mod kelly;
 pub mod keltner;
 pub mod landlord_notice;
+pub mod lead_paint_disclosure;
 pub mod lease_generator;
 pub mod lease_money_factor;
 pub mod lease_renewal;
