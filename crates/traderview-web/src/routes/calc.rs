@@ -61,6 +61,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/lease-termination", post(lease_termination_route))
         .route("/calc/nda", post(nda_route))
         .route("/calc/pet-addendum", post(pet_addendum_route))
+        .route("/calc/inspection-checklist", post(inspection_checklist_route))
         .route("/calc/fix-and-flip", post(fix_and_flip_route))
         .route("/calc/cash-conversion-cycle", post(cash_conversion_cycle_route))
         .route("/calc/profit-first", post(profit_first_route))
@@ -11554,6 +11555,15 @@ async fn pet_addendum_route(
     Json(b): Json<traderview_core::pet_addendum::PetAddendumInput>,
 ) -> Json<traderview_core::pet_addendum::PetAddendum> {
     Json(traderview_core::pet_addendum::generate(&b))
+}
+
+/// Move-in/out inspection checklist: area-by-area condition record with a
+/// needs-attention count.
+async fn inspection_checklist_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::inspection_checklist::ChecklistInput>,
+) -> Json<traderview_core::inspection_checklist::InspectionChecklist> {
+    Json(traderview_core::inspection_checklist::generate(&b))
 }
 
 /// Fix-and-flip: the 70% rule max-allowable-offer plus the full deal P&L

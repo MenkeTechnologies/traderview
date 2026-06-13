@@ -705,6 +705,7 @@ import { renderNoticeOfEntry } from './views/notice_of_entry.js';
 import { renderLeaseTermination } from './views/lease_termination.js';
 import { renderNdaAgreement } from './views/nda_agreement.js';
 import { renderPetAddendum } from './views/pet_addendum.js';
+import { renderInspectionChecklist } from './views/inspection_checklist.js';
 import { renderFixAndFlip } from './views/fix_and_flip.js';
 import { renderCashConversionCycle } from './views/cash_conversion_cycle.js';
 import { renderProfitFirst } from './views/profit_first.js';
@@ -3151,6 +3152,7 @@ export async function dispatch() {
             case 'lease-termination': await renderLeaseTermination(mount, state); break;
             case 'nda': await renderNdaAgreement(mount, state); break;
             case 'pet-addendum': await renderPetAddendum(mount, state); break;
+            case 'inspection-checklist': await renderInspectionChecklist(mount, state); break;
             case 'fix-and-flip': await renderFixAndFlip(mount, state); break;
             case 'cash-conversion-cycle': await renderCashConversionCycle(mount, state); break;
             case 'profit-first': await renderProfitFirst(mount, state); break;
@@ -4511,6 +4513,7 @@ export const viewRenderers = {
     'lease-termination': (m, s) => renderLeaseTermination(m, s),
     'nda': (m, s) => renderNdaAgreement(m, s),
     'pet-addendum': (m, s) => renderPetAddendum(m, s),
+    'inspection-checklist': (m, s) => renderInspectionChecklist(m, s),
     'fix-and-flip': (m, s) => renderFixAndFlip(m, s),
     'cash-conversion-cycle': (m, s) => renderCashConversionCycle(m, s),
     'profit-first': (m, s) => renderProfitFirst(m, s),
