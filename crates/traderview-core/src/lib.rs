@@ -49,6 +49,7 @@ pub mod carry_score;
 pub mod cash_conversion_cycle;
 pub mod cash_out_refinance;
 pub mod cd_early_withdrawal;
+pub mod cease_desist;
 pub mod cost_of_hire;
 pub mod cci;
 pub mod chaikin_volatility;

@@ -723,6 +723,7 @@ import { renderExpenseReimbursement } from './views/expense_reimbursement.js';
 import { renderTimesheet } from './views/timesheet.js';
 import { renderPayStub } from './views/pay_stub.js';
 import { renderRentalApplication } from './views/rental_application.js';
+import { renderCeaseDesist } from './views/cease_desist.js';
 import { renderFixAndFlip } from './views/fix_and_flip.js';
 import { renderCashConversionCycle } from './views/cash_conversion_cycle.js';
 import { renderProfitFirst } from './views/profit_first.js';
@@ -3187,6 +3188,7 @@ export async function dispatch() {
             case 'timesheet': await renderTimesheet(mount, state); break;
             case 'pay-stub': await renderPayStub(mount, state); break;
             case 'rental-application': await renderRentalApplication(mount, state); break;
+            case 'cease-desist': await renderCeaseDesist(mount, state); break;
             case 'fix-and-flip': await renderFixAndFlip(mount, state); break;
             case 'cash-conversion-cycle': await renderCashConversionCycle(mount, state); break;
             case 'profit-first': await renderProfitFirst(mount, state); break;
@@ -4565,6 +4567,7 @@ export const viewRenderers = {
     'timesheet': (m, s) => renderTimesheet(m, s),
     'pay-stub': (m, s) => renderPayStub(m, s),
     'rental-application': (m, s) => renderRentalApplication(m, s),
+    'cease-desist': (m, s) => renderCeaseDesist(m, s),
     'fix-and-flip': (m, s) => renderFixAndFlip(m, s),
     'cash-conversion-cycle': (m, s) => renderCashConversionCycle(m, s),
     'profit-first': (m, s) => renderProfitFirst(m, s),

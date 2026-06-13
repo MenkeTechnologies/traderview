@@ -79,6 +79,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/timesheet", post(timesheet_route))
         .route("/calc/pay-stub", post(pay_stub_route))
         .route("/calc/rental-application", post(rental_application_route))
+        .route("/calc/cease-desist", post(cease_desist_route))
         .route("/calc/fix-and-flip", post(fix_and_flip_route))
         .route("/calc/cash-conversion-cycle", post(cash_conversion_cycle_route))
         .route("/calc/profit-first", post(profit_first_route))
@@ -11718,6 +11719,14 @@ async fn rental_application_route(
     Json(b): Json<traderview_core::rental_application::RentalApplicationInput>,
 ) -> Json<traderview_core::rental_application::RentalApplication> {
     Json(traderview_core::rental_application::generate(&b))
+}
+
+/// Cease and desist letter: comply-by deadline + demand clauses.
+async fn cease_desist_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::cease_desist::CeaseDesistInput>,
+) -> Json<traderview_core::cease_desist::CeaseDesistLetter> {
+    Json(traderview_core::cease_desist::generate(&b))
 }
 
 /// Fix-and-flip: the 70% rule max-allowable-offer plus the full deal P&L
