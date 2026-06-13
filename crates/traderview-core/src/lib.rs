@@ -201,6 +201,7 @@ pub mod rebalance;
 pub mod reconcile_1099b;
 pub mod renko;
 pub mod rent_escalation;
+pub mod rental_noi;
 pub mod rent_vs_sell;
 pub mod roth_bracket_fill;
 pub mod roth_contribution;

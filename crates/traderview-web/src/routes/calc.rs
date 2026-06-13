@@ -125,6 +125,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/disability-insurance-needs", post(disability_insurance_needs_route))
         .route("/calc/true-hourly-wage", post(true_hourly_wage_route))
         .route("/calc/property-tax", post(property_tax_route))
+        .route("/calc/rental-noi", post(rental_noi_route))
         .route("/calc/wash-sale", post(wash_sale_route))
         .route("/calc/cost-basis", post(cost_basis_route))
         .route("/calc/section-1244", post(section_1244_route))
@@ -12054,4 +12055,12 @@ async fn property_tax_route(
     Json(b): Json<traderview_core::property_tax::PropertyTaxInput>,
 ) -> Json<traderview_core::property_tax::PropertyTaxResult> {
     Json(traderview_core::property_tax::analyze(&b))
+}
+
+/// Rental NOI — net operating income from rental income statement line items.
+async fn rental_noi_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::rental_noi::RentalNoiInput>,
+) -> Json<traderview_core::rental_noi::RentalNoiResult> {
+    Json(traderview_core::rental_noi::analyze(&b))
 }

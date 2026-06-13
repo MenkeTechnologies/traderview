@@ -769,6 +769,7 @@ import { renderCarAffordability } from './views/car_affordability.js';
 import { renderDisabilityInsuranceNeeds } from './views/disability_insurance_needs.js';
 import { renderTrueHourlyWage } from './views/true_hourly_wage.js';
 import { renderPropertyTax } from './views/property_tax.js';
+import { renderRentalNoi } from './views/rental_noi.js';
 import { renderNetWorthTracker } from './views/net_worth_tracker.js';
 import { renderPersonalBalanceSheet } from './views/personal_balance_sheet.js';
 import { renderPersonalCashFlow } from './views/personal_cash_flow.js';
@@ -3173,6 +3174,7 @@ export async function dispatch() {
             case 'disability-insurance-needs': await renderDisabilityInsuranceNeeds(mount, state); break;
             case 'true-hourly-wage': await renderTrueHourlyWage(mount, state); break;
             case 'property-tax': await renderPropertyTax(mount, state); break;
+            case 'rental-noi': await renderRentalNoi(mount, state); break;
             case 'net-worth-tracker': await renderNetWorthTracker(mount, state); break;
             case 'personal-balance-sheet': await renderPersonalBalanceSheet(mount, state); break;
             case 'personal-cash-flow': await renderPersonalCashFlow(mount, state); break;
@@ -4499,6 +4501,7 @@ export const viewRenderers = {
     'disability-insurance-needs': (m, s) => renderDisabilityInsuranceNeeds(m, s),
     'true-hourly-wage': (m, s) => renderTrueHourlyWage(m, s),
     'property-tax': (m, s) => renderPropertyTax(m, s),
+    'rental-noi': (m, s) => renderRentalNoi(m, s),
     'envelope-budget': (m, s) => renderEnvelopeBudget(m, s),
     'fafsa-efc': (m, s) => renderFafsaEfc(m, s),
     'fifty-thirty-twenty': (m, s) => renderFiftyThirtyTwenty(m, s),
