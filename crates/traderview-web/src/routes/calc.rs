@@ -65,6 +65,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/estimate", post(estimate_route))
         .route("/calc/purchase-order", post(purchase_order_route))
         .route("/calc/sublease", post(sublease_route))
+        .route("/calc/roommate-agreement", post(roommate_agreement_route))
         .route("/calc/fix-and-flip", post(fix_and_flip_route))
         .route("/calc/cash-conversion-cycle", post(cash_conversion_cycle_route))
         .route("/calc/profit-first", post(profit_first_route))
@@ -11591,6 +11592,14 @@ async fn sublease_route(
     Json(b): Json<traderview_core::sublease_agreement::SubleaseInput>,
 ) -> Json<traderview_core::sublease_agreement::SubleaseAgreement> {
     Json(traderview_core::sublease_agreement::generate(&b))
+}
+
+/// Roommate agreement: rent and deposit split (weighted) across roommates.
+async fn roommate_agreement_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::roommate_agreement::RoommateInput>,
+) -> Json<traderview_core::roommate_agreement::RoommateAgreement> {
+    Json(traderview_core::roommate_agreement::generate(&b))
 }
 
 /// Fix-and-flip: the 70% rule max-allowable-offer plus the full deal P&L

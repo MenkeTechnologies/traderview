@@ -233,6 +233,7 @@ pub mod rent_affordability;
 pub mod rent_escalation;
 pub mod rent_increase_notice;
 pub mod rent_receipt;
+pub mod roommate_agreement;
 pub mod rental_noi;
 pub mod rental_total_return;
 pub mod rent_vs_sell;
