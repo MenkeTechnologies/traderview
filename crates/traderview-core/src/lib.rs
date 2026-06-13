@@ -226,6 +226,7 @@ pub mod rsi_divergence;
 pub mod sales_tax;
 pub mod savings_waterfall;
 pub mod scale_order;
+pub mod sde_valuation;
 pub mod scan;
 pub mod schaff_trend;
 pub mod second_income;

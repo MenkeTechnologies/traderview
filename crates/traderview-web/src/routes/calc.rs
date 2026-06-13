@@ -134,6 +134,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/breakeven-occupancy", post(breakeven_occupancy_route))
         .route("/calc/rent-affordability", post(rent_affordability_route))
         .route("/calc/real-raise", post(real_raise_route))
+        .route("/calc/sde-valuation", post(sde_valuation_route))
         .route("/calc/wash-sale", post(wash_sale_route))
         .route("/calc/cost-basis", post(cost_basis_route))
         .route("/calc/section-1244", post(section_1244_route))
@@ -12135,4 +12136,12 @@ async fn real_raise_route(
     Json(b): Json<traderview_core::real_raise::RealRaiseInput>,
 ) -> Json<traderview_core::real_raise::RealRaiseResult> {
     Json(traderview_core::real_raise::analyze(&b))
+}
+
+/// SDE business valuation — seller's discretionary earnings × multiple.
+async fn sde_valuation_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::sde_valuation::SdeInput>,
+) -> Json<traderview_core::sde_valuation::SdeResult> {
+    Json(traderview_core::sde_valuation::analyze(&b))
 }
