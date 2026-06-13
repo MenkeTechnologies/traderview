@@ -839,6 +839,7 @@ export const api = {
     calcOvertimePay:         (body) => request('/calc/overtime-pay', { method: 'POST', body: JSON.stringify(body) }),
     calcSolarPayback:        (body) => request('/calc/solar-payback', { method: 'POST', body: JSON.stringify(body) }),
     calcPortfolioLongevity:  (body) => request('/calc/portfolio-longevity', { method: 'POST', body: JSON.stringify(body) }),
+    calcSecondIncome:        (body) => request('/calc/second-income', { method: 'POST', body: JSON.stringify(body) }),
     calcMergerArb:           (body) => request('/calc/merger-arb', { method: 'POST', body: JSON.stringify(body) }),
     calcBuybackAccretion:    (body) => request('/calc/buyback-accretion', { method: 'POST', body: JSON.stringify(body) }),
     calcCefDiscount:         (body) => request('/calc/cef-discount', { method: 'POST', body: JSON.stringify(body) }),

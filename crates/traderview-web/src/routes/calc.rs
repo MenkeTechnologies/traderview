@@ -130,6 +130,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/overtime-pay", post(overtime_pay_route))
         .route("/calc/solar-payback", post(solar_payback_route))
         .route("/calc/portfolio-longevity", post(portfolio_longevity_route))
+        .route("/calc/second-income", post(second_income_route))
         .route("/calc/wash-sale", post(wash_sale_route))
         .route("/calc/cost-basis", post(cost_basis_route))
         .route("/calc/section-1244", post(section_1244_route))
@@ -12099,4 +12100,12 @@ async fn portfolio_longevity_route(
     Json(b): Json<traderview_core::portfolio_longevity::LongevityInput>,
 ) -> Json<traderview_core::portfolio_longevity::LongevityResult> {
     Json(traderview_core::portfolio_longevity::analyze(&b))
+}
+
+/// Second income — net household benefit after taxes, childcare, work costs.
+async fn second_income_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::second_income::SecondIncomeInput>,
+) -> Json<traderview_core::second_income::SecondIncomeResult> {
+    Json(traderview_core::second_income::analyze(&b))
 }

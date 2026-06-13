@@ -225,6 +225,7 @@ pub mod savings_waterfall;
 pub mod scale_order;
 pub mod scan;
 pub mod schaff_trend;
+pub mod second_income;
 pub mod sector_exposure;
 pub mod seller_financing;
 pub mod sentiment;
