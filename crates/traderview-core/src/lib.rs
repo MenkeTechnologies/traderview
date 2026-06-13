@@ -187,6 +187,7 @@ pub mod scale_order;
 pub mod scan;
 pub mod schaff_trend;
 pub mod sector_exposure;
+pub mod seller_financing;
 pub mod sentiment;
 pub mod setup_catalog;
 pub mod sharpe_by_window;

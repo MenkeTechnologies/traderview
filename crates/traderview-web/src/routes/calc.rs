@@ -77,6 +77,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/price-to-rent", post(price_to_rent_route))
         .route("/calc/years-to-fi", post(years_to_fi_route))
         .route("/calc/grm", post(grm_route))
+        .route("/calc/seller-financing", post(seller_financing_route))
         .route("/calc/wash-sale", post(wash_sale_route))
         .route("/calc/cost-basis", post(cost_basis_route))
         .route("/calc/section-1244", post(section_1244_route))
@@ -11615,4 +11616,13 @@ async fn grm_route(
     Json(b): Json<traderview_core::gross_rent_multiplier::GrmInput>,
 ) -> Json<traderview_core::gross_rent_multiplier::GrmResult> {
     Json(traderview_core::gross_rent_multiplier::analyze(&b))
+}
+
+/// Seller financing: the carryback note — amortized payment, balloon balance,
+/// and the seller's interest income.
+async fn seller_financing_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::seller_financing::SellerFinancingInput>,
+) -> Json<traderview_core::seller_financing::SellerFinancingResult> {
+    Json(traderview_core::seller_financing::analyze(&b))
 }

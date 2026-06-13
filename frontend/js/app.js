@@ -721,6 +721,7 @@ import { renderDebtYield } from './views/debt_yield.js';
 import { renderPriceToRent } from './views/price_to_rent.js';
 import { renderYearsToFi } from './views/years_to_fi.js';
 import { renderGrm } from './views/gross_rent_multiplier.js';
+import { renderSellerFinancing } from './views/seller_financing.js';
 import { renderNetWorthTracker } from './views/net_worth_tracker.js';
 import { renderPersonalBalanceSheet } from './views/personal_balance_sheet.js';
 import { renderPersonalCashFlow } from './views/personal_cash_flow.js';
@@ -3077,6 +3078,7 @@ export async function dispatch() {
             case 'price-to-rent': await renderPriceToRent(mount, state); break;
             case 'years-to-fi': await renderYearsToFi(mount, state); break;
             case 'grm': await renderGrm(mount, state); break;
+            case 'seller-financing': await renderSellerFinancing(mount, state); break;
             case 'net-worth-tracker': await renderNetWorthTracker(mount, state); break;
             case 'personal-balance-sheet': await renderPersonalBalanceSheet(mount, state); break;
             case 'personal-cash-flow': await renderPersonalCashFlow(mount, state); break;
@@ -4355,6 +4357,7 @@ export const viewRenderers = {
     'price-to-rent': (m, s) => renderPriceToRent(m, s),
     'years-to-fi': (m, s) => renderYearsToFi(m, s),
     'grm': (m, s) => renderGrm(m, s),
+    'seller-financing': (m, s) => renderSellerFinancing(m, s),
     'envelope-budget': (m, s) => renderEnvelopeBudget(m, s),
     'fafsa-efc': (m, s) => renderFafsaEfc(m, s),
     'fifty-thirty-twenty': (m, s) => renderFiftyThirtyTwenty(m, s),

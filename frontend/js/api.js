@@ -786,6 +786,7 @@ export const api = {
     calcPriceToRent:         (body) => request('/calc/price-to-rent', { method: 'POST', body: JSON.stringify(body) }),
     calcYearsToFi:           (body) => request('/calc/years-to-fi', { method: 'POST', body: JSON.stringify(body) }),
     calcGrm:                 (body) => request('/calc/grm', { method: 'POST', body: JSON.stringify(body) }),
+    calcSellerFinancing:     (body) => request('/calc/seller-financing', { method: 'POST', body: JSON.stringify(body) }),
     calcMergerArb:           (body) => request('/calc/merger-arb', { method: 'POST', body: JSON.stringify(body) }),
     calcBuybackAccretion:    (body) => request('/calc/buyback-accretion', { method: 'POST', body: JSON.stringify(body) }),
     calcCefDiscount:         (body) => request('/calc/cef-discount', { method: 'POST', body: JSON.stringify(body) }),
