@@ -153,6 +153,7 @@ pub mod mean_reversion;
 pub mod mfi;
 pub mod models;
 pub mod monte_carlo;
+pub mod mortgage_affordability;
 pub mod mortgage_points;
 pub mod mortgage_recast;
 pub mod mtm_reconciliation;

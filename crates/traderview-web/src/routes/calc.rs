@@ -126,6 +126,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/true-hourly-wage", post(true_hourly_wage_route))
         .route("/calc/property-tax", post(property_tax_route))
         .route("/calc/rental-noi", post(rental_noi_route))
+        .route("/calc/mortgage-affordability", post(mortgage_affordability_route))
         .route("/calc/wash-sale", post(wash_sale_route))
         .route("/calc/cost-basis", post(cost_basis_route))
         .route("/calc/section-1244", post(section_1244_route))
@@ -12063,4 +12064,12 @@ async fn rental_noi_route(
     Json(b): Json<traderview_core::rental_noi::RentalNoiInput>,
 ) -> Json<traderview_core::rental_noi::RentalNoiResult> {
     Json(traderview_core::rental_noi::analyze(&b))
+}
+
+/// Mortgage affordability — max home price under the 28/36 rule.
+async fn mortgage_affordability_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::mortgage_affordability::AffordabilityInput>,
+) -> Json<traderview_core::mortgage_affordability::AffordabilityResult> {
+    Json(traderview_core::mortgage_affordability::analyze(&b))
 }
