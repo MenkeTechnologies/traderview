@@ -116,6 +116,7 @@ pub mod goal_tracker;
 pub mod graham_number;
 pub mod greeks;
 pub mod gross_rent_multiplier;
+pub mod guaranty_agreement;
 pub mod guyton_klinger;
 pub mod halt_risk;
 pub mod hedge_ratio;
