@@ -143,6 +143,7 @@ pub mod mfi;
 pub mod models;
 pub mod monte_carlo;
 pub mod mortgage_points;
+pub mod mortgage_recast;
 pub mod mtm_reconciliation;
 pub mod news_event_handler;
 pub mod npv_irr;
