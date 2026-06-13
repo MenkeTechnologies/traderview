@@ -802,6 +802,7 @@ export const api = {
     calcGrahamNumber:        (body) => request('/calc/graham-number', { method: 'POST', body: JSON.stringify(body) }),
     calcTakeHomePaycheck:    (body) => request('/calc/take-home-paycheck', { method: 'POST', body: JSON.stringify(body) }),
     calcEvEbitda:            (body) => request('/calc/ev-ebitda', { method: 'POST', body: JSON.stringify(body) }),
+    calcHoldingPeriodReturn: (body) => request('/calc/holding-period-return', { method: 'POST', body: JSON.stringify(body) }),
     calcMergerArb:           (body) => request('/calc/merger-arb', { method: 'POST', body: JSON.stringify(body) }),
     calcBuybackAccretion:    (body) => request('/calc/buyback-accretion', { method: 'POST', body: JSON.stringify(body) }),
     calcCefDiscount:         (body) => request('/calc/cef-discount', { method: 'POST', body: JSON.stringify(body) }),
