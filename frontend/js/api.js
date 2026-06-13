@@ -763,6 +763,7 @@ export const api = {
     calcRentIncreaseNotice:  (body) => request('/calc/rent-increase-notice', { method: 'POST', body: JSON.stringify(body) }),
     calcDemandForPayment:    (body) => request('/calc/demand-for-payment', { method: 'POST', body: JSON.stringify(body) }),
     calcLeaseRenewal:        (body) => request('/calc/lease-renewal', { method: 'POST', body: JSON.stringify(body) }),
+    calcBillOfSale:          (body) => request('/calc/bill-of-sale', { method: 'POST', body: JSON.stringify(body) }),
     calcFixAndFlip:          (body) => request('/calc/fix-and-flip', { method: 'POST', body: JSON.stringify(body) }),
     calcCashConversionCycle: (body) => request('/calc/cash-conversion-cycle', { method: 'POST', body: JSON.stringify(body) }),
     calcProfitFirst:         (body) => request('/calc/profit-first', { method: 'POST', body: JSON.stringify(body) }),

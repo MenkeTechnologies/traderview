@@ -698,6 +698,7 @@ import { renderPromissoryNote } from './views/promissory_note.js';
 import { renderRentIncreaseNotice } from './views/rent_increase_notice.js';
 import { renderDemandForPayment } from './views/demand_for_payment.js';
 import { renderLeaseRenewal } from './views/lease_renewal.js';
+import { renderBillOfSale } from './views/bill_of_sale.js';
 import { renderFixAndFlip } from './views/fix_and_flip.js';
 import { renderCashConversionCycle } from './views/cash_conversion_cycle.js';
 import { renderProfitFirst } from './views/profit_first.js';
@@ -3137,6 +3138,7 @@ export async function dispatch() {
             case 'rent-increase-notice': await renderRentIncreaseNotice(mount, state); break;
             case 'demand-for-payment': await renderDemandForPayment(mount, state); break;
             case 'lease-renewal': await renderLeaseRenewal(mount, state); break;
+            case 'bill-of-sale': await renderBillOfSale(mount, state); break;
             case 'fix-and-flip': await renderFixAndFlip(mount, state); break;
             case 'cash-conversion-cycle': await renderCashConversionCycle(mount, state); break;
             case 'profit-first': await renderProfitFirst(mount, state); break;
@@ -4490,6 +4492,7 @@ export const viewRenderers = {
     'rent-increase-notice': (m, s) => renderRentIncreaseNotice(m, s),
     'demand-for-payment': (m, s) => renderDemandForPayment(m, s),
     'lease-renewal': (m, s) => renderLeaseRenewal(m, s),
+    'bill-of-sale': (m, s) => renderBillOfSale(m, s),
     'fix-and-flip': (m, s) => renderFixAndFlip(m, s),
     'cash-conversion-cycle': (m, s) => renderCashConversionCycle(m, s),
     'profit-first': (m, s) => renderProfitFirst(m, s),

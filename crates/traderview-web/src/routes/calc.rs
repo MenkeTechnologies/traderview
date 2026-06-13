@@ -54,6 +54,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/rent-increase-notice", post(rent_increase_notice_route))
         .route("/calc/demand-for-payment", post(demand_for_payment_route))
         .route("/calc/lease-renewal", post(lease_renewal_route))
+        .route("/calc/bill-of-sale", post(bill_of_sale_route))
         .route("/calc/fix-and-flip", post(fix_and_flip_route))
         .route("/calc/cash-conversion-cycle", post(cash_conversion_cycle_route))
         .route("/calc/profit-first", post(profit_first_route))
@@ -11484,6 +11485,15 @@ async fn lease_renewal_route(
     Json(b): Json<traderview_core::lease_renewal::RenewalInput>,
 ) -> Json<traderview_core::lease_renewal::RenewalAgreement> {
     Json(traderview_core::lease_renewal::generate(&b))
+}
+
+/// Bill of sale: sales tax + total consideration, assembled into a transfer
+/// document with condition and title clauses.
+async fn bill_of_sale_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::bill_of_sale::BillOfSaleInput>,
+) -> Json<traderview_core::bill_of_sale::BillOfSale> {
+    Json(traderview_core::bill_of_sale::generate(&b))
 }
 
 /// Fix-and-flip: the 70% rule max-allowable-offer plus the full deal P&L
