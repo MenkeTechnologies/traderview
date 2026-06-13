@@ -204,6 +204,7 @@ pub mod real_return;
 pub mod rebalance;
 pub mod reconcile_1099b;
 pub mod renko;
+pub mod rent_affordability;
 pub mod rent_escalation;
 pub mod rental_noi;
 pub mod rent_vs_sell;

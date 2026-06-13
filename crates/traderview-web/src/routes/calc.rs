@@ -132,6 +132,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/portfolio-longevity", post(portfolio_longevity_route))
         .route("/calc/second-income", post(second_income_route))
         .route("/calc/breakeven-occupancy", post(breakeven_occupancy_route))
+        .route("/calc/rent-affordability", post(rent_affordability_route))
         .route("/calc/wash-sale", post(wash_sale_route))
         .route("/calc/cost-basis", post(cost_basis_route))
         .route("/calc/section-1244", post(section_1244_route))
@@ -12117,4 +12118,12 @@ async fn breakeven_occupancy_route(
     Json(b): Json<traderview_core::breakeven_occupancy::BreakevenOccupancyInput>,
 ) -> Json<traderview_core::breakeven_occupancy::BreakevenOccupancyResult> {
     Json(traderview_core::breakeven_occupancy::analyze(&b))
+}
+
+/// Rent affordability — max rent under the 30% and debt-adjusted rules.
+async fn rent_affordability_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::rent_affordability::RentAffordInput>,
+) -> Json<traderview_core::rent_affordability::RentAffordResult> {
+    Json(traderview_core::rent_affordability::analyze(&b))
 }
