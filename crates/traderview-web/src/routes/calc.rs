@@ -52,6 +52,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/security-deposit-itemization", post(security_deposit_itemization_route))
         .route("/calc/promissory-note", post(promissory_note_route))
         .route("/calc/rent-increase-notice", post(rent_increase_notice_route))
+        .route("/calc/demand-for-payment", post(demand_for_payment_route))
         .route("/calc/fix-and-flip", post(fix_and_flip_route))
         .route("/calc/cash-conversion-cycle", post(cash_conversion_cycle_route))
         .route("/calc/profit-first", post(profit_first_route))
@@ -11464,6 +11465,15 @@ async fn rent_increase_notice_route(
     Json(b): Json<traderview_core::rent_increase_notice::RentIncreaseInput>,
 ) -> Json<traderview_core::rent_increase_notice::RentIncreaseNotice> {
     Json(traderview_core::rent_increase_notice::generate(&b))
+}
+
+/// Demand for payment: totals principal + interest + fees and computes the
+/// pay-by date, assembled into a formal demand letter.
+async fn demand_for_payment_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::demand_for_payment::DemandInput>,
+) -> Json<traderview_core::demand_for_payment::DemandLetter> {
+    Json(traderview_core::demand_for_payment::generate(&b))
 }
 
 /// Fix-and-flip: the 70% rule max-allowable-offer plus the full deal P&L

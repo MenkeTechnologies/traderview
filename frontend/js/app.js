@@ -696,6 +696,7 @@ import { renderLandlordNotice } from './views/landlord_notice.js';
 import { renderSecurityDepositItemization } from './views/security_deposit_itemization.js';
 import { renderPromissoryNote } from './views/promissory_note.js';
 import { renderRentIncreaseNotice } from './views/rent_increase_notice.js';
+import { renderDemandForPayment } from './views/demand_for_payment.js';
 import { renderFixAndFlip } from './views/fix_and_flip.js';
 import { renderCashConversionCycle } from './views/cash_conversion_cycle.js';
 import { renderProfitFirst } from './views/profit_first.js';
@@ -3133,6 +3134,7 @@ export async function dispatch() {
             case 'security-deposit-itemization': await renderSecurityDepositItemization(mount, state); break;
             case 'promissory-note': await renderPromissoryNote(mount, state); break;
             case 'rent-increase-notice': await renderRentIncreaseNotice(mount, state); break;
+            case 'demand-for-payment': await renderDemandForPayment(mount, state); break;
             case 'fix-and-flip': await renderFixAndFlip(mount, state); break;
             case 'cash-conversion-cycle': await renderCashConversionCycle(mount, state); break;
             case 'profit-first': await renderProfitFirst(mount, state); break;
@@ -4484,6 +4486,7 @@ export const viewRenderers = {
     'security-deposit-itemization': (m, s) => renderSecurityDepositItemization(m, s),
     'promissory-note': (m, s) => renderPromissoryNote(m, s),
     'rent-increase-notice': (m, s) => renderRentIncreaseNotice(m, s),
+    'demand-for-payment': (m, s) => renderDemandForPayment(m, s),
     'fix-and-flip': (m, s) => renderFixAndFlip(m, s),
     'cash-conversion-cycle': (m, s) => renderCashConversionCycle(m, s),
     'profit-first': (m, s) => renderProfitFirst(m, s),

@@ -67,6 +67,7 @@ pub mod cumulative_delta;
 pub mod currency_exposure;
 pub mod cusum;
 pub mod daily_loss_limit;
+pub mod demand_for_payment;
 pub mod depreciation_recapture;
 pub mod debt_yield;
 pub mod disability_insurance_needs;

@@ -761,6 +761,7 @@ export const api = {
     calcSecurityDepositItemization: (body) => request('/calc/security-deposit-itemization', { method: 'POST', body: JSON.stringify(body) }),
     calcPromissoryNote:      (body) => request('/calc/promissory-note', { method: 'POST', body: JSON.stringify(body) }),
     calcRentIncreaseNotice:  (body) => request('/calc/rent-increase-notice', { method: 'POST', body: JSON.stringify(body) }),
+    calcDemandForPayment:    (body) => request('/calc/demand-for-payment', { method: 'POST', body: JSON.stringify(body) }),
     calcFixAndFlip:          (body) => request('/calc/fix-and-flip', { method: 'POST', body: JSON.stringify(body) }),
     calcCashConversionCycle: (body) => request('/calc/cash-conversion-cycle', { method: 'POST', body: JSON.stringify(body) }),
     calcProfitFirst:         (body) => request('/calc/profit-first', { method: 'POST', body: JSON.stringify(body) }),
