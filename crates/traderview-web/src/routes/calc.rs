@@ -143,6 +143,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/marriage-penalty", post(marriage_penalty_route))
         .route("/calc/standard-vs-itemized", post(standard_vs_itemized_route))
         .route("/calc/capture-ratio", post(capture_ratio_route))
+        .route("/calc/rental-total-return", post(rental_total_return_route))
         .route("/calc/wash-sale", post(wash_sale_route))
         .route("/calc/cost-basis", post(cost_basis_route))
         .route("/calc/section-1244", post(section_1244_route))
@@ -12216,4 +12217,12 @@ async fn capture_ratio_route(
     Json(b): Json<traderview_core::capture_ratio::CaptureRatioInput>,
 ) -> Json<traderview_core::capture_ratio::CaptureRatioResult> {
     Json(traderview_core::capture_ratio::analyze(&b))
+}
+
+/// Rental total return — the four-component decomposition on cash invested.
+async fn rental_total_return_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::rental_total_return::RentalReturnInput>,
+) -> Json<traderview_core::rental_total_return::RentalReturnResult> {
+    Json(traderview_core::rental_total_return::analyze(&b))
 }

@@ -852,6 +852,7 @@ export const api = {
     calcMarriagePenalty:     (body) => request('/calc/marriage-penalty', { method: 'POST', body: JSON.stringify(body) }),
     calcStdVsItemized:       (body) => request('/calc/standard-vs-itemized', { method: 'POST', body: JSON.stringify(body) }),
     calcCaptureRatio:        (body) => request('/calc/capture-ratio', { method: 'POST', body: JSON.stringify(body) }),
+    calcRentalTotalReturn:   (body) => request('/calc/rental-total-return', { method: 'POST', body: JSON.stringify(body) }),
     calcMergerArb:           (body) => request('/calc/merger-arb', { method: 'POST', body: JSON.stringify(body) }),
     calcBuybackAccretion:    (body) => request('/calc/buyback-accretion', { method: 'POST', body: JSON.stringify(body) }),
     calcCefDiscount:         (body) => request('/calc/cef-discount', { method: 'POST', body: JSON.stringify(body) }),
