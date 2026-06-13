@@ -856,6 +856,7 @@ export const api = {
     calcEconomicValueAdded:  (body) => request('/calc/economic-value-added', { method: 'POST', body: JSON.stringify(body) }),
     calcMirr:                (body) => request('/calc/mirr', { method: 'POST', body: JSON.stringify(body) }),
     calcEquivalentAnnualCost:(body) => request('/calc/equivalent-annual-cost', { method: 'POST', body: JSON.stringify(body) }),
+    calcMultiProductBreakeven:(body) => request('/calc/multi-product-breakeven', { method: 'POST', body: JSON.stringify(body) }),
     calcMergerArb:           (body) => request('/calc/merger-arb', { method: 'POST', body: JSON.stringify(body) }),
     calcBuybackAccretion:    (body) => request('/calc/buyback-accretion', { method: 'POST', body: JSON.stringify(body) }),
     calcCefDiscount:         (body) => request('/calc/cef-discount', { method: 'POST', body: JSON.stringify(body) }),
