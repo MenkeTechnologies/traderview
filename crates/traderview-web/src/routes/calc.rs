@@ -75,6 +75,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/severance", post(severance_route))
         .route("/calc/commission-agreement", post(commission_agreement_route))
         .route("/calc/pto-policy", post(pto_policy_route))
+        .route("/calc/expense-reimbursement", post(expense_reimbursement_route))
         .route("/calc/fix-and-flip", post(fix_and_flip_route))
         .route("/calc/cash-conversion-cycle", post(cash_conversion_cycle_route))
         .route("/calc/profit-first", post(profit_first_route))
@@ -11682,6 +11683,14 @@ async fn pto_policy_route(
     Json(b): Json<traderview_core::pto_policy::PtoPolicyInput>,
 ) -> Json<traderview_core::pto_policy::PtoPolicy> {
     Json(traderview_core::pto_policy::generate(&b))
+}
+
+/// Expense reimbursement: itemized + mileage → total reimbursement.
+async fn expense_reimbursement_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::expense_reimbursement::ReimbursementInput>,
+) -> Json<traderview_core::expense_reimbursement::ReimbursementRequest> {
+    Json(traderview_core::expense_reimbursement::generate(&b))
 }
 
 /// Fix-and-flip: the 70% rule max-allowable-offer plus the full deal P&L

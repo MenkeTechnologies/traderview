@@ -784,6 +784,7 @@ export const api = {
     calcSeverance:           (body) => request('/calc/severance', { method: 'POST', body: JSON.stringify(body) }),
     calcCommissionAgreement: (body) => request('/calc/commission-agreement', { method: 'POST', body: JSON.stringify(body) }),
     calcPtoPolicy:           (body) => request('/calc/pto-policy', { method: 'POST', body: JSON.stringify(body) }),
+    calcExpenseReimbursement:(body) => request('/calc/expense-reimbursement', { method: 'POST', body: JSON.stringify(body) }),
     calcFixAndFlip:          (body) => request('/calc/fix-and-flip', { method: 'POST', body: JSON.stringify(body) }),
     calcCashConversionCycle: (body) => request('/calc/cash-conversion-cycle', { method: 'POST', body: JSON.stringify(body) }),
     calcProfitFirst:         (body) => request('/calc/profit-first', { method: 'POST', body: JSON.stringify(body) }),
