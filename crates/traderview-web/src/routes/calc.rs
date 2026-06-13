@@ -66,6 +66,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/purchase-order", post(purchase_order_route))
         .route("/calc/sublease", post(sublease_route))
         .route("/calc/roommate-agreement", post(roommate_agreement_route))
+        .route("/calc/commercial-lease", post(commercial_lease_route))
         .route("/calc/fix-and-flip", post(fix_and_flip_route))
         .route("/calc/cash-conversion-cycle", post(cash_conversion_cycle_route))
         .route("/calc/profit-first", post(profit_first_route))
@@ -11600,6 +11601,15 @@ async fn roommate_agreement_route(
     Json(b): Json<traderview_core::roommate_agreement::RoommateInput>,
 ) -> Json<traderview_core::roommate_agreement::RoommateAgreement> {
     Json(traderview_core::roommate_agreement::generate(&b))
+}
+
+/// Commercial (NNN) lease: base + triple-net charges, gross monthly rent, end
+/// date.
+async fn commercial_lease_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::commercial_lease::CommercialLeaseInput>,
+) -> Json<traderview_core::commercial_lease::CommercialLease> {
+    Json(traderview_core::commercial_lease::generate(&b))
 }
 
 /// Fix-and-flip: the 70% rule max-allowable-offer plus the full deal P&L

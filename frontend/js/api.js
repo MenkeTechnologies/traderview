@@ -775,6 +775,7 @@ export const api = {
     calcPurchaseOrder:       (body) => request('/calc/purchase-order', { method: 'POST', body: JSON.stringify(body) }),
     calcSublease:            (body) => request('/calc/sublease', { method: 'POST', body: JSON.stringify(body) }),
     calcRoommateAgreement:   (body) => request('/calc/roommate-agreement', { method: 'POST', body: JSON.stringify(body) }),
+    calcCommercialLease:     (body) => request('/calc/commercial-lease', { method: 'POST', body: JSON.stringify(body) }),
     calcFixAndFlip:          (body) => request('/calc/fix-and-flip', { method: 'POST', body: JSON.stringify(body) }),
     calcCashConversionCycle: (body) => request('/calc/cash-conversion-cycle', { method: 'POST', body: JSON.stringify(body) }),
     calcProfitFirst:         (body) => request('/calc/profit-first', { method: 'POST', body: JSON.stringify(body) }),

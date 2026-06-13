@@ -710,6 +710,7 @@ import { renderEstimate } from './views/estimate.js';
 import { renderPurchaseOrder } from './views/purchase_order.js';
 import { renderSublease } from './views/sublease_agreement.js';
 import { renderRoommateAgreement } from './views/roommate_agreement.js';
+import { renderCommercialLease } from './views/commercial_lease.js';
 import { renderFixAndFlip } from './views/fix_and_flip.js';
 import { renderCashConversionCycle } from './views/cash_conversion_cycle.js';
 import { renderProfitFirst } from './views/profit_first.js';
@@ -3161,6 +3162,7 @@ export async function dispatch() {
             case 'purchase-order': await renderPurchaseOrder(mount, state); break;
             case 'sublease': await renderSublease(mount, state); break;
             case 'roommate-agreement': await renderRoommateAgreement(mount, state); break;
+            case 'commercial-lease': await renderCommercialLease(mount, state); break;
             case 'fix-and-flip': await renderFixAndFlip(mount, state); break;
             case 'cash-conversion-cycle': await renderCashConversionCycle(mount, state); break;
             case 'profit-first': await renderProfitFirst(mount, state); break;
@@ -4526,6 +4528,7 @@ export const viewRenderers = {
     'purchase-order': (m, s) => renderPurchaseOrder(m, s),
     'sublease': (m, s) => renderSublease(m, s),
     'roommate-agreement': (m, s) => renderRoommateAgreement(m, s),
+    'commercial-lease': (m, s) => renderCommercialLease(m, s),
     'fix-and-flip': (m, s) => renderFixAndFlip(m, s),
     'cash-conversion-cycle': (m, s) => renderCashConversionCycle(m, s),
     'profit-first': (m, s) => renderProfitFirst(m, s),

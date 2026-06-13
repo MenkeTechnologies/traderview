@@ -55,6 +55,7 @@ pub mod chaikin_volatility;
 pub mod change_of_character;
 pub mod choppiness;
 pub mod cluster_analysis;
+pub mod commercial_lease;
 pub mod commission_optimizer;
 pub mod concentration;
 pub mod contractor_agreement;
