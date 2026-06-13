@@ -182,6 +182,7 @@ pub mod pmi_removal;
 pub mod pnl;
 pub mod portfolio_greeks;
 pub mod portfolio_heat;
+pub mod portfolio_longevity;
 pub mod position_aging;
 pub mod position_irr;
 pub mod position_size;

@@ -773,6 +773,7 @@ import { renderRentalNoi } from './views/rental_noi.js';
 import { renderMortgageAffordability } from './views/mortgage_affordability.js';
 import { renderOvertimePay } from './views/overtime_pay.js';
 import { renderSolarPayback } from './views/solar_payback.js';
+import { renderPortfolioLongevity } from './views/portfolio_longevity.js';
 import { renderNetWorthTracker } from './views/net_worth_tracker.js';
 import { renderPersonalBalanceSheet } from './views/personal_balance_sheet.js';
 import { renderPersonalCashFlow } from './views/personal_cash_flow.js';
@@ -3181,6 +3182,7 @@ export async function dispatch() {
             case 'mortgage-affordability': await renderMortgageAffordability(mount, state); break;
             case 'overtime-pay': await renderOvertimePay(mount, state); break;
             case 'solar-payback': await renderSolarPayback(mount, state); break;
+            case 'portfolio-longevity': await renderPortfolioLongevity(mount, state); break;
             case 'net-worth-tracker': await renderNetWorthTracker(mount, state); break;
             case 'personal-balance-sheet': await renderPersonalBalanceSheet(mount, state); break;
             case 'personal-cash-flow': await renderPersonalCashFlow(mount, state); break;
@@ -4511,6 +4513,7 @@ export const viewRenderers = {
     'mortgage-affordability': (m, s) => renderMortgageAffordability(m, s),
     'overtime-pay': (m, s) => renderOvertimePay(m, s),
     'solar-payback': (m, s) => renderSolarPayback(m, s),
+    'portfolio-longevity': (m, s) => renderPortfolioLongevity(m, s),
     'envelope-budget': (m, s) => renderEnvelopeBudget(m, s),
     'fafsa-efc': (m, s) => renderFafsaEfc(m, s),
     'fifty-thirty-twenty': (m, s) => renderFiftyThirtyTwenty(m, s),

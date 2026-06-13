@@ -129,6 +129,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/mortgage-affordability", post(mortgage_affordability_route))
         .route("/calc/overtime-pay", post(overtime_pay_route))
         .route("/calc/solar-payback", post(solar_payback_route))
+        .route("/calc/portfolio-longevity", post(portfolio_longevity_route))
         .route("/calc/wash-sale", post(wash_sale_route))
         .route("/calc/cost-basis", post(cost_basis_route))
         .route("/calc/section-1244", post(section_1244_route))
@@ -12090,4 +12091,12 @@ async fn solar_payback_route(
     Json(b): Json<traderview_core::solar_payback::SolarInput>,
 ) -> Json<traderview_core::solar_payback::SolarResult> {
     Json(traderview_core::solar_payback::analyze(&b))
+}
+
+/// Portfolio longevity — years a nest egg lasts under inflation-adjusted draws.
+async fn portfolio_longevity_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::portfolio_longevity::LongevityInput>,
+) -> Json<traderview_core::portfolio_longevity::LongevityResult> {
+    Json(traderview_core::portfolio_longevity::analyze(&b))
 }
