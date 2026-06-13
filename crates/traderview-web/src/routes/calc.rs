@@ -117,6 +117,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/cash-out-refinance", post(cash_out_refinance_route))
         .route("/calc/margin-analysis", post(margin_analysis_route))
         .route("/calc/bonus-grossup", post(bonus_grossup_route))
+        .route("/calc/rent-escalation", post(rent_escalation_route))
         .route("/calc/wash-sale", post(wash_sale_route))
         .route("/calc/cost-basis", post(cost_basis_route))
         .route("/calc/section-1244", post(section_1244_route))
@@ -11982,4 +11983,12 @@ async fn bonus_grossup_route(
     Json(b): Json<traderview_core::bonus_grossup::GrossUpInput>,
 ) -> Json<traderview_core::bonus_grossup::GrossUpResult> {
     Json(traderview_core::bonus_grossup::analyze(&b))
+}
+
+/// Lease cost with escalations + concessions → total, NPV, effective rent.
+async fn rent_escalation_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::rent_escalation::RentEscalationInput>,
+) -> Json<traderview_core::rent_escalation::RentEscalationResult> {
+    Json(traderview_core::rent_escalation::analyze(&b))
 }
