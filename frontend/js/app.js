@@ -703,6 +703,7 @@ import { renderRentReceipt } from './views/rent_receipt.js';
 import { renderContractorAgreement } from './views/contractor_agreement.js';
 import { renderNoticeOfEntry } from './views/notice_of_entry.js';
 import { renderLeaseTermination } from './views/lease_termination.js';
+import { renderNdaAgreement } from './views/nda_agreement.js';
 import { renderFixAndFlip } from './views/fix_and_flip.js';
 import { renderCashConversionCycle } from './views/cash_conversion_cycle.js';
 import { renderProfitFirst } from './views/profit_first.js';
@@ -3147,6 +3148,7 @@ export async function dispatch() {
             case 'contractor-agreement': await renderContractorAgreement(mount, state); break;
             case 'notice-of-entry': await renderNoticeOfEntry(mount, state); break;
             case 'lease-termination': await renderLeaseTermination(mount, state); break;
+            case 'nda': await renderNdaAgreement(mount, state); break;
             case 'fix-and-flip': await renderFixAndFlip(mount, state); break;
             case 'cash-conversion-cycle': await renderCashConversionCycle(mount, state); break;
             case 'profit-first': await renderProfitFirst(mount, state); break;
@@ -4505,6 +4507,7 @@ export const viewRenderers = {
     'contractor-agreement': (m, s) => renderContractorAgreement(m, s),
     'notice-of-entry': (m, s) => renderNoticeOfEntry(m, s),
     'lease-termination': (m, s) => renderLeaseTermination(m, s),
+    'nda': (m, s) => renderNdaAgreement(m, s),
     'fix-and-flip': (m, s) => renderFixAndFlip(m, s),
     'cash-conversion-cycle': (m, s) => renderCashConversionCycle(m, s),
     'profit-first': (m, s) => renderProfitFirst(m, s),

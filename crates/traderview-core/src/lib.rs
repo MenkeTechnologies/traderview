@@ -172,6 +172,7 @@ pub mod mortgage_recast;
 pub mod mirr;
 pub mod mtm_reconciliation;
 pub mod multi_product_breakeven;
+pub mod nda_agreement;
 pub mod news_event_handler;
 pub mod notice_of_entry;
 pub mod npv_irr;
