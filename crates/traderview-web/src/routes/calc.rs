@@ -67,6 +67,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/ss-pia", post(ss_pia_route))
         .route("/calc/hsa-triple-tax", post(hsa_triple_tax_route))
         .route("/calc/age-allocation", post(age_allocation_route))
+        .route("/calc/roth-bracket-fill", post(roth_bracket_fill_route))
         .route("/calc/wash-sale", post(wash_sale_route))
         .route("/calc/cost-basis", post(cost_basis_route))
         .route("/calc/section-1244", post(section_1244_route))
@@ -11515,4 +11516,13 @@ async fn age_allocation_route(
     Json(b): Json<traderview_core::age_based_allocation::AllocationInput>,
 ) -> Json<traderview_core::age_based_allocation::AllocationResult> {
     Json(traderview_core::age_based_allocation::analyze(&b))
+}
+
+/// Roth bracket-fill: the conversion that tops off a tax bracket (headroom to
+/// the ceiling, capped at the balance) and the tax it triggers.
+async fn roth_bracket_fill_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::roth_bracket_fill::BracketFillInput>,
+) -> Json<traderview_core::roth_bracket_fill::BracketFillResult> {
+    Json(traderview_core::roth_bracket_fill::analyze(&b))
 }
