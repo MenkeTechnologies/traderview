@@ -57,6 +57,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/rent-vs-sell", post(rent_vs_sell_route))
         .route("/calc/depreciation-recapture", post(depreciation_recapture_route))
         .route("/calc/like-kind-exchange", post(like_kind_exchange_route))
+        .route("/calc/cost-of-hire", post(cost_of_hire_route))
         .route("/calc/wash-sale", post(wash_sale_route))
         .route("/calc/cost-basis", post(cost_basis_route))
         .route("/calc/section-1244", post(section_1244_route))
@@ -11415,4 +11416,13 @@ async fn like_kind_exchange_route(
     Json(b): Json<traderview_core::like_kind_exchange::ExchangeInput>,
 ) -> Json<traderview_core::like_kind_exchange::ExchangeResult> {
     Json(traderview_core::like_kind_exchange::analyze(&b))
+}
+
+/// True cost of hire: fully-loaded W-2 cost (payroll tax + benefits + match
+/// + workers' comp + overhead) vs a 1099 contractor, with burden + hourly.
+async fn cost_of_hire_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::cost_of_hire::CostOfHireInput>,
+) -> Json<traderview_core::cost_of_hire::CostOfHireResult> {
+    Json(traderview_core::cost_of_hire::analyze(&b))
 }

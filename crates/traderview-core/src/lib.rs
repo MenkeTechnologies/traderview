@@ -34,6 +34,7 @@ pub mod calmar_ratio;
 pub mod candlestick_patterns;
 pub mod carry_score;
 pub mod cash_conversion_cycle;
+pub mod cost_of_hire;
 pub mod cci;
 pub mod chaikin_volatility;
 pub mod change_of_character;
