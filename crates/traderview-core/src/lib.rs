@@ -246,6 +246,7 @@ pub mod wash_sale;
 pub mod williams_r;
 pub mod winloss_asymmetry;
 pub mod wyckoff;
+pub mod years_to_fi;
 pub mod yield_curve;
 
 // 10 canonical indicators added in one batch — Hull MA / TEMA / DEMA /
