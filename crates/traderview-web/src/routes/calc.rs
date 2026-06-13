@@ -73,6 +73,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/blended-debt", post(blended_debt_route))
         .route("/calc/dividend-coverage", post(dividend_coverage_route))
         .route("/calc/spia", post(spia_route))
+        .route("/calc/debt-yield", post(debt_yield_route))
         .route("/calc/wash-sale", post(wash_sale_route))
         .route("/calc/cost-basis", post(cost_basis_route))
         .route("/calc/section-1244", post(section_1244_route))
@@ -11575,4 +11576,13 @@ async fn spia_route(
     Json(b): Json<traderview_core::spia::SpiaInput>,
 ) -> Json<traderview_core::spia::SpiaResult> {
     Json(traderview_core::spia::analyze(&b))
+}
+
+/// Debt yield & loan sizing: the commercial-RE lender ratios (debt yield,
+/// LTV, LTC) and the max loan each allows, with the binding constraint.
+async fn debt_yield_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::debt_yield::DebtYieldInput>,
+) -> Json<traderview_core::debt_yield::DebtYieldResult> {
+    Json(traderview_core::debt_yield::analyze(&b))
 }

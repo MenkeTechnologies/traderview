@@ -57,6 +57,7 @@ pub mod currency_exposure;
 pub mod cusum;
 pub mod daily_loss_limit;
 pub mod depreciation_recapture;
+pub mod debt_yield;
 pub mod discipline_score;
 pub mod displacement;
 pub mod dividend_coverage;

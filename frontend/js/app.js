@@ -717,6 +717,7 @@ import { renderAprApy } from './views/apr_apy.js';
 import { renderBlendedDebt } from './views/blended_debt.js';
 import { renderDividendCoverage } from './views/dividend_coverage.js';
 import { renderSpia } from './views/spia.js';
+import { renderDebtYield } from './views/debt_yield.js';
 import { renderNetWorthTracker } from './views/net_worth_tracker.js';
 import { renderPersonalBalanceSheet } from './views/personal_balance_sheet.js';
 import { renderPersonalCashFlow } from './views/personal_cash_flow.js';
@@ -3069,6 +3070,7 @@ export async function dispatch() {
             case 'blended-debt': await renderBlendedDebt(mount, state); break;
             case 'dividend-coverage': await renderDividendCoverage(mount, state); break;
             case 'spia': await renderSpia(mount, state); break;
+            case 'debt-yield': await renderDebtYield(mount, state); break;
             case 'net-worth-tracker': await renderNetWorthTracker(mount, state); break;
             case 'personal-balance-sheet': await renderPersonalBalanceSheet(mount, state); break;
             case 'personal-cash-flow': await renderPersonalCashFlow(mount, state); break;
@@ -4343,6 +4345,7 @@ export const viewRenderers = {
     'blended-debt': (m, s) => renderBlendedDebt(m, s),
     'dividend-coverage': (m, s) => renderDividendCoverage(m, s),
     'spia': (m, s) => renderSpia(m, s),
+    'debt-yield': (m, s) => renderDebtYield(m, s),
     'envelope-budget': (m, s) => renderEnvelopeBudget(m, s),
     'fafsa-efc': (m, s) => renderFafsaEfc(m, s),
     'fifty-thirty-twenty': (m, s) => renderFiftyThirtyTwenty(m, s),
