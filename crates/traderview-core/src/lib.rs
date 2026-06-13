@@ -140,6 +140,7 @@ pub mod keltner;
 pub mod landlord_notice;
 pub mod lease_generator;
 pub mod lease_money_factor;
+pub mod lease_renewal;
 pub mod leverage_dol_dfl;
 pub mod life_insurance_needs;
 pub mod like_kind_exchange;

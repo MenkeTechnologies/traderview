@@ -53,6 +53,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/promissory-note", post(promissory_note_route))
         .route("/calc/rent-increase-notice", post(rent_increase_notice_route))
         .route("/calc/demand-for-payment", post(demand_for_payment_route))
+        .route("/calc/lease-renewal", post(lease_renewal_route))
         .route("/calc/fix-and-flip", post(fix_and_flip_route))
         .route("/calc/cash-conversion-cycle", post(cash_conversion_cycle_route))
         .route("/calc/profit-first", post(profit_first_route))
@@ -11474,6 +11475,15 @@ async fn demand_for_payment_route(
     Json(b): Json<traderview_core::demand_for_payment::DemandInput>,
 ) -> Json<traderview_core::demand_for_payment::DemandLetter> {
     Json(traderview_core::demand_for_payment::generate(&b))
+}
+
+/// Lease renewal / extension: new end date and rent change, assembled into a
+/// renewal agreement.
+async fn lease_renewal_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::lease_renewal::RenewalInput>,
+) -> Json<traderview_core::lease_renewal::RenewalAgreement> {
+    Json(traderview_core::lease_renewal::generate(&b))
 }
 
 /// Fix-and-flip: the 70% rule max-allowable-offer plus the full deal P&L
