@@ -81,6 +81,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/expense-drag", post(expense_drag_route))
         .route("/calc/lease-payment", post(lease_payment_route))
         .route("/calc/real-return", post(real_return_route))
+        .route("/calc/cd-penalty", post(cd_penalty_route))
         .route("/calc/wash-sale", post(wash_sale_route))
         .route("/calc/cost-basis", post(cost_basis_route))
         .route("/calc/section-1244", post(section_1244_route))
@@ -11655,4 +11656,13 @@ async fn real_return_route(
     Json(b): Json<traderview_core::real_return::RealReturnInput>,
 ) -> Json<traderview_core::real_return::RealReturnResult> {
     Json(traderview_core::real_return::analyze(&b))
+}
+
+/// CD early-withdrawal penalty: interest earned minus the months-of-interest
+/// penalty, net proceeds, annualized yield, and whether principal is lost.
+async fn cd_penalty_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::cd_early_withdrawal::CdInput>,
+) -> Json<traderview_core::cd_early_withdrawal::CdResult> {
+    Json(traderview_core::cd_early_withdrawal::analyze(&b))
 }
