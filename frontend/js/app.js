@@ -759,6 +759,7 @@ import { renderFreeCashFlow } from './views/free_cash_flow.js';
 import { renderCreditCardPayoff } from './views/credit_card_payoff.js';
 import { renderBondPricing } from './views/bond_pricing.js';
 import { renderCashOutRefinance } from './views/cash_out_refinance.js';
+import { renderMarginAnalysis } from './views/margin_analysis.js';
 import { renderNetWorthTracker } from './views/net_worth_tracker.js';
 import { renderPersonalBalanceSheet } from './views/personal_balance_sheet.js';
 import { renderPersonalCashFlow } from './views/personal_cash_flow.js';
@@ -3153,6 +3154,7 @@ export async function dispatch() {
             case 'credit-card-payoff': await renderCreditCardPayoff(mount, state); break;
             case 'bond-pricing': await renderBondPricing(mount, state); break;
             case 'cash-out-refinance': await renderCashOutRefinance(mount, state); break;
+            case 'margin-analysis': await renderMarginAnalysis(mount, state); break;
             case 'net-worth-tracker': await renderNetWorthTracker(mount, state); break;
             case 'personal-balance-sheet': await renderPersonalBalanceSheet(mount, state); break;
             case 'personal-cash-flow': await renderPersonalCashFlow(mount, state); break;
@@ -4469,6 +4471,7 @@ export const viewRenderers = {
     'credit-card-payoff': (m, s) => renderCreditCardPayoff(m, s),
     'bond-pricing': (m, s) => renderBondPricing(m, s),
     'cash-out-refinance': (m, s) => renderCashOutRefinance(m, s),
+    'margin-analysis': (m, s) => renderMarginAnalysis(m, s),
     'envelope-budget': (m, s) => renderEnvelopeBudget(m, s),
     'fafsa-efc': (m, s) => renderFafsaEfc(m, s),
     'fifty-thirty-twenty': (m, s) => renderFiftyThirtyTwenty(m, s),

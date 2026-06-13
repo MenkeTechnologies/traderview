@@ -134,6 +134,7 @@ pub mod like_kind_exchange;
 pub mod liquidity;
 pub mod liquidity_grab;
 pub mod mae_stop_tuning;
+pub mod margin_analysis;
 pub mod margin_call;
 pub mod margin_runway;
 pub mod market_impact;

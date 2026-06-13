@@ -115,6 +115,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/credit-card-payoff", post(credit_card_payoff_route))
         .route("/calc/bond-pricing", post(bond_pricing_route))
         .route("/calc/cash-out-refinance", post(cash_out_refinance_route))
+        .route("/calc/margin-analysis", post(margin_analysis_route))
         .route("/calc/wash-sale", post(wash_sale_route))
         .route("/calc/cost-basis", post(cost_basis_route))
         .route("/calc/section-1244", post(section_1244_route))
@@ -11964,4 +11965,12 @@ async fn cash_out_refinance_route(
     Json(b): Json<traderview_core::cash_out_refinance::CashOutInput>,
 ) -> Json<traderview_core::cash_out_refinance::CashOutResult> {
     Json(traderview_core::cash_out_refinance::analyze(&b))
+}
+
+/// Income-statement margin waterfall — gross / operating / pre-tax / net.
+async fn margin_analysis_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::margin_analysis::MarginInput>,
+) -> Json<traderview_core::margin_analysis::MarginResult> {
+    Json(traderview_core::margin_analysis::analyze(&b))
 }
