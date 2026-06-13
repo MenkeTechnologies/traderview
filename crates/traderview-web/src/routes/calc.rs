@@ -65,6 +65,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/spousal-ira", post(spousal_ira_route))
         .route("/calc/pension-survivor", post(pension_survivor_route))
         .route("/calc/ss-pia", post(ss_pia_route))
+        .route("/calc/hsa-triple-tax", post(hsa_triple_tax_route))
         .route("/calc/wash-sale", post(wash_sale_route))
         .route("/calc/cost-basis", post(cost_basis_route))
         .route("/calc/section-1244", post(section_1244_route))
@@ -11495,4 +11496,13 @@ async fn ss_pia_route(
     Json(b): Json<traderview_core::social_security_pia::PiaInput>,
 ) -> Json<traderview_core::social_security_pia::PiaResult> {
     Json(traderview_core::social_security_pia::analyze(&b))
+}
+
+/// HSA triple-tax: HSA vs a taxable account over a horizon — the dollar
+/// value of deductible-in / tax-free-growth / tax-free-out treatment.
+async fn hsa_triple_tax_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::hsa_triple_tax::HsaInput>,
+) -> Json<traderview_core::hsa_triple_tax::HsaResult> {
+    Json(traderview_core::hsa_triple_tax::analyze(&b))
 }

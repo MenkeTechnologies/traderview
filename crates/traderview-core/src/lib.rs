@@ -89,6 +89,7 @@ pub mod heikin_ashi;
 pub mod heikin_ashi_reversal;
 pub mod high_water_mark;
 pub mod holiday_calendar;
+pub mod hsa_triple_tax;
 pub mod ichimoku;
 pub mod implementation_shortfall;
 pub mod indicators;

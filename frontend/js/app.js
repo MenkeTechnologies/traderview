@@ -709,6 +709,7 @@ import { renderQlac } from './views/qlac.js';
 import { renderSpousalIra } from './views/spousal_ira.js';
 import { renderPensionSurvivor } from './views/pension_survivor.js';
 import { renderSsPia } from './views/ss_pia.js';
+import { renderHsaTripleTax } from './views/hsa_triple_tax.js';
 import { renderNetWorthTracker } from './views/net_worth_tracker.js';
 import { renderPersonalBalanceSheet } from './views/personal_balance_sheet.js';
 import { renderPersonalCashFlow } from './views/personal_cash_flow.js';
@@ -3053,6 +3054,7 @@ export async function dispatch() {
             case 'spousal-ira': await renderSpousalIra(mount, state); break;
             case 'pension-survivor': await renderPensionSurvivor(mount, state); break;
             case 'ss-pia': await renderSsPia(mount, state); break;
+            case 'hsa-triple-tax': await renderHsaTripleTax(mount, state); break;
             case 'net-worth-tracker': await renderNetWorthTracker(mount, state); break;
             case 'personal-balance-sheet': await renderPersonalBalanceSheet(mount, state); break;
             case 'personal-cash-flow': await renderPersonalCashFlow(mount, state); break;
@@ -4319,6 +4321,7 @@ export const viewRenderers = {
     'spousal-ira': (m, s) => renderSpousalIra(m, s),
     'pension-survivor': (m, s) => renderPensionSurvivor(m, s),
     'ss-pia': (m, s) => renderSsPia(m, s),
+    'hsa-triple-tax': (m, s) => renderHsaTripleTax(m, s),
     'envelope-budget': (m, s) => renderEnvelopeBudget(m, s),
     'fafsa-efc': (m, s) => renderFafsaEfc(m, s),
     'fifty-thirty-twenty': (m, s) => renderFiftyThirtyTwenty(m, s),
