@@ -44,6 +44,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/brrrr", post(brrrr_route))
         .route("/calc/paycheck-401k", post(paycheck_401k_route))
         .route("/calc/guyton-klinger", post(guyton_klinger_route))
+        .route("/calc/irmaa", post(irmaa_route))
         .route("/calc/wash-sale", post(wash_sale_route))
         .route("/calc/cost-basis", post(cost_basis_route))
         .route("/calc/section-1244", post(section_1244_route))
@@ -11285,4 +11286,13 @@ async fn guyton_klinger_route(
     Json(b): Json<traderview_core::guyton_klinger::GuardrailInput>,
 ) -> Json<traderview_core::guyton_klinger::GuardrailDecision> {
     Json(traderview_core::guyton_klinger::decide(&b))
+}
+
+/// IRMAA: the 2026 Medicare Part B/D income-surcharge tier for a MAGI and
+/// filing status, with the surcharge amounts and headroom to the next cliff.
+async fn irmaa_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::irmaa::IrmaaInput>,
+) -> Json<traderview_core::irmaa::IrmaaResult> {
+    Json(traderview_core::irmaa::compute(&b))
 }
