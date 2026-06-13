@@ -99,6 +99,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/gmroi", post(gmroi_route))
         .route("/calc/roth-contribution", post(roth_contribution_route))
         .route("/calc/interest-coverage", post(interest_coverage_route))
+        .route("/calc/capital-gains-tax", post(capital_gains_tax_route))
         .route("/calc/wash-sale", post(wash_sale_route))
         .route("/calc/cost-basis", post(cost_basis_route))
         .route("/calc/section-1244", post(section_1244_route))
@@ -11820,4 +11821,12 @@ async fn interest_coverage_route(
     Json(b): Json<traderview_core::interest_coverage::CoverageInput>,
 ) -> Json<traderview_core::interest_coverage::CoverageResult> {
     Json(traderview_core::interest_coverage::analyze(&b))
+}
+
+/// Capital-gains tax — long-term 0/15/20 stacking or short-term ordinary.
+async fn capital_gains_tax_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::capital_gains_tax::CapGainsInput>,
+) -> Json<traderview_core::capital_gains_tax::CapGainsResult> {
+    Json(traderview_core::capital_gains_tax::analyze(&b))
 }

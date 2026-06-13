@@ -38,6 +38,7 @@ pub mod cagr;
 pub mod calendar_bias;
 pub mod calmar_ratio;
 pub mod candlestick_patterns;
+pub mod capital_gains_tax;
 pub mod carry_score;
 pub mod cash_conversion_cycle;
 pub mod cd_early_withdrawal;
