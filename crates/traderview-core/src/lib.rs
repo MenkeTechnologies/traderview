@@ -102,6 +102,7 @@ pub mod kelly;
 pub mod keltner;
 pub mod landlord_notice;
 pub mod lease_generator;
+pub mod like_kind_exchange;
 pub mod liquidity;
 pub mod liquidity_grab;
 pub mod mae_stop_tuning;

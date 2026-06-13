@@ -56,6 +56,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/inventory-eoq", post(inventory_eoq_route))
         .route("/calc/rent-vs-sell", post(rent_vs_sell_route))
         .route("/calc/depreciation-recapture", post(depreciation_recapture_route))
+        .route("/calc/like-kind-exchange", post(like_kind_exchange_route))
         .route("/calc/wash-sale", post(wash_sale_route))
         .route("/calc/cost-basis", post(cost_basis_route))
         .route("/calc/section-1244", post(section_1244_route))
@@ -11405,4 +11406,13 @@ async fn depreciation_recapture_route(
     Json(b): Json<traderview_core::depreciation_recapture::RecaptureInput>,
 ) -> Json<traderview_core::depreciation_recapture::RecaptureResult> {
     Json(traderview_core::depreciation_recapture::analyze(&b))
+}
+
+/// § 1031 like-kind exchange: boot (cash + net mortgage relief), recognized
+/// vs deferred gain, tax now, and the replacement property's carryover basis.
+async fn like_kind_exchange_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::like_kind_exchange::ExchangeInput>,
+) -> Json<traderview_core::like_kind_exchange::ExchangeResult> {
+    Json(traderview_core::like_kind_exchange::analyze(&b))
 }

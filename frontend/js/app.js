@@ -700,6 +700,7 @@ import { renderMarkupMargin } from './views/markup_margin.js';
 import { renderInventoryEoq } from './views/inventory_eoq.js';
 import { renderRentVsSell } from './views/rent_vs_sell.js';
 import { renderDepreciationRecapture } from './views/depreciation_recapture.js';
+import { renderLikeKindExchange } from './views/like_kind_exchange.js';
 import { renderNetWorthTracker } from './views/net_worth_tracker.js';
 import { renderPersonalBalanceSheet } from './views/personal_balance_sheet.js';
 import { renderPersonalCashFlow } from './views/personal_cash_flow.js';
@@ -3035,6 +3036,7 @@ export async function dispatch() {
             case 'inventory-eoq': await renderInventoryEoq(mount, state); break;
             case 'rent-vs-sell': await renderRentVsSell(mount, state); break;
             case 'depreciation-recapture': await renderDepreciationRecapture(mount, state); break;
+            case 'like-kind-exchange': await renderLikeKindExchange(mount, state); break;
             case 'net-worth-tracker': await renderNetWorthTracker(mount, state); break;
             case 'personal-balance-sheet': await renderPersonalBalanceSheet(mount, state); break;
             case 'personal-cash-flow': await renderPersonalCashFlow(mount, state); break;
@@ -4292,6 +4294,7 @@ export const viewRenderers = {
     'inventory-eoq': (m, s) => renderInventoryEoq(m, s),
     'rent-vs-sell': (m, s) => renderRentVsSell(m, s),
     'depreciation-recapture': (m, s) => renderDepreciationRecapture(m, s),
+    'like-kind-exchange': (m, s) => renderLikeKindExchange(m, s),
     'envelope-budget': (m, s) => renderEnvelopeBudget(m, s),
     'fafsa-efc': (m, s) => renderFafsaEfc(m, s),
     'fifty-thirty-twenty': (m, s) => renderFiftyThirtyTwenty(m, s),
