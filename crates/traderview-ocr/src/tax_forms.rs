@@ -8,6 +8,8 @@
 //!   * 1099-INT — Interest Income
 //!   * 1099-DIV — Dividends and Distributions
 //!   * 1099-K — Payment Card and 3rd-Party Network Transactions
+//!   * 1099-B — Proceeds From Broker and Barter Exchange Transactions
+//!   * 1098 — Mortgage Interest Statement
 //!
 //! Strategy:
 //!   1. Detect kind by scanning for the form's title strings (case-
@@ -38,6 +40,8 @@ pub enum TaxFormKind {
     Form1099Int,
     Form1099Div,
     Form1099K,
+    Form1099B,
+    Form1098,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -73,6 +77,14 @@ pub fn detect(text: &str) -> Option<TaxFormKind> {
     }
     if lower.contains("1099-k") || lower.contains("payment card") {
         return Some(TaxFormKind::Form1099K);
+    }
+    if lower.contains("1099-b") || lower.contains("proceeds from broker") {
+        return Some(TaxFormKind::Form1099B);
+    }
+    // Specific tokens only — a bare "1098" substring would false-match dollar
+    // amounts like "10980.00".
+    if lower.contains("form 1098") || lower.contains("mortgage interest statement") {
+        return Some(TaxFormKind::Form1098);
     }
     None
 }
@@ -172,6 +184,27 @@ fn box_labels_for(kind: TaxFormKind) -> &'static [(&'static str, &'static [&'sta
             ("box_1a", &["Gross amount of payment card", "Gross amount"]),
             ("box_4", &["Federal income tax withheld"]),
         ],
+        TaxFormKind::Form1099B => &[
+            ("box_1d", &["Proceeds"]),
+            ("box_1e", &["Cost or other basis", "Cost basis"]),
+            (
+                "box_1g",
+                &["Wash sale loss disallowed", "Wash sale loss"],
+            ),
+            ("box_4", &["Federal income tax withheld"]),
+        ],
+        TaxFormKind::Form1098 => &[
+            (
+                "box_1",
+                &["Mortgage interest received from payer", "Mortgage interest received", "Mortgage interest"],
+            ),
+            ("box_2", &["Outstanding mortgage principal"]),
+            ("box_5", &["Mortgage insurance premiums"]),
+            (
+                "box_6",
+                &["Points paid on purchase of principal residence", "Points paid"],
+            ),
+        ],
     }
 }
 
@@ -270,6 +303,11 @@ fn parse_amount(s: &str) -> Option<Decimal> {
 fn extract_party_name(text: &str, kind: TaxFormKind) -> Option<String> {
     let needles: &[&str] = match kind {
         TaxFormKind::W2 => &["employer's name", "Employer's name"],
+        TaxFormKind::Form1098 => &[
+            "recipient's/lender's name",
+            "lender's name",
+            "recipient's name",
+        ],
         _ => &["payer's name", "PAYER'S name", "Payer name"],
     };
     let lower = text.to_lowercase();
@@ -371,6 +409,8 @@ mod tests {
             TaxFormKind::Form1099Int,
             TaxFormKind::Form1099Div,
             TaxFormKind::Form1099K,
+            TaxFormKind::Form1099B,
+            TaxFormKind::Form1098,
         ] {
             for (key, patterns) in box_labels_for(kind) {
                 assert!(
@@ -402,6 +442,71 @@ mod tests {
     #[test]
     fn detect_returns_none_for_random_text() {
         assert_eq!(detect("This is not a tax form"), None);
+    }
+
+    #[test]
+    fn detect_1099_b_by_title() {
+        assert_eq!(
+            detect("Form 1099-B\nProceeds From Broker and Barter Exchange Transactions"),
+            Some(TaxFormKind::Form1099B)
+        );
+    }
+
+    #[test]
+    fn detect_1098_by_title_not_by_amount_substring() {
+        assert_eq!(
+            detect("Form 1098\nMortgage Interest Statement"),
+            Some(TaxFormKind::Form1098)
+        );
+        // A bare "1098" inside a dollar amount must NOT trigger 1098 detection.
+        assert_eq!(detect("Receipt total 10980.00"), None);
+    }
+
+    #[test]
+    fn box_labels_1099_b_has_proceeds_basis_and_washsale() {
+        let labels = box_labels_for(TaxFormKind::Form1099B);
+        let keys: Vec<&str> = labels.iter().map(|(k, _)| *k).collect();
+        assert!(keys.contains(&"box_1d"), "1099-B needs box_1d (proceeds)");
+        assert!(keys.contains(&"box_1e"), "1099-B needs box_1e (cost basis)");
+        assert!(keys.contains(&"box_1g"), "1099-B needs box_1g (wash sale)");
+    }
+
+    #[test]
+    fn extract_1099_b_proceeds_cost_and_washsale() {
+        let text = "\
+Form 1099-B Proceeds From Broker and Barter Exchange Transactions
+PAYER'S name
+Robinhood Securities LLC
+Proceeds 18452.31
+Cost or other basis 16001.10
+Wash sale loss disallowed 212.45
+Federal income tax withheld 0.00
+";
+        let r = extract(text).expect("should detect 1099-B");
+        assert_eq!(r.kind, TaxFormKind::Form1099B);
+        assert_eq!(r.payload.get("box_1d"), Some(&"18452.31".parse().unwrap()));
+        assert_eq!(r.payload.get("box_1e"), Some(&"16001.10".parse().unwrap()));
+        assert_eq!(r.payload.get("box_1g"), Some(&"212.45".parse().unwrap()));
+        assert_eq!(r.party_name.as_deref(), Some("Robinhood Securities LLC"));
+    }
+
+    #[test]
+    fn extract_1098_mortgage_interest_and_lender() {
+        let text = "\
+Form 1098 Mortgage Interest Statement
+RECIPIENT'S/LENDER'S name
+Rocket Mortgage LLC
+Mortgage interest received from payer(s)/borrower(s) 12843.77
+Outstanding mortgage principal 298000.00
+Mortgage insurance premiums 0.00
+Points paid on purchase of principal residence 1500.00
+";
+        let r = extract(text).expect("should detect 1098");
+        assert_eq!(r.kind, TaxFormKind::Form1098);
+        assert_eq!(r.payload.get("box_1"), Some(&"12843.77".parse().unwrap()));
+        assert_eq!(r.payload.get("box_2"), Some(&"298000.00".parse().unwrap()));
+        assert_eq!(r.payload.get("box_6"), Some(&"1500.00".parse().unwrap()));
+        assert_eq!(r.party_name.as_deref(), Some("Rocket Mortgage LLC"));
     }
 
     #[test]
