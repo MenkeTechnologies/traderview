@@ -580,9 +580,11 @@ pub struct OrderRequest {
     pub trail_value: Option<Decimal>,
     #[serde(default)]
     pub trail_is_pct: Option<bool>,
-    /// Time in force for RESTING orders: 'gtc' (default), 'day'
-    /// (expires at the next 16:00 US Eastern close), or 'gtd'
-    /// (expires at expire_at). Ignored on orders that fill immediately.
+    /// Time in force: 'gtc' (default), 'day' (expires at the next 16:00
+    /// US Eastern close), 'gtd' (expires at expire_at), or 'ioc'/'fok'
+    /// (immediate-or-cancel / fill-or-kill — fill at submit if
+    /// marketable, otherwise cancel instead of resting). gtc/day/gtd are
+    /// ignored on orders that fill immediately.
     #[serde(default)]
     pub time_in_force: Option<String>,
     #[serde(default)]
@@ -793,6 +795,30 @@ fn frictioned_fill(price: Decimal, qty: Decimal, side: Side) -> (Decimal, f64) {
 /// limit/stop orders that don't trigger REST as 'pending' and are
 /// filled by the background ticker when the quote crosses. Malformed
 /// orders (missing the price their type needs) reject.
+/// Status for an order that did NOT fill at submit. IOC/FOK orders that
+/// aren't immediately marketable are CANCELLED rather than left to rest
+/// — the paper engine fills fully or not at all, so fill-or-kill and
+/// immediate-or-cancel collapse to one rule here. A malformed resting
+/// order is rejected (malformed beats IOC); otherwise it rests as
+/// pending. Returns (status, reject_reason).
+fn unfilled_status(
+    well_formed: bool,
+    immediate_or_cancel: bool,
+    tif: &str,
+) -> (&'static str, Option<String>) {
+    match (well_formed, immediate_or_cancel) {
+        (false, _) => (
+            "rejected",
+            Some("order type needs its limit/stop price or trail value".to_string()),
+        ),
+        (true, true) => (
+            "cancelled",
+            Some(format!("{}: not immediately marketable", tif.to_uppercase())),
+        ),
+        (true, false) => ("pending", None),
+    }
+}
+
 pub async fn submit(
     pool: &PgPool,
     user_id: Uuid,
@@ -879,8 +905,12 @@ pub async fn submit(
     let trigger_at = matches!(req.order_type.as_str(), "moc" | "loc")
         .then(|| traderview_core::holiday_calendar::day_order_expiry(Utc::now()));
     // Time in force → cancel_at. Only meaningful on orders that rest.
-    let cancel_at = match req.time_in_force.as_deref().unwrap_or("gtc") {
-        "gtc" => None,
+    // IOC/FOK never rest: they resolve at submit (fill if marketable,
+    // else cancel), so they carry no cancel_at.
+    let tif = req.time_in_force.as_deref().unwrap_or("gtc");
+    let immediate_or_cancel = matches!(tif, "ioc" | "fok");
+    let cancel_at = match tif {
+        "gtc" | "ioc" | "fok" => None,
         "day" => Some(traderview_core::holiday_calendar::day_order_expiry(
             Utc::now(),
         )),
@@ -900,14 +930,12 @@ pub async fn submit(
     // would cancel the order at its own trigger instant.
     let cancel_at = if trigger_at.is_some() { None } else { cancel_at };
     let mut tx = pool.begin().await?;
-    let (status, filled_at, reject) = match (fill_price, well_formed) {
-        (Some(_), _) => ("filled", Some(Utc::now()), None),
-        (None, true) => ("pending", None, None),
-        (None, false) => (
-            "rejected",
-            None,
-            Some("order type needs its limit/stop price or trail value".to_string()),
-        ),
+    let (status, filled_at, reject) = match fill_price {
+        Some(_) => ("filled", Some(Utc::now()), None),
+        None => {
+            let (s, r) = unfilled_status(well_formed, immediate_or_cancel, tif);
+            (s, None, r)
+        }
     };
     let order: PaperOrder = sqlx::query_as(
         "INSERT INTO paper_orders
@@ -2832,6 +2860,32 @@ mod tests {
             forex_spread_fee("GBPUSD", d(50_000)),
             forex_spread_fee("GBPUSD", d(-50_000))
         );
+    }
+
+    #[test]
+    fn ioc_fok_cancel_when_not_marketable() {
+        // Well-formed but unfilled IOC/FOK → cancelled, not resting.
+        let (s, r) = unfilled_status(true, true, "ioc");
+        assert_eq!(s, "cancelled");
+        assert!(r.unwrap().contains("IOC"));
+        let (s, r) = unfilled_status(true, true, "fok");
+        assert_eq!(s, "cancelled");
+        assert!(r.unwrap().contains("FOK"));
+    }
+
+    #[test]
+    fn gtc_unfilled_rests_pending() {
+        let (s, r) = unfilled_status(true, false, "gtc");
+        assert_eq!(s, "pending");
+        assert!(r.is_none());
+    }
+
+    #[test]
+    fn malformed_beats_ioc() {
+        // A malformed IOC is rejected for malformation, not cancelled.
+        let (s, r) = unfilled_status(false, true, "ioc");
+        assert_eq!(s, "rejected");
+        assert!(r.unwrap().contains("needs its limit/stop"));
     }
 
     #[test]

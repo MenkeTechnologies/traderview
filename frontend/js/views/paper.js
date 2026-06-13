@@ -122,6 +122,8 @@ export async function renderPaper(mount) {
                         <option value="gtc">GTC</option>
                         <option value="day">DAY</option>
                         <option value="gtd">GTD</option>
+                        <option value="ioc">IOC</option>
+                        <option value="fok">FOK</option>
                     </select>
                     <input name="expire_at" type="datetime-local" data-tip="view.paper.tip.gtd_expiry">
                     <input name="plan_note" placeholder="trade plan (why this trade?)" data-i18n-placeholder="view.paper.placeholder.plan" data-tip="view.paper.tip.plan" style="min-width:180px">
