@@ -78,6 +78,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/expense-reimbursement", post(expense_reimbursement_route))
         .route("/calc/timesheet", post(timesheet_route))
         .route("/calc/pay-stub", post(pay_stub_route))
+        .route("/calc/rental-application", post(rental_application_route))
         .route("/calc/fix-and-flip", post(fix_and_flip_route))
         .route("/calc/cash-conversion-cycle", post(cash_conversion_cycle_route))
         .route("/calc/profit-first", post(profit_first_route))
@@ -11709,6 +11710,14 @@ async fn pay_stub_route(
     Json(b): Json<traderview_core::pay_stub::PayStubInput>,
 ) -> Json<traderview_core::pay_stub::PayStub> {
     Json(traderview_core::pay_stub::generate(&b))
+}
+
+/// Rental application: income-to-rent qualification + application clauses.
+async fn rental_application_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::rental_application::RentalApplicationInput>,
+) -> Json<traderview_core::rental_application::RentalApplication> {
+    Json(traderview_core::rental_application::generate(&b))
 }
 
 /// Fix-and-flip: the 70% rule max-allowable-offer plus the full deal P&L
