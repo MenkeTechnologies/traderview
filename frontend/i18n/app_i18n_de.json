@@ -6638,6 +6638,8 @@
   "view.boards.widget.alerts.label": "Benachrichtigungs-Feed",
   "view.boards.widget.breadth.label": "Breiter Puls",
   "view.boards.widget.fear_greed.label": "Angst und Gier",
+  "view.boards.widget.fx_majors.label": "FX Majors",
+  "view.boards.widget.fx_sessions.label": "FX Sessions",
   "view.boards.widget.mini_chart.label": "Mini-Diagramm",
   "view.boards.widget.news.label": "Neuigkeiten (Symbol)",
   "view.boards.widget.note.label": "Haftnotiz",

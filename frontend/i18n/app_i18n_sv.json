@@ -6638,6 +6638,8 @@
   "view.boards.widget.alerts.label": "Varningsflöde",
   "view.boards.widget.breadth.label": "Breddpuls",
   "view.boards.widget.fear_greed.label": "Rädsla & girighet",
+  "view.boards.widget.fx_majors.label": "FX Majors",
+  "view.boards.widget.fx_sessions.label": "FX Sessions",
   "view.boards.widget.mini_chart.label": "Minidiagram",
   "view.boards.widget.news.label": "Nyheter (symbol)",
   "view.boards.widget.note.label": "Klisterlapp",

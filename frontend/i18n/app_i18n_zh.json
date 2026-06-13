@@ -6638,6 +6638,8 @@
   "view.boards.widget.alerts.label": "通知输入",
   "view.boards.widget.breadth.label": "面包脉冲",
   "view.boards.widget.fear_greed.label": "恐惧和贪婪",
+  "view.boards.widget.fx_majors.label": "FX Majors",
+  "view.boards.widget.fx_sessions.label": "FX Sessions",
   "view.boards.widget.mini_chart.label": "迷你图表",
   "view.boards.widget.news.label": "新闻(符号)",
   "view.boards.widget.note.label": "粘贴纸条",

@@ -6638,6 +6638,8 @@
   "view.boards.widget.alerts.label": "Indgiver foder",
   "view.boards.widget.breadth.label": "Brødpuls",
   "view.boards.widget.fear_greed.label": "Frygt & grådighed",
+  "view.boards.widget.fx_majors.label": "FX Majors",
+  "view.boards.widget.fx_sessions.label": "FX Sessions",
   "view.boards.widget.mini_chart.label": "Mini diagram",
   "view.boards.widget.news.label": "Nyheder (symbol)",
   "view.boards.widget.note.label": "Sticky note",

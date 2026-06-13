@@ -28,6 +28,8 @@ const WIDGET_KINDS = [
     { kind: 'fear_greed', label: t('chart.series.fear_greed'), defaults: {},                    w: 3, h: 2 },
     { kind: 'news',       label: t('chart.series.news_symbol'),defaults: { symbol: 'SPY', limit: 6 }, w: 6, h: 4 },
     { kind: 'note',       label: t('chart.series.sticky_note'),  defaults: { text: '' },          w: 3, h: 2 },
+    { kind: 'fx_sessions', label: t('view.boards.widget.fx_sessions.label'), defaults: {},        w: 3, h: 2 },
+    { kind: 'fx_majors',  label: t('view.boards.widget.fx_majors.label'),   defaults: {},          w: 4, h: 4 },
 ];
 
 // Look up a widget's display label, preferring the i18n catalog and
@@ -438,6 +440,8 @@ function mountWidget(body, w, tok) {
         case 'fear_greed':  return mountFearGreed(body, tok);
         case 'news':        return mountNews(body, w, tok);
         case 'note':        return mountNote(body, w);
+        case 'fx_sessions': return mountFxSessions(body, tok);
+        case 'fx_majors':   return mountFxMajors(body, tok);
         default:            body.innerHTML = `<p class="muted small">${esc(t('view.boards.widget.unknown', { kind: w.kind }))}</p>`;
     }
 }
@@ -629,4 +633,57 @@ function relTime(iso) {
 
 function mountNote(body, w) {
     body.innerHTML = `<div style="white-space:pre-wrap;font-family:'Share Tech Mono',monospace;font-size:12px;">${esc(w.params.text || t('view.boards.note.empty'))}</div>`;
+}
+
+const FX_SESSION_LABEL = {
+    sydney: 'Sydney',
+    tokyo: 'Tokyo',
+    london: 'London',
+    newyork: 'New York',
+};
+
+async function mountFxSessions(body, tok) {
+    tickEvery(60, async () => {
+        try {
+            const s = await api.forexSessions();
+            if (!viewIsCurrent(tok)) return;
+            if (!s.market_open) {
+                body.innerHTML = `
+                    <div class="muted small">${esc(t('view.boards.widget.fx_sessions.label'))}</div>
+                    <div style="font-size:18px;font-weight:700;" class="neg">${esc(t('view.forex.sessions.closed'))}</div>`;
+                return;
+            }
+            const active = (s.active || []).map(k => esc(FX_SESSION_LABEL[k] || k)).join(' · ') || '—';
+            const overlap = s.london_ny_overlap
+                ? `<div class="small pos">${esc(t('view.forex.sessions.overlap'))}</div>`
+                : '';
+            body.innerHTML = `
+                <div class="muted small">${esc(t('view.boards.widget.fx_sessions.label'))}</div>
+                <div style="font-size:18px;font-weight:700;" class="pos">${active}</div>
+                ${overlap}`;
+        } catch (e) { if (viewIsCurrent(tok)) body.innerHTML = `<p class="muted small">${esc(e.message)}</p>`; }
+    }, tok);
+}
+
+async function mountFxMajors(body, tok) {
+    tickEvery(60, async () => {
+        try {
+            const rows = await api.forexPairs();
+            if (!viewIsCurrent(tok)) return;
+            if (!rows || !rows.length) {
+                body.innerHTML = `<p class="muted small">${esc(t('view.forex.majors.empty'))}</p>`;
+                return;
+            }
+            body.innerHTML = `
+                <table class="trades" style="font-size:12px;"><tbody>${rows.map(q => {
+                    const ch = q.change_pct;
+                    const cls = ch == null ? '' : ch >= 0 ? 'pos' : 'neg';
+                    return `<tr>
+                        <td>${esc(q.symbol)}</td>
+                        <td>${fmt(q.price, 5)}</td>
+                        <td class="${cls}">${ch == null ? '—' : (ch >= 0 ? '+' : '') + ch.toFixed(2) + '%'}</td>
+                    </tr>`;
+                }).join('')}</tbody></table>`;
+        } catch (e) { if (viewIsCurrent(tok)) body.innerHTML = `<p class="muted small">${esc(e.message)}</p>`; }
+    }, tok);
 }

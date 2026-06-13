@@ -6638,6 +6638,8 @@
   "view.boards.widget.alerts.label": "Waarschuwingsfeed",
   "view.boards.widget.breadth.label": "Breedte pols",
   "view.boards.widget.fear_greed.label": "Angst & Hebzucht",
+  "view.boards.widget.fx_majors.label": "FX Majors",
+  "view.boards.widget.fx_sessions.label": "FX Sessions",
   "view.boards.widget.mini_chart.label": "Minigrafiek",
   "view.boards.widget.news.label": "Nieuws (symbool)",
   "view.boards.widget.note.label": "Kleverige notitie",

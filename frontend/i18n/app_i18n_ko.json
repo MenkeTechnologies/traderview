@@ -6638,6 +6638,8 @@
   "view.boards.widget.alerts.label": "Alerts 피드",
   "view.boards.widget.breadth.label": "폭 맥박",
   "view.boards.widget.fear_greed.label": "눈물 & 기름",
+  "view.boards.widget.fx_majors.label": "FX Majors",
+  "view.boards.widget.fx_sessions.label": "FX Sessions",
   "view.boards.widget.mini_chart.label": "미니 차트",
   "view.boards.widget.news.label": "뉴스 (symbol)",
   "view.boards.widget.note.label": "연락처",

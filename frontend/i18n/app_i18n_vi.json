@@ -6638,6 +6638,8 @@
   "view.boards.widget.alerts.label": "Cảnh báo",
   "view.boards.widget.breadth.label": "Mạch bánh mì",
   "view.boards.widget.fear_greed.label": "Sợ & tham lam",
+  "view.boards.widget.fx_majors.label": "FX Majors",
+  "view.boards.widget.fx_sessions.label": "FX Sessions",
   "view.boards.widget.mini_chart.label": "Sơ đồ nhỏ",
   "view.boards.widget.news.label": "Tin tức (symbol)",
   "view.boards.widget.note.label": "Ghi chú dính",
