@@ -38334,6 +38334,7 @@
   "view.sector_heatmap.h1.title": "// SECTOR HEATMAP",
   "view.sector_heatmap.hint.intro": "Præstation på sektorniveau + værdiansættelsesmålinger fra Finnhub. Brug den permetriske slags til at finde rotationskandidater (bedste YTD tilbagevenden, laveste P / E, højeste div).",
   "view.sector_heatmap.label.region": "Region",
+  "view.sector_heatmap.premium": "Sector metrics require a premium Finnhub plan — not available on the current API tier.",
   "view.sector_heatmap.th.debt_eq": "Gæld / Eq",
   "view.sector_heatmap.th.div_yield": "Div%",
   "view.sector_heatmap.th.margin": "Nettomargen",

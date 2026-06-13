@@ -38334,6 +38334,7 @@
   "view.sector_heatmap.h1.title": "// SECTOR HEATMAP",
   "view.sector_heatmap.hint.intro": "Finnhubのセクターレベルのパフォーマンス+評価メトリック。 回転候補(最高のYTDリターン、最低P/E、最高div)を見つけるために、パーメトリックソートを使用します.",
   "view.sector_heatmap.label.region": "地域紹介",
+  "view.sector_heatmap.premium": "Sector metrics require a premium Finnhub plan — not available on the current API tier.",
   "view.sector_heatmap.th.debt_eq": "デビット/ お問い合わせ",
   "view.sector_heatmap.th.div_yield": "分割%",
   "view.sector_heatmap.th.margin": "ネットマージン",

@@ -38334,6 +38334,7 @@
   "view.sector_heatmap.h1.title": "// SECTOR HEATMAP",
   "view.sector_heatmap.hint.intro": "Sector- level performance + valuation metrics from Finnhub. Použijte permetrický druh najít rotační kandidáty (nejlepší YTD návrat, nejnižší P / E, nejvyšší div).",
   "view.sector_heatmap.label.region": "Oblast",
+  "view.sector_heatmap.premium": "Sector metrics require a premium Finnhub plan — not available on the current API tier.",
   "view.sector_heatmap.th.debt_eq": "Dluh / Eq",
   "view.sector_heatmap.th.div_yield": "Div%",
   "view.sector_heatmap.th.margin": "Čisté rozpětí",

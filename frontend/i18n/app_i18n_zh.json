@@ -38334,6 +38334,7 @@
   "view.sector_heatmap.h1.title": "// SECTOR HEATMAP",
   "view.sector_heatmap.hint.intro": "部门一级业绩+Finnhub的估值指标。 使用每度量的排序来寻找轮换候选人(最佳YTD返回,最低P/E,最高div).",
   "view.sector_heatmap.label.region": "地区",
+  "view.sector_heatmap.premium": "Sector metrics require a premium Finnhub plan — not available on the current API tier.",
   "view.sector_heatmap.th.debt_eq": "债务/ 电子",
   "view.sector_heatmap.th.div_yield": "(单位:千美元)",
   "view.sector_heatmap.th.margin": "净额差值",

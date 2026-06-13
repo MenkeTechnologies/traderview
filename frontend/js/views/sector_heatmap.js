@@ -62,6 +62,14 @@ async function load(tok) {
         renderTable(tableEl, sectors);
     } catch (e) {
         if (!viewIsCurrent(tok)) return;
+        // A 403 is the expected "this endpoint needs a premium Finnhub plan"
+        // signal (the backend maps Finnhub's premium 403 to Forbidden). Show
+        // the same graceful affordance as the empty case — not a scary error.
+        if (e && e.status === 403) {
+            if (grid) grid.innerHTML = `<p class="muted">${esc(t('view.sector_heatmap.premium'))}</p>`;
+            if (tableEl) tableEl.innerHTML = '';
+            return;
+        }
         if (grid) grid.innerHTML = `<p class="muted neg">${esc(t('view.sector_heatmap.error.load', { msg: e.message || e }))}</p>`;
         showToast(t('view.sector_heatmap.toast.failed'), { level: 'error' });
     }
