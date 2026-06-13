@@ -2806,7 +2806,15 @@ export async function dispatch() {
     // the URL doesn't carry one. Lets the user type a ticker once on
     // any page, then navigate freely — every symbol-aware view picks
     // it up automatically.
-    const sym = () => rest[0] || getGlobalSymbol() || '';
+    // Symbols are encodeURIComponent'd into the hash (so `=`, `^`, `/` in
+    // forex `EURUSD=X`, indices `^GSPC`, futures `CL=F` survive routing), so
+    // decode the segment back before any symbol-aware view consumes it.
+    // try/catch guards a malformed `%` sequence — fall back to the raw text.
+    const sym = () => {
+        const raw = rest[0];
+        if (!raw) return getGlobalSymbol() || '';
+        try { return decodeURIComponent(raw); } catch { return raw; }
+    };
     state.view = view;
     document.querySelectorAll('.tab').forEach(b =>
         b.classList.toggle('active', b.dataset.view === view)
