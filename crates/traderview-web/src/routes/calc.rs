@@ -113,6 +113,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/pmi-removal", post(pmi_removal_route))
         .route("/calc/free-cash-flow", post(free_cash_flow_route))
         .route("/calc/credit-card-payoff", post(credit_card_payoff_route))
+        .route("/calc/bond-pricing", post(bond_pricing_route))
         .route("/calc/wash-sale", post(wash_sale_route))
         .route("/calc/cost-basis", post(cost_basis_route))
         .route("/calc/section-1244", post(section_1244_route))
@@ -11946,4 +11947,12 @@ async fn credit_card_payoff_route(
     Json(b): Json<traderview_core::credit_card_payoff::CardInput>,
 ) -> Json<traderview_core::credit_card_payoff::CardResult> {
     Json(traderview_core::credit_card_payoff::analyze(&b))
+}
+
+/// Bond pricing — price a coupon bond from its yield to maturity.
+async fn bond_pricing_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::bond_pricing::BondPriceInput>,
+) -> Json<traderview_core::bond_pricing::BondPriceResult> {
+    Json(traderview_core::bond_pricing::analyze(&b))
 }
