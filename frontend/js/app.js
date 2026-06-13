@@ -741,6 +741,7 @@ import { renderHoldingPeriodReturn } from './views/holding_period_return.js';
 import { renderAltmanZScore } from './views/altman_z_score.js';
 import { renderPiotroskiFScore } from './views/piotroski_f_score.js';
 import { renderGmroi } from './views/gmroi.js';
+import { renderRothContribution } from './views/roth_contribution.js';
 import { renderNetWorthTracker } from './views/net_worth_tracker.js';
 import { renderPersonalBalanceSheet } from './views/personal_balance_sheet.js';
 import { renderPersonalCashFlow } from './views/personal_cash_flow.js';
@@ -3117,6 +3118,7 @@ export async function dispatch() {
             case 'altman-z-score': await renderAltmanZScore(mount, state); break;
             case 'piotroski-f-score': await renderPiotroskiFScore(mount, state); break;
             case 'gmroi': await renderGmroi(mount, state); break;
+            case 'roth-contribution': await renderRothContribution(mount, state); break;
             case 'net-worth-tracker': await renderNetWorthTracker(mount, state); break;
             case 'personal-balance-sheet': await renderPersonalBalanceSheet(mount, state); break;
             case 'personal-cash-flow': await renderPersonalCashFlow(mount, state); break;
@@ -4415,6 +4417,7 @@ export const viewRenderers = {
     'altman-z-score': (m, s) => renderAltmanZScore(m, s),
     'piotroski-f-score': (m, s) => renderPiotroskiFScore(m, s),
     'gmroi': (m, s) => renderGmroi(m, s),
+    'roth-contribution': (m, s) => renderRothContribution(m, s),
     'envelope-budget': (m, s) => renderEnvelopeBudget(m, s),
     'fafsa-efc': (m, s) => renderFafsaEfc(m, s),
     'fifty-thirty-twenty': (m, s) => renderFiftyThirtyTwenty(m, s),

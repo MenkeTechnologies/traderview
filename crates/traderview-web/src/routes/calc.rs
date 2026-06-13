@@ -97,6 +97,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/altman-z-score", post(altman_z_score_route))
         .route("/calc/piotroski-f-score", post(piotroski_f_score_route))
         .route("/calc/gmroi", post(gmroi_route))
+        .route("/calc/roth-contribution", post(roth_contribution_route))
         .route("/calc/wash-sale", post(wash_sale_route))
         .route("/calc/cost-basis", post(cost_basis_route))
         .route("/calc/section-1244", post(section_1244_route))
@@ -11802,4 +11803,12 @@ async fn gmroi_route(
     Json(b): Json<traderview_core::gmroi::GmroiInput>,
 ) -> Json<traderview_core::gmroi::GmroiResult> {
     Json(traderview_core::gmroi::analyze(&b))
+}
+
+/// Roth IRA contribution limit after the MAGI phase-out.
+async fn roth_contribution_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::roth_contribution::RothInput>,
+) -> Json<traderview_core::roth_contribution::RothResult> {
+    Json(traderview_core::roth_contribution::analyze(&b))
 }
