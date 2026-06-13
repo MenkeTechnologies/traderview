@@ -40,6 +40,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/tax-loss-harvest", post(tax_loss_harvest_route))
         .route("/calc/tax-aware-rebalance", post(tax_aware_rebalance_route))
         .route("/calc/savings-waterfall", post(savings_waterfall_route))
+        .route("/calc/house-hacking", post(house_hacking_route))
         .route("/calc/wash-sale", post(wash_sale_route))
         .route("/calc/cost-basis", post(cost_basis_route))
         .route("/calc/section-1244", post(section_1244_route))
@@ -11245,4 +11246,13 @@ async fn savings_waterfall_route(
     Json(b): Json<traderview_core::savings_waterfall::WaterfallInput>,
 ) -> Json<traderview_core::savings_waterfall::WaterfallPlan> {
     Json(traderview_core::savings_waterfall::plan(&b))
+}
+
+/// House hacking: net rental income against the carrying cost to show
+/// what you actually pay to live in a small multi-unit you partly rent.
+async fn house_hacking_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_db::house_hacking::HouseHackInput>,
+) -> Json<traderview_db::house_hacking::HouseHackResult> {
+    Json(traderview_db::house_hacking::compute(&b))
 }
