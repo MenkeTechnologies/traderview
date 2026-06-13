@@ -57,6 +57,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/bill-of-sale", post(bill_of_sale_route))
         .route("/calc/rent-receipt", post(rent_receipt_route))
         .route("/calc/contractor-agreement", post(contractor_agreement_route))
+        .route("/calc/notice-of-entry", post(notice_of_entry_route))
         .route("/calc/fix-and-flip", post(fix_and_flip_route))
         .route("/calc/cash-conversion-cycle", post(cash_conversion_cycle_route))
         .route("/calc/profit-first", post(profit_first_route))
@@ -11514,6 +11515,15 @@ async fn contractor_agreement_route(
     Json(b): Json<traderview_core::contractor_agreement::ContractorInput>,
 ) -> Json<traderview_core::contractor_agreement::ContractorAgreement> {
     Json(traderview_core::contractor_agreement::generate(&b))
+}
+
+/// Notice of entry: earliest lawful entry date from the service date + notice
+/// period, with the purpose and time window.
+async fn notice_of_entry_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::notice_of_entry::EntryInput>,
+) -> Json<traderview_core::notice_of_entry::EntryNotice> {
+    Json(traderview_core::notice_of_entry::generate(&b))
 }
 
 /// Fix-and-flip: the 70% rule max-allowable-offer plus the full deal P&L

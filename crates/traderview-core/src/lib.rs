@@ -172,6 +172,7 @@ pub mod mirr;
 pub mod mtm_reconciliation;
 pub mod multi_product_breakeven;
 pub mod news_event_handler;
+pub mod notice_of_entry;
 pub mod npv_irr;
 pub mod oi_change;
 pub mod open_type;
