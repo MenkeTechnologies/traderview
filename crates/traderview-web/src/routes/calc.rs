@@ -49,6 +49,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/lease-generator", post(lease_generator_route))
         .route("/calc/invoice-generator", post(invoice_generator_route))
         .route("/calc/landlord-notice", post(landlord_notice_route))
+        .route("/calc/fix-and-flip", post(fix_and_flip_route))
         .route("/calc/wash-sale", post(wash_sale_route))
         .route("/calc/cost-basis", post(cost_basis_route))
         .route("/calc/section-1244", post(section_1244_route))
@@ -11335,4 +11336,13 @@ async fn landlord_notice_route(
     Json(b): Json<traderview_core::landlord_notice::NoticeInput>,
 ) -> Json<traderview_core::landlord_notice::NoticeDocument> {
     Json(traderview_core::landlord_notice::generate(&b))
+}
+
+/// Fix-and-flip: the 70% rule max-allowable-offer plus the full deal P&L
+/// (holding, financing, selling costs → net profit, cash-on-cash, annualized).
+async fn fix_and_flip_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::fix_and_flip::FlipInput>,
+) -> Json<traderview_core::fix_and_flip::FlipResult> {
+    Json(traderview_core::fix_and_flip::analyze(&b))
 }

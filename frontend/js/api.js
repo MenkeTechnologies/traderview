@@ -758,6 +758,7 @@ export const api = {
     calcLeaseGenerator:      (body) => request('/calc/lease-generator', { method: 'POST', body: JSON.stringify(body) }),
     calcInvoiceGenerator:    (body) => request('/calc/invoice-generator', { method: 'POST', body: JSON.stringify(body) }),
     calcLandlordNotice:      (body) => request('/calc/landlord-notice', { method: 'POST', body: JSON.stringify(body) }),
+    calcFixAndFlip:          (body) => request('/calc/fix-and-flip', { method: 'POST', body: JSON.stringify(body) }),
     calcMergerArb:           (body) => request('/calc/merger-arb', { method: 'POST', body: JSON.stringify(body) }),
     calcBuybackAccretion:    (body) => request('/calc/buyback-accretion', { method: 'POST', body: JSON.stringify(body) }),
     calcCefDiscount:         (body) => request('/calc/cef-discount', { method: 'POST', body: JSON.stringify(body) }),

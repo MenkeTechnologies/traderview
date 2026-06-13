@@ -69,6 +69,7 @@ pub mod excursion;
 pub mod exit_timing;
 pub mod fair_value_gap;
 pub mod fibonacci;
+pub mod fix_and_flip;
 pub mod footprint;
 pub mod force_index;
 pub mod futures_roll;
