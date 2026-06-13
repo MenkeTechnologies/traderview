@@ -816,6 +816,7 @@ export const api = {
     calcSsTaxation:          (body) => request('/calc/ss-taxation', { method: 'POST', body: JSON.stringify(body) }),
     calcNpvIrr:              (body) => request('/calc/npv-irr', { method: 'POST', body: JSON.stringify(body) }),
     calcLeverage:            (body) => request('/calc/leverage', { method: 'POST', body: JSON.stringify(body) }),
+    calcTwoAssetPortfolio:   (body) => request('/calc/two-asset-portfolio', { method: 'POST', body: JSON.stringify(body) }),
     calcMergerArb:           (body) => request('/calc/merger-arb', { method: 'POST', body: JSON.stringify(body) }),
     calcBuybackAccretion:    (body) => request('/calc/buyback-accretion', { method: 'POST', body: JSON.stringify(body) }),
     calcCefDiscount:         (body) => request('/calc/cef-discount', { method: 'POST', body: JSON.stringify(body) }),
