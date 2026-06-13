@@ -74,6 +74,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/dividend-coverage", post(dividend_coverage_route))
         .route("/calc/spia", post(spia_route))
         .route("/calc/debt-yield", post(debt_yield_route))
+        .route("/calc/price-to-rent", post(price_to_rent_route))
         .route("/calc/wash-sale", post(wash_sale_route))
         .route("/calc/cost-basis", post(cost_basis_route))
         .route("/calc/section-1244", post(section_1244_route))
@@ -11585,4 +11586,13 @@ async fn debt_yield_route(
     Json(b): Json<traderview_core::debt_yield::DebtYieldInput>,
 ) -> Json<traderview_core::debt_yield::DebtYieldResult> {
     Json(traderview_core::debt_yield::analyze(&b))
+}
+
+/// Price-to-rent: home price ÷ annual rent and the gross rental yield, with
+/// the buy/borderline/rent verdict for a market.
+async fn price_to_rent_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::price_to_rent::PriceToRentInput>,
+) -> Json<traderview_core::price_to_rent::PriceToRentResult> {
+    Json(traderview_core::price_to_rent::analyze(&b))
 }
