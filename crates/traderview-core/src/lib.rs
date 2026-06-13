@@ -188,6 +188,7 @@ pub mod portfolio_longevity;
 pub mod position_aging;
 pub mod position_irr;
 pub mod position_size;
+pub mod preferred_stock;
 pub mod premium_discount;
 pub mod price_to_rent;
 pub mod probability_of_touch;

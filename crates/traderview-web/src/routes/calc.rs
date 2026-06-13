@@ -136,6 +136,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/real-raise", post(real_raise_route))
         .route("/calc/sde-valuation", post(sde_valuation_route))
         .route("/calc/freelance-rate", post(freelance_rate_route))
+        .route("/calc/preferred-stock", post(preferred_stock_route))
         .route("/calc/wash-sale", post(wash_sale_route))
         .route("/calc/cost-basis", post(cost_basis_route))
         .route("/calc/section-1244", post(section_1244_route))
@@ -12153,4 +12154,12 @@ async fn freelance_rate_route(
     Json(b): Json<traderview_core::freelance_rate::FreelanceInput>,
 ) -> Json<traderview_core::freelance_rate::FreelanceResult> {
     Json(traderview_core::freelance_rate::analyze(&b))
+}
+
+/// Preferred stock valuation — fair value and current yield (perpetuity).
+async fn preferred_stock_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::preferred_stock::PreferredInput>,
+) -> Json<traderview_core::preferred_stock::PreferredResult> {
+    Json(traderview_core::preferred_stock::analyze(&b))
 }

@@ -780,6 +780,7 @@ import { renderRentAffordability } from './views/rent_affordability.js';
 import { renderRealRaise } from './views/real_raise.js';
 import { renderSdeValuation } from './views/sde_valuation.js';
 import { renderFreelanceRate } from './views/freelance_rate.js';
+import { renderPreferredStock } from './views/preferred_stock.js';
 import { renderNetWorthTracker } from './views/net_worth_tracker.js';
 import { renderPersonalBalanceSheet } from './views/personal_balance_sheet.js';
 import { renderPersonalCashFlow } from './views/personal_cash_flow.js';
@@ -3195,6 +3196,7 @@ export async function dispatch() {
             case 'real-raise': await renderRealRaise(mount, state); break;
             case 'sde-valuation': await renderSdeValuation(mount, state); break;
             case 'freelance-rate': await renderFreelanceRate(mount, state); break;
+            case 'preferred-stock': await renderPreferredStock(mount, state); break;
             case 'net-worth-tracker': await renderNetWorthTracker(mount, state); break;
             case 'personal-balance-sheet': await renderPersonalBalanceSheet(mount, state); break;
             case 'personal-cash-flow': await renderPersonalCashFlow(mount, state); break;
@@ -4532,6 +4534,7 @@ export const viewRenderers = {
     'real-raise': (m, s) => renderRealRaise(m, s),
     'sde-valuation': (m, s) => renderSdeValuation(m, s),
     'freelance-rate': (m, s) => renderFreelanceRate(m, s),
+    'preferred-stock': (m, s) => renderPreferredStock(m, s),
     'envelope-budget': (m, s) => renderEnvelopeBudget(m, s),
     'fafsa-efc': (m, s) => renderFafsaEfc(m, s),
     'fifty-thirty-twenty': (m, s) => renderFiftyThirtyTwenty(m, s),
