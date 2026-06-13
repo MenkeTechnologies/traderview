@@ -76,6 +76,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/commission-agreement", post(commission_agreement_route))
         .route("/calc/pto-policy", post(pto_policy_route))
         .route("/calc/expense-reimbursement", post(expense_reimbursement_route))
+        .route("/calc/timesheet", post(timesheet_route))
         .route("/calc/fix-and-flip", post(fix_and_flip_route))
         .route("/calc/cash-conversion-cycle", post(cash_conversion_cycle_route))
         .route("/calc/profit-first", post(profit_first_route))
@@ -11691,6 +11692,14 @@ async fn expense_reimbursement_route(
     Json(b): Json<traderview_core::expense_reimbursement::ReimbursementInput>,
 ) -> Json<traderview_core::expense_reimbursement::ReimbursementRequest> {
     Json(traderview_core::expense_reimbursement::generate(&b))
+}
+
+/// Timesheet: regular + overtime hours → gross pay.
+async fn timesheet_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::timesheet::TimesheetInput>,
+) -> Json<traderview_core::timesheet::Timesheet> {
+    Json(traderview_core::timesheet::generate(&b))
 }
 
 /// Fix-and-flip: the 70% rule max-allowable-offer plus the full deal P&L
