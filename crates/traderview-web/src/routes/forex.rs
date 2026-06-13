@@ -3,8 +3,9 @@
 //!
 //! Live quotes ride the shared Yahoo seam (`market_data::quote` appends
 //! the `=X` suffix for FX); the calculators are pure compute from
-//! `traderview_core` (`forex_calc` for pip value / sizing / sessions,
-//! `fx_carry` for carry + covered-interest-parity forwards).
+//! `traderview_core::forex_calc` (pip value / sizing / sessions). Carry
+//! and CIP forwards live at `/calc/fx-carry` (the shared `fx_carry`
+//! compute) and are not duplicated here.
 
 use crate::auth::AuthUser;
 use crate::error::ApiError;
@@ -22,7 +23,6 @@ pub fn router() -> Router<AppState> {
         .route("/forex/sessions", get(sessions))
         .route("/forex/pip-value", post(pip_value))
         .route("/forex/position-size", post(position_size))
-        .route("/forex/carry", post(carry))
 }
 
 /// Live quotes for the major USD pairs, through the same cache equities
@@ -79,15 +79,4 @@ async fn position_size(
         .ok_or_else(|| {
             ApiError::BadRequest("equity, risk_pct, and stop_pips must be positive".into())
         })
-}
-
-/// Carry + covered-interest-parity forward for an FX position. Wraps
-/// the shared `fx_carry` compute used elsewhere in the app.
-async fn carry(
-    _u: AuthUser,
-    Json(b): Json<traderview_core::fx_carry::Input>,
-) -> Result<Json<traderview_core::fx_carry::Report>, ApiError> {
-    traderview_core::fx_carry::compute(&b)
-        .map(Json)
-        .ok_or_else(|| ApiError::BadRequest("invalid carry inputs".into()))
 }

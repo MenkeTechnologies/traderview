@@ -957,6 +957,12 @@ export const api = {
     cryptoGlobal:   () => request('/crypto/global'),
     cryptoBtcChain: () => request('/crypto/btc/chain'),
 
+    // Forex (shared Yahoo quote seam + forex_calc desk math)
+    forexPairs:        () => request('/forex/pairs'),
+    forexSessions:     () => request('/forex/sessions'),
+    forexPipValue:     (body) => request('/forex/pip-value', { method: 'POST', body: JSON.stringify(body) }),
+    forexPositionSize: (body) => request('/forex/position-size', { method: 'POST', body: JSON.stringify(body) }),
+
     // Strategy backtest engine
     backtestRun: (body) => request('/backtest/run', { method: 'POST', body: JSON.stringify(body) }),
 

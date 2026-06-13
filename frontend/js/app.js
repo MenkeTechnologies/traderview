@@ -616,6 +616,7 @@ import { SYMBOL_ITEMS, SYMBOL_AWARE_SCOPES, ALL_SCOPED_ITEMS } from './_context_
 import { installTooltips, upgradeTooltips, autoApplyTooltips } from './tooltip.js';
 import { bootI18n, applyUiI18n, t } from './i18n.js';
 import { renderCrypto } from './views/crypto.js';
+import { renderForex } from './views/forex.js';
 import { renderBacktest } from './views/backtest.js';
 import { renderEconomy } from './views/economy.js';
 import { renderPairs } from './views/pairs.js';
@@ -2933,6 +2934,7 @@ export async function dispatch() {
             case 'absorption':         await renderAbsorption(mount, state); break;
             case 'favorites':          await renderFavoritesManager(mount, state); break;
             case 'crypto':      await renderCrypto(mount, state); break;
+            case 'forex':       await renderForex(mount, state); break;
             case 'backtest':    await renderBacktest(mount, state); break;
             case 'economy':     await renderEconomy(mount, state); break;
             case 'pairs':       await renderPairs(mount, state); break;
@@ -3726,6 +3728,7 @@ export const viewRenderers = {
     'cross-broker-wash': (m, s) => renderCrossBrokerWash(m, s),
     'crut': (m, s) => renderCrut(m, s),
     'crypto': (m, s) => renderCrypto(m, s),
+    'forex': (m, s) => renderForex(m, s),
     'crypto-staking': (m, s) => renderCryptoStaking(m, s),
     'csv-wizard': (m, s) => renderCsvWizard(m, s),
     'custom-indicators': (m, s) => renderCustomIndicators(m, s),
