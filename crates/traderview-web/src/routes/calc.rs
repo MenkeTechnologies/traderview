@@ -47,6 +47,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/irmaa", post(irmaa_route))
         .route("/calc/break-even", post(break_even_route))
         .route("/calc/lease-generator", post(lease_generator_route))
+        .route("/calc/invoice-generator", post(invoice_generator_route))
         .route("/calc/wash-sale", post(wash_sale_route))
         .route("/calc/cost-basis", post(cost_basis_route))
         .route("/calc/section-1244", post(section_1244_route))
@@ -11315,4 +11316,13 @@ async fn lease_generator_route(
     Json(b): Json<traderview_core::lease_generator::LeaseInput>,
 ) -> Json<traderview_core::lease_generator::LeaseDocument> {
     Json(traderview_core::lease_generator::generate(&b))
+}
+
+/// Invoice generator: builds a business invoice from line items, computing
+/// the subtotal, discount, tax on the discounted subtotal, total, and due date.
+async fn invoice_generator_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::invoice_generator::InvoiceInput>,
+) -> Json<traderview_core::invoice_generator::InvoiceDocument> {
+    Json(traderview_core::invoice_generator::generate(&b))
 }
