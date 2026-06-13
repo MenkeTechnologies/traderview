@@ -730,6 +730,7 @@ import { renderYieldOnCost } from './views/yield_on_cost.js';
 import { renderTradeExpectancy } from './views/trade_expectancy.js';
 import { renderWageConverter } from './views/wage_converter.js';
 import { renderSalesTax } from './views/sales_tax.js';
+import { renderAccruedInterest } from './views/accrued_interest.js';
 import { renderNetWorthTracker } from './views/net_worth_tracker.js';
 import { renderPersonalBalanceSheet } from './views/personal_balance_sheet.js';
 import { renderPersonalCashFlow } from './views/personal_cash_flow.js';
@@ -3095,6 +3096,7 @@ export async function dispatch() {
             case 'trade-expectancy': await renderTradeExpectancy(mount, state); break;
             case 'wage-converter': await renderWageConverter(mount, state); break;
             case 'sales-tax': await renderSalesTax(mount, state); break;
+            case 'accrued-interest': await renderAccruedInterest(mount, state); break;
             case 'net-worth-tracker': await renderNetWorthTracker(mount, state); break;
             case 'personal-balance-sheet': await renderPersonalBalanceSheet(mount, state); break;
             case 'personal-cash-flow': await renderPersonalCashFlow(mount, state); break;
@@ -4382,6 +4384,7 @@ export const viewRenderers = {
     'trade-expectancy': (m, s) => renderTradeExpectancy(m, s),
     'wage-converter': (m, s) => renderWageConverter(m, s),
     'sales-tax': (m, s) => renderSalesTax(m, s),
+    'accrued-interest': (m, s) => renderAccruedInterest(m, s),
     'envelope-budget': (m, s) => renderEnvelopeBudget(m, s),
     'fafsa-efc': (m, s) => renderFafsaEfc(m, s),
     'fifty-thirty-twenty': (m, s) => renderFiftyThirtyTwenty(m, s),

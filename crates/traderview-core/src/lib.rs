@@ -4,6 +4,7 @@
 //! Pure-Rust, no I/O. Consumed by `traderview-db` (persistence), `traderview-web`
 //! (HTTP), `traderview-import` (broker parsers), and `traderview-desktop`.
 
+pub mod accrued_interest;
 pub mod acceleration_deceleration;
 pub mod adx;
 pub mod age_based_allocation;

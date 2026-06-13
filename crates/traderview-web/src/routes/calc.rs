@@ -86,6 +86,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/trade-expectancy", post(trade_expectancy_route))
         .route("/calc/wage-converter", post(wage_converter_route))
         .route("/calc/sales-tax", post(sales_tax_route))
+        .route("/calc/accrued-interest", post(accrued_interest_route))
         .route("/calc/wash-sale", post(wash_sale_route))
         .route("/calc/cost-basis", post(cost_basis_route))
         .route("/calc/section-1244", post(section_1244_route))
@@ -11703,4 +11704,12 @@ async fn sales_tax_route(
     Json(b): Json<traderview_core::sales_tax::SalesTaxInput>,
 ) -> Json<traderview_core::sales_tax::SalesTaxResult> {
     Json(traderview_core::sales_tax::analyze(&b))
+}
+
+/// Bond accrued interest + dirty price between coupon dates.
+async fn accrued_interest_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::accrued_interest::AccruedInput>,
+) -> Json<traderview_core::accrued_interest::AccruedResult> {
+    Json(traderview_core::accrued_interest::analyze(&b))
 }
