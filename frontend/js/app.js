@@ -707,6 +707,7 @@ import { renderLtvCac } from './views/ltv_cac.js';
 import { renderBurnRate } from './views/burn_rate.js';
 import { renderQlac } from './views/qlac.js';
 import { renderSpousalIra } from './views/spousal_ira.js';
+import { renderPensionSurvivor } from './views/pension_survivor.js';
 import { renderNetWorthTracker } from './views/net_worth_tracker.js';
 import { renderPersonalBalanceSheet } from './views/personal_balance_sheet.js';
 import { renderPersonalCashFlow } from './views/personal_cash_flow.js';
@@ -3049,6 +3050,7 @@ export async function dispatch() {
             case 'burn-rate': await renderBurnRate(mount, state); break;
             case 'qlac': await renderQlac(mount, state); break;
             case 'spousal-ira': await renderSpousalIra(mount, state); break;
+            case 'pension-survivor': await renderPensionSurvivor(mount, state); break;
             case 'net-worth-tracker': await renderNetWorthTracker(mount, state); break;
             case 'personal-balance-sheet': await renderPersonalBalanceSheet(mount, state); break;
             case 'personal-cash-flow': await renderPersonalCashFlow(mount, state); break;
@@ -4313,6 +4315,7 @@ export const viewRenderers = {
     'burn-rate': (m, s) => renderBurnRate(m, s),
     'qlac': (m, s) => renderQlac(m, s),
     'spousal-ira': (m, s) => renderSpousalIra(m, s),
+    'pension-survivor': (m, s) => renderPensionSurvivor(m, s),
     'envelope-budget': (m, s) => renderEnvelopeBudget(m, s),
     'fafsa-efc': (m, s) => renderFafsaEfc(m, s),
     'fifty-thirty-twenty': (m, s) => renderFiftyThirtyTwenty(m, s),

@@ -63,6 +63,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/burn-rate", post(burn_rate_route))
         .route("/calc/qlac", post(qlac_route))
         .route("/calc/spousal-ira", post(spousal_ira_route))
+        .route("/calc/pension-survivor", post(pension_survivor_route))
         .route("/calc/wash-sale", post(wash_sale_route))
         .route("/calc/cost-basis", post(cost_basis_route))
         .route("/calc/section-1244", post(section_1244_route))
@@ -11475,4 +11476,13 @@ async fn spousal_ira_route(
     Json(b): Json<traderview_core::spousal_ira::SpousalIraInput>,
 ) -> Json<traderview_core::spousal_ira::SpousalIraResult> {
     Json(traderview_core::spousal_ira::analyze(&b))
+}
+
+/// Pension survivor election: cost of survivor protection (single-life − J&S),
+/// the survivor's continued benefit, and the pension-max comparison.
+async fn pension_survivor_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::pension_survivor::PensionSurvivorInput>,
+) -> Json<traderview_core::pension_survivor::PensionSurvivorResult> {
+    Json(traderview_core::pension_survivor::analyze(&b))
 }
