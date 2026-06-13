@@ -139,6 +139,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/preferred-stock", post(preferred_stock_route))
         .route("/calc/margin-interest", post(margin_interest_route))
         .route("/calc/qbi-deduction", post(qbi_deduction_route))
+        .route("/calc/estate-tax", post(estate_tax_route))
         .route("/calc/wash-sale", post(wash_sale_route))
         .route("/calc/cost-basis", post(cost_basis_route))
         .route("/calc/section-1244", post(section_1244_route))
@@ -12180,4 +12181,12 @@ async fn qbi_deduction_route(
     Json(b): Json<traderview_core::qbi_deduction::QbiInput>,
 ) -> Json<traderview_core::qbi_deduction::QbiResult> {
     Json(traderview_core::qbi_deduction::analyze(&b))
+}
+
+/// Federal estate tax — taxable estate above the unified exclusion.
+async fn estate_tax_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::estate_tax::EstateTaxInput>,
+) -> Json<traderview_core::estate_tax::EstateTaxResult> {
+    Json(traderview_core::estate_tax::analyze(&b))
 }

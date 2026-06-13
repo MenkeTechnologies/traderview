@@ -782,6 +782,7 @@ import { renderSdeValuation } from './views/sde_valuation.js';
 import { renderFreelanceRate } from './views/freelance_rate.js';
 import { renderPreferredStock } from './views/preferred_stock.js';
 import { renderMarginInterest } from './views/margin_interest.js';
+import { renderEstateTax } from './views/estate_tax.js';
 import { renderNetWorthTracker } from './views/net_worth_tracker.js';
 import { renderPersonalBalanceSheet } from './views/personal_balance_sheet.js';
 import { renderPersonalCashFlow } from './views/personal_cash_flow.js';
@@ -3199,6 +3200,7 @@ export async function dispatch() {
             case 'freelance-rate': await renderFreelanceRate(mount, state); break;
             case 'preferred-stock': await renderPreferredStock(mount, state); break;
             case 'margin-interest': await renderMarginInterest(mount, state); break;
+            case 'estate-tax': await renderEstateTax(mount, state); break;
             case 'net-worth-tracker': await renderNetWorthTracker(mount, state); break;
             case 'personal-balance-sheet': await renderPersonalBalanceSheet(mount, state); break;
             case 'personal-cash-flow': await renderPersonalCashFlow(mount, state); break;

@@ -848,6 +848,7 @@ export const api = {
     calcPreferredStock:      (body) => request('/calc/preferred-stock', { method: 'POST', body: JSON.stringify(body) }),
     calcMarginInterest:      (body) => request('/calc/margin-interest', { method: 'POST', body: JSON.stringify(body) }),
     calcQbiDeduction:        (body) => request('/calc/qbi-deduction', { method: 'POST', body: JSON.stringify(body) }),
+    calcEstateTax:           (body) => request('/calc/estate-tax', { method: 'POST', body: JSON.stringify(body) }),
     calcMergerArb:           (body) => request('/calc/merger-arb', { method: 'POST', body: JSON.stringify(body) }),
     calcBuybackAccretion:    (body) => request('/calc/buyback-accretion', { method: 'POST', body: JSON.stringify(body) }),
     calcCefDiscount:         (body) => request('/calc/cef-discount', { method: 'POST', body: JSON.stringify(body) }),
