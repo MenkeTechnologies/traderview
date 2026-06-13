@@ -124,6 +124,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/car-affordability", post(car_affordability_route))
         .route("/calc/disability-insurance-needs", post(disability_insurance_needs_route))
         .route("/calc/true-hourly-wage", post(true_hourly_wage_route))
+        .route("/calc/property-tax", post(property_tax_route))
         .route("/calc/wash-sale", post(wash_sale_route))
         .route("/calc/cost-basis", post(cost_basis_route))
         .route("/calc/section-1244", post(section_1244_route))
@@ -12045,4 +12046,12 @@ async fn true_hourly_wage_route(
     Json(b): Json<traderview_core::true_hourly_wage::TrueWageInput>,
 ) -> Json<traderview_core::true_hourly_wage::TrueWageResult> {
     Json(traderview_core::true_hourly_wage::analyze(&b))
+}
+
+/// Property tax — annual/monthly tax from value, assessment ratio, mill rate.
+async fn property_tax_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::property_tax::PropertyTaxInput>,
+) -> Json<traderview_core::property_tax::PropertyTaxResult> {
+    Json(traderview_core::property_tax::analyze(&b))
 }

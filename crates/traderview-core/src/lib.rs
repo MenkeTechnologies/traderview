@@ -188,6 +188,7 @@ pub mod price_to_rent;
 pub mod probability_of_touch;
 pub mod profit_factor;
 pub mod profit_first;
+pub mod property_tax;
 pub mod put_call_ratio;
 pub mod qlac;
 pub mod pyramid;
