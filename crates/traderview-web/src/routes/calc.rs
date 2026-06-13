@@ -119,6 +119,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/bonus-grossup", post(bonus_grossup_route))
         .route("/calc/rent-escalation", post(rent_escalation_route))
         .route("/calc/loan-apr", post(loan_apr_route))
+        .route("/calc/home-sale-exclusion", post(home_sale_exclusion_route))
         .route("/calc/wash-sale", post(wash_sale_route))
         .route("/calc/cost-basis", post(cost_basis_route))
         .route("/calc/section-1244", post(section_1244_route))
@@ -12000,4 +12001,12 @@ async fn loan_apr_route(
     Json(b): Json<traderview_core::loan_apr::LoanAprInput>,
 ) -> Json<traderview_core::loan_apr::LoanAprResult> {
     Json(traderview_core::loan_apr::analyze(&b))
+}
+
+/// Primary-home sale capital gain after the §121 exclusion.
+async fn home_sale_exclusion_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::home_sale_exclusion::HomeSaleInput>,
+) -> Json<traderview_core::home_sale_exclusion::HomeSaleResult> {
+    Json(traderview_core::home_sale_exclusion::analyze(&b))
 }

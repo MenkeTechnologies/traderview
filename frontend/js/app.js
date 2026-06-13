@@ -763,6 +763,7 @@ import { renderMarginAnalysis } from './views/margin_analysis.js';
 import { renderBonusGrossup } from './views/bonus_grossup.js';
 import { renderRentEscalation } from './views/rent_escalation.js';
 import { renderLoanApr } from './views/loan_apr.js';
+import { renderHomeSaleExclusion } from './views/home_sale_exclusion.js';
 import { renderNetWorthTracker } from './views/net_worth_tracker.js';
 import { renderPersonalBalanceSheet } from './views/personal_balance_sheet.js';
 import { renderPersonalCashFlow } from './views/personal_cash_flow.js';
@@ -3161,6 +3162,7 @@ export async function dispatch() {
             case 'bonus-grossup': await renderBonusGrossup(mount, state); break;
             case 'rent-escalation': await renderRentEscalation(mount, state); break;
             case 'loan-apr': await renderLoanApr(mount, state); break;
+            case 'home-sale-exclusion': await renderHomeSaleExclusion(mount, state); break;
             case 'net-worth-tracker': await renderNetWorthTracker(mount, state); break;
             case 'personal-balance-sheet': await renderPersonalBalanceSheet(mount, state); break;
             case 'personal-cash-flow': await renderPersonalCashFlow(mount, state); break;
@@ -4481,6 +4483,7 @@ export const viewRenderers = {
     'bonus-grossup': (m, s) => renderBonusGrossup(m, s),
     'rent-escalation': (m, s) => renderRentEscalation(m, s),
     'loan-apr': (m, s) => renderLoanApr(m, s),
+    'home-sale-exclusion': (m, s) => renderHomeSaleExclusion(m, s),
     'envelope-budget': (m, s) => renderEnvelopeBudget(m, s),
     'fafsa-efc': (m, s) => renderFafsaEfc(m, s),
     'fifty-thirty-twenty': (m, s) => renderFiftyThirtyTwenty(m, s),
