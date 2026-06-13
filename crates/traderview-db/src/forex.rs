@@ -74,16 +74,11 @@ pub fn yahoo_symbol(canonical: &str) -> String {
     format!("{canonical}=X")
 }
 
-/// Pip size for a canonical pair: 0.01 for JPY-quoted pairs (USDJPY,
-/// EURJPY, …), 0.0001 for everything else. The fourth decimal is the
-/// pip for most pairs; JPY pairs quote to two decimals so the pip is
-/// the second.
+/// Pip size for a canonical pair — delegates to the single source of
+/// truth in core so the fill engine and the FX calculators can't
+/// diverge on what a pip is worth.
 pub fn pip_size(canonical: &str) -> f64 {
-    if canonical.ends_with("JPY") {
-        0.01
-    } else {
-        0.0001
-    }
+    traderview_core::forex_calc::pip_size(canonical)
 }
 
 #[cfg(test)]

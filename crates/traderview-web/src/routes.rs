@@ -42,6 +42,7 @@ mod corr_matrix;
 mod credit_utilization;
 mod crypto;
 mod csv_wizard;
+mod forex;
 mod custom_indicators;
 mod darkpool;
 mod dashboards;
@@ -238,6 +239,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(heatmap::router())
         .merge(options::router())
         .merge(crypto::router())
+        .merge(forex::router())
         .merge(backtest::router())
         .merge(economy::router())
         .merge(analysis::router())
