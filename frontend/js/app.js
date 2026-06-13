@@ -746,6 +746,7 @@ import { renderInterestCoverage } from './views/interest_coverage.js';
 import { renderCapitalGainsTax } from './views/capital_gains_tax.js';
 import { renderTraditionalIraDeduction } from './views/traditional_ira_deduction.js';
 import { renderRuleOf40 } from './views/rule_of_40.js';
+import { renderWacc } from './views/wacc.js';
 import { renderNetWorthTracker } from './views/net_worth_tracker.js';
 import { renderPersonalBalanceSheet } from './views/personal_balance_sheet.js';
 import { renderPersonalCashFlow } from './views/personal_cash_flow.js';
@@ -3127,6 +3128,7 @@ export async function dispatch() {
             case 'capital-gains-tax': await renderCapitalGainsTax(mount, state); break;
             case 'traditional-ira-deduction': await renderTraditionalIraDeduction(mount, state); break;
             case 'rule-of-40': await renderRuleOf40(mount, state); break;
+            case 'wacc': await renderWacc(mount, state); break;
             case 'net-worth-tracker': await renderNetWorthTracker(mount, state); break;
             case 'personal-balance-sheet': await renderPersonalBalanceSheet(mount, state); break;
             case 'personal-cash-flow': await renderPersonalCashFlow(mount, state); break;
@@ -4430,6 +4432,7 @@ export const viewRenderers = {
     'capital-gains-tax': (m, s) => renderCapitalGainsTax(m, s),
     'traditional-ira-deduction': (m, s) => renderTraditionalIraDeduction(m, s),
     'rule-of-40': (m, s) => renderRuleOf40(m, s),
+    'wacc': (m, s) => renderWacc(m, s),
     'envelope-budget': (m, s) => renderEnvelopeBudget(m, s),
     'fafsa-efc': (m, s) => renderFafsaEfc(m, s),
     'fifty-thirty-twenty': (m, s) => renderFiftyThirtyTwenty(m, s),

@@ -811,6 +811,7 @@ export const api = {
     calcCapitalGainsTax:     (body) => request('/calc/capital-gains-tax', { method: 'POST', body: JSON.stringify(body) }),
     calcTraditionalIraDeduction: (body) => request('/calc/traditional-ira-deduction', { method: 'POST', body: JSON.stringify(body) }),
     calcRuleOf40:            (body) => request('/calc/rule-of-40', { method: 'POST', body: JSON.stringify(body) }),
+    calcWacc:                (body) => request('/calc/wacc', { method: 'POST', body: JSON.stringify(body) }),
     calcMergerArb:           (body) => request('/calc/merger-arb', { method: 'POST', body: JSON.stringify(body) }),
     calcBuybackAccretion:    (body) => request('/calc/buyback-accretion', { method: 'POST', body: JSON.stringify(body) }),
     calcCefDiscount:         (body) => request('/calc/cef-discount', { method: 'POST', body: JSON.stringify(body) }),

@@ -102,6 +102,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/capital-gains-tax", post(capital_gains_tax_route))
         .route("/calc/traditional-ira-deduction", post(traditional_ira_deduction_route))
         .route("/calc/rule-of-40", post(rule_of_40_route))
+        .route("/calc/wacc", post(wacc_route))
         .route("/calc/wash-sale", post(wash_sale_route))
         .route("/calc/cost-basis", post(cost_basis_route))
         .route("/calc/section-1244", post(section_1244_route))
@@ -11847,4 +11848,12 @@ async fn rule_of_40_route(
     Json(b): Json<traderview_core::rule_of_40::RuleOf40Input>,
 ) -> Json<traderview_core::rule_of_40::RuleOf40Result> {
     Json(traderview_core::rule_of_40::analyze(&b))
+}
+
+/// WACC — blended after-tax cost of capital (optional CAPM cost of equity).
+async fn wacc_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::wacc::WaccInput>,
+) -> Json<traderview_core::wacc::WaccResult> {
+    Json(traderview_core::wacc::analyze(&b))
 }
