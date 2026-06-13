@@ -185,6 +185,10 @@ export function extractCalendarRows(payload) {
         if (!ex || !symbol) continue;
         const amount = Number(r.amount);
         const annual = Number(r.annual_dividend);
+        // Yields are prepopulated server-side (see market_data::refresh_dividends_calendar);
+        // the soonest names carry price + yield, the rest stay null.
+        const price = Number(r.price);
+        const yld = Number(r.yield);
         out.push({
             symbol,
             company: typeof r.company === 'string' ? r.company : '',
@@ -195,8 +199,8 @@ export function extractCalendarRows(payload) {
             amount: Number.isFinite(amount) ? amount : null,
             annualized: Number.isFinite(annual) ? annual : null,
             payments_per_year: Number.isFinite(Number(r.payments_per_year)) ? Number(r.payments_per_year) : null,
-            price: null,
-            yield: null,
+            price: Number.isFinite(price) ? price : null,
+            yield: Number.isFinite(yld) ? yld : null,
         });
     }
     return out;

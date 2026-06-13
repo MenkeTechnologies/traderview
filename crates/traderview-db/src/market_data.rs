@@ -10,10 +10,12 @@
 //! Failures degrade gracefully — each module returns `Option`.
 
 use chrono::{DateTime, Utc};
+use once_cell::sync::Lazy;
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 use sqlx::PgPool;
 use std::str::FromStr;
+use tokio::sync::Mutex;
 
 const UA: &str =
     "Mozilla/5.0 (compatible; traderview/0.1; +https://github.com/MenkeTechnologies/traderview)";
@@ -741,9 +743,191 @@ pub async fn dividends_calendar(
     }))
 }
 
+// ── Prepopulated dividend calendar ────────────────────────────────────────
+//
+// Opening the Dividend Calendar view used to fan out a per-date Nasdaq fetch
+// (and the frontend then pulled ~60 quotes for yields) on every open. Instead
+// the full horizon is computed and yield-enriched on a background interval and
+// parked here; the GET route serves the cached window so a view open is free —
+// the same model as the sector heatmap and world-markets snapshot.
+
+/// Horizon the background refresher always fetches. The route serves any
+/// requested window (1..=90d) by filtering this superset.
+pub const DIVIDEND_CALENDAR_HORIZON_DAYS: i64 = 90;
+/// Cap on how many of the soonest unique symbols get a quote for yield
+/// enrichment, to stay within rate limits — matches the old client cap.
+const DIVIDEND_CALENDAR_YIELD_CAP: usize = 60;
+
+static DIVIDEND_CALENDAR_CACHE: Lazy<Mutex<Option<serde_json::Value>>> =
+    Lazy::new(|| Mutex::new(None));
+
+/// Recompute the full-horizon calendar, enrich yields server-side, and store
+/// it in the cache. Called by the background refresher on a fixed interval.
+/// Returns the event count.
+pub async fn refresh_dividends_calendar(pool: &PgPool) -> anyhow::Result<usize> {
+    let from = Utc::now().date_naive();
+    let to = from + chrono::Duration::days(DIVIDEND_CALENDAR_HORIZON_DAYS);
+    let mut payload = dividends_calendar(from, to).await?;
+    enrich_calendar_yields(pool, &mut payload).await;
+    let count = payload["rows"].as_array().map(|a| a.len()).unwrap_or(0);
+    *DIVIDEND_CALENDAR_CACHE.lock().await = Some(payload);
+    Ok(count)
+}
+
+/// Inject `price` and `yield` into the soonest names' rows. Rows arrive sorted
+/// by ex-date ascending, so the first `YIELD_CAP` unique symbols are the most
+/// imminent ones — the ones a user is most likely to act on.
+async fn enrich_calendar_yields(pool: &PgPool, payload: &mut serde_json::Value) {
+    let mut targets: Vec<String> = Vec::new();
+    {
+        let rows = match payload["rows"].as_array() {
+            Some(r) => r,
+            None => return,
+        };
+        let mut seen = std::collections::HashSet::new();
+        for r in rows {
+            if let Some(s) = r["symbol"].as_str() {
+                if seen.insert(s.to_string()) {
+                    targets.push(s.to_string());
+                    if targets.len() >= DIVIDEND_CALENDAR_YIELD_CAP {
+                        break;
+                    }
+                }
+            }
+        }
+    }
+    if targets.is_empty() {
+        return;
+    }
+
+    let mut price: std::collections::HashMap<String, f64> = std::collections::HashMap::new();
+    for q in quotes(pool, &targets).await {
+        if q.price > 0.0 {
+            price.insert(q.symbol.clone(), q.price);
+        }
+    }
+    if price.is_empty() {
+        return;
+    }
+
+    if let Some(rows) = payload["rows"].as_array_mut() {
+        for r in rows.iter_mut() {
+            let sym = match r["symbol"].as_str() {
+                Some(s) => s.to_string(),
+                None => continue,
+            };
+            if let Some(&px) = price.get(&sym) {
+                r["price"] = serde_json::json!(px);
+                if let Some(ann) = r["annual_dividend"].as_f64() {
+                    if ann > 0.0 {
+                        r["yield"] = serde_json::json!(ann / px);
+                    }
+                }
+            }
+        }
+    }
+}
+
+/// Serve the dividend calendar for `[from, to]` from the prepopulated cache.
+/// On a cold cache (the boot race before the first refresh lands) it computes
+/// the requested window inline, un-enriched — the next refresh fills yields.
+pub async fn cached_dividends_calendar(
+    from: chrono::NaiveDate,
+    to: chrono::NaiveDate,
+) -> anyhow::Result<serde_json::Value> {
+    let cached = DIVIDEND_CALENDAR_CACHE.lock().await.clone();
+    match cached {
+        Some(full) => Ok(filter_calendar_window(&full, from, to)),
+        None => dividends_calendar(from, to).await,
+    }
+}
+
+/// Narrow a cached full-horizon payload to the requested `[from, to]` window.
+/// Ex-dates are ISO `YYYY-MM-DD` strings, which sort lexicographically, so a
+/// string range comparison is correct and avoids re-parsing dates.
+fn filter_calendar_window(
+    full: &serde_json::Value,
+    from: chrono::NaiveDate,
+    to: chrono::NaiveDate,
+) -> serde_json::Value {
+    let from_s = from.format("%Y-%m-%d").to_string();
+    let to_s = to.format("%Y-%m-%d").to_string();
+    let rows: Vec<serde_json::Value> = full["rows"]
+        .as_array()
+        .map(|a| {
+            a.iter()
+                .filter(|r| {
+                    r["ex_date"]
+                        .as_str()
+                        .map(|d| d >= from_s.as_str() && d <= to_s.as_str())
+                        .unwrap_or(false)
+                })
+                .cloned()
+                .collect()
+        })
+        .unwrap_or_default();
+    serde_json::json!({
+        "from": from_s,
+        "to": to_s,
+        "count": rows.len(),
+        "rows": rows,
+    })
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    // ── filter_calendar_window: narrow the cached full horizon ────────────
+
+    fn cal_fixture() -> serde_json::Value {
+        serde_json::json!({
+            "from": "2026-01-01",
+            "to": "2026-04-01",
+            "count": 4,
+            "rows": [
+                { "symbol": "A", "ex_date": "2026-01-05" },
+                { "symbol": "B", "ex_date": "2026-01-20" },
+                { "symbol": "C", "ex_date": "2026-02-10" },
+                { "symbol": "D", "ex_date": "2026-03-15" },
+            ],
+        })
+    }
+
+    fn ymd(s: &str) -> chrono::NaiveDate {
+        chrono::NaiveDate::parse_from_str(s, "%Y-%m-%d").unwrap()
+    }
+
+    #[test]
+    fn filter_window_keeps_inclusive_range() {
+        let out = filter_calendar_window(&cal_fixture(), ymd("2026-01-05"), ymd("2026-02-10"));
+        // Both endpoints are inclusive: A (1/5) and C (2/10) stay; D drops.
+        assert_eq!(out["count"], 3);
+        let syms: Vec<&str> = out["rows"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|r| r["symbol"].as_str().unwrap())
+            .collect();
+        assert_eq!(syms, vec!["A", "B", "C"]);
+    }
+
+    #[test]
+    fn filter_window_rewrites_from_to_and_excludes_outside() {
+        let out = filter_calendar_window(&cal_fixture(), ymd("2026-01-10"), ymd("2026-01-25"));
+        assert_eq!(out["from"], "2026-01-10");
+        assert_eq!(out["to"], "2026-01-25");
+        // Only B (1/20) falls inside; A is before, C/D after.
+        assert_eq!(out["count"], 1);
+        assert_eq!(out["rows"][0]["symbol"], "B");
+    }
+
+    #[test]
+    fn filter_window_empty_when_no_rows_match() {
+        let out = filter_calendar_window(&cal_fixture(), ymd("2026-06-01"), ymd("2026-06-30"));
+        assert_eq!(out["count"], 0);
+        assert!(out["rows"].as_array().unwrap().is_empty());
+    }
 
     // ── dec_f64: Decimal → f64 via string round-trip ──────────────────────
 

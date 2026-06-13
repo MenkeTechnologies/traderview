@@ -1,14 +1,14 @@
 // Dividend Calendar — an investing.com-style, market-wide calendar of
 // *upcoming* ex-dividend events.
 //
-// Data source: the backend `/dividends/calendar?days=N` endpoint, which
-// aggregates Nasdaq's per-date dividend feed across the horizon and returns
-// *every* company going ex in the window (not a curated universe). Events are
-// grouped by ex-date so the table reads like a day-by-day calendar.
-//
-// Yield needs a price, which the market-wide feed doesn't carry, so it is
-// enriched best-effort: for up to YIELD_CAP of the soonest symbols we pull a
-// (Yahoo-backed) quote and compute annualized ÷ price. The rest show "—".
+// Data source: the backend `/dividends/calendar?days=N` endpoint, served from
+// a background-refreshed cache (see market_data::refresh_dividends_calendar).
+// The full 90-day Nasdaq feed is precomputed on a 6h interval and the soonest
+// names' yields (annualized ÷ price) are enriched server-side, so opening this
+// view never triggers a per-date fan-out or a client-side quote sweep — it
+// just renders the prepopulated window. Events are grouped by ex-date so the
+// table reads like a day-by-day calendar; names without an enriched yield
+// show "—".
 
 import { api } from '../api.js';
 import { esc, fmt } from '../util.js';
@@ -31,9 +31,6 @@ const HORIZON_OPTIONS = [
 function horizonLabel(o) {
     return t('view.dividend_calendar.horizon.next_n_days', { n: o.n });
 }
-
-// Cap how many quotes we pull to enrich yields, to stay within rate limits.
-const YIELD_CAP = 60;
 
 let state = {
     horizon: 14,
@@ -125,42 +122,6 @@ async function runFetch(tok) {
     state.rows = rows;
     renderAll(rows);
     showToast(t('view.dividend_calendar.toast.loaded', { events: rows.length }), { level: 'success' });
-
-    // Best-effort yield enrichment for the soonest names, then re-render.
-    void enrichYields(tok, rows);
-}
-
-async function enrichYields(tok, rows) {
-    const seen = new Set();
-    const targets = [];
-    for (const r of rows) {
-        if (seen.has(r.symbol)) continue;
-        seen.add(r.symbol);
-        targets.push(r.symbol);
-        if (targets.length >= YIELD_CAP) break;
-    }
-    if (targets.length === 0) return;
-
-    const prices = {};
-    await fetchWithConcurrencyLimit(targets, 6, async (sym) => {
-        try {
-            const q = await api.quote(sym);
-            const px = Number(q && q.price);
-            if (Number.isFinite(px) && px > 0) prices[sym] = px;
-        } catch (_e) { /* leave blank */ }
-    });
-    if (!viewIsCurrent(tok)) return;
-
-    let any = false;
-    for (const r of rows) {
-        const px = prices[r.symbol];
-        if (px && r.annualized != null) {
-            r.price = px;
-            r.yield = r.annualized / px;
-            any = true;
-        }
-    }
-    if (any && state.rows === rows) renderAll(rows);
 }
 
 function renderAll(rows) {
@@ -168,19 +129,6 @@ function renderAll(rows) {
     renderTable(rows);
     renderYieldChart(rows);
     renderDteChart(rows);
-}
-
-// Bounded-concurrency mapper.
-async function fetchWithConcurrencyLimit(items, limit, worker) {
-    let next = 0;
-    const runners = Array.from({ length: Math.min(limit, items.length) }, async () => {
-        while (true) {
-            const i = next++;
-            if (i >= items.length) return;
-            await worker(items[i]);
-        }
-    });
-    await Promise.all(runners);
 }
 
 const NUMERIC_SORT_KEYS = new Set(['amount', 'payments_per_year', 'annualized', 'yield']);

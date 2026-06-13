@@ -124,13 +124,15 @@ async fn dividends_calendar(
     _u: AuthUser,
     Query(q): Query<DivCalQ>,
 ) -> Result<Json<Value>, ApiError> {
-    // Clamp the horizon so we never fan out an unbounded number of per-date
-    // Nasdaq calls. 1..=90 days.
+    // Served from the background-refreshed cache (see background.rs
+    // spawn_dividend_calendar) — the 90-day window is precomputed and
+    // yield-enriched on interval, so this just narrows it to the requested
+    // horizon. 1..=90 days, matching the cached superset.
     let days = q.days.clamp(1, 90);
     let from = Utc::now().date_naive();
     let to = from + Duration::days(days);
     Ok(Json(
-        traderview_db::market_data::dividends_calendar(from, to)
+        traderview_db::market_data::cached_dividends_calendar(from, to)
             .await
             .map_err(ApiError::Internal)?,
     ))

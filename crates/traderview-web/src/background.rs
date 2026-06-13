@@ -40,6 +40,10 @@ pub const MARKETS_REFRESH: Duration = Duration::from_secs(60);
 /// Screener snapshot cadence — the screens run on daily bars, so
 /// twice a day keeps them fresh without burning quota.
 pub const SCREENER_REFRESH: Duration = Duration::from_secs(12 * 60 * 60);
+/// Dividend-calendar refresh — the Nasdaq feed and indicated yields are
+/// daily-bar data, so a few times a day keeps the prepopulated 90-day
+/// window fresh without re-fetching on every view open.
+pub const DIVIDEND_CALENDAR_REFRESH: Duration = Duration::from_secs(6 * 60 * 60);
 /// Paper TWAP ticker — child-order submission resolution. 5s gives
 /// per-slice timing error well under any allowed interval.
 pub const PAPER_TWAP_TICK: Duration = Duration::from_secs(5);
@@ -138,6 +142,7 @@ pub fn spawn_refreshers(pool: PgPool, cache: TileCache, hub: crate::realtime::Hu
     spawn_heatmap_universe(pool.clone());
     spawn_markets_snapshot();
     spawn_screener_snapshots(pool.clone());
+    spawn_dividend_calendar(pool.clone());
     spawn_paper_twap_ticker(pool.clone(), hub.clone());
     spawn_strategy_drift_watch(pool.clone(), hub.clone());
     spawn_funding_regime_watch(hub.clone());
@@ -739,6 +744,22 @@ fn spawn_markets_snapshot() {
                 tracing::warn!(error = %e, "markets snapshot refresh failed");
             }
             tokio::time::sleep(MARKETS_REFRESH).await;
+        }
+    });
+}
+
+/// Dividend-calendar refresh. Fetches the full 90-day Nasdaq calendar and
+/// enriches the soonest names' yields server-side, parked in an in-memory
+/// cache so opening the view never triggers the per-date fan-out or a
+/// client-side quote sweep. Runs immediately on boot, then on interval.
+fn spawn_dividend_calendar(pool: PgPool) {
+    tokio::spawn(async move {
+        loop {
+            match traderview_db::market_data::refresh_dividends_calendar(&pool).await {
+                Ok(n) => tracing::debug!(events = n, "dividend calendar refreshed"),
+                Err(e) => tracing::warn!(error = %e, "dividend calendar refresh failed"),
+            }
+            tokio::time::sleep(DIVIDEND_CALENDAR_REFRESH).await;
         }
     });
 }
