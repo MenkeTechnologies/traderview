@@ -74,6 +74,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/offer-letter", post(offer_letter_route))
         .route("/calc/severance", post(severance_route))
         .route("/calc/commission-agreement", post(commission_agreement_route))
+        .route("/calc/pto-policy", post(pto_policy_route))
         .route("/calc/fix-and-flip", post(fix_and_flip_route))
         .route("/calc/cash-conversion-cycle", post(cash_conversion_cycle_route))
         .route("/calc/profit-first", post(profit_first_route))
@@ -11673,6 +11674,14 @@ async fn commission_agreement_route(
     Json(b): Json<traderview_core::commission_agreement::CommissionInput>,
 ) -> Json<traderview_core::commission_agreement::CommissionAgreement> {
     Json(traderview_core::commission_agreement::generate(&b))
+}
+
+/// PTO accrual policy: annual accrual (hours/days) + policy clauses.
+async fn pto_policy_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::pto_policy::PtoPolicyInput>,
+) -> Json<traderview_core::pto_policy::PtoPolicy> {
+    Json(traderview_core::pto_policy::generate(&b))
 }
 
 /// Fix-and-flip: the 70% rule max-allowable-offer plus the full deal P&L
