@@ -103,6 +103,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/traditional-ira-deduction", post(traditional_ira_deduction_route))
         .route("/calc/rule-of-40", post(rule_of_40_route))
         .route("/calc/wacc", post(wacc_route))
+        .route("/calc/dupont-roe", post(dupont_roe_route))
         .route("/calc/wash-sale", post(wash_sale_route))
         .route("/calc/cost-basis", post(cost_basis_route))
         .route("/calc/section-1244", post(section_1244_route))
@@ -11856,4 +11857,12 @@ async fn wacc_route(
     Json(b): Json<traderview_core::wacc::WaccInput>,
 ) -> Json<traderview_core::wacc::WaccResult> {
     Json(traderview_core::wacc::analyze(&b))
+}
+
+/// DuPont ROE decomposition (five-step).
+async fn dupont_roe_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::dupont_roe::DupontInput>,
+) -> Json<traderview_core::dupont_roe::DupontResult> {
+    Json(traderview_core::dupont_roe::analyze(&b))
 }

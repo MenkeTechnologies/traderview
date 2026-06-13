@@ -71,6 +71,7 @@ pub mod dow_hour_heatmap;
 pub mod dpo;
 pub mod drawdown_duration;
 pub mod drawdown_throttle;
+pub mod dupont_roe;
 pub mod dynamic_kelly;
 pub mod earnings_calendar;
 pub mod earnings_move;
