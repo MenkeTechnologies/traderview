@@ -50,6 +50,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/invoice-generator", post(invoice_generator_route))
         .route("/calc/landlord-notice", post(landlord_notice_route))
         .route("/calc/security-deposit-itemization", post(security_deposit_itemization_route))
+        .route("/calc/promissory-note", post(promissory_note_route))
         .route("/calc/fix-and-flip", post(fix_and_flip_route))
         .route("/calc/cash-conversion-cycle", post(cash_conversion_cycle_route))
         .route("/calc/profit-first", post(profit_first_route))
@@ -11444,6 +11445,15 @@ async fn security_deposit_itemization_route(
     Json(b): Json<traderview_core::security_deposit_itemization::DepositInput>,
 ) -> Json<traderview_core::security_deposit_itemization::DepositStatement> {
     Json(traderview_core::security_deposit_itemization::generate(&b))
+}
+
+/// Promissory note: amortizes the loan (monthly payment, total interest,
+/// maturity) and assembles the note's operative clauses.
+async fn promissory_note_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::promissory_note::NoteInput>,
+) -> Json<traderview_core::promissory_note::PromissoryNote> {
+    Json(traderview_core::promissory_note::generate(&b))
 }
 
 /// Fix-and-flip: the 70% rule max-allowable-offer plus the full deal P&L
