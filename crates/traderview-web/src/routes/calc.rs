@@ -104,6 +104,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/rule-of-40", post(rule_of_40_route))
         .route("/calc/wacc", post(wacc_route))
         .route("/calc/dupont-roe", post(dupont_roe_route))
+        .route("/calc/ss-taxation", post(ss_taxation_route))
         .route("/calc/wash-sale", post(wash_sale_route))
         .route("/calc/cost-basis", post(cost_basis_route))
         .route("/calc/section-1244", post(section_1244_route))
@@ -11865,4 +11866,12 @@ async fn dupont_roe_route(
     Json(b): Json<traderview_core::dupont_roe::DupontInput>,
 ) -> Json<traderview_core::dupont_roe::DupontResult> {
     Json(traderview_core::dupont_roe::analyze(&b))
+}
+
+/// Taxation of Social Security benefits (Pub 915 provisional-income tiers).
+async fn ss_taxation_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::ss_taxation::SsTaxInput>,
+) -> Json<traderview_core::ss_taxation::SsTaxResult> {
+    Json(traderview_core::ss_taxation::analyze(&b))
 }

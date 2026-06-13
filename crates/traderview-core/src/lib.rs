@@ -213,6 +213,7 @@ pub mod signals;
 pub mod sip_simulator;
 pub mod slug;
 pub mod social_security_pia;
+pub mod ss_taxation;
 pub mod sortino;
 pub mod spousal_ira;
 pub mod spia;
