@@ -165,6 +165,7 @@ pub mod opening_range;
 pub mod optimal_f;
 pub mod options_margin;
 pub mod order_block;
+pub mod overtime_pay;
 pub mod order_book_imbalance;
 pub mod order_flow;
 pub mod order_staleness;

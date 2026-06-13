@@ -771,6 +771,7 @@ import { renderTrueHourlyWage } from './views/true_hourly_wage.js';
 import { renderPropertyTax } from './views/property_tax.js';
 import { renderRentalNoi } from './views/rental_noi.js';
 import { renderMortgageAffordability } from './views/mortgage_affordability.js';
+import { renderOvertimePay } from './views/overtime_pay.js';
 import { renderNetWorthTracker } from './views/net_worth_tracker.js';
 import { renderPersonalBalanceSheet } from './views/personal_balance_sheet.js';
 import { renderPersonalCashFlow } from './views/personal_cash_flow.js';
@@ -3177,6 +3178,7 @@ export async function dispatch() {
             case 'property-tax': await renderPropertyTax(mount, state); break;
             case 'rental-noi': await renderRentalNoi(mount, state); break;
             case 'mortgage-affordability': await renderMortgageAffordability(mount, state); break;
+            case 'overtime-pay': await renderOvertimePay(mount, state); break;
             case 'net-worth-tracker': await renderNetWorthTracker(mount, state); break;
             case 'personal-balance-sheet': await renderPersonalBalanceSheet(mount, state); break;
             case 'personal-cash-flow': await renderPersonalCashFlow(mount, state); break;
@@ -4505,6 +4507,7 @@ export const viewRenderers = {
     'property-tax': (m, s) => renderPropertyTax(m, s),
     'rental-noi': (m, s) => renderRentalNoi(m, s),
     'mortgage-affordability': (m, s) => renderMortgageAffordability(m, s),
+    'overtime-pay': (m, s) => renderOvertimePay(m, s),
     'envelope-budget': (m, s) => renderEnvelopeBudget(m, s),
     'fafsa-efc': (m, s) => renderFafsaEfc(m, s),
     'fifty-thirty-twenty': (m, s) => renderFiftyThirtyTwenty(m, s),
