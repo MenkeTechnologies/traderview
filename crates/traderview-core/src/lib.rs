@@ -95,6 +95,7 @@ pub mod iv_rank;
 pub mod iv_skew;
 pub mod kelly;
 pub mod keltner;
+pub mod lease_generator;
 pub mod liquidity;
 pub mod liquidity_grab;
 pub mod mae_stop_tuning;

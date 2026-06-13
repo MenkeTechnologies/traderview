@@ -46,6 +46,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/guyton-klinger", post(guyton_klinger_route))
         .route("/calc/irmaa", post(irmaa_route))
         .route("/calc/break-even", post(break_even_route))
+        .route("/calc/lease-generator", post(lease_generator_route))
         .route("/calc/wash-sale", post(wash_sale_route))
         .route("/calc/cost-basis", post(cost_basis_route))
         .route("/calc/section-1244", post(section_1244_route))
@@ -11305,4 +11306,13 @@ async fn break_even_route(
     Json(b): Json<traderview_core::break_even::BreakEvenInput>,
 ) -> Json<traderview_core::break_even::BreakEvenResult> {
     Json(traderview_core::break_even::analyze(&b))
+}
+
+/// Lease generator: assembles a residential lease agreement and computes
+/// the term, prorated first month, and move-in total from the terms.
+async fn lease_generator_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::lease_generator::LeaseInput>,
+) -> Json<traderview_core::lease_generator::LeaseDocument> {
+    Json(traderview_core::lease_generator::generate(&b))
 }
