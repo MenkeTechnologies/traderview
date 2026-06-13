@@ -16,12 +16,11 @@
 use chrono::{Duration, NaiveDate};
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Deserialize)]
-pub struct InvoiceLineItem {
-    pub description: String,
-    pub quantity: f64,
-    pub unit_price_usd: f64,
-}
+// Line-item math is shared with the estimate and purchase-order generators —
+// one implementation in `line_items` so every billing document reconciles
+// identically. These aliases keep the invoice's public type names and JSON
+// shape unchanged.
+pub use crate::line_items::{LineItem as InvoiceLineItem, LineResult as InvoiceLineResult};
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct InvoiceInput {
@@ -46,14 +45,6 @@ pub struct InvoiceInput {
 }
 
 #[derive(Debug, Clone, Serialize)]
-pub struct InvoiceLineResult {
-    pub description: String,
-    pub quantity: f64,
-    pub unit_price_usd: f64,
-    pub amount_usd: f64,
-}
-
-#[derive(Debug, Clone, Serialize)]
 pub struct InvoiceDocument {
     pub business_name: String,
     pub business_address: String,
@@ -74,29 +65,8 @@ pub struct InvoiceDocument {
     pub notes: String,
 }
 
-fn cents(x: f64) -> f64 {
-    (x * 100.0).round() / 100.0
-}
-
 pub fn generate(i: &InvoiceInput) -> InvoiceDocument {
-    let lines: Vec<InvoiceLineResult> = i
-        .line_items
-        .iter()
-        .map(|li| InvoiceLineResult {
-            description: li.description.clone(),
-            quantity: li.quantity,
-            unit_price_usd: li.unit_price_usd,
-            amount_usd: cents(li.quantity * li.unit_price_usd),
-        })
-        .collect();
-
-    let subtotal = cents(lines.iter().map(|l| l.amount_usd).sum());
-    let discount_pct = i.discount_pct.max(0.0);
-    let discount_amount = cents(subtotal * discount_pct / 100.0);
-    let taxable = subtotal - discount_amount;
-    let tax_rate = i.tax_rate_pct.max(0.0);
-    let tax_amount = cents(taxable * tax_rate / 100.0);
-    let total = cents(taxable + tax_amount);
+    let t = crate::line_items::compute(&i.line_items, i.discount_pct, i.tax_rate_pct);
 
     let due_date = NaiveDate::parse_from_str(&i.invoice_date, "%Y-%m-%d")
         .map(|d| (d + Duration::days(i.payment_terms_days)).format("%Y-%m-%d").to_string())
@@ -111,13 +81,13 @@ pub fn generate(i: &InvoiceInput) -> InvoiceDocument {
         invoice_date: i.invoice_date.clone(),
         due_date,
         payment_terms_days: i.payment_terms_days,
-        lines,
-        subtotal_usd: subtotal,
-        discount_pct,
-        discount_amount_usd: discount_amount,
-        tax_rate_pct: tax_rate,
-        tax_amount_usd: tax_amount,
-        total_usd: total,
+        lines: t.lines,
+        subtotal_usd: t.subtotal_usd,
+        discount_pct: t.discount_pct,
+        discount_amount_usd: t.discount_amount_usd,
+        tax_rate_pct: t.tax_rate_pct,
+        tax_amount_usd: t.tax_amount_usd,
+        total_usd: t.total_usd,
         notes: i.notes.clone(),
     }
 }

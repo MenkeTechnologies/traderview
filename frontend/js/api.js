@@ -771,6 +771,7 @@ export const api = {
     calcNda:                 (body) => request('/calc/nda', { method: 'POST', body: JSON.stringify(body) }),
     calcPetAddendum:         (body) => request('/calc/pet-addendum', { method: 'POST', body: JSON.stringify(body) }),
     calcInspectionChecklist: (body) => request('/calc/inspection-checklist', { method: 'POST', body: JSON.stringify(body) }),
+    calcEstimate:            (body) => request('/calc/estimate', { method: 'POST', body: JSON.stringify(body) }),
     calcFixAndFlip:          (body) => request('/calc/fix-and-flip', { method: 'POST', body: JSON.stringify(body) }),
     calcCashConversionCycle: (body) => request('/calc/cash-conversion-cycle', { method: 'POST', body: JSON.stringify(body) }),
     calcProfitFirst:         (body) => request('/calc/profit-first', { method: 'POST', body: JSON.stringify(body) }),

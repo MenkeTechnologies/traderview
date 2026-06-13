@@ -62,6 +62,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/nda", post(nda_route))
         .route("/calc/pet-addendum", post(pet_addendum_route))
         .route("/calc/inspection-checklist", post(inspection_checklist_route))
+        .route("/calc/estimate", post(estimate_route))
         .route("/calc/fix-and-flip", post(fix_and_flip_route))
         .route("/calc/cash-conversion-cycle", post(cash_conversion_cycle_route))
         .route("/calc/profit-first", post(profit_first_route))
@@ -11564,6 +11565,14 @@ async fn inspection_checklist_route(
     Json(b): Json<traderview_core::inspection_checklist::ChecklistInput>,
 ) -> Json<traderview_core::inspection_checklist::InspectionChecklist> {
     Json(traderview_core::inspection_checklist::generate(&b))
+}
+
+/// Estimate / quote: shared line-item math plus a valid-until date.
+async fn estimate_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::estimate::EstimateInput>,
+) -> Json<traderview_core::estimate::EstimateDocument> {
+    Json(traderview_core::estimate::generate(&b))
 }
 
 /// Fix-and-flip: the 70% rule max-allowable-offer plus the full deal P&L
