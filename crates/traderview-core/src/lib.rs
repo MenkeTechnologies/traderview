@@ -200,6 +200,7 @@ pub mod order_staleness;
 pub mod overtrading;
 pub mod pair_trade;
 pub mod parabolic_sar;
+pub mod pay_stub;
 pub mod paycheck_401k;
 pub mod pead;
 pub mod pension_survivor;

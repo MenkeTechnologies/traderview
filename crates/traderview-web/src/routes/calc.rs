@@ -77,6 +77,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/pto-policy", post(pto_policy_route))
         .route("/calc/expense-reimbursement", post(expense_reimbursement_route))
         .route("/calc/timesheet", post(timesheet_route))
+        .route("/calc/pay-stub", post(pay_stub_route))
         .route("/calc/fix-and-flip", post(fix_and_flip_route))
         .route("/calc/cash-conversion-cycle", post(cash_conversion_cycle_route))
         .route("/calc/profit-first", post(profit_first_route))
@@ -11700,6 +11701,14 @@ async fn timesheet_route(
     Json(b): Json<traderview_core::timesheet::TimesheetInput>,
 ) -> Json<traderview_core::timesheet::Timesheet> {
     Json(traderview_core::timesheet::generate(&b))
+}
+
+/// Pay stub: auto FICA + withholding + deductions → net pay.
+async fn pay_stub_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::pay_stub::PayStubInput>,
+) -> Json<traderview_core::pay_stub::PayStub> {
+    Json(traderview_core::pay_stub::generate(&b))
 }
 
 /// Fix-and-flip: the 70% rule max-allowable-offer plus the full deal P&L
