@@ -700,6 +700,7 @@ import { renderDemandForPayment } from './views/demand_for_payment.js';
 import { renderLeaseRenewal } from './views/lease_renewal.js';
 import { renderBillOfSale } from './views/bill_of_sale.js';
 import { renderRentReceipt } from './views/rent_receipt.js';
+import { renderContractorAgreement } from './views/contractor_agreement.js';
 import { renderFixAndFlip } from './views/fix_and_flip.js';
 import { renderCashConversionCycle } from './views/cash_conversion_cycle.js';
 import { renderProfitFirst } from './views/profit_first.js';
@@ -3141,6 +3142,7 @@ export async function dispatch() {
             case 'lease-renewal': await renderLeaseRenewal(mount, state); break;
             case 'bill-of-sale': await renderBillOfSale(mount, state); break;
             case 'rent-receipt': await renderRentReceipt(mount, state); break;
+            case 'contractor-agreement': await renderContractorAgreement(mount, state); break;
             case 'fix-and-flip': await renderFixAndFlip(mount, state); break;
             case 'cash-conversion-cycle': await renderCashConversionCycle(mount, state); break;
             case 'profit-first': await renderProfitFirst(mount, state); break;
@@ -4496,6 +4498,7 @@ export const viewRenderers = {
     'lease-renewal': (m, s) => renderLeaseRenewal(m, s),
     'bill-of-sale': (m, s) => renderBillOfSale(m, s),
     'rent-receipt': (m, s) => renderRentReceipt(m, s),
+    'contractor-agreement': (m, s) => renderContractorAgreement(m, s),
     'fix-and-flip': (m, s) => renderFixAndFlip(m, s),
     'cash-conversion-cycle': (m, s) => renderCashConversionCycle(m, s),
     'profit-first': (m, s) => renderProfitFirst(m, s),

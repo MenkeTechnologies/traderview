@@ -56,6 +56,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/lease-renewal", post(lease_renewal_route))
         .route("/calc/bill-of-sale", post(bill_of_sale_route))
         .route("/calc/rent-receipt", post(rent_receipt_route))
+        .route("/calc/contractor-agreement", post(contractor_agreement_route))
         .route("/calc/fix-and-flip", post(fix_and_flip_route))
         .route("/calc/cash-conversion-cycle", post(cash_conversion_cycle_route))
         .route("/calc/profit-first", post(profit_first_route))
@@ -11504,6 +11505,15 @@ async fn rent_receipt_route(
     Json(b): Json<traderview_core::rent_receipt::ReceiptInput>,
 ) -> Json<traderview_core::rent_receipt::RentReceipt> {
     Json(traderview_core::rent_receipt::generate(&b))
+}
+
+/// Independent contractor agreement: fee (fixed or hourly with estimate) and
+/// the 1099 / IP / confidentiality clauses.
+async fn contractor_agreement_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::contractor_agreement::ContractorInput>,
+) -> Json<traderview_core::contractor_agreement::ContractorAgreement> {
+    Json(traderview_core::contractor_agreement::generate(&b))
 }
 
 /// Fix-and-flip: the 70% rule max-allowable-offer plus the full deal P&L
