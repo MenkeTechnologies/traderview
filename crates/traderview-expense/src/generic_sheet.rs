@@ -15,7 +15,7 @@
 //! and blank separators fall out without failing the import. Pure compute.
 
 use crate::{normalize::normalize, sheet, ImportError, ParsedTransaction};
-use chrono::{NaiveDate, NaiveDateTime, NaiveTime, TimeZone, Utc};
+use chrono::{Datelike, NaiveDate, NaiveDateTime, NaiveTime, TimeZone, Utc};
 use rust_decimal::Decimal;
 use serde::Deserialize;
 use serde_json::json;
@@ -121,7 +121,12 @@ fn parse_date(s: &str, explicit: Option<&str>) -> Option<chrono::DateTime<Utc>> 
     }
     for fmt in COMMON_DATE_FORMATS {
         if let Ok(d) = NaiveDate::parse_from_str(s, fmt) {
-            return to_utc(d);
+            // chrono's %Y greedily accepts a 2-digit string ("08/01/23" →
+            // year 23), shadowing the %y format that would read it as 2023.
+            // Reject the sub-millennium year so the loop falls through to %y.
+            if d.year() >= 1000 {
+                return to_utc(d);
+            }
         }
     }
     // Excel serial date (cells that surfaced as a number through calamine).
@@ -193,6 +198,15 @@ mod tests {
         // "job,amount,date" row: date_col0="job" → no date → skipped; blank skipped.
         assert_eq!(r.len(), 1);
         assert_eq!(r[0].amount, Decimal::new(20000, 2));
+    }
+
+    #[test]
+    fn two_digit_year_resolves_to_correct_century() {
+        // Real rental sheet uses "08/01/23" — must parse as 2023, not 0023.
+        let csv = "date,amount,description\n08/01/23,900,rent\n";
+        let r = parse_generic(csv.as_bytes(), &map()).unwrap();
+        assert_eq!(r.len(), 1);
+        assert_eq!(r[0].posted_at.date_naive().to_string(), "2023-08-01");
     }
 
     #[test]
