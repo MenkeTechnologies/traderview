@@ -1,0 +1,12 @@
+-- Trailing-stop-LIMIT in the paper engine. Like 'trailing', the order
+-- ratchets trail_extreme and triggers on a retrace of trail_value from
+-- the extreme — but instead of filling at market it FREEZES into a limit
+-- at the trailing stop level, conceding at most a set slippage.
+--
+-- Reuses existing columns rather than adding new ones: for this type
+-- stop_price carries the limit OFFSET (0 = fill exactly at the trail
+-- level), and on trigger the engine writes the frozen limit into
+-- limit_price and sets stop_triggered, after which it behaves as a
+-- triggered stop-limit — fills only if the market is at/through the
+-- limit, otherwise keeps resting on a hard gap.
+ALTER TYPE paper_order_type_t ADD VALUE IF NOT EXISTS 'trailing_stop_limit';

@@ -17448,6 +17448,7 @@
   "view.paper.opt.straddle": "straddle",
   "view.paper.opt.strangle": "kvalming",
   "view.paper.opt.trailing": "etterfølger",
+  "view.paper.opt.trailing_stop_limit": "trailing stop limit",
   "view.paper.placeholder.account_name": "kontonavn",
   "view.paper.placeholder.bracket_trail": "eller spor",
   "view.paper.placeholder.entry_stop": "stopp",

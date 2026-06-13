@@ -17448,6 +17448,7 @@
   "view.paper.opt.straddle": "traîneau",
   "view.paper.opt.strangle": "étrangle",
   "view.paper.opt.trailing": "suivi",
+  "view.paper.opt.trailing_stop_limit": "trailing stop limit",
   "view.paper.placeholder.account_name": "nom du compte",
   "view.paper.placeholder.bracket_trail": "ou de piste",
   "view.paper.placeholder.entry_stop": "arrêt d'entrée",

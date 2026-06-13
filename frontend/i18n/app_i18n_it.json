@@ -17448,6 +17448,7 @@
   "view.paper.opt.straddle": "a cavallo",
   "view.paper.opt.strangle": "strangolamento",
   "view.paper.opt.trailing": "trailing",
+  "view.paper.opt.trailing_stop_limit": "trailing stop limit",
   "view.paper.placeholder.account_name": "nome del conto",
   "view.paper.placeholder.bracket_trail": "o sentiero",
   "view.paper.placeholder.entry_stop": "arresto di ingresso",

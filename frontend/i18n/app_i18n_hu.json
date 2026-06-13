@@ -17448,6 +17448,7 @@
   "view.paper.opt.straddle": "eddle",
   "view.paper.opt.strangle": "fojtogatás",
   "view.paper.opt.trailing": "korlát",
+  "view.paper.opt.trailing_stop_limit": "trailing stop limit",
   "view.paper.placeholder.account_name": "számlanév",
   "view.paper.placeholder.bracket_trail": "vagy nyom",
   "view.paper.placeholder.entry_stop": "behatolás leállítása",

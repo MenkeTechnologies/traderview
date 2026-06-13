@@ -109,6 +109,7 @@ export async function renderPaper(mount) {
                         <option data-i18n="view.paper.opt.moc" value="moc">MOC</option>
                         <option data-i18n="view.paper.opt.loc" value="loc">LOC</option>
                         <option data-i18n="view.paper.opt.trailing" value="trailing">trailing</option>
+                        <option data-i18n="view.paper.opt.trailing_stop_limit" value="trailing_stop_limit">trailing stop limit</option>
                     </select>
                     <input name="limit_price" type="number" step="0.01" placeholder="limit" data-i18n-placeholder="common.placeholder.limit" data-tip="view.paper.tip.limit">
                     <input name="stop_price"  type="number" step="0.01" placeholder="stop" data-i18n-placeholder="common.placeholder.stop" data-tip="view.paper.tip.stop">

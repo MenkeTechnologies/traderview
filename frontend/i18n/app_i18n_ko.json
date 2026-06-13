@@ -17448,6 +17448,7 @@
   "view.paper.opt.straddle": "스트라들",
   "view.paper.opt.strangle": "사이트맵",
   "view.paper.opt.trailing": "관련 기사",
+  "view.paper.opt.trailing_stop_limit": "trailing stop limit",
   "view.paper.placeholder.account_name": "계정 이름",
   "view.paper.placeholder.bracket_trail": "또는 트레일",
   "view.paper.placeholder.entry_stop": "공지사항",

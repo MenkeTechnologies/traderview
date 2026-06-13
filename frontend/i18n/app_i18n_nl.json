@@ -17448,6 +17448,7 @@
   "view.paper.opt.straddle": "strande",
   "view.paper.opt.strangle": "wurgen",
   "view.paper.opt.trailing": "volgen",
+  "view.paper.opt.trailing_stop_limit": "trailing stop limit",
   "view.paper.placeholder.account_name": "rekeningnaam",
   "view.paper.placeholder.bracket_trail": "of spoor",
   "view.paper.placeholder.entry_stop": "ingangsstop",

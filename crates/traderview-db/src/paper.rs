@@ -619,6 +619,12 @@ pub fn order_well_formed(
             | ("moc", _, _)
             | ("loc", Some(_), _)
     ) || (order_type == "trailing" && trail_ok)
+        // trailing_stop_limit: a valid trail, plus an optional limit
+        // offset in stop_price (absent = 0 = fill at the trail level);
+        // a negative offset is malformed.
+        || (order_type == "trailing_stop_limit"
+            && trail_ok
+            && stop_price.map_or(true, |o| o >= Decimal::ZERO))
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -771,6 +777,31 @@ pub fn trail_update(
     (new_extreme, triggered)
 }
 
+/// The frozen limit price when a trailing-stop-limit triggers. The
+/// trailing stop sits `trail` below the high-water (sell/short) or above
+/// the low-water (buy/cover); on trigger the order converts to a limit
+/// at that stop level, moved `limit_offset` further toward the market so
+/// a small retrace past the stop still fills while a hard gap rests.
+/// Offset 0 fills exactly at the trailing stop level.
+pub fn trailing_limit_on_trigger(
+    side: Side,
+    extreme: Decimal,
+    trail_value: Decimal,
+    trail_is_pct: bool,
+    limit_offset: Decimal,
+) -> Decimal {
+    let trail = if trail_is_pct {
+        extreme * trail_value
+    } else {
+        trail_value
+    };
+    if matches!(side, Side::Sell | Side::Short) {
+        extreme - trail - limit_offset
+    } else {
+        extreme + trail + limit_offset
+    }
+}
+
 /// Apply the baseline-equity friction model to a triggered price:
 /// returns (adjusted fill price, total commission + SEC fee in USD).
 fn frictioned_fill(price: Decimal, qty: Decimal, side: Side) -> (Decimal, f64) {
@@ -899,8 +930,11 @@ pub async fn submit(
         req.trail_value,
         req.trail_is_pct,
     );
-    // A resting trailing stop starts its ratchet at the current price.
-    let trail_extreme = (req.order_type == "trailing" && well_formed).then_some(last);
+    // A resting trailing stop (plain or stop-limit) starts its ratchet
+    // at the current price.
+    let trail_extreme = (matches!(req.order_type.as_str(), "trailing" | "trailing_stop_limit")
+        && well_formed)
+        .then_some(last);
     // On-close orders carry their fill time, stamped at submit.
     let trigger_at = matches!(req.order_type.as_str(), "moc" | "loc")
         .then(|| traderview_core::holiday_calendar::day_order_expiry(Utc::now()));
@@ -1135,6 +1169,60 @@ pub async fn check_pending(pool: &PgPool) -> anyhow::Result<Vec<BackgroundFill>>
                 continue;
             }
             last
+        } else if o.order_type == "trailing_stop_limit" {
+            let (Some(tv), Some(extreme)) = (o.trail_value, o.trail_extreme) else {
+                continue;
+            };
+            if o.stop_triggered {
+                // Already converted to a static limit at the frozen
+                // level; fill if the market is at/through it, else rest.
+                let Some(lp) = o.limit_price else { continue };
+                let Some(p) = trigger_price("limit", side, last, Some(lp), None) else {
+                    continue;
+                };
+                p
+            } else {
+                let (new_extreme, triggered) =
+                    trail_update(side, last, extreme, tv, o.trail_is_pct.unwrap_or(false));
+                if !triggered {
+                    if new_extreme != extreme {
+                        sqlx::query("UPDATE paper_orders SET trail_extreme = $2 WHERE id = $1")
+                            .bind(o.id)
+                            .bind(new_extreme)
+                            .execute(pool)
+                            .await
+                            .ok();
+                    }
+                    continue;
+                }
+                // Trigger: freeze the trailing stop into a limit (the
+                // stop level moved stop_price toward the market) and
+                // persist the conversion, so a gap past the limit keeps
+                // resting instead of slipping to market.
+                let offset = o.stop_price.unwrap_or(Decimal::ZERO);
+                let frozen = trailing_limit_on_trigger(
+                    side,
+                    new_extreme,
+                    tv,
+                    o.trail_is_pct.unwrap_or(false),
+                    offset,
+                );
+                sqlx::query(
+                    "UPDATE paper_orders
+                        SET stop_triggered = TRUE, limit_price = $2, trail_extreme = $3
+                      WHERE id = $1",
+                )
+                .bind(o.id)
+                .bind(frozen)
+                .bind(new_extreme)
+                .execute(pool)
+                .await
+                .ok();
+                let Some(p) = trigger_price("limit", side, last, Some(frozen), None) else {
+                    continue;
+                };
+                p
+            }
         } else if o.order_type == "moc" || o.order_type == "loc" {
             let Some(trigger_at) = o.trigger_at else {
                 continue; // malformed row — leave it for inspection
@@ -2837,6 +2925,9 @@ mod tests {
     fn d(v: i64) -> Decimal {
         Decimal::from(v)
     }
+    fn dq(s: &str) -> Decimal {
+        s.parse().unwrap()
+    }
 
     #[test]
     fn forex_spread_fee_standard_lot_eurusd() {
@@ -2886,6 +2977,42 @@ mod tests {
         let (s, r) = unfilled_status(false, true, "ioc");
         assert_eq!(s, "rejected");
         assert!(r.unwrap().contains("needs its limit/stop"));
+    }
+
+    #[test]
+    fn trailing_stop_limit_freezes_below_stop_for_sell() {
+        // High-water 100, $2 trail → stop at 98; $0.50 offset moves the
+        // limit to 97.50, the most slippage the order will concede.
+        let lp = trailing_limit_on_trigger(Side::Sell, d(100), d(2), false, dq("0.5"));
+        assert_eq!(lp, dq("97.5"));
+        // Offset 0 → fill exactly at the trail stop level (98).
+        assert_eq!(trailing_limit_on_trigger(Side::Sell, d(100), d(2), false, d(0)), d(98));
+    }
+
+    #[test]
+    fn trailing_stop_limit_freezes_above_stop_for_buy() {
+        // Low-water 100, $2 trail → stop at 102; $0.50 offset → 102.50.
+        let lp = trailing_limit_on_trigger(Side::Cover, d(100), d(2), false, dq("0.5"));
+        assert_eq!(lp, dq("102.5"));
+    }
+
+    #[test]
+    fn trailing_stop_limit_percentage_trail() {
+        // 5% trail off high-water 100 → stop at 95; $0.25 offset → 94.75.
+        let lp = trailing_limit_on_trigger(Side::Short, d(100), dq("0.05"), true, dq("0.25"));
+        assert_eq!(lp, dq("94.75"));
+    }
+
+    #[test]
+    fn trailing_stop_limit_is_well_formed() {
+        // Needs a valid trail; the limit offset (stop_price) is optional
+        // and defaults to 0 (fill at the trail level) when absent.
+        assert!(order_well_formed("trailing_stop_limit", None, None, Some(d(2)), Some(false)));
+        assert!(order_well_formed("trailing_stop_limit", None, Some(d(0)), Some(d(2)), Some(false)));
+        assert!(order_well_formed("trailing_stop_limit", None, Some(dq("0.5")), Some(d(2)), Some(false)));
+        // A bad trail, or a negative offset, is malformed.
+        assert!(!order_well_formed("trailing_stop_limit", None, Some(d(0)), None, None));
+        assert!(!order_well_formed("trailing_stop_limit", None, Some(d(-1)), Some(d(2)), Some(false)));
     }
 
     #[test]

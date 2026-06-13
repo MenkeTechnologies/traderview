@@ -17448,6 +17448,7 @@
   "view.paper.opt.straddle": "călcat",
   "view.paper.opt.strangle": "sugrumă",
   "view.paper.opt.trailing": "traseu",
+  "view.paper.opt.trailing_stop_limit": "trailing stop limit",
   "view.paper.placeholder.account_name": "denumirea contului",
   "view.paper.placeholder.bracket_trail": "sau traseu",
   "view.paper.placeholder.entry_stop": "oprire de intrare",

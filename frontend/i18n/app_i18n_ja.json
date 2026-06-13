@@ -17448,6 +17448,7 @@
   "view.paper.opt.straddle": "ストラドル",
   "view.paper.opt.strangle": "ストライアングル",
   "view.paper.opt.trailing": "トレーニング",
+  "view.paper.opt.trailing_stop_limit": "trailing stop limit",
   "view.paper.placeholder.account_name": "口座名",
   "view.paper.placeholder.bracket_trail": "またはトレイル",
   "view.paper.placeholder.entry_stop": "エントリーストップ",

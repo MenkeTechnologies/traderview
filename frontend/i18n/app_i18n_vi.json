@@ -17448,6 +17448,7 @@
   "view.paper.opt.straddle": "hình vuông",
   "view.paper.opt.strangle": "bị siết cổ",
   "view.paper.opt.trailing": "vết",
+  "view.paper.opt.trailing_stop_limit": "trailing stop limit",
   "view.paper.placeholder.account_name": "tên tài khoản",
   "view.paper.placeholder.bracket_trail": "hoặc vết",
   "view.paper.placeholder.entry_stop": "dừng mục nhập",

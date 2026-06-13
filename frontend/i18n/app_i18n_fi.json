@@ -17448,6 +17448,7 @@
   "view.paper.opt.straddle": "poikki",
   "view.paper.opt.strangle": "kurista",
   "view.paper.opt.trailing": "seuranta",
+  "view.paper.opt.trailing_stop_limit": "trailing stop limit",
   "view.paper.placeholder.account_name": "tilin nimi",
   "view.paper.placeholder.bracket_trail": "tai polku",
   "view.paper.placeholder.entry_stop": "maahantulon pysäytys",

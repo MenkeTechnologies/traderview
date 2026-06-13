@@ -17448,6 +17448,7 @@
   "view.paper.opt.straddle": "横跨",
   "view.paper.opt.strangle": "勒紧",
   "view.paper.opt.trailing": "跟踪",
+  "view.paper.opt.trailing_stop_limit": "trailing stop limit",
   "view.paper.placeholder.account_name": "账户名称",
   "view.paper.placeholder.bracket_trail": "或线索",
   "view.paper.placeholder.entry_stop": "进站",
