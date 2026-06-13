@@ -209,6 +209,7 @@ pub mod spread_payoff;
 pub mod spread_tracker;
 pub mod stats;
 pub mod stochastic;
+pub mod stock_split;
 pub mod stop_hunt;
 pub mod stop_loss_backtest;
 pub mod stops;

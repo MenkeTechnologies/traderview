@@ -87,6 +87,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/wage-converter", post(wage_converter_route))
         .route("/calc/sales-tax", post(sales_tax_route))
         .route("/calc/accrued-interest", post(accrued_interest_route))
+        .route("/calc/stock-split", post(stock_split_route))
         .route("/calc/wash-sale", post(wash_sale_route))
         .route("/calc/cost-basis", post(cost_basis_route))
         .route("/calc/section-1244", post(section_1244_route))
@@ -11712,4 +11713,12 @@ async fn accrued_interest_route(
     Json(b): Json<traderview_core::accrued_interest::AccruedInput>,
 ) -> Json<traderview_core::accrued_interest::AccruedResult> {
     Json(traderview_core::accrued_interest::analyze(&b))
+}
+
+/// Stock-split position adjuster: scale shares, price, and basis by a ratio.
+async fn stock_split_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::stock_split::SplitInput>,
+) -> Json<traderview_core::stock_split::SplitResult> {
+    Json(traderview_core::stock_split::analyze(&b))
 }
