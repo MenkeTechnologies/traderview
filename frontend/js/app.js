@@ -753,6 +753,7 @@ import { renderNpvIrr } from './views/npv_irr.js';
 import { renderLeverage } from './views/leverage_dol_dfl.js';
 import { renderTwoAssetPortfolio } from './views/two_asset_portfolio.js';
 import { renderMortgageRecast } from './views/mortgage_recast.js';
+import { renderTaxEquivalentYield } from './views/tax_equivalent_yield.js';
 import { renderNetWorthTracker } from './views/net_worth_tracker.js';
 import { renderPersonalBalanceSheet } from './views/personal_balance_sheet.js';
 import { renderPersonalCashFlow } from './views/personal_cash_flow.js';
@@ -3141,6 +3142,7 @@ export async function dispatch() {
             case 'leverage': await renderLeverage(mount, state); break;
             case 'two-asset-portfolio': await renderTwoAssetPortfolio(mount, state); break;
             case 'mortgage-recast': await renderMortgageRecast(mount, state); break;
+            case 'tax-equivalent-yield': await renderTaxEquivalentYield(mount, state); break;
             case 'net-worth-tracker': await renderNetWorthTracker(mount, state); break;
             case 'personal-balance-sheet': await renderPersonalBalanceSheet(mount, state); break;
             case 'personal-cash-flow': await renderPersonalCashFlow(mount, state); break;
@@ -4451,6 +4453,7 @@ export const viewRenderers = {
     'leverage': (m, s) => renderLeverage(m, s),
     'two-asset-portfolio': (m, s) => renderTwoAssetPortfolio(m, s),
     'mortgage-recast': (m, s) => renderMortgageRecast(m, s),
+    'tax-equivalent-yield': (m, s) => renderTaxEquivalentYield(m, s),
     'envelope-budget': (m, s) => renderEnvelopeBudget(m, s),
     'fafsa-efc': (m, s) => renderFafsaEfc(m, s),
     'fifty-thirty-twenty': (m, s) => renderFiftyThirtyTwenty(m, s),
