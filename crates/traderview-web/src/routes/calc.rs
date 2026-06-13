@@ -42,6 +42,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/savings-waterfall", post(savings_waterfall_route))
         .route("/calc/house-hacking", post(house_hacking_route))
         .route("/calc/brrrr", post(brrrr_route))
+        .route("/calc/paycheck-401k", post(paycheck_401k_route))
         .route("/calc/wash-sale", post(wash_sale_route))
         .route("/calc/cost-basis", post(cost_basis_route))
         .route("/calc/section-1244", post(section_1244_route))
@@ -11265,4 +11266,13 @@ async fn brrrr_route(
     Json(b): Json<traderview_db::brrrr::BrrrrInput>,
 ) -> Json<traderview_db::brrrr::BrrrrResult> {
     Json(traderview_db::brrrr::compute(&b))
+}
+
+/// 401(k) per-paycheck maximizer: the even deferral to hit the annual
+/// limit and the match forfeited by front-loading without a true-up.
+async fn paycheck_401k_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::paycheck_401k::Paycheck401kInput>,
+) -> Json<traderview_core::paycheck_401k::Paycheck401kResult> {
+    Json(traderview_core::paycheck_401k::compute(&b))
 }

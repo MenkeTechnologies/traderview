@@ -120,6 +120,7 @@ pub mod order_staleness;
 pub mod overtrading;
 pub mod pair_trade;
 pub mod parabolic_sar;
+pub mod paycheck_401k;
 pub mod pead;
 pub mod per_symbol_slippage;
 pub mod pivots;
