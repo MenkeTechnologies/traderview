@@ -694,6 +694,7 @@ import { renderLeaseGenerator } from './views/lease_generator.js';
 import { renderInvoiceGenerator } from './views/invoice_generator.js';
 import { renderLandlordNotice } from './views/landlord_notice.js';
 import { renderFixAndFlip } from './views/fix_and_flip.js';
+import { renderCashConversionCycle } from './views/cash_conversion_cycle.js';
 import { renderNetWorthTracker } from './views/net_worth_tracker.js';
 import { renderPersonalBalanceSheet } from './views/personal_balance_sheet.js';
 import { renderPersonalCashFlow } from './views/personal_cash_flow.js';
@@ -3023,6 +3024,7 @@ export async function dispatch() {
             case 'invoice-generator': await renderInvoiceGenerator(mount, state); break;
             case 'landlord-notice': await renderLandlordNotice(mount, state); break;
             case 'fix-and-flip': await renderFixAndFlip(mount, state); break;
+            case 'cash-conversion-cycle': await renderCashConversionCycle(mount, state); break;
             case 'net-worth-tracker': await renderNetWorthTracker(mount, state); break;
             case 'personal-balance-sheet': await renderPersonalBalanceSheet(mount, state); break;
             case 'personal-cash-flow': await renderPersonalCashFlow(mount, state); break;
@@ -4274,6 +4276,7 @@ export const viewRenderers = {
     'invoice-generator': (m, s) => renderInvoiceGenerator(m, s),
     'landlord-notice': (m, s) => renderLandlordNotice(m, s),
     'fix-and-flip': (m, s) => renderFixAndFlip(m, s),
+    'cash-conversion-cycle': (m, s) => renderCashConversionCycle(m, s),
     'envelope-budget': (m, s) => renderEnvelopeBudget(m, s),
     'fafsa-efc': (m, s) => renderFafsaEfc(m, s),
     'fifty-thirty-twenty': (m, s) => renderFiftyThirtyTwenty(m, s),

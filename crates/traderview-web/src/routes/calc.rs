@@ -50,6 +50,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/invoice-generator", post(invoice_generator_route))
         .route("/calc/landlord-notice", post(landlord_notice_route))
         .route("/calc/fix-and-flip", post(fix_and_flip_route))
+        .route("/calc/cash-conversion-cycle", post(cash_conversion_cycle_route))
         .route("/calc/wash-sale", post(wash_sale_route))
         .route("/calc/cost-basis", post(cost_basis_route))
         .route("/calc/section-1244", post(section_1244_route))
@@ -11345,4 +11346,13 @@ async fn fix_and_flip_route(
     Json(b): Json<traderview_core::fix_and_flip::FlipInput>,
 ) -> Json<traderview_core::fix_and_flip::FlipResult> {
     Json(traderview_core::fix_and_flip::analyze(&b))
+}
+
+/// Cash conversion cycle: DSO + DIO − DPO and the operating cycle, the days
+/// a dollar is tied up between paying suppliers and collecting from customers.
+async fn cash_conversion_cycle_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::cash_conversion_cycle::CccInput>,
+) -> Json<traderview_core::cash_conversion_cycle::CccResult> {
+    Json(traderview_core::cash_conversion_cycle::analyze(&b))
 }
