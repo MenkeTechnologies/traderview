@@ -72,6 +72,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/llc-operating-agreement", post(llc_operating_agreement_route))
         .route("/calc/lead-paint-disclosure", post(lead_paint_disclosure_route))
         .route("/calc/offer-letter", post(offer_letter_route))
+        .route("/calc/severance", post(severance_route))
         .route("/calc/fix-and-flip", post(fix_and_flip_route))
         .route("/calc/cash-conversion-cycle", post(cash_conversion_cycle_route))
         .route("/calc/profit-first", post(profit_first_route))
@@ -11655,6 +11656,14 @@ async fn offer_letter_route(
     Json(b): Json<traderview_core::offer_letter::OfferInput>,
 ) -> Json<traderview_core::offer_letter::OfferLetter> {
     Json(traderview_core::offer_letter::generate(&b))
+}
+
+/// Severance agreement: severance pay + total payout, release clauses.
+async fn severance_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::severance_agreement::SeveranceInput>,
+) -> Json<traderview_core::severance_agreement::SeveranceAgreement> {
+    Json(traderview_core::severance_agreement::generate(&b))
 }
 
 /// Fix-and-flip: the 70% rule max-allowable-offer plus the full deal P&L
