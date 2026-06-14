@@ -102,6 +102,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/cam-reconciliation", post(cam_reconciliation_route))
         .route("/calc/percentage-rent", post(percentage_rent_route))
         .route("/calc/cpi-rent-adjustment", post(cpi_rent_adjustment_route))
+        .route("/calc/deposit-interest", post(deposit_interest_route))
         .route("/calc/fix-and-flip", post(fix_and_flip_route))
         .route("/calc/cash-conversion-cycle", post(cash_conversion_cycle_route))
         .route("/calc/profit-first", post(profit_first_route))
@@ -11925,6 +11926,14 @@ async fn cpi_rent_adjustment_route(
     Json(b): Json<traderview_core::cpi_rent_adjustment::CpiRentInput>,
 ) -> Json<traderview_core::cpi_rent_adjustment::CpiRentAdjustment> {
     Json(traderview_core::cpi_rent_adjustment::generate(&b))
+}
+
+/// Security-deposit interest: simple or annually-compounded interest over the tenancy.
+async fn deposit_interest_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::deposit_interest::DepositInterestInput>,
+) -> Json<traderview_core::deposit_interest::DepositInterest> {
+    Json(traderview_core::deposit_interest::generate(&b))
 }
 
 /// Fix-and-flip: the 70% rule max-allowable-offer plus the full deal P&L
