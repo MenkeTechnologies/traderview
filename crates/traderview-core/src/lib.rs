@@ -300,6 +300,7 @@ pub mod rental_total_return;
 pub mod rent_vs_sell;
 pub mod roth_bracket_fill;
 pub mod roth_contribution;
+pub mod roth_conversion_ladder;
 pub mod rule_of_40;
 pub mod rule_of_78;
 pub mod risk;
