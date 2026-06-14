@@ -1803,6 +1803,7 @@ export const api = {
     calcGammaPinZone:        (b) => request('/calc/gamma-pin-zone',       { method: 'POST', body: JSON.stringify(b) }),
     calcCalendarSpread:      (b) => request('/calc/calendar-spread',      { method: 'POST', body: JSON.stringify(b) }),
     calcInventoryCosting:    (b) => request('/calc/inventory-costing',    { method: 'POST', body: JSON.stringify(b) }),
+    calcMacrsDepreciation:   (b) => request('/calc/macrs-depreciation',   { method: 'POST', body: JSON.stringify(b) }),
     calcRiskOnOff:           (b) => request('/calc/risk-on-off',          { method: 'POST', body: JSON.stringify(b) }),
     calcMarginCall:          (b) => request('/calc/margin-call',          { method: 'POST', body: JSON.stringify(b) }),
     calcMarginRunway:        (b) => request('/calc/margin-runway',        { method: 'POST', body: JSON.stringify(b) }),

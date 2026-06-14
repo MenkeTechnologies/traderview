@@ -53,6 +53,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/gamma-pin-zone", post(gamma_pin_zone_route))
         .route("/calc/calendar-spread", post(calendar_spread_route))
         .route("/calc/inventory-costing", post(inventory_costing_route))
+        .route("/calc/macrs-depreciation", post(macrs_depreciation_route))
         .route("/calc/risk-on-off", post(risk_on_off_route))
         // ── Margin / buying power ─────────────────────────────────────
         .route("/calc/margin-call", post(margin_call_route))
@@ -975,6 +976,14 @@ async fn inventory_costing_route(
     Json(b): Json<traderview_core::inventory_costing::InventoryInput>,
 ) -> Json<traderview_core::inventory_costing::InventoryReport> {
     Json(traderview_core::inventory_costing::generate(&b))
+}
+
+/// MACRS depreciation: IRS tax depreciation schedule (GDS half-year).
+async fn macrs_depreciation_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::macrs_depreciation::MacrsInput>,
+) -> Json<traderview_core::macrs_depreciation::MacrsReport> {
+    Json(traderview_core::macrs_depreciation::generate(&b))
 }
 
 async fn risk_on_off_route(

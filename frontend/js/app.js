@@ -849,6 +849,7 @@ import { renderIvCone } from './views/iv_cone.js';
 import { renderGammaPinZone } from './views/gamma_pin_zone.js';
 import { renderCalendarSpread } from './views/calendar_spread.js';
 import { renderInventoryCosting } from './views/inventory_costing.js';
+import { renderMacrsDepreciation } from './views/macrs_depreciation.js';
 import { renderMortgageRecast } from './views/mortgage_recast.js';
 import { renderTaxEquivalentYield } from './views/tax_equivalent_yield.js';
 import { renderPmiRemoval } from './views/pmi_removal.js';
@@ -3380,6 +3381,7 @@ export async function dispatch() {
             case 'gamma-pin-zone': await renderGammaPinZone(mount, state); break;
             case 'calendar-spread': await renderCalendarSpread(mount, state); break;
             case 'inventory-costing': await renderInventoryCosting(mount, state); break;
+            case 'macrs-depreciation': await renderMacrsDepreciation(mount, state); break;
             case 'mortgage-recast': await renderMortgageRecast(mount, state); break;
             case 'tax-equivalent-yield': await renderTaxEquivalentYield(mount, state); break;
             case 'pmi-removal': await renderPmiRemoval(mount, state); break;
@@ -4825,6 +4827,7 @@ export const viewRenderers = {
     'gamma-pin-zone': (m, s) => renderGammaPinZone(m, s),
     'calendar-spread': (m, s) => renderCalendarSpread(m, s),
     'inventory-costing': (m, s) => renderInventoryCosting(m, s),
+    'macrs-depreciation': (m, s) => renderMacrsDepreciation(m, s),
     'mortgage-recast': (m, s) => renderMortgageRecast(m, s),
     'tax-equivalent-yield': (m, s) => renderTaxEquivalentYield(m, s),
     'pmi-removal': (m, s) => renderPmiRemoval(m, s),
