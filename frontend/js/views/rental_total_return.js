@@ -7,9 +7,13 @@ import { applyUiI18n, t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import { showToast } from '../toast.js';
 import { debounce } from '../util.js';
+import * as enh from '../calc_enhance.js';
 
 const money = (n) => (n == null ? '—' : (n < 0 ? '−$' : '$') + Math.abs(Number(n)).toLocaleString(undefined, { maximumFractionDigits: 0 }));
 const pct = (n) => (n == null ? '—' : Number(n).toLocaleString(undefined, { maximumFractionDigits: 2 }) + '%');
+const VIEW = 'rental-total-return';
+let lastReport = null;
+let lastBody = null;
 
 export async function renderRentalTotalReturn(mount, _appState) {
     const tok = currentViewToken();
@@ -46,15 +50,17 @@ export async function renderRentalTotalReturn(mount, _appState) {
                     <input type="number" step="1" min="0" max="100" name="land_value_pct" value="20"></label>
             </form>
         </div>
+        <div id="rentret-tools" class="ce-toolbar"></div>
         <div id="rentret-result" class="lpv-preview"></div>
         </div>
     `;
     applyUiI18n(mount);
 
     const form = mount.querySelector('#rentret-form');
-    const generate = async () => {
+    enh.prefillForm(form, enh.readHashInputs());
+    const readBody = () => {
         const fd = new FormData(form);
-        const body = {
+        return {
             purchase_price_usd: Number(fd.get('purchase_price_usd')) || 0,
             down_payment_usd: Number(fd.get('down_payment_usd')) || 0,
             closing_costs_usd: Number(fd.get('closing_costs_usd')) || 0,
@@ -65,22 +71,47 @@ export async function renderRentalTotalReturn(mount, _appState) {
             marginal_tax_rate_pct: Number(fd.get('marginal_tax_rate_pct')) || 0,
             land_value_pct: Number(fd.get('land_value_pct')) || 0,
         };
+    };
+    const generate = async () => {
+        const body = readBody();
         try {
             const r = await api.calcRentalTotalReturn(body);
             if (!viewIsCurrent(tok)) return;
+            lastReport = r; lastBody = body;
             renderResult(mount, r);
         } catch (err) {
             showToast(err.message || t('view.rentret.toast.error'), { level: 'error' });
         }
     };
+    enh.mountToolbar(mount.querySelector('#rentret-tools'), { viewId: VIEW, getInputs: () => lastBody || readBody(), getRows: () => reportRows(lastReport), filename: 'rental-total-return.csv' });
     form.addEventListener('input', debounce(generate, 250));
     form.addEventListener('submit', (e) => { e.preventDefault(); generate(); });
     generate();
 }
 
+function reportRows(r) {
+    if (!r) return [];
+    return [
+        ['metric', 'value'],
+        ['total_return_pct', r.total_return_pct],
+        ['total_return_usd', r.total_return_usd],
+        ['cash_flow_usd', r.cash_flow_usd],
+        ['appreciation_gain_usd', r.appreciation_gain_usd],
+        ['principal_paydown_usd', r.principal_paydown_usd],
+        ['tax_shield_usd', r.tax_shield_usd],
+    ];
+}
+
 function renderResult(mount, r) {
     const el = mount.querySelector('#rentret-result');
     const cfCls = r.cash_flow_usd >= 0 ? 'pos' : 'neg';
+    // Four-component return decomposition (where the total return comes from).
+    const chart = enh.svgBarChart([
+        { label: 'CashFlow', value: r.cash_flow_usd },
+        { label: 'Apprec', value: r.appreciation_gain_usd },
+        { label: 'Paydown', value: r.principal_paydown_usd },
+        { label: 'TaxShield', value: r.tax_shield_usd },
+    ]);
     el.innerHTML = `
         <div class="chart-panel">
             <h2 data-i18n="view.rentret.h2.result">The return</h2>
@@ -92,6 +123,7 @@ function renderResult(mount, r) {
                 <div class="card"><div class="label" data-i18n="view.rentret.card.cash">Cash invested</div>
                     <div class="value">${money(r.cash_invested_usd)}</div></div>
             </div>
+            ${chart}
             <table class="data-table">
                 <tbody>
                     <tr class="${cfCls}"><td data-i18n="view.rentret.row.cashflow">1. Cash flow</td><td>${money(r.cash_flow_usd)} (${pct(r.cash_on_cash_pct)})</td></tr>

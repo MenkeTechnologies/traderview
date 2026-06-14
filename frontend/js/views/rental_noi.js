@@ -6,9 +6,13 @@ import { applyUiI18n, t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import { showToast } from '../toast.js';
 import { debounce } from '../util.js';
+import * as enh from '../calc_enhance.js';
 
 const money = (n) => '$' + Number(n).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const pct = (n) => (n == null ? '—' : Number(n).toLocaleString(undefined, { maximumFractionDigits: 1 }) + '%');
+const VIEW = 'rental-noi';
+let lastReport = null;
+let lastBody = null;
 
 export async function renderRentalNoi(mount, _appState) {
     const tok = currentViewToken();
@@ -48,6 +52,9 @@ export async function renderRentalNoi(mount, _appState) {
                 <label><span data-i18n="view.noi.label.other_exp">Other expenses ($)</span>
                     <input type="number" step="0.01" min="0" name="other_expenses_usd" value="500"></label>
             </form>
+            <div id="noi-tools" class="ce-toolbar"></div>
+            <button type="button" id="noi-sens-btn" class="ce-tool" data-i18n="calc.enh.sens.run">▦ Sensitivity</button>
+            <div id="noi-sens" class="ce-sens"></div>
         </div>
         <div id="noi-result" class="lpv-preview"></div>
         </div>
@@ -55,9 +62,10 @@ export async function renderRentalNoi(mount, _appState) {
     applyUiI18n(mount);
 
     const form = mount.querySelector('#noi-form');
-    const generate = async () => {
+    enh.prefillForm(form, enh.readHashInputs());
+    const readBody = () => {
         const fd = new FormData(form);
-        const body = {
+        return {
             gross_rental_income_usd: Number(fd.get('gross_rental_income_usd')) || 0,
             other_income_usd: Number(fd.get('other_income_usd')) || 0,
             vacancy_pct: Number(fd.get('vacancy_pct')) || 0,
@@ -70,22 +78,46 @@ export async function renderRentalNoi(mount, _appState) {
             hoa_usd: Number(fd.get('hoa_usd')) || 0,
             other_expenses_usd: Number(fd.get('other_expenses_usd')) || 0,
         };
+    };
+    const generate = async () => {
+        const body = readBody();
         try {
             const r = await api.calcRentalNoi(body);
             if (!viewIsCurrent(tok)) return;
+            lastReport = r; lastBody = body;
             renderResult(mount, r);
         } catch (err) {
             showToast(err.message || t('view.noi.toast.error'), { level: 'error' });
         }
     };
+    enh.mountToolbar(mount.querySelector('#noi-tools'), { viewId: VIEW, getInputs: () => lastBody || readBody(), getRows: () => reportRows(lastReport), filename: 'rental-noi.csv' });
+    mount.querySelector('#noi-sens-btn').addEventListener('click', () => runSens(mount, readBody(), tok));
     form.addEventListener('input', debounce(generate, 250));
     form.addEventListener('submit', (e) => { e.preventDefault(); generate(); });
     generate();
 }
 
+function reportRows(r) {
+    if (!r) return [];
+    return [
+        ['metric', 'value'],
+        ['noi_usd', r.noi_usd],
+        ['effective_gross_income_usd', r.effective_gross_income_usd],
+        ['total_operating_expenses_usd', r.total_operating_expenses_usd],
+        ['operating_expense_ratio_pct', r.operating_expense_ratio_pct],
+        ['vacancy_loss_usd', r.vacancy_loss_usd],
+    ];
+}
+
 function renderResult(mount, r) {
     const el = mount.querySelector('#noi-result');
     const noiCls = r.noi_usd >= 0 ? 'pos' : 'neg';
+    // Income-statement bar: effective gross income vs operating expenses vs NOI.
+    const chart = enh.svgBarChart([
+        { label: 'EGI', value: r.effective_gross_income_usd },
+        { label: 'OpEx', value: -r.total_operating_expenses_usd },
+        { label: 'NOI', value: r.noi_usd },
+    ]);
     el.innerHTML = `
         <div class="chart-panel">
             <h2 data-i18n="view.noi.h2.result">The income statement</h2>
@@ -97,6 +129,7 @@ function renderResult(mount, r) {
                 <div class="card"><div class="label" data-i18n="view.noi.card.oer">Expense ratio</div>
                     <div class="value">${pct(r.operating_expense_ratio_pct)}</div></div>
             </div>
+            ${chart}
             <table class="data-table">
                 <tbody>
                     <tr><td data-i18n="view.noi.row.potential">Potential gross income</td><td>${money(r.potential_gross_income_usd)}</td></tr>
@@ -110,4 +143,15 @@ function renderResult(mount, r) {
         </div>
     `;
     applyUiI18n(el);
+}
+
+async function runSens(mount, base, tok) {
+    const panel = mount.querySelector('#noi-sens');
+    panel.innerHTML = `<p class="muted small" data-i18n="calc.enh.sens.running">Computing…</p>`; applyUiI18n(panel);
+    // x: vacancy 0% -> 20%; y: management 0% -> 15%. Output: NOI.
+    const xVals = enh.linspace(0, 20, 5);
+    const yVals = enh.linspace(0, 15, 5);
+    const { cells } = await enh.runSensitivity({ base, xKey: 'vacancy_pct', yKey: 'management_pct', xVals, yVals, compute: (b) => api.calcRentalNoi(b), pick: (r) => (r ? r.noi_usd : null) });
+    if (!viewIsCurrent(tok)) return;
+    panel.innerHTML = enh.renderSensitivityTable({ xVals, yVals, cells, fmt: (v) => (v == null ? '—' : '$' + Math.round(v / 1000) + 'k'), xfmt: (v) => v.toFixed(0) + '%', yfmt: (v) => v.toFixed(0) + '%', xName: t('view.noi.label.vacancy') || 'Vacancy', yName: t('view.noi.label.mgmt') || 'Mgmt' });
 }

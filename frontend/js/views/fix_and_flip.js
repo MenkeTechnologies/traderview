@@ -7,6 +7,7 @@ import { applyUiI18n, t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import { showToast } from '../toast.js';
 import { debounce } from '../util.js';
+import * as enh from '../calc_enhance.js';
 
 const FIELDS = [
     ['arv_usd', 'After-repair value ($)', 300000],
@@ -24,6 +25,9 @@ const FIELDS = [
 
 const money = (n) => '$' + Number(n).toLocaleString(undefined, { maximumFractionDigits: 0 });
 const pct = (n) => Number(n).toFixed(1) + '%';
+const VIEW = 'fix-and-flip';
+let lastReport = null;
+let lastBody = null;
 
 export async function renderFixAndFlip(mount, _appState) {
     const tok = currentViewToken();
@@ -47,6 +51,7 @@ export async function renderFixAndFlip(mount, _appState) {
                         <input type="number" step="0.01" min="0" name="${key}" value="${def}" required></label>
                 `).join('')}
             </form>
+            <div id="flip-tools" class="ce-toolbar"></div>
         </div>
         <div id="flip-result" class="lpv-preview"></div>
         </div>
@@ -54,26 +59,54 @@ export async function renderFixAndFlip(mount, _appState) {
     applyUiI18n(mount);
 
     const form = mount.querySelector('#flip-form');
-    const generate = async () => {
+    enh.prefillForm(form, enh.readHashInputs());
+    const readBody = () => {
         const fd = new FormData(form);
         const body = {};
         for (const [key] of FIELDS) body[key] = Number(fd.get(key)) || 0;
+        return body;
+    };
+    const generate = async () => {
+        const body = readBody();
         try {
             const r = await api.calcFixAndFlip(body);
             if (!viewIsCurrent(tok)) return;
+            lastReport = r; lastBody = body;
             renderResult(mount, r);
         } catch (err) {
             showToast(err.message || t('view.flip.toast.error'), { level: 'error' });
         }
     };
+    enh.mountToolbar(mount.querySelector('#flip-tools'), { viewId: VIEW, getInputs: () => lastBody || readBody(), getRows: () => reportRows(lastReport), filename: 'fix-and-flip.csv' });
     form.addEventListener('input', debounce(generate, 250));
     form.addEventListener('submit', (e) => { e.preventDefault(); generate(); });
     generate();
 }
 
+function reportRows(r) {
+    if (!r) return [];
+    return [
+        ['metric', 'value'],
+        ['max_allowable_offer_usd', r.max_allowable_offer_usd],
+        ['net_profit_usd', r.net_profit_usd],
+        ['cash_on_cash_pct', r.cash_on_cash_pct],
+        ['annualized_roi_pct', r.annualized_roi_pct == null ? '' : r.annualized_roi_pct],
+        ['profit_margin_pct', r.profit_margin_pct],
+        ['total_project_cost_usd', r.total_project_cost_usd],
+    ];
+}
+
 function renderResult(mount, r) {
     const el = mount.querySelector('#flip-result');
     const ruleCls = r.passes_rule ? 'pos' : 'neg';
+    // Deal P&L bars: cost components (negative) vs net profit.
+    const chart = enh.svgBarChart([
+        { label: 'Holding', value: -r.holding_cost_usd },
+        { label: 'Interest', value: -r.interest_cost_usd },
+        { label: 'Points', value: -r.financing_points_usd },
+        { label: 'Selling', value: -r.selling_cost_usd },
+        { label: 'Profit', value: r.net_profit_usd },
+    ]);
     const profitCls = r.net_profit_usd >= 0 ? 'pos' : 'neg';
     const annual = r.annualized_roi_pct == null ? '—' : pct(r.annualized_roi_pct);
     el.innerHTML = `
@@ -93,6 +126,7 @@ function renderResult(mount, r) {
                 <div class="card"><div class="label" data-i18n="view.flip.card.margin">Profit margin (of ARV)</div>
                     <div class="value">${pct(r.profit_margin_pct)}</div></div>
             </div>
+            ${chart}
             <table class="data-table">
                 <thead><tr>
                     <th data-i18n="view.flip.col.line">Line</th>
