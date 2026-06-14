@@ -244,6 +244,7 @@ pub mod profit_factor;
 pub mod profit_first;
 pub mod promissory_note;
 pub mod property_tax;
+pub mod prorated_rent;
 pub mod pto_policy;
 pub mod purchase_agreement;
 pub mod purchase_order;
