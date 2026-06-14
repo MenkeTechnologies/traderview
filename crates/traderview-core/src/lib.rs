@@ -163,6 +163,7 @@ pub mod inside_bar_breakout;
 pub mod inspection_checklist;
 pub mod interest_coverage;
 pub mod intraday_heatmap;
+pub mod inventory_costing;
 pub mod inventory_eoq;
 pub mod invoice_factoring;
 pub mod invoice_generator;

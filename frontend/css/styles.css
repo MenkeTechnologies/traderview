@@ -4378,3 +4378,5 @@ mark.fzf-hl {
 .ivs-row { grid-template-columns: minmax(70px,1.2fr) 1fr 1fr auto; }
 .ivs-surface td { text-align: center; color: #07111a; font-weight: 600; }
 .ivs-surface th { text-align: center; }
+.inv-head,
+.inv-row { grid-template-columns: 1fr 1fr auto; }

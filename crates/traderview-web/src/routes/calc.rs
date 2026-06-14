@@ -52,6 +52,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/iv-cone", post(iv_cone_route))
         .route("/calc/gamma-pin-zone", post(gamma_pin_zone_route))
         .route("/calc/calendar-spread", post(calendar_spread_route))
+        .route("/calc/inventory-costing", post(inventory_costing_route))
         .route("/calc/risk-on-off", post(risk_on_off_route))
         // ── Margin / buying power ─────────────────────────────────────
         .route("/calc/margin-call", post(margin_call_route))
@@ -966,6 +967,14 @@ async fn calendar_spread_route(
     Json(b): Json<CalendarBody>,
 ) -> Json<Option<traderview_core::calendar_spread::CalendarReport>> {
     Json(traderview_core::calendar_spread::analyze(&b.spread, &b.config))
+}
+
+/// Inventory costing: COGS and ending inventory under FIFO, LIFO, and WAC.
+async fn inventory_costing_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::inventory_costing::InventoryInput>,
+) -> Json<traderview_core::inventory_costing::InventoryReport> {
+    Json(traderview_core::inventory_costing::generate(&b))
 }
 
 async fn risk_on_off_route(
