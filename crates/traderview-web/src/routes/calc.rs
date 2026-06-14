@@ -91,6 +91,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/stock-subscription", post(stock_subscription_route))
         .route("/calc/convertible-note", post(convertible_note_route))
         .route("/calc/cap-table", post(cap_table_route))
+        .route("/calc/board-resolution", post(board_resolution_route))
         .route("/calc/fix-and-flip", post(fix_and_flip_route))
         .route("/calc/cash-conversion-cycle", post(cash_conversion_cycle_route))
         .route("/calc/profit-first", post(profit_first_route))
@@ -11826,6 +11827,14 @@ async fn cap_table_route(
     Json(b): Json<traderview_core::cap_table::CapTableInput>,
 ) -> Json<traderview_core::cap_table::CapTable> {
     Json(traderview_core::cap_table::generate(&b))
+}
+
+/// Board resolution: quorum + vote tally → passed/failed.
+async fn board_resolution_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::board_resolution::BoardResolutionInput>,
+) -> Json<traderview_core::board_resolution::BoardResolution> {
+    Json(traderview_core::board_resolution::generate(&b))
 }
 
 /// Fix-and-flip: the 70% rule max-allowable-offer plus the full deal P&L

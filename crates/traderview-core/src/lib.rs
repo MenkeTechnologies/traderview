@@ -29,6 +29,7 @@ pub mod beta_hedge;
 pub mod bill_of_sale;
 pub mod blended_debt;
 pub mod bonus_grossup;
+pub mod board_resolution;
 pub mod bond_duration;
 pub mod bond_pricing;
 pub mod bracket_order;
