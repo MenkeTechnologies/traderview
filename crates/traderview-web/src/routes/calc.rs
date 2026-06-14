@@ -58,6 +58,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/tenant-turnover", post(tenant_turnover_route))
         .route("/calc/break-even-roas", post(break_even_roas_route))
         .route("/calc/rule-of-78", post(rule_of_78_route))
+        .route("/calc/liquidity-ratios", post(liquidity_ratios_route))
         .route("/calc/risk-on-off", post(risk_on_off_route))
         // ── Margin / buying power ─────────────────────────────────────
         .route("/calc/margin-call", post(margin_call_route))
@@ -1020,6 +1021,14 @@ async fn rule_of_78_route(
     Json(b): Json<traderview_core::rule_of_78::RuleOf78Input>,
 ) -> Json<traderview_core::rule_of_78::RuleOf78Report> {
     Json(traderview_core::rule_of_78::generate(&b))
+}
+
+/// Business liquidity ratios: current, quick, cash, net working capital.
+async fn liquidity_ratios_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::liquidity_ratios::LiquidityInput>,
+) -> Json<traderview_core::liquidity_ratios::LiquidityReport> {
+    Json(traderview_core::liquidity_ratios::generate(&b))
 }
 
 async fn risk_on_off_route(
