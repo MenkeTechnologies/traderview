@@ -7,6 +7,11 @@ import { applyUiI18n, t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import { showToast } from '../toast.js';
 import { debounce } from '../util.js';
+import * as enh from '../calc_enhance.js';
+
+const VIEW = 'like-kind-exchange';
+let lastReport = null;
+let lastBody = null;
 
 const FIELDS = [
     ['relinquished_sale_price_usd', 'Relinquished sale price ($)', 500000],
@@ -43,6 +48,7 @@ export async function renderLikeKindExchange(mount, _appState) {
                         <input type="number" step="0.01" min="0" name="${key}" value="${def}" required></label>
                 `).join('')}
             </form>
+            <div id="lke-tools" class="ce-toolbar"></div>
         </div>
         <div id="lke-result" class="lpv-preview"></div>
         </div>
@@ -50,26 +56,51 @@ export async function renderLikeKindExchange(mount, _appState) {
     applyUiI18n(mount);
 
     const form = mount.querySelector('#lke-form');
-    const generate = async () => {
+    enh.prefillForm(form, enh.readHashInputs());
+    const readBody = () => {
         const fd = new FormData(form);
         const body = {};
         for (const [key] of FIELDS) body[key] = Number(fd.get(key)) || 0;
+        return body;
+    };
+    const generate = async () => {
+        const body = readBody();
         try {
             const r = await api.calcLikeKindExchange(body);
             if (!viewIsCurrent(tok)) return;
+            lastReport = r; lastBody = body;
             renderResult(mount, r);
         } catch (err) {
             showToast(err.message || t('view.lke.toast.error'), { level: 'error' });
         }
     };
+    enh.mountToolbar(mount.querySelector('#lke-tools'), { viewId: VIEW, getInputs: () => lastBody || readBody(), getRows: () => reportRows(lastReport), filename: 'like-kind-exchange.csv' });
     form.addEventListener('input', debounce(generate, 250));
     form.addEventListener('submit', (e) => { e.preventDefault(); generate(); });
     generate();
 }
 
+function reportRows(r) {
+    if (!r) return [];
+    return [
+        ['metric', 'value'],
+        ['realized_gain_usd', r.realized_gain_usd],
+        ['recognized_gain_usd', r.recognized_gain_usd],
+        ['deferred_gain_usd', r.deferred_gain_usd],
+        ['tax_now_usd', r.tax_now_usd],
+        ['total_boot_usd', r.total_boot_usd],
+        ['replacement_basis_usd', r.replacement_basis_usd],
+    ];
+}
+
 function renderResult(mount, r) {
     const el = mount.querySelector('#lke-result');
     const deferredCls = r.fully_deferred ? 'pos' : '';
+    // 1031 split: gain deferred vs gain recognized now (where the realized gain goes).
+    const chart = enh.svgBarChart([
+        { label: 'Deferred', value: r.deferred_gain_usd },
+        { label: 'Recognized', value: r.recognized_gain_usd },
+    ]);
     el.innerHTML = `
         <div class="chart-panel">
             <h2 data-i18n="view.lke.h2.result">The result</h2>
@@ -83,6 +114,7 @@ function renderResult(mount, r) {
                 <div class="card"><div class="label" data-i18n="view.lke.card.basis">Replacement basis</div>
                     <div class="value">${money(r.replacement_basis_usd)}</div></div>
             </div>
+            ${chart}
             <table class="data-table">
                 <thead><tr><th data-i18n="view.lke.col.line">Line</th><th data-i18n="view.lke.col.amount">Amount</th></tr></thead>
                 <tbody>
