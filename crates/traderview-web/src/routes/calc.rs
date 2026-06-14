@@ -110,6 +110,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/prorated-rent", post(prorated_rent_route))
         .route("/calc/ti-allowance", post(ti_allowance_route))
         .route("/calc/contractor-1099", post(contractor_1099_route))
+        .route("/calc/pto-balance", post(pto_balance_route))
         .route("/calc/fix-and-flip", post(fix_and_flip_route))
         .route("/calc/cash-conversion-cycle", post(cash_conversion_cycle_route))
         .route("/calc/profit-first", post(profit_first_route))
@@ -11997,6 +11998,14 @@ async fn contractor_1099_route(
     Json(b): Json<traderview_core::contractor_1099::Contractor1099Input>,
 ) -> Json<traderview_core::contractor_1099::Contractor1099> {
     Json(traderview_core::contractor_1099::generate(&b))
+}
+
+/// PTO balance: earned − used, capped, with payout value.
+async fn pto_balance_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::pto_balance::PtoBalanceInput>,
+) -> Json<traderview_core::pto_balance::PtoBalance> {
+    Json(traderview_core::pto_balance::generate(&b))
 }
 
 /// Fix-and-flip: the 70% rule max-allowable-offer plus the full deal P&L

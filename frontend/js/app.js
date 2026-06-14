@@ -754,6 +754,7 @@ import { renderHoldoverRent } from './views/holdover_rent.js';
 import { renderProratedRent } from './views/prorated_rent.js';
 import { renderTiAllowance } from './views/ti_allowance.js';
 import { renderContractor1099 } from './views/contractor_1099.js';
+import { renderPtoBalance } from './views/pto_balance.js';
 import { renderFixAndFlip } from './views/fix_and_flip.js';
 import { renderCashConversionCycle } from './views/cash_conversion_cycle.js';
 import { renderProfitFirst } from './views/profit_first.js';
@@ -3249,6 +3250,7 @@ export async function dispatch() {
             case 'prorated-rent': await renderProratedRent(mount, state); break;
             case 'ti-allowance': await renderTiAllowance(mount, state); break;
             case 'contractor-1099': await renderContractor1099(mount, state); break;
+            case 'pto-balance': await renderPtoBalance(mount, state); break;
             case 'fix-and-flip': await renderFixAndFlip(mount, state); break;
             case 'cash-conversion-cycle': await renderCashConversionCycle(mount, state); break;
             case 'profit-first': await renderProfitFirst(mount, state); break;
@@ -4658,6 +4660,7 @@ export const viewRenderers = {
     'prorated-rent': (m, s) => renderProratedRent(m, s),
     'ti-allowance': (m, s) => renderTiAllowance(m, s),
     'contractor-1099': (m, s) => renderContractor1099(m, s),
+    'pto-balance': (m, s) => renderPtoBalance(m, s),
     'fix-and-flip': (m, s) => renderFixAndFlip(m, s),
     'cash-conversion-cycle': (m, s) => renderCashConversionCycle(m, s),
     'profit-first': (m, s) => renderProfitFirst(m, s),
