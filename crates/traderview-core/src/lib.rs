@@ -313,6 +313,7 @@ pub mod royalty_agreement;
 pub mod rsi_divergence;
 pub mod rsu_grant;
 pub mod saas_magic_number;
+pub mod saas_quick_ratio;
 pub mod safe_agreement;
 pub mod sales_tax;
 pub mod savings_waterfall;

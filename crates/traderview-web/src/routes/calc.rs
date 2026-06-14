@@ -49,9 +49,6 @@ pub fn router() -> Router<AppState> {
         .route("/calc/cape-valuation", post(cape_valuation_route))
         .route("/calc/decumulation-mc", post(decumulation_mc_route))
         .route("/calc/callable-oas", post(callable_oas_route))
-        .route("/calc/iv-cone", post(iv_cone_route))
-        .route("/calc/gamma-pin-zone", post(gamma_pin_zone_route))
-        .route("/calc/calendar-spread", post(calendar_spread_route))
         .route("/calc/inventory-costing", post(inventory_costing_route))
         .route("/calc/macrs-depreciation", post(macrs_depreciation_route))
         .route("/calc/rent-roll", post(rent_roll_route))
@@ -61,6 +58,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/liquidity-ratios", post(liquidity_ratios_route))
         .route("/calc/revenue-retention", post(revenue_retention_route))
         .route("/calc/saas-magic-number", post(saas_magic_number_route))
+        .route("/calc/saas-quick-ratio", post(saas_quick_ratio_route))
         .route("/calc/risk-on-off", post(risk_on_off_route))
         // ── Margin / buying power ─────────────────────────────────────
         .route("/calc/margin-call", post(margin_call_route))
@@ -927,56 +925,6 @@ async fn callable_oas_route(
     Json(traderview_core::callable_oas::generate(&b))
 }
 
-#[derive(serde::Deserialize)]
-struct IvConeBody {
-    spot: f64,
-    #[serde(default)]
-    term: Vec<traderview_core::iv_cone::TermPoint>,
-}
-
-/// IV cone: expected 1σ/2σ move bands across the IV term structure.
-async fn iv_cone_route(
-    _u: AuthUser,
-    Json(b): Json<IvConeBody>,
-) -> Json<Option<Vec<traderview_core::iv_cone::ConeRow>>> {
-    Json(traderview_core::iv_cone::compute(b.spot, &b.term))
-}
-
-#[derive(serde::Deserialize)]
-struct GammaPinBody {
-    #[serde(default)]
-    strike_gex: Vec<traderview_core::gamma_pin_zone::StrikeGex>,
-    spot: f64,
-    #[serde(default = "default_pin_radius")]
-    pin_radius_pct: f64,
-}
-
-fn default_pin_radius() -> f64 {
-    2.0
-}
-
-/// Gamma pin zone: gamma-flip level and the pinning strike near spot.
-async fn gamma_pin_zone_route(
-    _u: AuthUser,
-    Json(b): Json<GammaPinBody>,
-) -> Json<Option<traderview_core::gamma_pin_zone::GammaPinReport>> {
-    Json(traderview_core::gamma_pin_zone::compute(&b.strike_gex, b.spot, b.pin_radius_pct))
-}
-
-#[derive(serde::Deserialize)]
-struct CalendarBody {
-    spread: traderview_core::calendar_spread::CalendarSpread,
-    config: traderview_core::calendar_spread::AnalyzerConfig,
-}
-
-/// Calendar spread: net debit, P&L grid, breakevens, max profit/loss.
-async fn calendar_spread_route(
-    _u: AuthUser,
-    Json(b): Json<CalendarBody>,
-) -> Json<Option<traderview_core::calendar_spread::CalendarReport>> {
-    Json(traderview_core::calendar_spread::analyze(&b.spread, &b.config))
-}
-
 /// Inventory costing: COGS and ending inventory under FIFO, LIFO, and WAC.
 async fn inventory_costing_route(
     _u: AuthUser,
@@ -1031,6 +979,13 @@ async fn liquidity_ratios_route(
     Json(b): Json<traderview_core::liquidity_ratios::LiquidityInput>,
 ) -> Json<traderview_core::liquidity_ratios::LiquidityReport> {
     Json(traderview_core::liquidity_ratios::generate(&b))
+}
+
+/// SaaS quick ratio: growth efficiency — gained MRR per dollar of lost MRR.
+async fn saas_quick_ratio_route(
+    Json(b): Json<traderview_core::saas_quick_ratio::QuickRatioInput>,
+) -> Json<traderview_core::saas_quick_ratio::QuickRatioReport> {
+    Json(traderview_core::saas_quick_ratio::generate(&b))
 }
 
 /// SaaS magic number: annualized net-new revenue per dollar of prior S&M spend.
