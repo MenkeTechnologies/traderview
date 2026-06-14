@@ -120,6 +120,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/allowance-doubtful", post(allowance_doubtful_route))
         .route("/calc/depreciation-schedule", post(depreciation_schedule_route))
         .route("/calc/asset-disposal", post(asset_disposal_route))
+        .route("/calc/cash-flow-statement", post(cash_flow_statement_route))
         .route("/calc/fix-and-flip", post(fix_and_flip_route))
         .route("/calc/cash-conversion-cycle", post(cash_conversion_cycle_route))
         .route("/calc/profit-first", post(profit_first_route))
@@ -12087,6 +12088,14 @@ async fn asset_disposal_route(
     Json(b): Json<traderview_core::asset_disposal::AssetDisposalInput>,
 ) -> Json<traderview_core::asset_disposal::AssetDisposal> {
     Json(traderview_core::asset_disposal::generate(&b))
+}
+
+/// Cash flow statement (indirect method): derive CFO/CFI/CFF and net change.
+async fn cash_flow_statement_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::cash_flow_statement::CashFlowInput>,
+) -> Json<traderview_core::cash_flow_statement::CashFlowStatement> {
+    Json(traderview_core::cash_flow_statement::generate(&b))
 }
 
 /// Fix-and-flip: the 70% rule max-allowable-offer plus the full deal P&L
