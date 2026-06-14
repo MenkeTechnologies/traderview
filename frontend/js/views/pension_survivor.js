@@ -7,6 +7,7 @@ import { applyUiI18n, t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import { showToast } from '../toast.js';
 import { debounce } from '../util.js';
+import * as enh from '../calc_enhance.js';
 
 const FIELDS = [
     ['single_life_monthly_usd', 'Single-life monthly ($)', 3000],
@@ -17,6 +18,9 @@ const FIELDS = [
 
 const money = (n) => '$' + Number(n).toLocaleString(undefined, { maximumFractionDigits: 2 });
 const pct = (n) => Number(n).toFixed(1) + '%';
+const VIEW = 'pension-survivor';
+let lastReport = null;
+let lastBody = null;
 
 export async function renderPensionSurvivor(mount, _appState) {
     const tok = currentViewToken();
@@ -41,32 +45,57 @@ export async function renderPensionSurvivor(mount, _appState) {
                 `).join('')}
             </form>
         </div>
+        <div id="psv-tools" class="ce-toolbar"></div>
         <div id="psv-result" class="lpv-preview"></div>
         </div>
     `;
     applyUiI18n(mount);
 
     const form = mount.querySelector('#psv-form');
-    const generate = async () => {
+    enh.prefillForm(form, enh.readHashInputs());
+    const readBody = () => {
         const fd = new FormData(form);
         const body = {};
         for (const [key] of FIELDS) body[key] = Number(fd.get(key)) || 0;
+        return body;
+    };
+    const generate = async () => {
+        const body = readBody();
         try {
             const r = await api.calcPensionSurvivor(body);
             if (!viewIsCurrent(tok)) return;
+            lastReport = r; lastBody = body;
             renderResult(mount, r);
         } catch (err) {
             showToast(err.message || t('view.psv.toast.error'), { level: 'error' });
         }
     };
+    enh.mountToolbar(mount.querySelector('#psv-tools'), { viewId: VIEW, getInputs: () => lastBody || readBody(), getRows: () => reportRows(lastReport), filename: 'pension-survivor.csv' });
     form.addEventListener('input', debounce(generate, 250));
     form.addEventListener('submit', (e) => { e.preventDefault(); generate(); });
     generate();
 }
 
+function reportRows(r) {
+    if (!r) return [];
+    return [
+        ['metric', 'value'],
+        ['monthly_reduction_usd', r.monthly_reduction_usd],
+        ['reduction_pct', r.reduction_pct],
+        ['survivor_monthly_benefit_usd', r.survivor_monthly_benefit_usd],
+        ['pension_max_net_monthly_usd', r.pension_max_net_monthly_usd],
+        ['pension_max_better', r.pension_max_better],
+    ];
+}
+
 function renderResult(mount, r) {
     const el = mount.querySelector('#psv-result');
     const pmCls = r.pension_max_better ? 'pos' : '';
+    // Survivor benefit vs pension-max net monthly — the election comparison.
+    const chart = enh.svgBarChart([
+        { label: 'Survivor', value: r.survivor_monthly_benefit_usd },
+        { label: 'Pension-max', value: r.pension_max_net_monthly_usd },
+    ]);
     el.innerHTML = `
         <div class="chart-panel">
             <h2 data-i18n="view.psv.h2.result">The trade-off</h2>
@@ -80,6 +109,7 @@ function renderResult(mount, r) {
                 <div class="card ${pmCls}"><div class="label" data-i18n="view.psv.card.pensionmax">Pension-max net</div>
                     <div class="value ${pmCls}">${money(r.pension_max_net_monthly_usd)}<span class="muted">/mo</span></div></div>
             </div>
+            ${chart}
             <table class="data-table">
                 <thead><tr><th data-i18n="view.psv.col.line">Line</th><th data-i18n="view.psv.col.amount">Amount</th></tr></thead>
                 <tbody>

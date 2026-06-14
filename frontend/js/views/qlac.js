@@ -6,6 +6,7 @@ import { applyUiI18n, t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import { showToast } from '../toast.js';
 import { debounce } from '../util.js';
+import * as enh from '../calc_enhance.js';
 
 const FIELDS = [
     ['account_balance_usd', 'IRA / 401(k) balance ($)', 1000000],
@@ -15,6 +16,9 @@ const FIELDS = [
 ];
 
 const money = (n) => '$' + Number(n).toLocaleString(undefined, { maximumFractionDigits: 0 });
+const VIEW = 'qlac';
+let lastReport = null;
+let lastBody = null;
 
 export async function renderQlac(mount, _appState) {
     const tok = currentViewToken();
@@ -37,6 +41,7 @@ export async function renderQlac(mount, _appState) {
                         <input type="number" step="0.01" min="0" name="${key}" value="${def}" required></label>
                 `).join('')}
             </form>
+            <div id="qlac-tools" class="ce-toolbar"></div>
         </div>
         <div id="qlac-result" class="lpv-preview"></div>
         </div>
@@ -44,25 +49,49 @@ export async function renderQlac(mount, _appState) {
     applyUiI18n(mount);
 
     const form = mount.querySelector('#qlac-form');
-    const generate = async () => {
+    enh.prefillForm(form, enh.readHashInputs());
+    const readBody = () => {
         const fd = new FormData(form);
         const body = {};
         for (const [key] of FIELDS) body[key] = Number(fd.get(key)) || 0;
+        return body;
+    };
+    const generate = async () => {
+        const body = readBody();
         try {
             const r = await api.calcQlac(body);
             if (!viewIsCurrent(tok)) return;
+            lastReport = r; lastBody = body;
             renderResult(mount, r);
         } catch (err) {
             showToast(err.message || t('view.qlac.toast.error'), { level: 'error' });
         }
     };
+    enh.mountToolbar(mount.querySelector('#qlac-tools'), { viewId: VIEW, getInputs: () => lastBody || readBody(), getRows: () => reportRows(lastReport), filename: 'qlac.csv' });
     form.addEventListener('input', debounce(generate, 250));
     form.addEventListener('submit', (e) => { e.preventDefault(); generate(); });
     generate();
 }
 
+function reportRows(r) {
+    if (!r) return [];
+    return [
+        ['metric', 'value'],
+        ['annual_rmd_reduction_usd', r.annual_rmd_reduction_usd],
+        ['premium_allowed_usd', r.premium_allowed_usd],
+        ['premium_limit_usd', r.premium_limit_usd],
+        ['rmd_without_qlac_usd', r.rmd_without_qlac_usd],
+        ['rmd_with_qlac_usd', r.rmd_with_qlac_usd],
+    ];
+}
+
 function renderResult(mount, r) {
     const el = mount.querySelector('#qlac-result');
+    // RMD without vs with the QLAC — the deferral's effect.
+    const chart = enh.svgBarChart([
+        { label: 'No QLAC', value: r.rmd_without_qlac_usd },
+        { label: 'With QLAC', value: r.rmd_with_qlac_usd },
+    ]);
     el.innerHTML = `
         <div class="chart-panel">
             <h2 data-i18n="view.qlac.h2.result">The deferral</h2>
@@ -74,6 +103,7 @@ function renderResult(mount, r) {
                 <div class="card ${r.over_limit ? 'neg' : ''}"><div class="label" data-i18n="view.qlac.card.limit">Premium limit</div>
                     <div class="value">${money(r.premium_limit_usd)}</div></div>
             </div>
+            ${chart}
             ${r.over_limit ? `<p class="muted small neg" data-i18n="view.qlac.warn.over">Requested premium exceeds the limit — capped to the maximum allowed.</p>` : ''}
             <table class="data-table">
                 <thead><tr><th data-i18n="view.qlac.col.line">Line</th><th data-i18n="view.qlac.col.amount">Annual RMD</th></tr></thead>

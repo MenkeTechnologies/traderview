@@ -6,6 +6,11 @@ import { api } from '../api.js';
 import { applyUiI18n, t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import { showToast } from '../toast.js';
+import * as enh from '../calc_enhance.js';
+
+const VIEW = 'guyton-klinger';
+let lastReport = null;
+let lastBody = null;
 
 const FIELDS = [
     ['portfolio_value_usd', 'Portfolio value ($)', 1000000],
@@ -47,20 +52,30 @@ export async function renderGuytonKlinger(mount, _appState) {
                 <label data-tip="view.guardrails.tip.gained"><input type="checkbox" name="portfolio_gained" checked> <span data-i18n="view.guardrails.label.gained">Portfolio gained this year</span></label>
                 <button class="primary" type="submit" data-i18n="view.guardrails.btn.run">Decide</button>
             </form>
+            <div id="gk-tools" class="ce-toolbar"></div>
         </div>
         <div id="gk-result"></div>
     `;
     applyUiI18n(mount);
 
     const form = mount.querySelector('#gk-form');
-    form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const fd = new FormData(e.target);
+    const hashIn = enh.readHashInputs();
+    enh.prefillForm(form, hashIn);
+    if ('portfolio_gained' in hashIn) form.querySelector('[name=portfolio_gained]').checked = hashIn.portfolio_gained === 'true';
+    const readBody = () => {
+        const fd = new FormData(form);
         const body = { portfolio_gained: fd.get('portfolio_gained') != null };
         for (const [key] of FIELDS) body[key] = Number(fd.get(key)) || 0;
+        return body;
+    };
+    enh.mountToolbar(mount.querySelector('#gk-tools'), { viewId: VIEW, getInputs: () => lastBody || readBody(), getRows: () => reportRows(lastReport), filename: 'guyton-klinger.csv' });
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const body = readBody();
         try {
             const r = await api.calcGuytonKlinger(body);
             if (!viewIsCurrent(tok)) return;
+            lastReport = r; lastBody = body;
             renderResult(mount, r);
         } catch (err) {
             showToast(err.message || t('view.guardrails.toast.error'), { level: 'error' });
@@ -69,9 +84,28 @@ export async function renderGuytonKlinger(mount, _appState) {
     form.dispatchEvent(new Event('submit'));
 }
 
+function reportRows(r) {
+    if (!r) return [];
+    return [
+        ['metric', 'value'],
+        ['rule', r.rule],
+        ['final_withdrawal_usd', r.final_withdrawal_usd],
+        ['change_vs_last_pct', r.change_vs_last_pct],
+        ['current_rate_pct', r.current_rate_pct],
+        ['lower_guardrail_pct', r.lower_guardrail_pct],
+        ['upper_guardrail_pct', r.upper_guardrail_pct],
+    ];
+}
+
 function renderResult(mount, r) {
     const el = mount.querySelector('#gk-result');
     const [ruleLabel, ruleCls] = RULE[r.rule] || [r.rule, ''];
+    // Where the current rate sits within the guardrail band (lower / current / upper).
+    const chart = enh.svgBarChart([
+        { label: 'Lower', value: r.lower_guardrail_pct },
+        { label: 'Current', value: r.current_rate_pct },
+        { label: 'Upper', value: r.upper_guardrail_pct },
+    ]);
     const chg = Number(r.change_vs_last_pct);
     const chgCls = chg > 0 ? 'pos' : chg < 0 ? 'neg' : '';
     el.innerHTML = `
@@ -89,6 +123,7 @@ function renderResult(mount, r) {
                 <div class="card"><div class="label" data-i18n="view.guardrails.card.band">Guardrails</div>
                     <div class="value">${Number(r.lower_guardrail_pct).toFixed(1)}% – ${Number(r.upper_guardrail_pct).toFixed(1)}%</div></div>
             </div>
+            ${chart}
         </div>
     `;
     applyUiI18n(el);
