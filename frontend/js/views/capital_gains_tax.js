@@ -6,9 +6,13 @@ import { applyUiI18n, t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import { showToast } from '../toast.js';
 import { debounce } from '../util.js';
+import * as enh from '../calc_enhance.js';
 
 const money = (n) => '$' + Number(n).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const pct = (n) => Number(n).toLocaleString(undefined, { maximumFractionDigits: 2 }) + '%';
+const VIEW = 'capital-gains-tax';
+let lastReport = null;
+let lastBody = null;
 
 export async function renderCapitalGainsTax(mount, _appState) {
     const tok = currentViewToken();
@@ -44,6 +48,9 @@ export async function renderCapitalGainsTax(mount, _appState) {
                 <label><span data-i18n="view.capgains.label.ordrate">Ordinary rate for short-term (%)</span>
                     <input type="number" step="0.1" min="0" name="ordinary_rate_pct" value="24"></label>
             </form>
+            <div id="capgains-tools" class="ce-toolbar"></div>
+            <button type="button" id="capgains-sens-btn" class="ce-tool" data-i18n="calc.enh.sens.run">▦ Sensitivity</button>
+            <div id="capgains-sens" class="ce-sens"></div>
         </div>
         <div id="capgains-result" class="lpv-preview"></div>
         </div>
@@ -51,9 +58,10 @@ export async function renderCapitalGainsTax(mount, _appState) {
     applyUiI18n(mount);
 
     const form = mount.querySelector('#capgains-form');
-    const generate = async () => {
+    enh.prefillForm(form, enh.readHashInputs());
+    const readBody = () => {
         const fd = new FormData(form);
-        const body = {
+        return {
             proceeds_usd: Number(fd.get('proceeds_usd')) || 0,
             cost_basis_usd: Number(fd.get('cost_basis_usd')) || 0,
             term: fd.get('term'),
@@ -61,22 +69,50 @@ export async function renderCapitalGainsTax(mount, _appState) {
             ordinary_taxable_income_usd: Number(fd.get('ordinary_taxable_income_usd')) || 0,
             ordinary_rate_pct: Number(fd.get('ordinary_rate_pct')) || 0,
         };
+    };
+    const generate = async () => {
+        const body = readBody();
         try {
             const r = await api.calcCapitalGainsTax(body);
             if (!viewIsCurrent(tok)) return;
-            renderResult(mount, r);
+            lastReport = r; lastBody = body;
+            renderResult(mount, r, body, tok);
         } catch (err) {
             showToast(err.message || t('view.capgains.toast.error'), { level: 'error' });
         }
     };
+    enh.mountToolbar(mount.querySelector('#capgains-tools'), { viewId: VIEW, getInputs: () => lastBody || readBody(), getRows: () => reportRows(lastReport), filename: 'capital-gains-tax.csv' });
+    mount.querySelector('#capgains-sens-btn').addEventListener('click', () => runSens(mount, readBody(), tok));
     form.addEventListener('input', debounce(generate, 250));
     form.addEventListener('submit', (e) => { e.preventDefault(); generate(); });
     generate();
 }
 
-function renderResult(mount, r) {
+function reportRows(r) {
+    if (!r) return [];
+    return [
+        ['metric', 'value'],
+        ['gain_usd', r.gain_usd],
+        ['tax_usd', r.tax_usd],
+        ['effective_rate_pct', r.effective_rate_pct],
+        ['after_tax_gain_usd', r.after_tax_gain_usd],
+        ['taxed_at_0_usd', r.taxed_at_0_usd],
+        ['taxed_at_15_usd', r.taxed_at_15_usd],
+        ['taxed_at_20_usd', r.taxed_at_20_usd],
+    ];
+}
+
+async function renderResult(mount, r, body, tok) {
     const el = mount.querySelector('#capgains-result');
     const gainClass = r.gain_usd >= 0 ? 'pos' : 'neg';
+    // Line chart: tax as ordinary income sweeps 0 -> $600k (LTCG slices stack and cross 15/20% thresholds).
+    const xs = enh.linspace(0, 600000, 16);
+    const pts = await Promise.all(xs.map(async (inc) => {
+        const rr = await api.calcCapitalGainsTax({ ...body, ordinary_taxable_income_usd: inc });
+        return { x: inc / 1000, y: rr ? rr.tax_usd / 1000 : NaN };
+    }));
+    if (!viewIsCurrent(tok)) return;
+    const chart = enh.svgLineChart(pts, { xlabel: 'ord income $k', ylabel: 'tax $k' });
     const slices = r.is_long_term
         ? `
             <tr><td data-i18n="view.capgains.row.at0">Taxed at 0%</td><td>${money(r.taxed_at_0_usd)}</td></tr>
@@ -94,6 +130,7 @@ function renderResult(mount, r) {
                 <div class="card"><div class="label" data-i18n="view.capgains.card.effrate">Effective rate</div>
                     <div class="value">${pct(r.effective_rate_pct)}</div></div>
             </div>
+            ${chart}
             <table class="data-table">
                 <tbody>
                     ${slices}
@@ -104,4 +141,16 @@ function renderResult(mount, r) {
         </div>
     `;
     applyUiI18n(el);
+}
+
+async function runSens(mount, base, tok) {
+    const panel = mount.querySelector('#capgains-sens');
+    panel.innerHTML = `<p class="muted small" data-i18n="calc.enh.sens.running">Computing…</p>`; applyUiI18n(panel);
+    // x: ordinary income 0 -> 600k; y: proceeds 0.5x -> 1.5x. Output: capital-gains tax.
+    const proc = base.proceeds_usd || 50000;
+    const xVals = enh.linspace(0, 600000, 5);
+    const yVals = enh.linspace(proc * 0.5, proc * 1.5, 5);
+    const { cells } = await enh.runSensitivity({ base, xKey: 'ordinary_taxable_income_usd', yKey: 'proceeds_usd', xVals, yVals, compute: (b) => api.calcCapitalGainsTax(b), pick: (r) => (r ? r.tax_usd : null) });
+    if (!viewIsCurrent(tok)) return;
+    panel.innerHTML = enh.renderSensitivityTable({ xVals, yVals, cells, fmt: (v) => (v == null ? '—' : '$' + Math.round(v / 1000) + 'k'), xfmt: (v) => '$' + Math.round(v / 1000) + 'k', yfmt: (v) => '$' + Math.round(v / 1000) + 'k', xName: t('view.capgains.label.income') || 'Income', yName: t('view.capgains.label.proceeds') || 'Proceeds' });
 }

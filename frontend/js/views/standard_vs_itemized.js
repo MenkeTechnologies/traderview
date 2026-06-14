@@ -6,9 +6,13 @@ import { applyUiI18n, t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import { showToast } from '../toast.js';
 import { debounce } from '../util.js';
+import * as enh from '../calc_enhance.js';
 
 const money = (n) => (n == null ? '—' : '$' + Number(n).toLocaleString(undefined, { maximumFractionDigits: 0 }));
 const signed = (n) => (n == null ? '—' : (n >= 0 ? '+$' : '−$') + Math.abs(Number(n)).toLocaleString(undefined, { maximumFractionDigits: 0 }));
+const VIEW = 'standard-vs-itemized';
+let lastReport = null;
+let lastBody = null;
 
 export async function renderStdVsItemized(mount, _appState) {
     const tok = currentViewToken();
@@ -43,6 +47,7 @@ export async function renderStdVsItemized(mount, _appState) {
                 <label><span data-i18n="view.itemize.label.medical">Medical expenses ($)</span>
                     <input type="number" step="500" min="0" name="medical_usd" value="0"></label>
             </form>
+            <div id="itemize-tools" class="ce-toolbar"></div>
         </div>
         <div id="itemize-result" class="lpv-preview"></div>
         </div>
@@ -50,9 +55,10 @@ export async function renderStdVsItemized(mount, _appState) {
     applyUiI18n(mount);
 
     const form = mount.querySelector('#itemize-form');
-    const generate = async () => {
+    enh.prefillForm(form, enh.readHashInputs());
+    const readBody = () => {
         const fd = new FormData(form);
-        const body = {
+        return {
             agi_usd: Number(fd.get('agi_usd')) || 0,
             filing_status: fd.get('filing_status'),
             state_local_tax_usd: Number(fd.get('state_local_tax_usd')) || 0,
@@ -61,22 +67,45 @@ export async function renderStdVsItemized(mount, _appState) {
             charitable_usd: Number(fd.get('charitable_usd')) || 0,
             medical_usd: Number(fd.get('medical_usd')) || 0,
         };
+    };
+    const generate = async () => {
+        const body = readBody();
         try {
             const r = await api.calcStdVsItemized(body);
             if (!viewIsCurrent(tok)) return;
+            lastReport = r; lastBody = body;
             renderResult(mount, r);
         } catch (err) {
             showToast(err.message || t('view.itemize.toast.error'), { level: 'error' });
         }
     };
+    enh.mountToolbar(mount.querySelector('#itemize-tools'), { viewId: VIEW, getInputs: () => lastBody || readBody(), getRows: () => reportRows(lastReport), filename: 'standard-vs-itemized.csv' });
     form.addEventListener('input', debounce(generate, 250));
     form.addEventListener('submit', (e) => { e.preventDefault(); generate(); });
     generate();
 }
 
+function reportRows(r) {
+    if (!r) return [];
+    return [
+        ['metric', 'value'],
+        ['deduction_taken_usd', r.deduction_taken_usd],
+        ['standard_deduction_usd', r.standard_deduction_usd],
+        ['itemized_total_usd', r.itemized_total_usd],
+        ['itemizing_advantage_usd', r.itemizing_advantage_usd],
+        ['salt_deductible_usd', r.salt_deductible_usd],
+        ['medical_deductible_usd', r.medical_deductible_usd],
+    ];
+}
+
 function renderResult(mount, r) {
     const el = mount.querySelector('#itemize-result');
     const cls = r.should_itemize ? 'pos' : '';
+    // Standard vs itemized deduction comparison bars (the larger wins).
+    const chart = enh.svgBarChart([
+        { label: 'Standard', value: r.standard_deduction_usd },
+        { label: 'Itemized', value: r.itemized_total_usd },
+    ]);
     const verdictKey = r.should_itemize ? 'view.itemize.verdict.itemize' : 'view.itemize.verdict.standard';
     const saltLostRow = r.salt_lost_usd > 0
         ? `<tr class="neg"><td data-i18n="view.itemize.row.salt_lost">SALT lost over cap</td><td>${money(r.salt_lost_usd)}</td></tr>`
@@ -92,6 +121,7 @@ function renderResult(mount, r) {
                 <div class="card"><div class="label" data-i18n="view.itemize.card.itemized">Itemized</div>
                     <div class="value">${money(r.itemized_total_usd)}</div></div>
             </div>
+            ${chart}
             <table class="data-table">
                 <tbody>
                     <tr><td data-i18n="view.itemize.row.salt_paid">SALT paid</td><td>${money(r.salt_paid_usd)}</td></tr>
