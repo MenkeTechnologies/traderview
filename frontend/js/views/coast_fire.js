@@ -6,6 +6,7 @@
 import { api } from '../api.js';
 import { esc } from '../util.js';
 import { t } from '../i18n.js';
+import * as enh from '../calc_enhance.js';
 
 export async function renderCoastFire(mount, _state) {
     mount.innerHTML = `
@@ -57,6 +58,8 @@ async function runCompute(mount) {
     result.innerHTML = `<p class="muted">${esc(t('view.coast_fire.status.computing'))}</p>`;
     try {
         const r = await api.request('/coast-fire/compute', { method: 'POST', body: JSON.stringify(input) });
+        // Coast number required by age — the curve rises toward the FI number near retirement.
+        const chart = enh.svgLineChart((r.per_year_coast_required || []).map(y => ({ x: y.age, y: y.coast_required_usd })), { xlabel: 'age', ylabel: 'coast # $' });
         const coastCls = r.is_coast_fi ? 'pos' : 'neg';
         const deltaCls = r.current_vs_coast_delta_usd >= 0 ? 'pos' : 'neg';
         result.innerHTML = `
@@ -74,6 +77,8 @@ async function runCompute(mount) {
                 <div><div class="muted small">${esc(t('view.coast_fire.field.years_to_coast'))}</div>
                     <strong>${r.years_until_coast_fi == null ? '∞' : r.years_until_coast_fi.toFixed(1) + 'y'}</strong></div>
             </div>
+            ${chart}
+            <div id="cf-tools" class="ce-toolbar"></div>
             <h2 style="margin-top:1rem">${esc(t('view.coast_fire.h2.per_year'))}</h2>
             <table class="trades">
                 <thead><tr>
@@ -88,6 +93,14 @@ async function runCompute(mount) {
                 `).join('')}</tbody>
             </table>
         `;
+        // Export the per-year coast-number table (Copy / CSV). No permalink — id-based inputs.
+        enh.mountToolbar(mount.querySelector('#cf-tools'), {
+            viewId: 'coast-fire',
+            link: false,
+            filename: 'coast-fire.csv',
+            getRows: () => [['age', 'coast_required_usd'],
+                ...(r.per_year_coast_required || []).map(y => [y.age, y.coast_required_usd])],
+        });
     } catch (e) {
         result.innerHTML = `<p class="neg">${esc(String(e))}</p>`;
     }

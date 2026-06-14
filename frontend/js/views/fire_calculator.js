@@ -7,6 +7,7 @@
 import { api } from '../api.js';
 import { esc } from '../util.js';
 import { t } from '../i18n.js';
+import * as enh from '../calc_enhance.js';
 
 export async function renderFireCalculator(mount, _state) {
     mount.innerHTML = `
@@ -73,6 +74,8 @@ async function runCompute(mount) {
     result.innerHTML = `<p class="muted">${esc(t('view.fire_calculator.status.computing'))}</p>`;
     try {
         const r = await api.request('/fire-calculator/compute', { method: 'POST', body: JSON.stringify(input) });
+        // Net-worth trajectory straight from the year-by-year projection.
+        const chart = enh.svgLineChart((r.yearly_projection || []).map(y => ({ x: y.age, y: y.end_balance_usd })), { xlabel: 'age', ylabel: 'net worth $' });
         const yearsCls = r.years_to_target == null
             ? 'neg'
             : r.years_to_target <= (input.target_retirement_age - input.current_age)
@@ -92,6 +95,8 @@ async function runCompute(mount) {
                 <div><div class="muted small">${esc(t('view.fire_calculator.field.swr_income'))}</div>
                     <strong class="pos">$${(r.safe_withdrawal_income_annual_usd / 1000).toFixed(1)}K/yr</strong></div>
             </div>
+            ${chart}
+            <div id="fire-tools" class="ce-toolbar"></div>
             <h2 style="margin-top:1rem">${esc(t('view.fire_calculator.h2.sensitivity'))}</h2>
             <table class="trades">
                 <thead><tr>
@@ -129,6 +134,14 @@ async function runCompute(mount) {
                 `).join('')}</tbody>
             </table>
         `;
+        // Export the year-by-year projection (Copy / CSV). No permalink — id-based inputs.
+        enh.mountToolbar(mount.querySelector('#fire-tools'), {
+            viewId: 'fire-calculator',
+            link: false,
+            filename: 'fire-projection.csv',
+            getRows: () => [['age', 'start', 'contributions', 'growth', 'end'],
+                ...(r.yearly_projection || []).map(y => [y.age, y.start_balance_usd, y.contributions_usd, y.growth_usd, y.end_balance_usd])],
+        });
     } catch (e) {
         result.innerHTML = `<p class="neg">${esc(String(e))}</p>`;
     }
