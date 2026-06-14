@@ -4,22 +4,10 @@
 // earned income < 50% of support. Defeats the "give appreciated stock
 // to kid to sell at 0% LT cap-gains rate" strategy unless kid is grown.
 
+import { api } from '../api.js';
 import { esc } from '../util.js';
 import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
-
-const STANDARD_DEDUCTION_DEPENDENT_2024 = 1_300;  // greater of $1,300 or earned + $450
-const UNEARNED_TIER_2024 = 2_600;  // first $1,300 0%, next $1,300 at kid's rate, above at parent's
-const STANDARD_DEDUCTION_DEPENDENT_2025 = 1_350;
-const UNEARNED_TIER_2025 = 2_700;
-
-const KID_BRACKETS_SINGLE = [
-    [11_600, 0.10],
-    [47_150, 0.12],
-    [100_525, 0.22],
-    [191_950, 0.24],
-    [Infinity, 0.37],
-];
 
 let state = {
     year: new Date().getFullYear(),
@@ -75,37 +63,34 @@ export async function renderKiddieTax(mount, _appState) {
     renderOutput();
 }
 
-function renderOutput() {
+async function renderOutput() {
     const el = document.getElementById('kt-output');
     if (!el) return;
-    const stdDed = state.year >= 2025 ? STANDARD_DEDUCTION_DEPENDENT_2025 : STANDARD_DEDUCTION_DEPENDENT_2024;
-    const tier = state.year >= 2025 ? UNEARNED_TIER_2025 : UNEARNED_TIER_2024;
-    const half_tier = tier / 2;  // = $1,300 / $1,350
-
-    const kiddieTaxApplies = state.kid_age < 18 ||
-        (state.kid_age >= 19 && state.kid_age <= 23);
-
-    // Standard deduction for dependent: greater of $1,300 or earned + $450
-    const effStdDed = Math.max(stdDed, state.kid_earned_income + 450);
-    const taxableIncome = Math.max(0, state.kid_earned_income + state.kid_unearned_income - effStdDed);
-
-    // First half_tier ($1,300) of unearned offset by std deduction
-    // Next half_tier ($1,300) taxed at kid's rate (10%)
-    // Above tier ($2,600) of unearned taxed at parent's rate
-    const subjectToParentRate = Math.max(0, state.kid_unearned_income - tier);
-    const kidsOwnRateAmount = Math.max(0, Math.min(state.kid_unearned_income, tier) - half_tier);
-    const offsetByStdDed = Math.min(state.kid_unearned_income, half_tier);
-    const kidsTaxOnEarned = computeKidTax(Math.max(0, state.kid_earned_income - effStdDed));
-    const kidsTaxOnOwnUnearned = kidsOwnRateAmount * 0.10;
-    const parentRateTax = subjectToParentRate * state.parent_marginal_rate;
-
-    const totalKidTax = kiddieTaxApplies
-        ? kidsTaxOnEarned + kidsTaxOnOwnUnearned + parentRateTax
-        : kidsTaxOnEarned + computeKidTax(state.kid_unearned_income);
-
-    // Compare to parent owning the asset directly (LT cap gains)
-    const parentDirectTax = state.kid_unearned_income * state.parent_lt_cap_gains_rate;
-    const savingsVsParent = parentDirectTax - totalKidTax;
+    let r;
+    try {
+        r = await api.calcKiddieTax({
+            year: state.year,
+            kid_age: state.kid_age,
+            kid_earned_income_usd: state.kid_earned_income,
+            kid_unearned_income_usd: state.kid_unearned_income,
+            parent_marginal_rate_fraction: state.parent_marginal_rate,
+            parent_lt_cap_gains_fraction: state.parent_lt_cap_gains_rate,
+        });
+    } catch (e) {
+        el.innerHTML = `<p class="neg">${esc(String(e))}</p>`;
+        return;
+    }
+    const kiddieTaxApplies = r.kiddie_tax_applies;
+    const effStdDed = r.eff_std_deduction_usd;
+    const offsetByStdDed = r.offset_by_std_ded_usd;
+    const kidsOwnRateAmount = r.kids_rate_amount_usd;
+    const subjectToParentRate = r.subject_to_parent_rate_usd;
+    const kidsTaxOnEarned = r.tax_on_earned_usd;
+    const kidsTaxOnOwnUnearned = r.tax_at_kids_rate_usd;
+    const parentRateTax = r.tax_at_parent_rate_usd;
+    const totalKidTax = r.total_kid_tax_usd;
+    const parentDirectTax = r.parent_direct_tax_usd;
+    const savingsVsParent = r.savings_vs_parent_usd;
 
     el.innerHTML = `
         <div class="chart-panel ${kiddieTaxApplies ? 'neg' : 'pos'}">
@@ -166,16 +151,4 @@ function renderOutput() {
             </p>
         </div>
     `;
-}
-
-function computeKidTax(taxable) {
-    let owe = 0;
-    let lastCap = 0;
-    for (const [cap, rate] of KID_BRACKETS_SINGLE) {
-        const slice = Math.max(0, Math.min(taxable, cap) - lastCap);
-        owe += slice * rate;
-        if (taxable <= cap) break;
-        lastCap = cap;
-    }
-    return owe;
 }

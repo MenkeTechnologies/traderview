@@ -47,6 +47,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/time-value-money", post(time_value_money_route))
         .route("/calc/scorp-election", post(scorp_calc_route))
         .route("/calc/quarterly-tax", post(quarterly_tax_route))
+        .route("/calc/kiddie-tax", post(kiddie_tax_route))
         .route("/calc/dividend-discount-model", post(dividend_discount_model_route))
         .route("/calc/probability-of-profit", post(probability_of_profit_route))
         .route("/calc/straddle", post(straddle_route))
@@ -1049,6 +1050,12 @@ async fn quarterly_tax_route(
     Json(b): Json<traderview_core::quarterly_tax::QuarterlyTaxInput>,
 ) -> Json<traderview_core::quarterly_tax::QuarterlyTaxReport> {
     Json(traderview_core::quarterly_tax::generate(&b))
+}
+
+async fn kiddie_tax_route(
+    Json(b): Json<traderview_core::kiddie_tax::KiddieTaxInput>,
+) -> Json<traderview_core::kiddie_tax::KiddieTaxReport> {
+    Json(traderview_core::kiddie_tax::generate(&b))
 }
 
 async fn roth_conversion_ladder_route(

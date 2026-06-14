@@ -179,6 +179,7 @@ pub mod iv_skew;
 pub mod iv_surface;
 pub mod kelly;
 pub mod keltner;
+pub mod kiddie_tax;
 pub mod land_contract;
 pub mod landlord_notice;
 pub mod lead_paint_disclosure;

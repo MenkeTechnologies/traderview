@@ -1825,6 +1825,7 @@ export const api = {
     calcTimeValueMoney:      (b) => request('/calc/time-value-money',        { method: 'POST', body: JSON.stringify(b) }),
     calcScorpElection:       (b) => request('/calc/scorp-election',          { method: 'POST', body: JSON.stringify(b) }),
     calcQuarterlyTax:        (b) => request('/calc/quarterly-tax',           { method: 'POST', body: JSON.stringify(b) }),
+    calcKiddieTax:           (b) => request('/calc/kiddie-tax',              { method: 'POST', body: JSON.stringify(b) }),
     calcRiskOnOff:           (b) => request('/calc/risk-on-off',          { method: 'POST', body: JSON.stringify(b) }),
     calcMarginCall:          (b) => request('/calc/margin-call',          { method: 'POST', body: JSON.stringify(b) }),
     calcMarginRunway:        (b) => request('/calc/margin-runway',        { method: 'POST', body: JSON.stringify(b) }),
