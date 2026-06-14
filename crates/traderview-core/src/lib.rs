@@ -88,6 +88,7 @@ pub mod drawdown_duration;
 pub mod drawdown_throttle;
 pub mod dupont_roe;
 pub mod dynamic_kelly;
+pub mod earnest_money_receipt;
 pub mod earnings_calendar;
 pub mod earnings_move;
 pub mod economic_value_added;
