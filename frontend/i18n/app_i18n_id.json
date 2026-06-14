@@ -12451,6 +12451,7 @@
   "view.depsch.label.start": "Placed in service (year)",
   "view.depsch.opt.ddb": "Double-declining-balance",
   "view.depsch.opt.sl": "Straight-line",
+  "view.depsch.opt.syd": "Sum-of-years-digits",
   "view.depsch.ph.note": "e.g. Fleet asset #12",
   "view.depsch.th.accum": "Accumulated",
   "view.depsch.th.book": "Book value",

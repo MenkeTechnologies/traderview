@@ -1,10 +1,13 @@
 //! Depreciation schedule — the period-by-period book-value table for a fixed asset
-//! under straight-line or double-declining-balance depreciation. Straight-line
-//! spreads (cost − salvage) evenly over the life; double-declining-balance applies
-//! twice the straight-line rate to the declining book value, floored so the book
-//! value never falls below salvage. Distinct from depreciation recapture, which
-//! computes the tax clawback on sale; this is the book schedule. Drafting aid, not
-//! accounting/tax advice.
+//! under straight-line, double-declining-balance, or sum-of-years-digits
+//! depreciation. Straight-line spreads (cost − salvage) evenly over the life;
+//! double-declining-balance applies twice the straight-line rate to the declining
+//! book value, floored so the book value never falls below salvage;
+//! sum-of-years-digits weights the depreciable base by remaining life — year k of
+//! an N-year life takes (N−k+1)/[N(N+1)/2] of the base, an accelerated method
+//! gentler than DDB. Distinct from depreciation recapture, which computes the tax
+//! clawback on sale; this is the book schedule. Drafting aid, not accounting/tax
+//! advice.
 
 use serde::{Deserialize, Serialize};
 
@@ -19,7 +22,8 @@ pub struct DepreciationScheduleInput {
     pub salvage_usd: f64,
     /// Useful life in years.
     pub life_years: u32,
-    /// "straight_line" or "ddb" (double-declining-balance).
+    /// "straight_line", "ddb" (double-declining-balance), or "syd"
+    /// (sum-of-years-digits).
     #[serde(default)]
     pub method: String,
     /// Year the asset was placed in service (for labelling).
@@ -64,7 +68,9 @@ fn money(v: f64) -> String {
 }
 
 pub fn generate(i: &DepreciationScheduleInput) -> DepreciationSchedule {
-    let is_ddb = i.method.trim().eq_ignore_ascii_case("ddb");
+    let method = i.method.trim().to_ascii_lowercase();
+    let is_ddb = method == "ddb";
+    let is_syd = method == "syd";
     let base = (i.cost_usd - i.salvage_usd).max(0.0);
 
     let mut schedule = Vec::with_capacity(i.life_years as usize);
@@ -74,11 +80,21 @@ pub fn generate(i: &DepreciationScheduleInput) -> DepreciationSchedule {
     if i.life_years > 0 {
         let sl_annual = base / i.life_years as f64;
         let ddb_rate = 2.0 / i.life_years as f64;
+        // Sum-of-years-digits denominator: N(N+1)/2.
+        let syd_sum = (i.life_years as f64 * (i.life_years as f64 + 1.0)) / 2.0;
         for y in 1..=i.life_years {
             let dep = if is_ddb {
                 // Twice the SL rate on the declining book value, but never depreciate
                 // below salvage.
                 (book * ddb_rate).min((book - i.salvage_usd).max(0.0))
+            } else if is_syd {
+                // Year k takes (N−k+1)/Σ of the base; last year absorbs rounding.
+                if y == i.life_years {
+                    (book - i.salvage_usd).max(0.0)
+                } else {
+                    let remaining = (i.life_years - y + 1) as f64;
+                    base * remaining / syd_sum
+                }
             } else {
                 // Last year absorbs any rounding so book lands exactly on salvage.
                 if y == i.life_years {
@@ -102,6 +118,8 @@ pub fn generate(i: &DepreciationScheduleInput) -> DepreciationSchedule {
     let total = cents(accumulated);
     let method_label = if is_ddb {
         "Double-declining-balance"
+    } else if is_syd {
+        "Sum-of-years-digits"
     } else {
         "Straight-line"
     };
@@ -206,6 +224,21 @@ mod tests {
         assert!(close(d.schedule[4].depreciation_usd, 296.0));
         assert!(close(d.schedule[4].book_value_usd, 1_000.0));
         assert!(close(d.total_depreciation_usd, 9_000.0));
+    }
+
+    #[test]
+    fn syd_schedule_weights_by_remaining_life() {
+        // base 9000, life 5 → Σ = 15: 5/15, 4/15, 3/15, 2/15, 1/15 of 9000.
+        let d = generate(&DepreciationScheduleInput { method: "syd".into(), ..base() });
+        assert_eq!(d.schedule.len(), 5);
+        assert!(close(d.schedule[0].depreciation_usd, 3_000.0));
+        assert!(close(d.schedule[1].depreciation_usd, 2_400.0));
+        assert!(close(d.schedule[2].depreciation_usd, 1_800.0));
+        assert!(close(d.schedule[3].depreciation_usd, 1_200.0));
+        assert!(close(d.schedule[4].depreciation_usd, 600.0));
+        assert!(close(d.schedule[4].book_value_usd, 1_000.0));
+        assert!(close(d.total_depreciation_usd, 9_000.0));
+        assert_eq!(d.method_label, "Sum-of-years-digits");
     }
 
     #[test]

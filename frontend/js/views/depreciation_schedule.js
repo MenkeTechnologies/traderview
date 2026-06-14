@@ -19,8 +19,8 @@ export async function renderDepreciationSchedule(mount, _appState) {
         <p class="muted small" data-i18n="view.depsch.hint.intro">
             The period-by-period book-value table for a fixed asset. Straight-line spreads (cost − salvage)
             evenly over the life; double-declining-balance applies twice the straight-line rate to the
-            declining book value, floored so the book value never falls below salvage. Drafting aid, not
-            accounting/tax advice.
+            declining book value, floored so the book value never falls below salvage; sum-of-years-digits
+            weights the base by remaining life. Drafting aid, not accounting/tax advice.
         </p>
         <div class="lpv-split">
         <div class="chart-panel">
@@ -40,6 +40,7 @@ export async function renderDepreciationSchedule(mount, _appState) {
                     <select name="method">
                         <option value="straight_line" data-i18n="view.depsch.opt.sl">Straight-line</option>
                         <option value="ddb" data-i18n="view.depsch.opt.ddb">Double-declining-balance</option>
+                        <option value="syd" data-i18n="view.depsch.opt.syd">Sum-of-years-digits</option>
                     </select></label>
                 <label><span data-i18n="view.depsch.label.start">Placed in service (year)</span>
                     <input type="number" step="1" min="0" name="start_year" value="2026"></label>
