@@ -7,6 +7,11 @@ import { applyUiI18n, t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import { showToast } from '../toast.js';
 import { debounce } from '../util.js';
+import * as enh from '../calc_enhance.js';
+
+const VIEW = 'depreciation-recapture';
+let lastReport = null;
+let lastBody = null;
 
 const FIELDS = [
     ['purchase_price_usd', 'Purchase price ($)', 200000],
@@ -43,6 +48,7 @@ export async function renderDepreciationRecapture(mount, _appState) {
                         <input type="number" step="0.01" min="0" name="${key}" value="${def}" required></label>
                 `).join('')}
             </form>
+            <div id="dr-tools" class="ce-toolbar"></div>
         </div>
         <div id="dr-result" class="lpv-preview"></div>
         </div>
@@ -50,21 +56,41 @@ export async function renderDepreciationRecapture(mount, _appState) {
     applyUiI18n(mount);
 
     const form = mount.querySelector('#dr-form');
-    const generate = async () => {
+    enh.prefillForm(form, enh.readHashInputs());
+    const readBody = () => {
         const fd = new FormData(form);
         const body = {};
         for (const [key] of FIELDS) body[key] = Number(fd.get(key)) || 0;
+        return body;
+    };
+    const generate = async () => {
+        const body = readBody();
         try {
             const r = await api.calcDepreciationRecapture(body);
             if (!viewIsCurrent(tok)) return;
+            lastReport = r; lastBody = body;
             renderResult(mount, r);
         } catch (err) {
             showToast(err.message || t('view.dr.toast.error'), { level: 'error' });
         }
     };
+    enh.mountToolbar(mount.querySelector('#dr-tools'), { viewId: VIEW, getInputs: () => lastBody || readBody(), getRows: () => reportRows(lastReport), filename: 'depreciation-recapture.csv' });
     form.addEventListener('input', debounce(generate, 250));
     form.addEventListener('submit', (e) => { e.preventDefault(); generate(); });
     generate();
+}
+
+function reportRows(r) {
+    if (!r) return [];
+    return [
+        ['metric', 'value'],
+        ['total_gain_usd', r.total_gain_usd],
+        ['unrecaptured_1250_gain_usd', r.unrecaptured_1250_gain_usd],
+        ['recapture_tax_usd', r.recapture_tax_usd],
+        ['ltcg_gain_usd', r.ltcg_gain_usd],
+        ['ltcg_tax_usd', r.ltcg_tax_usd],
+        ['total_tax_usd', r.total_tax_usd],
+    ];
 }
 
 function renderResult(mount, r) {
@@ -88,6 +114,11 @@ function renderResult(mount, r) {
                 <div class="card pos"><div class="label" data-i18n="view.dr.card.after_tax">After-tax gain</div>
                     <div class="value pos">${money(r.after_tax_gain_usd)}</div></div>
             </div>
+            ${enh.svgBarChart([
+                { label: '§1250 tax', value: -r.recapture_tax_usd },
+                { label: 'LTCG tax', value: -r.ltcg_tax_usd },
+                { label: 'After-tax', value: r.after_tax_gain_usd },
+            ])}
             <table class="data-table">
                 <thead><tr>
                     <th data-i18n="view.dr.col.line">Line</th>

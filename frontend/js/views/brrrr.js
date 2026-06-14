@@ -6,6 +6,11 @@ import { api } from '../api.js';
 import { applyUiI18n, t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import { showToast } from '../toast.js';
+import * as enh from '../calc_enhance.js';
+
+const VIEW = 'brrrr';
+let lastReport = null;
+let lastBody = null;
 
 const FIELDS = [
     ['purchase_price_usd', 'Purchase price ($)', 100000],
@@ -44,20 +49,28 @@ export async function renderBrrrr(mount, _appState) {
                 `).join('')}
                 <button class="primary" type="submit" data-i18n="view.brrrr.btn.run">Run the deal</button>
             </form>
+            <div id="br-tools" class="ce-toolbar"></div>
         </div>
         <div id="br-result"></div>
     `;
     applyUiI18n(mount);
 
     const form = mount.querySelector('#br-form');
-    form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const fd = new FormData(e.target);
+    enh.prefillForm(form, enh.readHashInputs());
+    const readBody = () => {
+        const fd = new FormData(form);
         const body = {};
         for (const [key] of FIELDS) body[key] = Number(fd.get(key)) || 0;
+        return body;
+    };
+    enh.mountToolbar(mount.querySelector('#br-tools'), { viewId: VIEW, getInputs: () => lastBody || readBody(), getRows: () => reportRows(lastReport), filename: 'brrrr.csv' });
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const body = readBody();
         try {
             const r = await api.calcBrrrr(body);
             if (!viewIsCurrent(tok)) return;
+            lastReport = r; lastBody = body;
             renderResult(mount, r);
         } catch (err) {
             showToast(err.message || t('view.brrrr.toast.error'), { level: 'error' });
@@ -66,9 +79,28 @@ export async function renderBrrrr(mount, _appState) {
     form.dispatchEvent(new Event('submit'));
 }
 
+function reportRows(r) {
+    if (!r) return [];
+    return [
+        ['metric', 'value'],
+        ['total_cash_invested_usd', r.total_cash_invested_usd],
+        ['refi_loan_usd', r.refi_loan_usd],
+        ['cash_out_usd', r.cash_out_usd],
+        ['cash_left_in_deal_usd', r.cash_left_in_deal_usd],
+        ['equity_after_refi_usd', r.equity_after_refi_usd],
+        ['monthly_cash_flow_usd', r.monthly_cash_flow_usd],
+    ];
+}
+
 function renderResult(mount, r) {
     const el = mount.querySelector('#br-result');
     const leftCls = Number(r.cash_left_in_deal_usd) <= 0 ? 'pos' : '';
+    // Cash invested vs cash pulled at refi vs cash left in the deal.
+    const chart = enh.svgBarChart([
+        { label: 'Cash in', value: r.total_cash_invested_usd },
+        { label: 'Cash out', value: r.cash_out_usd },
+        { label: 'Left in', value: r.cash_left_in_deal_usd },
+    ]);
     const cfCls = Number(r.monthly_cash_flow_usd) >= 0 ? 'pos' : 'neg';
     const coc = r.cash_on_cash_pct == null ? t('view.brrrr.infinite') : Number(r.cash_on_cash_pct).toFixed(1) + '%';
     el.innerHTML = `
@@ -92,6 +124,7 @@ function renderResult(mount, r) {
                 <div class="card"><div class="label" data-i18n="view.brrrr.card.coc">Cash-on-cash</div>
                     <div class="value ${r.cash_on_cash_pct == null ? 'pos' : ''}">${coc}</div></div>
             </div>
+            ${chart}
             <p class="muted small">${r.all_cash_recovered
                 ? `<span class="pos" data-i18n="view.brrrr.note.recovered">The refinance recovered all your cash — an infinite-return rental you can repeat.</span>`
                 : `<span data-i18n="view.brrrr.note.partial">Some cash stays in the deal; the cash-on-cash return measures what it earns.</span>`}</p>
