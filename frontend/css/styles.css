@@ -3282,6 +3282,33 @@ table.sc-table tfoot td {
     font-family: 'Share Tech Mono', monospace;
 }
 
+/* ---- shared calculator enhancements (charts / export / sensitivity) --- */
+.ce-svg {
+    width: 100%; height: auto; display: block;
+    background: var(--bg-primary); border: 1px solid var(--border);
+    border-radius: 2px; margin-top: 8px;
+}
+.ce-axis { fill: #5a6b78; font-size: 9px; font-family: 'Share Tech Mono', monospace; }
+.ce-toolbar { display: flex; gap: 6px; margin: 8px 0; flex-wrap: wrap; }
+.ce-tool {
+    font-family: 'Share Tech Mono', monospace; font-size: 11px;
+    padding: 4px 10px; cursor: pointer; color: var(--cyan);
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: 2px;
+}
+.ce-tool:hover { border-color: var(--cyan); color: var(--accent); }
+.ce-sens { margin-top: 10px; }
+.ce-sens-table {
+    border-collapse: collapse; font-family: 'Share Tech Mono', monospace;
+    font-size: 11px; width: 100%;
+}
+.ce-sens-table th, .ce-sens-table td {
+    border: 1px solid var(--border); padding: 4px 8px; text-align: right;
+    color: var(--text);
+}
+.ce-sens-table thead th { color: var(--cyan); }
+.ce-sens-table tbody th { color: var(--cyan); text-align: right; }
+.ce-sens-corner { color: var(--text-dim) !important; text-align: left; }
+
 /* ---- color-scheme picker inside Settings ----------------------------- */
 .settings-scheme .scheme-grid {
     display: grid;
