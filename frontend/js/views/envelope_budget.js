@@ -6,6 +6,7 @@
 import { api } from '../api.js';
 import { esc } from '../util.js';
 import { t } from '../i18n.js';
+import * as enh from '../calc_enhance.js';
 
 const STATE = {
     envelopes: [
@@ -92,6 +93,8 @@ async function runCompute(mount) {
     result.innerHTML = `<p class="muted">${esc(t('view.envelope_budget.status.computing'))}</p>`;
     try {
         const r = await api.request('/envelope-budget/compute', { method: 'POST', body: JSON.stringify(STATE) });
+        // Remaining-per-envelope bar chart (red where overspent).
+        const chart = enh.svgBarChart((r.envelopes || []).map(env => ({ label: env.name, value: env.remaining_usd })));
         const overallCls = r.overall_status === 'healthy' ? 'pos'
                          : r.overall_status === 'envelope_empty' ? 'neg' : '';
         const stCls = s => s === 'ok' ? 'pos' : s === 'empty' ? 'neg' : '';
@@ -112,6 +115,7 @@ async function runCompute(mount) {
                 <div><div class="muted small">${esc(t('view.envelope_budget.field.overall'))}</div>
                     <strong class="${overallCls}" style="text-transform:uppercase">${esc(t('view.envelope_budget.status.' + r.overall_status) || r.overall_status)}</strong></div>
             </div>
+            ${chart}
             <h2 style="margin-top:1rem">${esc(t('view.envelope_budget.h2.per_envelope'))}</h2>
             <table class="trades">
                 <thead><tr>
@@ -133,7 +137,17 @@ async function runCompute(mount) {
                     </tr>
                 `).join('')}</tbody>
             </table>
+            <div id="env-tools" class="ce-toolbar"></div>
         `;
+        // Per-envelope + totals export (Copy / CSV). No permalink — multi-envelope table state.
+        enh.mountToolbar(mount.querySelector('#env-tools'), {
+            viewId: 'envelope-budget',
+            link: false,
+            filename: 'envelope-budget.csv',
+            getRows: () => [['envelope', 'remaining_usd', 'usage_pct', 'status', 'next_period_balance_usd'],
+                ...(r.envelopes || []).map(env => [env.name, env.remaining_usd, env.usage_pct, env.status, env.next_period_balance_usd]),
+                ['TOTAL', r.total_remaining_usd, '', r.overall_status, '']],
+        });
     } catch (e) {
         result.innerHTML = `<p class="neg">${esc(String(e))}</p>`;
     }

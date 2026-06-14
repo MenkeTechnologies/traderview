@@ -6,6 +6,7 @@
 import { api } from '../api.js';
 import { esc } from '../util.js';
 import { t } from '../i18n.js';
+import * as enh from '../calc_enhance.js';
 
 const STATE = {
     net_monthly_income_usd: 5000,
@@ -105,6 +106,9 @@ async function runCompute(mount) {
     try {
         const r = await api.request('/fifty-thirty-twenty/compute', { method: 'POST', body: JSON.stringify(STATE) });
         const overallCls = r.overall_status === 'on-track' ? 'pos' : 'neg';
+        // Actual-vs-ideal bars across the three buckets.
+        const buckets = [r.needs, r.wants, r.savings];
+        const chart = enh.svgBarChart(buckets.map(b => ({ label: t('view.fifty_thirty_twenty.bucket.' + b.bucket) || b.bucket, value: b.actual_usd })));
         const bucketRow = b => `
             <tr>
                 <td><strong style="text-transform:uppercase">${esc(t('view.fifty_thirty_twenty.bucket.' + b.bucket) || b.bucket)}</strong></td>
@@ -139,7 +143,17 @@ async function runCompute(mount) {
                     ${bucketRow(r.savings)}
                 </tbody>
             </table>
+            ${chart}
+            <div id="ftt-tools" class="ce-toolbar"></div>
         `;
+        // Per-bucket export (Copy / CSV). No permalink — multi-row classification state.
+        enh.mountToolbar(mount.querySelector('#ftt-tools'), {
+            viewId: 'fifty-thirty-twenty',
+            link: false,
+            filename: 'fifty-thirty-twenty.csv',
+            getRows: () => [['bucket', 'ideal_usd', 'actual_usd', 'delta_usd'],
+                ...buckets.map(b => [b.bucket, b.ideal_usd, b.actual_usd, b.delta_usd])],
+        });
     } catch (e) {
         result.innerHTML = `<p class="neg">${esc(String(e))}</p>`;
     }

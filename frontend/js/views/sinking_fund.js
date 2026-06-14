@@ -6,6 +6,7 @@
 import { api } from '../api.js';
 import { esc } from '../util.js';
 import { t } from '../i18n.js';
+import * as enh from '../calc_enhance.js';
 
 const STATE = {
     goals: [
@@ -88,6 +89,8 @@ async function runCompute(mount) {
     result.innerHTML = `<p class="muted">${esc(t('view.sinking_fund.status.computing'))}</p>`;
     try {
         const r = await api.request('/sinking-fund/compute', { method: 'POST', body: JSON.stringify(STATE) });
+        // Required-monthly-per-goal bar chart from the result.
+        const chart = enh.svgBarChart((r.goals || []).map(g => ({ label: g.name, value: g.required_monthly_usd || 0 })));
         const statusCls = r.status === 'on-track' ? 'pos' : 'neg';
         result.innerHTML = `
             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-top:1rem">
@@ -106,6 +109,7 @@ async function runCompute(mount) {
                 <div><div class="muted small">${esc(t('view.sinking_fund.field.status'))}</div>
                     <strong class="${statusCls}" style="text-transform:uppercase">${esc(t('view.sinking_fund.status.' + r.status.replace('-', '_')) || r.status)}</strong></div>
             </div>
+            ${chart}
             <h2 style="margin-top:1rem">${esc(t('view.sinking_fund.h2.per_goal'))}</h2>
             <table class="trades">
                 <thead><tr>
@@ -129,7 +133,17 @@ async function runCompute(mount) {
                     </tr>
                 `).join('')}</tbody>
             </table>
+            <div id="sf-tools" class="ce-toolbar"></div>
         `;
+        // Per-goal + totals export (Copy / CSV). No permalink — multi-goal table state.
+        enh.mountToolbar(mount.querySelector('#sf-tools'), {
+            viewId: 'sinking-fund',
+            link: false,
+            filename: 'sinking-fund.csv',
+            getRows: () => [['goal', 'remaining_usd', 'required_monthly_usd', 'contribution_usd', 'shortfall_per_month_usd'],
+                ...(r.goals || []).map(g => [g.name, g.remaining_usd, g.required_monthly_usd == null ? '' : g.required_monthly_usd, g.monthly_contribution_usd, g.shortfall_per_month_usd]),
+                ['TOTAL', r.total_remaining_usd, r.total_required_monthly_usd, r.total_monthly_contribution_usd, r.aggregate_shortfall_per_month_usd]],
+        });
     } catch (e) {
         result.innerHTML = `<p class="neg">${esc(String(e))}</p>`;
     }

@@ -6,6 +6,7 @@
 import { api } from '../api.js';
 import { esc } from '../util.js';
 import { t } from '../i18n.js';
+import * as enh from '../calc_enhance.js';
 
 const STATE = {
     monthly_income_usd: 6000,
@@ -97,6 +98,8 @@ async function runCompute(mount) {
     result.innerHTML = `<p class="muted">${esc(t('view.zero_based_budget.status.computing'))}</p>`;
     try {
         const r = await api.request('/zero-based-budget/compute', { method: 'POST', body: JSON.stringify(STATE) });
+        // Planned-per-category bar chart (where every dollar is assigned).
+        const chart = enh.svgBarChart((r.categories || []).map(c => ({ label: c.name, value: c.planned_usd })));
         const leftoverCls = r.is_zero_based ? 'pos' : r.leftover_usd > 0 ? '' : 'neg';
         const statusKey = r.status.replace(/-/g, '_');
         const statusCls = r.status === 'zero-based' ? 'pos' : r.status === 'over-allocated' ? 'neg' : '';
@@ -114,6 +117,7 @@ async function runCompute(mount) {
                 <div><div class="muted small">${esc(t('view.zero_based_budget.field.status'))}</div>
                     <strong class="${statusCls}" style="text-transform:uppercase">${esc(t('view.zero_based_budget.status.' + statusKey) || r.status)}</strong></div>
             </div>
+            ${chart}
             <h2 style="margin-top:1rem">${esc(t('view.zero_based_budget.h2.variance'))}</h2>
             <table class="trades">
                 <thead><tr>
@@ -133,7 +137,17 @@ async function runCompute(mount) {
                     </tr>
                 `).join('')}</tbody>
             </table>
+            <div id="zbb-tools" class="ce-toolbar"></div>
         `;
+        // Per-category + totals export (Copy / CSV). No permalink — multi-category table state.
+        enh.mountToolbar(mount.querySelector('#zbb-tools'), {
+            viewId: 'zero-based-budget',
+            link: false,
+            filename: 'zero-based-budget.csv',
+            getRows: () => [['category', 'planned_usd', 'actual_usd', 'variance_usd'],
+                ...(r.categories || []).map(c => [c.name, c.planned_usd, c.actual_usd, c.variance_usd]),
+                ['TOTAL', r.total_planned_usd, r.total_actual_usd, r.total_variance_usd]],
+        });
     } catch (e) {
         result.innerHTML = `<p class="neg">${esc(String(e))}</p>`;
     }

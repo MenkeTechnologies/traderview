@@ -5,6 +5,7 @@
 import { api } from '../api.js';
 import { esc } from '../util.js';
 import { t } from '../i18n.js';
+import * as enh from '../calc_enhance.js';
 
 export async function renderSavingsRate(mount, _state) {
     mount.innerHTML = `
@@ -65,6 +66,8 @@ async function runCompute(mount) {
     result.innerHTML = `<p class="muted">${esc(t('view.savings_rate.status.computing'))}</p>`;
     try {
         const r = await api.request('/savings-rate/compute', { method: 'POST', body: JSON.stringify(input) });
+        // Years-to-FI vs savings-rate curve (MMM's "shockingly simple math") from the projection.
+        const chart = enh.svgLineChart((r.projection || []).filter(p => isFinite(p.years_to_fi)).map(p => ({ x: p.savings_rate_pct, y: p.years_to_fi })), { xlabel: 'SR %', ylabel: 'years' });
         const benchCls = r.benchmark === 'elite' || r.benchmark === 'excellent' ? 'pos'
                        : r.benchmark === 'poor' ? 'neg' : '';
         const yrsFmt = isFinite(r.years_to_fi) ? r.years_to_fi.toFixed(1) : '∞';
@@ -81,6 +84,8 @@ async function runCompute(mount) {
                 <div><div class="muted small">${esc(t('view.savings_rate.field.fi_number'))}</div>
                     <strong>$${(r.fi_number_usd / 1000).toFixed(0)}K</strong></div>
             </div>
+            ${chart}
+            <div id="sr-tools" class="ce-toolbar"></div>
             <h2 style="margin-top:1rem">${esc(t('view.savings_rate.h2.projection'))}</h2>
             <table class="trades">
                 <thead><tr>
@@ -95,6 +100,14 @@ async function runCompute(mount) {
                 `).join('')}</tbody>
             </table>
         `;
+        // Projection export (Copy / CSV). No permalink — id-based inputs.
+        enh.mountToolbar(mount.querySelector('#sr-tools'), {
+            viewId: 'savings-rate',
+            link: false,
+            filename: 'savings-rate.csv',
+            getRows: () => [['savings_rate_pct', 'years_to_fi'],
+                ...(r.projection || []).map(p => [p.savings_rate_pct, isFinite(p.years_to_fi) ? p.years_to_fi : ''])],
+        });
     } catch (e) {
         result.innerHTML = `<p class="neg">${esc(String(e))}</p>`;
     }
