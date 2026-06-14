@@ -6,6 +6,7 @@
 import { api } from '../api.js';
 import { esc } from '../util.js';
 import { t } from '../i18n.js';
+import * as enh from '../calc_enhance.js';
 
 const STATE = {
     debts: [
@@ -94,6 +95,9 @@ async function runCompute(mount) {
     result.innerHTML = `<p class="muted">${esc(t('view.debt_snowball.status.computing'))}</p>`;
     try {
         const r = await api.request('/debt-snowball/compute', { method: 'POST', body: JSON.stringify(STATE) });
+        // Interest-paid-per-debt bar chart (payoff order), straight from the result.
+        const ordered = (r.debts || []).slice().sort((a, b) => (a.payoff_month || 9999) - (b.payoff_month || 9999));
+        const chart = enh.svgBarChart(ordered.map(d => ({ label: d.name, value: d.total_interest_paid_usd })));
         const yearsMo = `${Math.floor(r.total_months / 12)}y ${r.total_months % 12}m`;
         const statusCls = r.all_paid_off ? 'pos' : 'neg';
         result.innerHTML = `
@@ -112,6 +116,7 @@ async function runCompute(mount) {
                         ? esc(t('view.debt_snowball.status.all_paid'))
                         : esc(t('view.debt_snowball.status.not_paid'))}</strong></div>
             </div>
+            ${chart}
             <h2 style="margin-top:1rem">${esc(t('view.debt_snowball.h2.per_debt'))}</h2>
             <table class="trades">
                 <thead><tr>
@@ -131,7 +136,17 @@ async function runCompute(mount) {
                     </tr>
                 `).join('')}</tbody>
             </table>
+            <div id="ds-tools" class="ce-toolbar"></div>
         `;
+        // Per-debt + totals export (Copy / CSV). No permalink — multi-debt table state.
+        enh.mountToolbar(mount.querySelector('#ds-tools'), {
+            viewId: 'debt-snowball',
+            link: false,
+            filename: 'debt-snowball.csv',
+            getRows: () => [['debt', 'starting_balance_usd', 'apr_pct', 'payoff_month', 'interest_paid_usd'],
+                ...ordered.map(d => [d.name, d.starting_balance_usd, d.apr_pct, d.payoff_month == null ? '' : d.payoff_month, d.total_interest_paid_usd]),
+                ['TOTAL', r.total_principal_usd, '', r.total_months, r.total_interest_paid_usd]],
+        });
     } catch (e) {
         result.innerHTML = `<p class="neg">${esc(String(e))}</p>`;
     }
