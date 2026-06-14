@@ -810,6 +810,7 @@ export const api = {
     calcRoyalty:             (body) => request('/calc/royalty', { method: 'POST', body: JSON.stringify(body) }),
     calcCamReconciliation:   (body) => request('/calc/cam-reconciliation', { method: 'POST', body: JSON.stringify(body) }),
     calcPercentageRent:      (body) => request('/calc/percentage-rent', { method: 'POST', body: JSON.stringify(body) }),
+    calcCpiRentAdjustment:   (body) => request('/calc/cpi-rent-adjustment', { method: 'POST', body: JSON.stringify(body) }),
     calcFixAndFlip:          (body) => request('/calc/fix-and-flip', { method: 'POST', body: JSON.stringify(body) }),
     calcCashConversionCycle: (body) => request('/calc/cash-conversion-cycle', { method: 'POST', body: JSON.stringify(body) }),
     calcProfitFirst:         (body) => request('/calc/profit-first', { method: 'POST', body: JSON.stringify(body) }),

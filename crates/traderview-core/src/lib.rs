@@ -71,6 +71,7 @@ pub mod correlation;
 pub mod correlation_gate;
 pub mod correlation_clusters;
 pub mod cost_basis;
+pub mod cpi_rent_adjustment;
 pub mod credit_card_payoff;
 pub mod crossover;
 pub mod cumulative_delta;

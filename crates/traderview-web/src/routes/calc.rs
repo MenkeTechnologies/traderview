@@ -101,6 +101,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/royalty", post(royalty_route))
         .route("/calc/cam-reconciliation", post(cam_reconciliation_route))
         .route("/calc/percentage-rent", post(percentage_rent_route))
+        .route("/calc/cpi-rent-adjustment", post(cpi_rent_adjustment_route))
         .route("/calc/fix-and-flip", post(fix_and_flip_route))
         .route("/calc/cash-conversion-cycle", post(cash_conversion_cycle_route))
         .route("/calc/profit-first", post(profit_first_route))
@@ -11916,6 +11917,14 @@ async fn percentage_rent_route(
     Json(b): Json<traderview_core::percentage_rent::PercentageRentInput>,
 ) -> Json<traderview_core::percentage_rent::PercentageRentStatement> {
     Json(traderview_core::percentage_rent::generate(&b))
+}
+
+/// CPI rent adjustment: index-ratio escalation bounded by a floor/ceiling collar.
+async fn cpi_rent_adjustment_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::cpi_rent_adjustment::CpiRentInput>,
+) -> Json<traderview_core::cpi_rent_adjustment::CpiRentAdjustment> {
+    Json(traderview_core::cpi_rent_adjustment::generate(&b))
 }
 
 /// Fix-and-flip: the 70% rule max-allowable-offer plus the full deal P&L
