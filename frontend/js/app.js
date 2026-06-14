@@ -841,6 +841,8 @@ import { renderCryptoLiquidation } from './views/crypto_liquidation.js';
 import { renderPerpFunding } from './views/perp_funding.js';
 import { renderSpanMargin } from './views/span_margin.js';
 import { renderIvSurface } from './views/iv_surface.js';
+import { renderMertonDefault } from './views/merton_default.js';
+import { renderCapeValuation } from './views/cape_valuation.js';
 import { renderMortgageRecast } from './views/mortgage_recast.js';
 import { renderTaxEquivalentYield } from './views/tax_equivalent_yield.js';
 import { renderPmiRemoval } from './views/pmi_removal.js';
@@ -3364,6 +3366,8 @@ export async function dispatch() {
             case 'perp-funding': await renderPerpFunding(mount, state); break;
             case 'span-margin': await renderSpanMargin(mount, state); break;
             case 'iv-surface': await renderIvSurface(mount, state); break;
+            case 'merton-default': await renderMertonDefault(mount, state); break;
+            case 'cape-valuation': await renderCapeValuation(mount, state); break;
             case 'mortgage-recast': await renderMortgageRecast(mount, state); break;
             case 'tax-equivalent-yield': await renderTaxEquivalentYield(mount, state); break;
             case 'pmi-removal': await renderPmiRemoval(mount, state); break;
@@ -4801,6 +4805,8 @@ export const viewRenderers = {
     'perp-funding': (m, s) => renderPerpFunding(m, s),
     'span-margin': (m, s) => renderSpanMargin(m, s),
     'iv-surface': (m, s) => renderIvSurface(m, s),
+    'merton-default': (m, s) => renderMertonDefault(m, s),
+    'cape-valuation': (m, s) => renderCapeValuation(m, s),
     'mortgage-recast': (m, s) => renderMortgageRecast(m, s),
     'tax-equivalent-yield': (m, s) => renderTaxEquivalentYield(m, s),
     'pmi-removal': (m, s) => renderPmiRemoval(m, s),
