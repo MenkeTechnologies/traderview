@@ -1822,6 +1822,7 @@ export const api = {
     calcDripSimulator:       (b) => request('/calc/drip-simulator',          { method: 'POST', body: JSON.stringify(b) }),
     calcIbondCalculator:     (b) => request('/calc/ibond-calculator',        { method: 'POST', body: JSON.stringify(b) }),
     calcReverseMortgage:     (b) => request('/calc/reverse-mortgage',        { method: 'POST', body: JSON.stringify(b) }),
+    calcTimeValueMoney:      (b) => request('/calc/time-value-money',        { method: 'POST', body: JSON.stringify(b) }),
     calcRiskOnOff:           (b) => request('/calc/risk-on-off',          { method: 'POST', body: JSON.stringify(b) }),
     calcMarginCall:          (b) => request('/calc/margin-call',          { method: 'POST', body: JSON.stringify(b) }),
     calcMarginRunway:        (b) => request('/calc/margin-runway',        { method: 'POST', body: JSON.stringify(b) }),

@@ -386,6 +386,7 @@ pub mod three_bar_reversal;
 pub mod tilt_detector;
 pub mod tilt_indicator;
 pub mod time_in_force;
+pub mod time_value_money;
 pub mod timeframe_confluence;
 pub mod timesheet;
 pub mod ti_allowance;
