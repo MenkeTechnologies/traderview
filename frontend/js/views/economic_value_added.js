@@ -6,9 +6,13 @@ import { applyUiI18n, t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import { showToast } from '../toast.js';
 import { debounce } from '../util.js';
+import * as enh from '../calc_enhance.js';
 
 const money = (n) => (n == null ? '—' : (n < 0 ? '−$' : '$') + Math.abs(Number(n)).toLocaleString(undefined, { maximumFractionDigits: 0 }));
 const pct = (n) => (n == null ? '—' : Number(n).toLocaleString(undefined, { maximumFractionDigits: 2 }) + '%');
+const VIEW = 'economic-value-added';
+let lastReport = null;
+let lastBody = null;
 
 export async function renderEconomicValueAdded(mount, _appState) {
     const tok = currentViewToken();
@@ -37,37 +41,62 @@ export async function renderEconomicValueAdded(mount, _appState) {
                     <input type="number" step="1000" min="0" name="revenue_usd" value="4000000"></label>
             </form>
         </div>
+        <div id="eva-tools" class="ce-toolbar"></div>
         <div id="eva-result" class="lpv-preview"></div>
         </div>
     `;
     applyUiI18n(mount);
 
     const form = mount.querySelector('#eva-form');
-    const generate = async () => {
+    enh.prefillForm(form, enh.readHashInputs());
+    const readBody = () => {
         const fd = new FormData(form);
-        const body = {
+        return {
             ebit_usd: Number(fd.get('ebit_usd')) || 0,
             tax_rate_pct: Number(fd.get('tax_rate_pct')) || 0,
             invested_capital_usd: Number(fd.get('invested_capital_usd')) || 0,
             wacc_pct: Number(fd.get('wacc_pct')) || 0,
             revenue_usd: Number(fd.get('revenue_usd')) || 0,
         };
+    };
+    const generate = async () => {
+        const body = readBody();
         try {
             const r = await api.calcEconomicValueAdded(body);
             if (!viewIsCurrent(tok)) return;
+            lastReport = r; lastBody = body;
             renderResult(mount, r);
         } catch (err) {
             showToast(err.message || t('view.eva.toast.error'), { level: 'error' });
         }
     };
+    enh.mountToolbar(mount.querySelector('#eva-tools'), { viewId: VIEW, getInputs: () => lastBody || readBody(), getRows: () => reportRows(lastReport), filename: 'economic-value-added.csv' });
     form.addEventListener('input', debounce(generate, 250));
     form.addEventListener('submit', (e) => { e.preventDefault(); generate(); });
     generate();
 }
 
+function reportRows(r) {
+    if (!r) return [];
+    return [
+        ['metric', 'value'],
+        ['eva_usd', r.eva_usd],
+        ['nopat_usd', r.nopat_usd],
+        ['capital_charge_usd', r.capital_charge_usd],
+        ['roic_pct', r.roic_pct],
+        ['eva_spread_pct', r.eva_spread_pct],
+    ];
+}
+
 function renderResult(mount, r) {
     const el = mount.querySelector('#eva-result');
     const cls = r.creates_value ? 'pos' : 'neg';
+    // EVA decomposition: NOPAT minus capital charge equals economic value added.
+    const chart = enh.svgBarChart([
+        { label: 'NOPAT', value: r.nopat_usd },
+        { label: 'Cap charge', value: -r.capital_charge_usd },
+        { label: 'EVA', value: r.eva_usd },
+    ]);
     const verdictKey = r.creates_value ? 'view.eva.verdict.creates' : 'view.eva.verdict.destroys';
     el.innerHTML = `
         <div class="chart-panel">
@@ -80,6 +109,7 @@ function renderResult(mount, r) {
                 <div class="card"><div class="label" data-i18n="view.eva.card.spread">EVA spread</div>
                     <div class="value">${pct(r.eva_spread_pct)}</div></div>
             </div>
+            ${chart}
             <table class="data-table">
                 <tbody>
                     <tr><td data-i18n="view.eva.row.nopat">NOPAT (EBIT after tax)</td><td>${money(r.nopat_usd)}</td></tr>

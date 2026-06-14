@@ -7,8 +7,12 @@ import { applyUiI18n, t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import { showToast } from '../toast.js';
 import { debounce } from '../util.js';
+import * as enh from '../calc_enhance.js';
 
 const money = (n) => (n == null ? '—' : '$' + Number(n).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+const VIEW = 'graham-number';
+let lastReport = null;
+let lastBody = null;
 const ratio = (n) => (n == null ? '—' : Number(n).toLocaleString(undefined, { maximumFractionDigits: 3 }));
 const pctv = (n) => (n == null ? '—' : (Number(n) * 100).toLocaleString(undefined, { maximumFractionDigits: 1 }) + '%');
 
@@ -43,6 +47,9 @@ export async function renderGrahamNumber(mount, _appState) {
                         <input type="number" step="1" min="0" name="shares_outstanding" value="0"></label>
                 </fieldset>
             </form>
+            <div id="graham-tools" class="ce-toolbar"></div>
+            <button type="button" id="graham-sens-btn" class="ce-tool" data-i18n="calc.enh.sens.run">▦ Sensitivity</button>
+            <div id="graham-sens" class="ce-sens"></div>
         </div>
         <div id="graham-result" class="lpv-preview"></div>
         </div>
@@ -50,9 +57,10 @@ export async function renderGrahamNumber(mount, _appState) {
     applyUiI18n(mount);
 
     const form = mount.querySelector('#graham-form');
-    const generate = async () => {
+    enh.prefillForm(form, enh.readHashInputs());
+    const readBody = () => {
         const fd = new FormData(form);
-        const body = {
+        return {
             eps: Number(fd.get('eps')) || 0,
             bvps: Number(fd.get('bvps')) || 0,
             price: Number(fd.get('price')) || 0,
@@ -60,22 +68,50 @@ export async function renderGrahamNumber(mount, _appState) {
             total_liabilities_usd: Number(fd.get('total_liabilities_usd')) || 0,
             shares_outstanding: Number(fd.get('shares_outstanding')) || 0,
         };
+    };
+    const generate = async () => {
+        const body = readBody();
         try {
             const r = await api.calcGrahamNumber(body);
             if (!viewIsCurrent(tok)) return;
-            renderResult(mount, r);
+            lastReport = r; lastBody = body;
+            renderResult(mount, r, body, tok);
         } catch (err) {
             showToast(err.message || t('view.graham.toast.error'), { level: 'error' });
         }
     };
+    enh.mountToolbar(mount.querySelector('#graham-tools'), { viewId: VIEW, getInputs: () => lastBody || readBody(), getRows: () => reportRows(lastReport), filename: 'graham-number.csv' });
+    mount.querySelector('#graham-sens-btn').addEventListener('click', () => runSens(mount, readBody(), tok));
     form.addEventListener('input', debounce(generate, 250));
     form.addEventListener('submit', (e) => { e.preventDefault(); generate(); });
     generate();
 }
 
-function renderResult(mount, r) {
+function reportRows(r) {
+    if (!r) return [];
+    return [
+        ['metric', 'value'],
+        ['graham_number', r.graham_number],
+        ['margin_of_safety_pct', r.margin_of_safety_pct],
+        ['pe_ratio', r.pe_ratio],
+        ['pb_ratio', r.pb_ratio],
+        ['pe_times_pb', r.pe_times_pb],
+        ['ncav_per_share', r.ncav_per_share == null ? '' : r.ncav_per_share],
+    ];
+}
+
+async function renderResult(mount, r, body, tok) {
     const el = mount.querySelector('#graham-result');
     const mosClass = r.margin_of_safety_pct == null ? '' : (r.margin_of_safety_pct >= 0 ? 'pos' : 'neg');
+    // Line chart: Graham number as EPS sweeps 0 -> 2x (the sqrt(22.5*EPS*BVPS) curve).
+    const base = body.eps || 5;
+    const xs = enh.linspace(0, base * 2, 13);
+    const pts = await Promise.all(xs.map(async (e) => {
+        const rr = await api.calcGrahamNumber({ ...body, eps: e });
+        return { x: e, y: rr ? rr.graham_number : NaN };
+    }));
+    if (!viewIsCurrent(tok)) return;
+    const chart = enh.svgLineChart(pts, { xlabel: 'EPS $', ylabel: 'Graham # $' });
     const peClass = r.passes_graham_pe_pb ? 'pos' : 'neg';
     const netNetRows = r.ncav_per_share == null ? '' : `
         <tr><td data-i18n="view.graham.row.ncav">NCAV / share</td><td>${money(r.ncav_per_share)}</td></tr>
@@ -92,6 +128,7 @@ function renderResult(mount, r) {
                 <div class="card ${peClass}"><div class="label" data-i18n="view.graham.card.pepb">P/E × P/B</div>
                     <div class="value ${peClass}">${ratio(r.pe_times_pb)}</div></div>
             </div>
+            ${chart}
             <table class="data-table">
                 <tbody>
                     <tr><td data-i18n="view.graham.row.pe">P/E</td><td>${ratio(r.pe_ratio)}</td></tr>
@@ -103,4 +140,15 @@ function renderResult(mount, r) {
         </div>
     `;
     applyUiI18n(el);
+}
+
+async function runSens(mount, base, tok) {
+    const panel = mount.querySelector('#graham-sens');
+    panel.innerHTML = `<p class="muted small" data-i18n="calc.enh.sens.running">Computing…</p>`; applyUiI18n(panel);
+    // x: EPS 0 -> 2x; y: BVPS 0 -> 2x. Output: Graham number.
+    const xVals = enh.linspace(0, (base.eps || 5) * 2, 5);
+    const yVals = enh.linspace(0, (base.bvps || 20) * 2, 5);
+    const { cells } = await enh.runSensitivity({ base, xKey: 'eps', yKey: 'bvps', xVals, yVals, compute: (b) => api.calcGrahamNumber(b), pick: (r) => (r ? r.graham_number : null) });
+    if (!viewIsCurrent(tok)) return;
+    panel.innerHTML = enh.renderSensitivityTable({ xVals, yVals, cells, fmt: (v) => (v == null ? '—' : '$' + v.toFixed(0)), xfmt: (v) => '$' + v.toFixed(1), yfmt: (v) => '$' + v.toFixed(0), xName: t('view.graham.label.eps') || 'EPS', yName: t('view.graham.label.bvps') || 'BVPS' });
 }
