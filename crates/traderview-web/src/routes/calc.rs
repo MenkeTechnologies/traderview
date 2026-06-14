@@ -37,6 +37,10 @@ pub fn router() -> Router<AppState> {
         .route("/calc/probability-of-profit", post(probability_of_profit_route))
         .route("/calc/straddle", post(straddle_route))
         .route("/calc/strangle", post(strangle_route))
+        .route("/calc/collar", post(collar_route))
+        .route("/calc/iron-butterfly", post(iron_butterfly_route))
+        .route("/calc/butterfly-spread", post(butterfly_spread_route))
+        .route("/calc/box-spread", post(box_spread_route))
         .route("/calc/risk-on-off", post(risk_on_off_route))
         // ── Margin / buying power ─────────────────────────────────────
         .route("/calc/margin-call", post(margin_call_route))
@@ -780,6 +784,63 @@ async fn strangle_route(
     Json(b): Json<traderview_core::strangle::Strangle>,
 ) -> Json<Option<traderview_core::strangle::StrangleReport>> {
     Json(traderview_core::strangle::analyze(&b))
+}
+
+/// Collar: max profit/loss, upside cap, downside floor, breakeven.
+async fn collar_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::collar::Collar>,
+) -> Json<Option<traderview_core::collar::CollarReport>> {
+    Json(traderview_core::collar::analyze(&b))
+}
+
+/// Iron butterfly: max profit/loss, breakevens, wing width.
+async fn iron_butterfly_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::iron_butterfly::IronButterfly>,
+) -> Json<Option<traderview_core::iron_butterfly::IronButterflyReport>> {
+    Json(traderview_core::iron_butterfly::analyze(&b))
+}
+
+/// Butterfly spread: max profit/loss, breakevens, wing width, debit ratio.
+async fn butterfly_spread_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::butterfly_spread::Butterfly>,
+) -> Json<Option<traderview_core::butterfly_spread::ButterflyReport>> {
+    Json(traderview_core::butterfly_spread::analyze(&b))
+}
+
+#[derive(serde::Deserialize)]
+struct BoxSpreadBody {
+    strike_low: f64,
+    strike_high: f64,
+    call_low_price: f64,
+    call_high_price: f64,
+    put_low_price: f64,
+    put_high_price: f64,
+    time_to_expiry_years: f64,
+    #[serde(default)]
+    market_risk_free_rate: f64,
+    #[serde(default)]
+    arbitrage_threshold_bps: f64,
+}
+
+/// Box spread: synthetic-loan implied rate and arbitrage check.
+async fn box_spread_route(
+    _u: AuthUser,
+    Json(b): Json<BoxSpreadBody>,
+) -> Json<Option<traderview_core::box_spread::BoxSpreadReport>> {
+    Json(traderview_core::box_spread::compute(
+        b.strike_low,
+        b.strike_high,
+        b.call_low_price,
+        b.call_high_price,
+        b.put_low_price,
+        b.put_high_price,
+        b.time_to_expiry_years,
+        b.market_risk_free_rate,
+        b.arbitrage_threshold_bps,
+    ))
 }
 
 async fn risk_on_off_route(
