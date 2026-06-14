@@ -798,6 +798,7 @@ export const api = {
     calcSellerDisclosure:    (body) => request('/calc/seller-disclosure', { method: 'POST', body: JSON.stringify(body) }),
     calcEarnestMoneyReceipt: (body) => request('/calc/earnest-money-receipt', { method: 'POST', body: JSON.stringify(body) }),
     calcStockSubscription:   (body) => request('/calc/stock-subscription', { method: 'POST', body: JSON.stringify(body) }),
+    calcConvertibleNote:     (body) => request('/calc/convertible-note', { method: 'POST', body: JSON.stringify(body) }),
     calcFixAndFlip:          (body) => request('/calc/fix-and-flip', { method: 'POST', body: JSON.stringify(body) }),
     calcCashConversionCycle: (body) => request('/calc/cash-conversion-cycle', { method: 'POST', body: JSON.stringify(body) }),
     calcProfitFirst:         (body) => request('/calc/profit-first', { method: 'POST', body: JSON.stringify(body) }),

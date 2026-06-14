@@ -62,6 +62,7 @@ pub mod commission_agreement;
 pub mod commission_optimizer;
 pub mod concentration;
 pub mod contractor_agreement;
+pub mod convertible_note;
 pub mod coppock;
 pub mod correlation;
 pub mod correlation_gate;

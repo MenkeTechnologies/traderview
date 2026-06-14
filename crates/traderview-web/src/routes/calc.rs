@@ -89,6 +89,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/seller-disclosure", post(seller_disclosure_route))
         .route("/calc/earnest-money-receipt", post(earnest_money_receipt_route))
         .route("/calc/stock-subscription", post(stock_subscription_route))
+        .route("/calc/convertible-note", post(convertible_note_route))
         .route("/calc/fix-and-flip", post(fix_and_flip_route))
         .route("/calc/cash-conversion-cycle", post(cash_conversion_cycle_route))
         .route("/calc/profit-first", post(profit_first_route))
@@ -11808,6 +11809,14 @@ async fn stock_subscription_route(
     Json(b): Json<traderview_core::stock_subscription::StockSubscriptionInput>,
 ) -> Json<traderview_core::stock_subscription::StockSubscription> {
     Json(traderview_core::stock_subscription::generate(&b))
+}
+
+/// Convertible note: accrued interest + discount/cap conversion price + shares.
+async fn convertible_note_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::convertible_note::ConvertibleNoteInput>,
+) -> Json<traderview_core::convertible_note::ConvertibleNote> {
+    Json(traderview_core::convertible_note::generate(&b))
 }
 
 /// Fix-and-flip: the 70% rule max-allowable-offer plus the full deal P&L
