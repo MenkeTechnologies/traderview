@@ -417,6 +417,7 @@ pub mod wyckoff;
 pub mod years_to_fi;
 pub mod yield_curve;
 pub mod yield_on_cost;
+pub mod yield_to_call;
 
 // 10 canonical indicators added in one batch — Hull MA / TEMA / DEMA /
 // KAMA (moving averages), Stochastic RSI / Ultimate Oscillator / TSI /

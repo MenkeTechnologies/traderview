@@ -34,6 +34,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/efficient-frontier", post(efficient_frontier_route))
         .route("/calc/valuation-multiples", post(valuation_multiples_route))
         .route("/calc/cap-rate", post(cap_rate_route))
+        .route("/calc/yield-to-call", post(yield_to_call_route))
         .route("/calc/dividend-discount-model", post(dividend_discount_model_route))
         .route("/calc/probability-of-profit", post(probability_of_profit_route))
         .route("/calc/straddle", post(straddle_route))
@@ -980,6 +981,13 @@ async fn liquidity_ratios_route(
     Json(b): Json<traderview_core::liquidity_ratios::LiquidityInput>,
 ) -> Json<traderview_core::liquidity_ratios::LiquidityReport> {
     Json(traderview_core::liquidity_ratios::generate(&b))
+}
+
+/// Yield to call: YTM / YTC / yield-to-worst for a callable bond.
+async fn yield_to_call_route(
+    Json(b): Json<traderview_core::yield_to_call::YieldToCallInput>,
+) -> Json<traderview_core::yield_to_call::YieldToCallReport> {
+    Json(traderview_core::yield_to_call::generate(&b))
 }
 
 /// Cap rate: rental-property underwriting (cap rate, cash-on-cash, DSCR, 1% rule, GRM, P&L).

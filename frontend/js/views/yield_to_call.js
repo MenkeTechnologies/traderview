@@ -1,15 +1,26 @@
-// Yield to Call (YTC) — for callable bonds, the issuer can redeem at
-// a stated price (often par or par + small premium) at specified dates.
-// YTC = the IRR you'd earn if held to first call date and called at
-// that price. For premium bonds (priced above par), YTC < YTM because
-// you'd lose the premium upfront. For discount bonds, YTC > YTM because
-// you'd pick up the discount sooner.
-// Investors should evaluate using the LOWER of YTM and YTC ("yield to
-// worst") to avoid being surprised by an early call.
+// Yield to Call (YTC) — for callable bonds, the issuer can redeem at a stated
+// price on stated dates. YTC is the IRR if held to first call; YTM if held to
+// maturity; yield-to-worst is the lower of the two. Computation runs server-side
+// via /calc/yield-to-call (traderview-core::yield_to_call) — a faithful port of
+// the former client-side bisection solver, Python-pinned and unit-tested.
+// Class-based styling (no inline styles) for release-WebKit correctness.
 
+import { api } from '../api.js';
+import { applyUiI18n } from '../i18n.js';
+import { currentViewToken, viewIsCurrent } from '../app.js';
+import { showToast } from '../toast.js';
+import { debounce } from '../util.js';
 import { esc } from '../util.js';
+import * as enh from '../calc_enhance.js';
+
+const fmt = (n, d) => (n == null || !Number.isFinite(Number(n)) ? '—' : Number(n).toLocaleString(undefined, { minimumFractionDigits: d, maximumFractionDigits: d }));
+const VIEW = 'yield-to-call';
+let lastReport = null;
+let lastBody = null;
 
 export async function renderYieldToCall(mount, _state) {
+    const tok = currentViewToken();
+    if (!viewIsCurrent(tok)) return;
     mount.innerHTML = `
         <h1 class="view-title"><span data-i18n="view.yield_to_call.title">// YIELD TO CALL · YTC vs YTM vs YTW</span></h1>
         <p class="muted small" data-i18n-html="view.yield_to_call.intro">
@@ -21,127 +32,117 @@ export async function renderYieldToCall(mount, _state) {
             issuer will only call when it benefits them.
         </p>
         <div class="chart-panel">
-            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px;margin-bottom:12px">
-                <label>
-                    <span class="muted small">Current price (% of par)</span>
-                    <input type="number" id="ytc-price" step="0.1" min="20" max="200" value="106.5" style="width:100%">
-                </label>
-                <label>
-                    <span class="muted small">Coupon rate %/yr</span>
-                    <input type="number" id="ytc-coupon" step="0.125" min="0" max="20" value="5.5" style="width:100%">
-                </label>
-                <label>
-                    <span class="muted small">Years to maturity</span>
-                    <input type="number" id="ytc-mat" step="0.25" min="0.5" max="40" value="10" style="width:100%">
-                </label>
-                <label>
-                    <span class="muted small">Years to first call</span>
-                    <input type="number" id="ytc-call" step="0.25" min="0.5" max="40" value="3" style="width:100%">
-                </label>
-                <label>
-                    <span class="muted small">Call price (% of par)</span>
-                    <input type="number" id="ytc-callprice" step="0.5" min="80" max="120" value="100" style="width:100%">
-                </label>
-                <label>
-                    <span class="muted small">Payments / yr</span>
-                    <select id="ytc-freq" style="width:100%">
+            <div class="re-grid">
+                <label><span class="muted small">Current price (% of par)</span>
+                    <input type="number" id="ytc-price" step="0.1" min="20" max="200" value="106.5"></label>
+                <label><span class="muted small">Coupon rate %/yr</span>
+                    <input type="number" id="ytc-coupon" step="0.125" min="0" max="20" value="5.5"></label>
+                <label><span class="muted small">Years to maturity</span>
+                    <input type="number" id="ytc-mat" step="0.25" min="0.5" max="40" value="10"></label>
+                <label><span class="muted small">Years to first call</span>
+                    <input type="number" id="ytc-call" step="0.25" min="0.5" max="40" value="3"></label>
+                <label><span class="muted small">Call price (% of par)</span>
+                    <input type="number" id="ytc-callprice" step="0.5" min="80" max="120" value="100"></label>
+                <label><span class="muted small">Payments / yr</span>
+                    <select id="ytc-freq">
                         <option value="1">Annual (1)</option>
                         <option value="2" selected>Semi-annual (2)</option>
                         <option value="4">Quarterly (4)</option>
-                    </select>
-                </label>
+                    </select></label>
             </div>
             <button class="btn btn-sm primary" id="ytc-run">⚡ Compute</button>
-            <div id="ytc-result" style="margin-top:12px"></div>
+            <div id="ytc-tools" class="ce-toolbar"></div>
+            <div id="ytc-result" class="re-result"></div>
         </div>
     `;
-    mount.querySelectorAll('#ytc-price, #ytc-coupon, #ytc-mat, #ytc-call, #ytc-callprice, #ytc-freq').forEach(el => {
-        el.addEventListener('input', () => compute(mount));
+    applyUiI18n(mount);
+
+    const num = (id) => parseFloat(mount.querySelector(id).value) || 0;
+    const readBody = () => ({
+        price_pct: num('#ytc-price'),
+        coupon_rate_pct: num('#ytc-coupon'),
+        years_to_maturity: num('#ytc-mat'),
+        years_to_call: num('#ytc-call'),
+        call_price_pct: num('#ytc-callprice'),
+        coupons_per_year: parseInt(mount.querySelector('#ytc-freq').value, 10) || 2,
     });
-    mount.querySelector('#ytc-run').addEventListener('click', () => compute(mount));
-    compute(mount);
+    const compute = async () => {
+        const body = readBody();
+        try {
+            const r = await api.calcYieldToCall(body);
+            if (!viewIsCurrent(tok)) return;
+            lastReport = r; lastBody = body;
+            renderResult(mount, r, body);
+        } catch (err) {
+            showToast(err.message || 'Could not compute the yields.', { level: 'error' });
+        }
+    };
+    enh.mountToolbar(mount.querySelector('#ytc-tools'), {
+        viewId: VIEW, link: false, filename: 'yield-to-call.csv',
+        getRows: () => reportRows(lastReport),
+    });
+    mount.querySelectorAll('#ytc-price, #ytc-coupon, #ytc-mat, #ytc-call, #ytc-callprice, #ytc-freq').forEach(el => {
+        el.addEventListener('input', debounce(compute, 250));
+    });
+    mount.querySelector('#ytc-run').addEventListener('click', compute);
+    compute();
 }
 
-function compute(mount) {
-    const pricePct = parseFloat(mount.querySelector('#ytc-price').value) || 0;
-    const couponRate = parseFloat(mount.querySelector('#ytc-coupon').value) / 100;
-    const matYears = parseFloat(mount.querySelector('#ytc-mat').value) || 0;
-    const callYears = parseFloat(mount.querySelector('#ytc-call').value) || 0;
-    const callPricePct = parseFloat(mount.querySelector('#ytc-callprice').value) || 0;
-    const freq = parseInt(mount.querySelector('#ytc-freq').value, 10) || 2;
+function reportRows(r) {
+    if (!r || !r.valid) return [];
+    return [
+        ['metric', 'value'],
+        ['ytm_pct', r.ytm_pct == null ? '' : r.ytm_pct],
+        ['ytc_pct', r.ytc_pct == null ? '' : r.ytc_pct],
+        ['ytw_pct', r.ytw_pct == null ? '' : r.ytw_pct],
+        ['current_yield_pct', r.current_yield_pct],
+        ['premium_to_par_pct', r.premium_to_par_pct],
+        ['verdict', r.verdict],
+    ];
+}
+
+function renderResult(mount, r, body) {
     const result = mount.querySelector('#ytc-result');
-
-    const par = 1000;
-    const price = par * pricePct / 100;
-    const callPrice = par * callPricePct / 100;
-    const cpn = par * couponRate / freq;
-
-    const ytm = solveYield(price, cpn, par, matYears * freq, freq);
-    const ytc = solveYield(price, cpn, callPrice, callYears * freq, freq);
-    const ytw = Math.min(ytm, ytc);
-    const verdict = ytc < ytm ? 'YTC' : ytc > ytm ? 'YTM' : 'TIE';
-    const verdictCls = verdict === 'YTC' ? 'neg' : 'pos';
-
-    const isPremium = pricePct > 100;
-    const callRisk = isPremium ? '<strong>High call risk</strong> — bond trades above par. Issuer benefits by refinancing at lower rates and paying par. Plan on YTW.' : '<strong>Low call risk</strong> — bond trades at/below par. Issuer has no economic reason to call. YTM likely realized.';
-
+    if (!r.valid) {
+        result.innerHTML = `<p class="muted">Enter a positive price.</p>`;
+        return;
+    }
+    const verdictCls = r.verdict === 'YTC' ? 'neg' : 'pos';
+    const isPremium = r.is_premium;
+    const callRisk = isPremium
+        ? '<strong>High call risk</strong> — bond trades above par. Issuer benefits by refinancing at lower rates and paying par. Plan on YTW.'
+        : '<strong>Low call risk</strong> — bond trades at/below par. Issuer has no economic reason to call. YTM likely realized.';
+    // The three yields side by side — the decision is the lowest (yield-to-worst).
+    const chart = enh.svgBarChart([
+        { label: 'YTM', value: r.ytm_pct || 0 },
+        { label: 'YTC', value: r.ytc_pct || 0 },
+        { label: 'YTW', value: r.ytw_pct || 0 },
+    ]);
+    // Cash flow trace (assumes called) — a schedule of the entered terms.
+    const freq = body.coupons_per_year;
+    const cpn = 1000 * (body.coupon_rate_pct / 100) / freq;
+    const callPrice = 1000 * body.call_price_pct / 100;
+    const periods = Math.ceil(body.years_to_call * freq);
+    let rows = '';
+    for (let i = 1; i <= periods; i++) {
+        const yrs = i / freq;
+        const principal = i === periods ? callPrice : 0;
+        rows += `<tr><td>${i}</td><td class="muted">${fmt(yrs, 2)}</td><td>$${fmt(cpn, 2)}</td><td>${principal > 0 ? '<strong>$' + fmt(principal, 2) + '</strong>' : '—'}</td><td>$${fmt(cpn + principal, 2)}</td></tr>`;
+    }
     result.innerHTML = `
-        <div class="cards" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px;margin-bottom:12px">
-            <div class="card"><div class="label">Yield to Maturity</div><div class="value">${fmt(ytm * 100, 3)}%</div><div class="muted small">If held ${fmt(matYears, 1)} yr</div></div>
-            <div class="card"><div class="label">Yield to Call</div><div class="value">${fmt(ytc * 100, 3)}%</div><div class="muted small">If called yr ${fmt(callYears, 1)}</div></div>
-            <div class="card"><div class="label">Yield to Worst</div><div class="value ${verdictCls}"><strong>${fmt(ytw * 100, 3)}%</strong></div><div class="muted small">min(YTM, YTC) = ${esc(verdict)}</div></div>
-            <div class="card"><div class="label">Current yield</div><div class="value">${fmt((cpn * freq) / price * 100, 3)}%</div><div class="muted small">Coupon / price (ignores principal)</div></div>
-            <div class="card"><div class="label">Premium / discount</div><div class="value ${isPremium ? 'neg' : 'pos'}">${isPremium ? '+' : ''}${fmt(pricePct - 100, 2)}</div><div class="muted small">vs par</div></div>
+        <div class="cards">
+            <div class="card"><div class="label">Yield to Maturity</div><div class="value">${fmt(r.ytm_pct, 3)}%</div><div class="muted small">If held ${fmt(body.years_to_maturity, 1)} yr</div></div>
+            <div class="card"><div class="label">Yield to Call</div><div class="value">${fmt(r.ytc_pct, 3)}%</div><div class="muted small">If called yr ${fmt(body.years_to_call, 1)}</div></div>
+            <div class="card"><div class="label">Yield to Worst</div><div class="value ${verdictCls}"><strong>${fmt(r.ytw_pct, 3)}%</strong></div><div class="muted small">min(YTM, YTC) = ${esc(r.verdict)}</div></div>
+            <div class="card"><div class="label">Current yield</div><div class="value">${fmt(r.current_yield_pct, 3)}%</div><div class="muted small">Coupon / price (ignores principal)</div></div>
+            <div class="card"><div class="label">Premium / discount</div><div class="value ${isPremium ? 'neg' : 'pos'}">${isPremium ? '+' : ''}${fmt(r.premium_to_par_pct, 2)}</div><div class="muted small">vs par</div></div>
         </div>
+        ${chart}
         <p class="muted small">${callRisk}</p>
         <h3 class="section-title">Cash flow trace (assumes called)</h3>
         <table class="trades" data-table-key="ytc-cf">
             <thead><tr><th>Period</th><th>Years</th><th>Coupon</th><th>Principal</th><th>Total</th></tr></thead>
-            <tbody>${(() => {
-                const periods = Math.ceil(callYears * freq);
-                const out = [];
-                for (let i = 1; i <= periods; i++) {
-                    const yrs = i / freq;
-                    const principal = i === periods ? callPrice : 0;
-                    out.push(`<tr>
-                        <td>${i}</td>
-                        <td class="muted">${fmt(yrs, 2)}</td>
-                        <td>$${fmt(cpn, 2)}</td>
-                        <td>${principal > 0 ? '<strong>$' + fmt(principal, 2) + '</strong>' : '—'}</td>
-                        <td>$${fmt(cpn + principal, 2)}</td>
-                    </tr>`);
-                }
-                return out.join('');
-            })()}</tbody>
+            <tbody>${rows}</tbody>
         </table>
     `;
-}
-
-function solveYield(price, cpn, redemption, n, freq) {
-    // Bisection on YTM (annualized).
-    const F = (y) => {
-        const r = y / freq;
-        if (Math.abs(r) < 1e-12) return cpn * n + redemption - price;
-        const f = Math.pow(1 + r, n);
-        return cpn * (1 - 1/f) / r + redemption / f - price;
-    };
-    let lo = -0.20, hi = 0.50;
-    let fl = F(lo), fh = F(hi);
-    if (fl * fh > 0) {
-        for (let i = 0; i < 20 && fl * fh > 0; i++) { hi *= 1.5; fh = F(hi); }
-        if (fl * fh > 0) return null;
-    }
-    for (let i = 0; i < 200; i++) {
-        const mid = (lo + hi) / 2;
-        const fm = F(mid);
-        if (Math.abs(fm) < 1e-9) return mid;
-        if (fl * fm < 0) { hi = mid; fh = fm; }
-        else            { lo = mid; fl = fm; }
-    }
-    return (lo + hi) / 2;
-}
-
-function fmt(n, d) {
-    if (n == null || !Number.isFinite(Number(n))) return '—';
-    return Number(n).toLocaleString(undefined, { minimumFractionDigits: d, maximumFractionDigits: d });
 }
