@@ -6,9 +6,13 @@ import { applyUiI18n, t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import { showToast } from '../toast.js';
 import { debounce } from '../util.js';
+import * as enh from '../calc_enhance.js';
 
 const money = (n) => '$' + Number(n).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 });
 const num = (n) => Number(n).toLocaleString(undefined, { maximumFractionDigits: 3 });
+const VIEW = 'altman-z-score';
+let lastReport = null;
+let lastBody = null;
 
 const ZONE = {
     safe: { key: 'view.altman.zone.safe', cls: 'pos' },
@@ -48,6 +52,7 @@ export async function renderAltmanZScore(mount, _appState) {
                 <label><span data-i18n="view.altman.label.ta">Total assets</span>
                     <input type="number" step="0.01" name="total_assets_usd" value="1000" required></label>
             </form>
+            <div id="altman-tools" class="ce-toolbar"></div>
         </div>
         <div id="altman-result" class="lpv-preview"></div>
         </div>
@@ -55,9 +60,10 @@ export async function renderAltmanZScore(mount, _appState) {
     applyUiI18n(mount);
 
     const form = mount.querySelector('#altman-form');
-    const generate = async () => {
+    enh.prefillForm(form, enh.readHashInputs());
+    const readBody = () => {
         const fd = new FormData(form);
-        const body = {
+        return {
             current_assets_usd: Number(fd.get('current_assets_usd')) || 0,
             current_liabilities_usd: Number(fd.get('current_liabilities_usd')) || 0,
             retained_earnings_usd: Number(fd.get('retained_earnings_usd')) || 0,
@@ -67,22 +73,49 @@ export async function renderAltmanZScore(mount, _appState) {
             sales_usd: Number(fd.get('sales_usd')) || 0,
             total_assets_usd: Number(fd.get('total_assets_usd')) || 0,
         };
+    };
+    const generate = async () => {
+        const body = readBody();
         try {
             const r = await api.calcAltmanZScore(body);
             if (!viewIsCurrent(tok)) return;
+            lastReport = r; lastBody = body;
             renderResult(mount, r);
         } catch (err) {
             showToast(err.message || t('view.altman.toast.error'), { level: 'error' });
         }
     };
+    enh.mountToolbar(mount.querySelector('#altman-tools'), { viewId: VIEW, getInputs: () => lastBody || readBody(), getRows: () => reportRows(lastReport), filename: 'altman-z-score.csv' });
     form.addEventListener('input', debounce(generate, 250));
     form.addEventListener('submit', (e) => { e.preventDefault(); generate(); });
     generate();
 }
 
+function reportRows(r) {
+    if (!r) return [];
+    return [
+        ['metric', 'value'],
+        ['z_score', r.z_score],
+        ['zone', r.zone],
+        ['x1_working_capital', r.x1_working_capital],
+        ['x2_retained_earnings', r.x2_retained_earnings],
+        ['x3_ebit', r.x3_ebit],
+        ['x4_equity_to_liabilities', r.x4_equity_to_liabilities],
+        ['x5_sales', r.x5_sales],
+    ];
+}
+
 function renderResult(mount, r) {
     const el = mount.querySelector('#altman-result');
     const z = ZONE[r.zone] || ZONE.distress;
+    // The five ratios that drive the Z-score.
+    const chart = enh.svgBarChart([
+        { label: 'X1 WC', value: r.x1_working_capital },
+        { label: 'X2 RE', value: r.x2_retained_earnings },
+        { label: 'X3 EBIT', value: r.x3_ebit },
+        { label: 'X4 Eq/L', value: r.x4_equity_to_liabilities },
+        { label: 'X5 Sales', value: r.x5_sales },
+    ]);
     el.innerHTML = `
         <div class="chart-panel">
             <h2 data-i18n="view.altman.h2.result">The score</h2>
@@ -94,6 +127,7 @@ function renderResult(mount, r) {
                 <div class="card"><div class="label" data-i18n="view.altman.card.wc">Working capital</div>
                     <div class="value">${money(r.working_capital_usd)}</div></div>
             </div>
+            ${chart}
             <table class="data-table">
                 <thead><tr><th data-i18n="view.altman.col.ratio">Ratio</th><th data-i18n="view.altman.col.value">Value</th></tr></thead>
                 <tbody>

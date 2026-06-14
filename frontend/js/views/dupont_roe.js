@@ -6,9 +6,13 @@ import { applyUiI18n, t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import { showToast } from '../toast.js';
 import { debounce } from '../util.js';
+import * as enh from '../calc_enhance.js';
 
 const num = (n) => (n == null ? '—' : Number(n).toLocaleString(undefined, { maximumFractionDigits: 4 }));
 const pct = (n) => (n == null ? '—' : Number(n).toLocaleString(undefined, { maximumFractionDigits: 2 }) + '%');
+const VIEW = 'dupont-roe';
+let lastReport = null;
+let lastBody = null;
 
 export async function renderDupontRoe(mount, _appState) {
     const tok = currentViewToken();
@@ -38,6 +42,7 @@ export async function renderDupontRoe(mount, _appState) {
                 <label><span data-i18n="view.dupont.label.equity">Total equity ($)</span>
                     <input type="number" step="0.01" name="total_equity_usd" value="400" required></label>
             </form>
+            <div id="dupont-tools" class="ce-toolbar"></div>
         </div>
         <div id="dupont-result" class="lpv-preview"></div>
         </div>
@@ -45,9 +50,10 @@ export async function renderDupontRoe(mount, _appState) {
     applyUiI18n(mount);
 
     const form = mount.querySelector('#dupont-form');
-    const generate = async () => {
+    enh.prefillForm(form, enh.readHashInputs());
+    const readBody = () => {
         const fd = new FormData(form);
-        const body = {
+        return {
             net_income_usd: Number(fd.get('net_income_usd')) || 0,
             pretax_income_usd: Number(fd.get('pretax_income_usd')) || 0,
             ebit_usd: Number(fd.get('ebit_usd')) || 0,
@@ -55,17 +61,36 @@ export async function renderDupontRoe(mount, _appState) {
             total_assets_usd: Number(fd.get('total_assets_usd')) || 0,
             total_equity_usd: Number(fd.get('total_equity_usd')) || 0,
         };
+    };
+    const generate = async () => {
+        const body = readBody();
         try {
             const r = await api.calcDupontRoe(body);
             if (!viewIsCurrent(tok)) return;
+            lastReport = r; lastBody = body;
             renderResult(mount, r);
         } catch (err) {
             showToast(err.message || t('view.dupont.toast.error'), { level: 'error' });
         }
     };
+    enh.mountToolbar(mount.querySelector('#dupont-tools'), { viewId: VIEW, getInputs: () => lastBody || readBody(), getRows: () => reportRows(lastReport), filename: 'dupont-roe.csv' });
     form.addEventListener('input', debounce(generate, 250));
     form.addEventListener('submit', (e) => { e.preventDefault(); generate(); });
     generate();
+}
+
+function reportRows(r) {
+    if (!r) return [];
+    return [
+        ['factor', 'value'],
+        ['tax_burden', r.tax_burden],
+        ['interest_burden', r.interest_burden],
+        ['operating_margin_pct', r.operating_margin_pct],
+        ['asset_turnover', r.asset_turnover],
+        ['equity_multiplier', r.equity_multiplier],
+        ['net_profit_margin_pct', r.net_profit_margin_pct],
+        ['roe_pct', r.roe_pct],
+    ];
 }
 
 function renderResult(mount, r) {

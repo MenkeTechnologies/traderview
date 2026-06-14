@@ -6,8 +6,12 @@ import { applyUiI18n, t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import { showToast } from '../toast.js';
 import { debounce } from '../util.js';
+import * as enh from '../calc_enhance.js';
 
 const pct = (n) => Number(n).toLocaleString(undefined, { maximumFractionDigits: 3 }) + '%';
+const VIEW = 'wacc';
+let lastReport = null;
+let lastBody = null;
 
 export async function renderWacc(mount, _appState) {
     const tok = currentViewToken();
@@ -46,6 +50,7 @@ export async function renderWacc(mount, _appState) {
                         <input type="number" step="0.01" name="market_return_pct" value="10"></label>
                 </fieldset>
             </form>
+            <div id="wacc-tools" class="ce-toolbar"></div>
         </div>
         <div id="wacc-result" class="lpv-preview"></div>
         </div>
@@ -53,9 +58,12 @@ export async function renderWacc(mount, _appState) {
     applyUiI18n(mount);
 
     const form = mount.querySelector('#wacc-form');
-    const generate = async () => {
+    const hashIn = enh.readHashInputs();
+    enh.prefillForm(form, hashIn);
+    if ('use_capm' in hashIn) form.querySelector('[name=use_capm]').checked = hashIn.use_capm === 'true';
+    const readBody = () => {
         const fd = new FormData(form);
-        const body = {
+        return {
             market_value_equity_usd: Number(fd.get('market_value_equity_usd')) || 0,
             market_value_debt_usd: Number(fd.get('market_value_debt_usd')) || 0,
             cost_of_equity_pct: Number(fd.get('cost_of_equity_pct')) || 0,
@@ -66,21 +74,44 @@ export async function renderWacc(mount, _appState) {
             beta: Number(fd.get('beta')) || 0,
             market_return_pct: Number(fd.get('market_return_pct')) || 0,
         };
+    };
+    const generate = async () => {
+        const body = readBody();
         try {
             const r = await api.calcWacc(body);
             if (!viewIsCurrent(tok)) return;
+            lastReport = r; lastBody = body;
             renderResult(mount, r);
         } catch (err) {
             showToast(err.message || t('view.wacc.toast.error'), { level: 'error' });
         }
     };
+    enh.mountToolbar(mount.querySelector('#wacc-tools'), { viewId: VIEW, getInputs: () => lastBody || readBody(), getRows: () => reportRows(lastReport), filename: 'wacc.csv' });
     form.addEventListener('input', debounce(generate, 250));
     form.addEventListener('submit', (e) => { e.preventDefault(); generate(); });
     generate();
 }
 
+function reportRows(r) {
+    if (!r) return [];
+    return [
+        ['metric', 'value'],
+        ['wacc_pct', r.wacc_pct],
+        ['cost_of_equity_used_pct', r.cost_of_equity_used_pct],
+        ['after_tax_cost_of_debt_pct', r.after_tax_cost_of_debt_pct],
+        ['weight_equity_pct', r.weight_equity_pct],
+        ['weight_debt_pct', r.weight_debt_pct],
+    ];
+}
+
 function renderResult(mount, r) {
     const el = mount.querySelector('#wacc-result');
+    // Cost-of-capital components: equity cost, after-tax debt cost, and the blended WACC.
+    const chart = enh.svgBarChart([
+        { label: 'Equity', value: r.cost_of_equity_used_pct },
+        { label: 'Debt', value: r.after_tax_cost_of_debt_pct },
+        { label: 'WACC', value: r.wacc_pct },
+    ]);
     el.innerHTML = `
         <div class="chart-panel">
             <h2 data-i18n="view.wacc.h2.result">The cost of capital</h2>
@@ -92,6 +123,7 @@ function renderResult(mount, r) {
                 <div class="card"><div class="label" data-i18n="view.wacc.card.rd">After-tax cost of debt</div>
                     <div class="value">${pct(r.after_tax_cost_of_debt_pct)}</div></div>
             </div>
+            ${chart}
             <table class="data-table">
                 <tbody>
                     <tr><td data-i18n="view.wacc.row.we">Equity weight</td><td>${pct(r.weight_equity_pct)}</td></tr>
