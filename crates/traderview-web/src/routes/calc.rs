@@ -95,6 +95,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/safe", post(safe_route))
         .route("/calc/option-grant", post(option_grant_route))
         .route("/calc/rsu-grant", post(rsu_grant_route))
+        .route("/calc/statement-of-account", post(statement_of_account_route))
         .route("/calc/fix-and-flip", post(fix_and_flip_route))
         .route("/calc/cash-conversion-cycle", post(cash_conversion_cycle_route))
         .route("/calc/profit-first", post(profit_first_route))
@@ -11862,6 +11863,14 @@ async fn rsu_grant_route(
     Json(b): Json<traderview_core::rsu_grant::RsuGrantInput>,
 ) -> Json<traderview_core::rsu_grant::RsuGrant> {
     Json(traderview_core::rsu_grant::generate(&b))
+}
+
+/// Statement of account: aggregate outstanding invoices into aging buckets.
+async fn statement_of_account_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::statement_of_account::StatementInput>,
+) -> Json<traderview_core::statement_of_account::StatementOfAccount> {
+    Json(traderview_core::statement_of_account::generate(&b))
 }
 
 /// Fix-and-flip: the 70% rule max-allowable-offer plus the full deal P&L
