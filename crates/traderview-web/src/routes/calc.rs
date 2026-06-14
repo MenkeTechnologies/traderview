@@ -32,6 +32,8 @@ pub fn router() -> Router<AppState> {
         .route("/calc/monte-carlo", post(monte_carlo_route))
         .route("/calc/risk-parity", post(risk_parity_route))
         .route("/calc/efficient-frontier", post(efficient_frontier_route))
+        .route("/calc/valuation-multiples", post(valuation_multiples_route))
+        .route("/calc/dividend-discount-model", post(dividend_discount_model_route))
         .route("/calc/risk-on-off", post(risk_on_off_route))
         // ── Margin / buying power ─────────────────────────────────────
         .route("/calc/margin-call", post(margin_call_route))
@@ -735,6 +737,22 @@ async fn efficient_frontier_route(
     Json(b): Json<traderview_core::efficient_frontier::FrontierInput>,
 ) -> Json<traderview_core::efficient_frontier::FrontierReport> {
     Json(traderview_core::efficient_frontier::generate(&b))
+}
+
+/// Valuation multiples: P/E, P/B, P/S, PEG, and dividend/earnings/FCF yields.
+async fn valuation_multiples_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::valuation_multiples::MultiplesInput>,
+) -> Json<traderview_core::valuation_multiples::MultiplesReport> {
+    Json(traderview_core::valuation_multiples::generate(&b))
+}
+
+/// Dividend discount model: Gordon growth or two-stage intrinsic value.
+async fn dividend_discount_model_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::dividend_discount_model::DdmInput>,
+) -> Json<traderview_core::dividend_discount_model::DdmReport> {
+    Json(traderview_core::dividend_discount_model::generate(&b))
 }
 
 async fn risk_on_off_route(
