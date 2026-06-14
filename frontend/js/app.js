@@ -763,6 +763,7 @@ import { renderSplitShiftPremium } from './views/split_shift_premium.js';
 import { renderWorkersComp } from './views/workers_comp_premium.js';
 import { renderAllowanceDoubtful } from './views/allowance_doubtful.js';
 import { renderDepreciationSchedule } from './views/depreciation_schedule.js';
+import { renderAssetDisposal } from './views/asset_disposal.js';
 import { renderFixAndFlip } from './views/fix_and_flip.js';
 import { renderCashConversionCycle } from './views/cash_conversion_cycle.js';
 import { renderProfitFirst } from './views/profit_first.js';
@@ -3267,6 +3268,7 @@ export async function dispatch() {
             case 'workers-comp-premium': await renderWorkersComp(mount, state); break;
             case 'allowance-doubtful': await renderAllowanceDoubtful(mount, state); break;
             case 'depreciation-schedule': await renderDepreciationSchedule(mount, state); break;
+            case 'asset-disposal': await renderAssetDisposal(mount, state); break;
             case 'fix-and-flip': await renderFixAndFlip(mount, state); break;
             case 'cash-conversion-cycle': await renderCashConversionCycle(mount, state); break;
             case 'profit-first': await renderProfitFirst(mount, state); break;
@@ -4685,6 +4687,7 @@ export const viewRenderers = {
     'workers-comp-premium': (m, s) => renderWorkersComp(m, s),
     'allowance-doubtful': (m, s) => renderAllowanceDoubtful(m, s),
     'depreciation-schedule': (m, s) => renderDepreciationSchedule(m, s),
+    'asset-disposal': (m, s) => renderAssetDisposal(m, s),
     'fix-and-flip': (m, s) => renderFixAndFlip(m, s),
     'cash-conversion-cycle': (m, s) => renderCashConversionCycle(m, s),
     'profit-first': (m, s) => renderProfitFirst(m, s),

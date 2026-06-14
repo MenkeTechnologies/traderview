@@ -119,6 +119,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/workers-comp-premium", post(workers_comp_premium_route))
         .route("/calc/allowance-doubtful", post(allowance_doubtful_route))
         .route("/calc/depreciation-schedule", post(depreciation_schedule_route))
+        .route("/calc/asset-disposal", post(asset_disposal_route))
         .route("/calc/fix-and-flip", post(fix_and_flip_route))
         .route("/calc/cash-conversion-cycle", post(cash_conversion_cycle_route))
         .route("/calc/profit-first", post(profit_first_route))
@@ -12078,6 +12079,14 @@ async fn depreciation_schedule_route(
     Json(b): Json<traderview_core::depreciation_schedule::DepreciationScheduleInput>,
 ) -> Json<traderview_core::depreciation_schedule::DepreciationSchedule> {
     Json(traderview_core::depreciation_schedule::generate(&b))
+}
+
+/// Fixed-asset disposal: gain/loss with §1245 ordinary recapture and §1231 split.
+async fn asset_disposal_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::asset_disposal::AssetDisposalInput>,
+) -> Json<traderview_core::asset_disposal::AssetDisposal> {
+    Json(traderview_core::asset_disposal::generate(&b))
 }
 
 /// Fix-and-flip: the 70% rule max-allowable-offer plus the full deal P&L
