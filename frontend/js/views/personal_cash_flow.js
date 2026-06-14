@@ -5,6 +5,7 @@
 import { api } from '../api.js';
 import { esc } from '../util.js';
 import { t } from '../i18n.js';
+import * as enh from '../calc_enhance.js';
 
 const STATE = {
     rows: [
@@ -104,6 +105,12 @@ async function runCompute(mount) {
     result.innerHTML = `<p class="muted">${esc(t('view.personal_cash_flow.status.computing'))}</p>`;
     try {
         const r = await api.request('/personal-cash-flow/compute', { method: 'POST', body: JSON.stringify(STATE) });
+        // Net-cash-per-section bars (operating / investing / financing; sign-colored).
+        const chart = enh.svgBarChart([
+            { label: 'Operating', value: r.operating.net_usd },
+            { label: 'Investing', value: r.investing.net_usd },
+            { label: 'Financing', value: r.financing.net_usd },
+        ]);
         const netCls = r.net_change_in_cash_usd > 0 ? 'pos' : r.net_change_in_cash_usd < 0 ? 'neg' : '';
         const statusCls = r.status === 'surplus' ? 'pos' : r.status === 'deficit' ? 'neg' : '';
         const section = (lbl, s) => `
@@ -127,6 +134,8 @@ async function runCompute(mount) {
                 <div><div class="muted small">${esc(t('view.personal_cash_flow.field.status'))}</div>
                     <strong class="${statusCls}" style="text-transform:uppercase">${esc(t('view.personal_cash_flow.status.' + r.status) || r.status)}</strong></div>
             </div>
+            ${chart}
+            <div id="pcf-tools" class="ce-toolbar"></div>
             <h2 style="margin-top:1rem">${esc(t('view.personal_cash_flow.h2.sections'))}</h2>
             <table class="trades">
                 <thead><tr>
@@ -142,6 +151,17 @@ async function runCompute(mount) {
                 </tbody>
             </table>
         `;
+        // Section + totals export (Copy / CSV). No permalink — multi-row table state.
+        enh.mountToolbar(mount.querySelector('#pcf-tools'), {
+            viewId: 'personal-cash-flow',
+            link: false,
+            filename: 'personal-cash-flow.csv',
+            getRows: () => [['section', 'inflows_usd', 'outflows_usd', 'net_usd'],
+                ['operating', r.operating.inflows_usd, r.operating.outflows_usd, r.operating.net_usd],
+                ['investing', r.investing.inflows_usd, r.investing.outflows_usd, r.investing.net_usd],
+                ['financing', r.financing.inflows_usd, r.financing.outflows_usd, r.financing.net_usd],
+                ['TOTAL', r.total_inflows_usd, r.total_outflows_usd, r.net_change_in_cash_usd]],
+        });
     } catch (e) {
         result.innerHTML = `<p class="neg">${esc(String(e))}</p>`;
     }

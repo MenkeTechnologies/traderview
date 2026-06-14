@@ -5,6 +5,7 @@
 import { api } from '../api.js';
 import { esc } from '../util.js';
 import { t } from '../i18n.js';
+import * as enh from '../calc_enhance.js';
 
 const STATE = {
     assets: [
@@ -138,6 +139,12 @@ async function runCompute(mount) {
     result.innerHTML = `<p class="muted">${esc(t('view.personal_balance_sheet.status.computing'))}</p>`;
     try {
         const r = await api.request('/personal-balance-sheet/compute', { method: 'POST', body: JSON.stringify(STATE) });
+        // Assets / liabilities / equity comparison bars (the accounting identity).
+        const chart = enh.svgBarChart([
+            { label: 'Assets', value: r.total_assets_usd },
+            { label: 'Liab', value: r.total_liabilities_usd },
+            { label: 'Equity', value: r.equity_usd },
+        ]);
         const eqCls = r.equity_usd >= 0 ? 'pos' : 'neg';
         const wcCls = r.working_capital_usd >= 0 ? 'pos' : 'neg';
         const statusCls = r.status === 'solvent' ? 'pos' : r.status === 'illiquid' ? '' : 'neg';
@@ -160,6 +167,8 @@ async function runCompute(mount) {
                 <div><div class="muted small">${esc(t('view.personal_balance_sheet.field.status'))}</div>
                     <strong class="${statusCls}" style="text-transform:uppercase">${esc(t('view.personal_balance_sheet.status.' + r.status) || r.status)}</strong></div>
             </div>
+            ${chart}
+            <div id="pbs-tools" class="ce-toolbar"></div>
             <h2 style="margin-top:1rem">${esc(t('view.personal_balance_sheet.h2.breakdown'))}</h2>
             <table class="trades">
                 <tbody>
@@ -170,6 +179,21 @@ async function runCompute(mount) {
                 </tbody>
             </table>
         `;
+        // Balance-sheet export (Copy / CSV). No permalink — multi-row table state.
+        enh.mountToolbar(mount.querySelector('#pbs-tools'), {
+            viewId: 'personal-balance-sheet',
+            link: false,
+            filename: 'personal-balance-sheet.csv',
+            getRows: () => [['metric', 'value'],
+                ['total_assets_usd', r.total_assets_usd],
+                ['current_assets_usd', r.current_assets_usd],
+                ['non_current_assets_usd', r.non_current_assets_usd],
+                ['total_liabilities_usd', r.total_liabilities_usd],
+                ['current_liabilities_usd', r.current_liabilities_usd],
+                ['long_term_liabilities_usd', r.long_term_liabilities_usd],
+                ['equity_usd', r.equity_usd],
+                ['working_capital_usd', r.working_capital_usd]],
+        });
     } catch (e) {
         result.innerHTML = `<p class="neg">${esc(String(e))}</p>`;
     }

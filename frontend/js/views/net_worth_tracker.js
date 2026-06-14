@@ -6,6 +6,7 @@
 import { api } from '../api.js';
 import { esc } from '../util.js';
 import { t } from '../i18n.js';
+import * as enh from '../calc_enhance.js';
 
 const STATE = {
     assets: [
@@ -144,6 +145,8 @@ async function runCompute(mount) {
     result.innerHTML = `<p class="muted">${esc(t('view.net_worth_tracker.status.computing'))}</p>`;
     try {
         const r = await api.request('/net-worth-tracker/compute', { method: 'POST', body: JSON.stringify(STATE) });
+        // Assets-by-category bar chart (where the net worth sits).
+        const chart = enh.svgBarChart((r.by_asset_category || []).map(c => ({ label: c.category, value: c.total_usd })));
         const nwCls = r.net_worth_usd >= 0 ? 'pos' : 'neg';
         const momCls = r.mom_delta_usd == null ? 'muted' : r.mom_delta_usd >= 0 ? 'pos' : 'neg';
         const yoyCls = r.yoy_delta_usd == null ? 'muted' : r.yoy_delta_usd >= 0 ? 'pos' : 'neg';
@@ -164,6 +167,8 @@ async function runCompute(mount) {
                 <div><div class="muted small">${esc(t('view.net_worth_tracker.field.status'))}</div>
                     <strong class="${r.status === 'positive' ? 'pos' : 'neg'}" style="text-transform:uppercase">${esc(t('view.net_worth_tracker.status.' + r.status) || r.status)}</strong></div>
             </div>
+            ${chart}
+            <div id="nw-tools" class="ce-toolbar"></div>
             <h2 style="margin-top:1rem">${esc(t('view.net_worth_tracker.h2.by_asset_cat'))}</h2>
             <table class="trades">
                 <thead><tr>
@@ -187,6 +192,16 @@ async function runCompute(mount) {
                 `).join('')}</tbody>
             </table>
         `;
+        // Asset + liability category export (Copy / CSV). No permalink — multi-row table state.
+        enh.mountToolbar(mount.querySelector('#nw-tools'), {
+            viewId: 'net-worth-tracker',
+            link: false,
+            filename: 'net-worth-tracker.csv',
+            getRows: () => [['type', 'category', 'total_usd', 'share_pct'],
+                ...(r.by_asset_category || []).map(c => ['asset', c.category, c.total_usd, c.share_pct]),
+                ...(r.by_liability_category || []).map(c => ['liability', c.category, c.total_usd, c.share_pct]),
+                ['net_worth', '', r.net_worth_usd, '']],
+        });
     } catch (e) {
         result.innerHTML = `<p class="neg">${esc(String(e))}</p>`;
     }
