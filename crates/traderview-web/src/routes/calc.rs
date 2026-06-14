@@ -111,6 +111,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/ti-allowance", post(ti_allowance_route))
         .route("/calc/contractor-1099", post(contractor_1099_route))
         .route("/calc/pto-balance", post(pto_balance_route))
+        .route("/calc/wage-garnishment", post(wage_garnishment_route))
         .route("/calc/fix-and-flip", post(fix_and_flip_route))
         .route("/calc/cash-conversion-cycle", post(cash_conversion_cycle_route))
         .route("/calc/profit-first", post(profit_first_route))
@@ -12006,6 +12007,14 @@ async fn pto_balance_route(
     Json(b): Json<traderview_core::pto_balance::PtoBalanceInput>,
 ) -> Json<traderview_core::pto_balance::PtoBalance> {
     Json(traderview_core::pto_balance::generate(&b))
+}
+
+/// Wage garnishment: CCPA cap — lesser of % of disposable or amount above 30× min wage.
+async fn wage_garnishment_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::wage_garnishment::GarnishmentInput>,
+) -> Json<traderview_core::wage_garnishment::WageGarnishment> {
+    Json(traderview_core::wage_garnishment::generate(&b))
 }
 
 /// Fix-and-flip: the 70% rule max-allowable-offer plus the full deal P&L

@@ -820,6 +820,7 @@ export const api = {
     calcTiAllowance:         (body) => request('/calc/ti-allowance', { method: 'POST', body: JSON.stringify(body) }),
     calcContractor1099:      (body) => request('/calc/contractor-1099', { method: 'POST', body: JSON.stringify(body) }),
     calcPtoBalance:          (body) => request('/calc/pto-balance', { method: 'POST', body: JSON.stringify(body) }),
+    calcWageGarnishment:     (body) => request('/calc/wage-garnishment', { method: 'POST', body: JSON.stringify(body) }),
     calcFixAndFlip:          (body) => request('/calc/fix-and-flip', { method: 'POST', body: JSON.stringify(body) }),
     calcCashConversionCycle: (body) => request('/calc/cash-conversion-cycle', { method: 'POST', body: JSON.stringify(body) }),
     calcProfitFirst:         (body) => request('/calc/profit-first', { method: 'POST', body: JSON.stringify(body) }),
