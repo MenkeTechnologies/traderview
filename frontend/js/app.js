@@ -766,6 +766,7 @@ import { renderDepreciationSchedule } from './views/depreciation_schedule.js';
 import { renderAssetDisposal } from './views/asset_disposal.js';
 import { renderCashFlowStatement } from './views/cash_flow_statement.js';
 import { renderIncomeStatement } from './views/income_statement.js';
+import { renderBankReconciliation } from './views/bank_reconciliation.js';
 import { renderFixAndFlip } from './views/fix_and_flip.js';
 import { renderCashConversionCycle } from './views/cash_conversion_cycle.js';
 import { renderProfitFirst } from './views/profit_first.js';
@@ -3273,6 +3274,7 @@ export async function dispatch() {
             case 'asset-disposal': await renderAssetDisposal(mount, state); break;
             case 'cash-flow-statement': await renderCashFlowStatement(mount, state); break;
             case 'income-statement': await renderIncomeStatement(mount, state); break;
+            case 'bank-reconciliation': await renderBankReconciliation(mount, state); break;
             case 'fix-and-flip': await renderFixAndFlip(mount, state); break;
             case 'cash-conversion-cycle': await renderCashConversionCycle(mount, state); break;
             case 'profit-first': await renderProfitFirst(mount, state); break;
@@ -4694,6 +4696,7 @@ export const viewRenderers = {
     'asset-disposal': (m, s) => renderAssetDisposal(m, s),
     'cash-flow-statement': (m, s) => renderCashFlowStatement(m, s),
     'income-statement': (m, s) => renderIncomeStatement(m, s),
+    'bank-reconciliation': (m, s) => renderBankReconciliation(m, s),
     'fix-and-flip': (m, s) => renderFixAndFlip(m, s),
     'cash-conversion-cycle': (m, s) => renderCashConversionCycle(m, s),
     'profit-first': (m, s) => renderProfitFirst(m, s),

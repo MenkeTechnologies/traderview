@@ -122,6 +122,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/asset-disposal", post(asset_disposal_route))
         .route("/calc/cash-flow-statement", post(cash_flow_statement_route))
         .route("/calc/income-statement", post(income_statement_route))
+        .route("/calc/bank-reconciliation", post(bank_reconciliation_route))
         .route("/calc/fix-and-flip", post(fix_and_flip_route))
         .route("/calc/cash-conversion-cycle", post(cash_conversion_cycle_route))
         .route("/calc/profit-first", post(profit_first_route))
@@ -12105,6 +12106,14 @@ async fn income_statement_route(
     Json(b): Json<traderview_core::income_statement::IncomeStatementInput>,
 ) -> Json<traderview_core::income_statement::IncomeStatement> {
     Json(traderview_core::income_statement::generate(&b))
+}
+
+/// Bank reconciliation: adjusted bank vs adjusted book balance, difference.
+async fn bank_reconciliation_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::bank_reconciliation::BankReconciliationInput>,
+) -> Json<traderview_core::bank_reconciliation::BankReconciliation> {
+    Json(traderview_core::bank_reconciliation::generate(&b))
 }
 
 /// Fix-and-flip: the 70% rule max-allowable-offer plus the full deal P&L

@@ -25,6 +25,7 @@ pub mod atr_cone;
 pub mod awesome_oscillator;
 pub mod backtest;
 pub mod bb_squeeze;
+pub mod bank_reconciliation;
 pub mod beta;
 pub mod beta_hedge;
 pub mod bill_of_sale;
