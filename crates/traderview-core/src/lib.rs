@@ -197,6 +197,7 @@ pub mod liquidity_grab;
 pub mod liquidity_ratios;
 pub mod llc_operating_agreement;
 pub mod loan_apr;
+pub mod lump_sum_vs_dca;
 pub mod macrs_depreciation;
 pub mod mae_stop_tuning;
 pub mod margin_analysis;

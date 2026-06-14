@@ -4,6 +4,7 @@
 // (b) drip across the cadence, then reports the gap and the breakeven
 // market return below which DCA pulls ahead.
 
+import { api } from '../api.js';
 import { esc } from '../util.js';
 import { t } from '../i18n.js';
 
@@ -49,110 +50,68 @@ export async function renderLumpSumVsDca(mount, _state) {
     runCompute(mount);
 }
 
-function runCompute(mount) {
+async function runCompute(mount) {
     const result = mount.querySelector('#ls-result');
-    const T = parseFloat(mount.querySelector('#ls-total').value) || 0;
-    const N = parseInt(mount.querySelector('#ls-months').value, 10) || 0;
-    const H = parseInt(mount.querySelector('#ls-horizon').value, 10) || 0;
-    const r_ann = parseFloat(mount.querySelector('#ls-return').value) / 100;
-    const c_ann = parseFloat(mount.querySelector('#ls-cash').value) / 100;
-    if (T <= 0 || N < 2 || H < N) {
-        result.innerHTML = `<p class="muted">${esc(t('view.lump_sum_vs_dca.empty.invalid') || 'Total > 0, DCA months ≥ 2, horizon ≥ DCA months.')}</p>`;
+    const body = {
+        total_usd: parseFloat(mount.querySelector('#ls-total').value) || 0,
+        dca_months: parseInt(mount.querySelector('#ls-months').value, 10) || 0,
+        horizon_months: parseInt(mount.querySelector('#ls-horizon').value, 10) || 0,
+        expected_annual_return_pct: parseFloat(mount.querySelector('#ls-return').value) || 0,
+        cash_rate_pct: parseFloat(mount.querySelector('#ls-cash').value) || 0,
+    };
+    if (body.total_usd <= 0 || body.dca_months < 2 || body.horizon_months < body.dca_months) {
+        result.innerHTML = `<p class="muted">${esc(t('view.lump_sum_vs_dca.empty.invalid'))}</p>`;
         return;
     }
-    const r = Math.pow(1 + r_ann, 1/12) - 1;     // monthly market return
-    const c = Math.pow(1 + c_ann, 1/12) - 1;     // monthly cash rate
-    const perMonth = T / N;
-
-    // LUMP — single investment at month 0, compounded H months at r.
-    const lump_end = T * Math.pow(1 + r, H);
-
-    // DCA — invested portion compounds at r, un-invested cash sits at c.
-    // Track invested + cash each month.
-    let invested = 0;     // value of already-invested portion
-    let cash = T;         // cash bucket waiting to be DCA'd
-    for (let m = 1; m <= H; m++) {
-        // Existing invested compounds at market rate.
-        invested *= (1 + r);
-        // Existing cash earns the cash rate.
-        cash *= (1 + c);
-        // If still in DCA window, move perMonth from cash to invested.
-        if (m <= N) {
-            const drop = Math.min(perMonth, cash);
-            cash -= drop;
-            invested += drop;
-        }
+    try {
+        const r = await api.calcLumpSumVsDca(body);
+        renderResult(result, r, body);
+    } catch (e) {
+        result.innerHTML = `<p class="neg">${esc(String(e))}</p>`;
     }
-    const dca_end = invested + cash;
+}
 
-    const gap = lump_end - dca_end;
-    const gap_pct = (gap / dca_end) * 100;
-    const winner = gap > 0 ? 'LUMP-SUM' : gap < 0 ? 'DCA' : 'TIE';
-    const winnerCls = gap > 0 ? 'pos' : gap < 0 ? 'neg' : 'muted';
-
-    // Solve for break-even market return where dca_end == lump_end.
-    // Closed form is ugly; binary-search r between -30%/yr and +50%/yr.
-    const breakeven = findBreakeven(T, N, H, c_ann);
+function renderResult(result, r, body) {
+    const winnerCls = r.gap_usd > 0 ? 'pos' : r.gap_usd < 0 ? 'neg' : 'muted';
+    const winnerLabel = r.gap_usd > 0 ? t('view.lump_sum_vs_dca.winner.lump')
+        : r.gap_usd < 0 ? t('view.lump_sum_vs_dca.winner.dca')
+            : t('view.lump_sum_vs_dca.winner.tie');
+    const gapStr = t('view.lump_sum_vs_dca.card.gap', {
+        amount: '$' + fmt(Math.abs(r.gap_usd), 0),
+        pct: (r.gap_pct >= 0 ? '+' : '') + fmt(r.gap_pct, 2) + '%',
+    });
+    const breakeven = r.breakeven_return_pct == null ? '—' : fmt(r.breakeven_return_pct, 2) + '%/yr';
+    const assumption = t('view.lump_sum_vs_dca.assumption', {
+        total: '$' + fmt(body.total_usd, 0),
+        horizon: String(body.horizon_months),
+        ret: fmt(body.expected_annual_return_pct, 1) + '%',
+        permonth: '$' + fmt(body.total_usd / body.dca_months, 0),
+        months: String(body.dca_months),
+        cash: fmt(body.cash_rate_pct, 1) + '%',
+    });
     result.innerHTML = `
         <div class="cards" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px;margin-bottom:12px">
             <div class="card">
-                <div class="label">Lump-sum end value</div>
-                <div class="value">$${fmt(lump_end, 0)}</div>
+                <div class="label" data-i18n="view.lump_sum_vs_dca.card.lump">Lump-sum end value</div>
+                <div class="value">$${fmt(r.lump_end_usd, 0)}</div>
             </div>
             <div class="card">
-                <div class="label">DCA end value</div>
-                <div class="value">$${fmt(dca_end, 0)}</div>
+                <div class="label" data-i18n="view.lump_sum_vs_dca.card.dca">DCA end value</div>
+                <div class="value">$${fmt(r.dca_end_usd, 0)}</div>
             </div>
             <div class="card">
-                <div class="label">Winner</div>
-                <div class="value ${winnerCls}"><strong>${winner}</strong></div>
-                <div class="muted small">by $${fmt(Math.abs(gap), 0)} (${gap_pct >= 0 ? '+' : ''}${fmt(gap_pct, 2)}%)</div>
+                <div class="label" data-i18n="view.lump_sum_vs_dca.card.winner">Winner</div>
+                <div class="value ${winnerCls}"><strong>${esc(winnerLabel)}</strong></div>
+                <div class="muted small">${esc(gapStr)}</div>
             </div>
             <div class="card">
-                <div class="label">Break-even market return</div>
-                <div class="value">${breakeven == null ? '—' : fmt(breakeven * 100, 2) + '%/yr'}</div>
-                <div class="muted small">below this, DCA wins (cash drag less of a penalty)</div>
+                <div class="label" data-i18n="view.lump_sum_vs_dca.card.breakeven">Break-even market return</div>
+                <div class="value">${esc(breakeven)}</div>
+                <div class="muted small" data-i18n="view.lump_sum_vs_dca.card.breakeven_hint">below this, DCA wins (cash drag less of a penalty)</div>
             </div>
         </div>
-        <p class="muted small">
-            Assumption: lump-sum invests <strong>$${fmt(T, 0)}</strong> at month 0 and rides
-            <strong>${H}</strong> months at <strong>${fmt(r_ann * 100, 1)}%</strong>/yr.
-            DCA invests <strong>$${fmt(T / N, 0)}</strong>/month for ${N} months while
-            the un-invested cash earns <strong>${fmt(c_ann * 100, 1)}%</strong>/yr in a money-market.
-        </p>
+        <p class="muted small">${esc(assumption)}</p>
     `;
-}
-
-function simulateDca(T, N, H, r_ann, c_ann) {
-    const r = Math.pow(1 + r_ann, 1/12) - 1;
-    const c = Math.pow(1 + c_ann, 1/12) - 1;
-    const perMonth = T / N;
-    let invested = 0;
-    let cash = T;
-    for (let m = 1; m <= H; m++) {
-        invested *= (1 + r);
-        cash *= (1 + c);
-        if (m <= N) {
-            const drop = Math.min(perMonth, cash);
-            cash -= drop;
-            invested += drop;
-        }
-    }
-    return invested + cash;
-}
-
-function findBreakeven(T, N, H, c_ann) {
-    // Binary search for r_ann where dca_end == lump_end. Both are
-    // monotonic in r_ann; lump grows faster, so above breakeven lump wins.
-    let lo = -0.30, hi = 0.50;
-    for (let i = 0; i < 60; i++) {
-        const mid = (lo + hi) / 2;
-        const lump = T * Math.pow(1 + Math.pow(1 + mid, 1/12) - 1, H);
-        const dca = simulateDca(T, N, H, mid, c_ann);
-        if (Math.abs(lump - dca) < 1) return mid;
-        if (lump > dca) hi = mid; else lo = mid;
-    }
-    return (lo + hi) / 2;
 }
 
 function fmt(n, d) {
