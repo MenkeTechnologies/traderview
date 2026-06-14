@@ -6,6 +6,7 @@
 import { api } from '../api.js';
 import { esc } from '../util.js';
 import { t } from '../i18n.js';
+import * as enh from '../calc_enhance.js';
 
 export async function renderCarTco(mount, _state) {
     mount.innerHTML = `
@@ -73,6 +74,8 @@ async function runCompute(mount) {
     result.innerHTML = `<p class="muted">${esc(t('view.car_tco.status.computing'))}</p>`;
     try {
         const r = await api.request('/car-tco/compute', { method: 'POST', body: JSON.stringify(input) });
+        // Per-year total-cost bar chart from the returned yearly breakdown.
+        const chart = enh.svgBarChart((r.yearly || []).map(y => ({ label: 'Y' + y.year, value: y.total_year_usd })));
         result.innerHTML = `
             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-top:1rem">
                 <div><div class="muted small">${esc(t('view.car_tco.field.total'))}</div>
@@ -97,6 +100,8 @@ async function runCompute(mount) {
                     <tr><td><strong>${esc(t('view.car_tco.row.registration'))}</strong></td><td>$${r.total_registration_usd.toFixed(0)}</td></tr>
                 </tbody>
             </table>
+            ${chart}
+            <div id="ct-tools" class="ce-toolbar"></div>
             <h2 style="margin-top:1rem">${esc(t('view.car_tco.h2.yearly'))}</h2>
             <table class="trades">
                 <thead><tr>
@@ -121,6 +126,15 @@ async function runCompute(mount) {
                 `).join('')}</tbody>
             </table>
         `;
+        // Per-year cost export (Copy / CSV). No permalink — id-based inputs.
+        enh.mountToolbar(mount.querySelector('#ct-tools'), {
+            viewId: 'car-tco',
+            link: false,
+            filename: 'car-tco.csv',
+            getRows: () => [['year', 'financing', 'fuel', 'insurance', 'maintenance', 'registration', 'total'],
+                ...(r.yearly || []).map(y => [y.year, y.financing_usd, y.fuel_usd, y.insurance_usd, y.maintenance_usd, y.registration_usd, y.total_year_usd]),
+                ['TOTAL', r.total_financing_interest_usd, r.total_fuel_usd, r.total_insurance_usd, r.total_maintenance_usd, r.total_registration_usd, r.total_cost_usd]],
+        });
     } catch (e) {
         result.innerHTML = `<p class="neg">${esc(String(e))}</p>`;
     }

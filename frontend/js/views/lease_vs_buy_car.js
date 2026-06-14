@@ -8,6 +8,7 @@
 import { api } from '../api.js';
 import { esc } from '../util.js';
 import { t } from '../i18n.js';
+import * as enh from '../calc_enhance.js';
 
 export async function renderLeaseVsBuyCar(mount, _state) {
     mount.innerHTML = `
@@ -74,6 +75,11 @@ async function runCompute(mount) {
     result.innerHTML = `<p class="muted">${esc(t('view.lease_vs_buy_car.status.computing'))}</p>`;
     try {
         const r = await api.request('/lease-vs-buy-car/compute', { method: 'POST', body: JSON.stringify(input) });
+        // Lease-vs-buy total-cost comparison bars.
+        const chart = enh.svgBarChart([
+            { label: 'Lease', value: r.lease_total_cost_usd },
+            { label: 'Buy', value: r.buy_total_cost_usd },
+        ]);
         const winnerCls = r.net_winner === 'buy' ? 'pos' : '';
         result.innerHTML = `
             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-top:1rem">
@@ -88,6 +94,8 @@ async function runCompute(mount) {
                 <div><div class="muted small">${esc(t('view.lease_vs_buy_car.field.breakeven'))}</div>
                     <strong>$${r.breakeven_monthly_lease_usd.toFixed(2)}/mo</strong></div>
             </div>
+            ${chart}
+            <div id="lb-tools" class="ce-toolbar"></div>
             <h2 style="margin-top:1rem">${esc(t('view.lease_vs_buy_car.h2.lease'))}</h2>
             <table class="trades">
                 <tbody>
@@ -117,6 +125,18 @@ async function runCompute(mount) {
                 </tbody>
             </table>
         `;
+        // Lease-vs-buy summary export (Copy / CSV). No permalink — id-based inputs.
+        enh.mountToolbar(mount.querySelector('#lb-tools'), {
+            viewId: 'lease-vs-buy-car',
+            link: false,
+            filename: 'lease-vs-buy-car.csv',
+            getRows: () => [['metric', 'value'],
+                ['lease_total_cost_usd', r.lease_total_cost_usd],
+                ['buy_total_cost_usd', r.buy_total_cost_usd],
+                ['net_winner', r.net_winner],
+                ['savings_winner_minus_loser_usd', r.savings_winner_minus_loser_usd],
+                ['breakeven_monthly_lease_usd', r.breakeven_monthly_lease_usd]],
+        });
     } catch (e) {
         result.innerHTML = `<p class="neg">${esc(String(e))}</p>`;
     }
