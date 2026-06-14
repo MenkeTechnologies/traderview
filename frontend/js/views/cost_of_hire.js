@@ -7,6 +7,7 @@ import { applyUiI18n, t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import { showToast } from '../toast.js';
 import { debounce } from '../util.js';
+import * as enh from '../calc_enhance.js';
 
 const FIELDS = [
     ['base_salary_usd', 'Base salary ($)', 100000],
@@ -23,6 +24,9 @@ const FIELDS = [
 const money = (n) => '$' + Number(n).toLocaleString(undefined, { maximumFractionDigits: 0 });
 const hourly = (n) => '$' + Number(n).toLocaleString(undefined, { maximumFractionDigits: 2 }) + '/hr';
 const pct = (n) => Number(n).toFixed(1) + '%';
+const VIEW = 'cost-of-hire';
+let lastReport = null;
+let lastBody = null;
 
 export async function renderCostOfHire(mount, _appState) {
     const tok = currentViewToken();
@@ -46,6 +50,9 @@ export async function renderCostOfHire(mount, _appState) {
                         <input type="number" step="0.01" min="0" name="${key}" value="${def}" required></label>
                 `).join('')}
             </form>
+            <div id="coh-tools" class="ce-toolbar"></div>
+            <button type="button" id="coh-sens-btn" class="ce-tool" data-i18n="calc.enh.sens.run">▦ Sensitivity</button>
+            <div id="coh-sens" class="ce-sens"></div>
         </div>
         <div id="coh-result" class="lpv-preview"></div>
         </div>
@@ -53,27 +60,56 @@ export async function renderCostOfHire(mount, _appState) {
     applyUiI18n(mount);
 
     const form = mount.querySelector('#coh-form');
-    const generate = async () => {
+    enh.prefillForm(form, enh.readHashInputs());
+    const readBody = () => {
         const fd = new FormData(form);
         const body = {};
         for (const [key] of FIELDS) body[key] = Number(fd.get(key)) || 0;
+        return body;
+    };
+    const generate = async () => {
+        const body = readBody();
         try {
             const r = await api.calcCostOfHire(body);
             if (!viewIsCurrent(tok)) return;
-            renderResult(mount, r);
+            lastReport = r; lastBody = body;
+            renderResult(mount, r, body, tok);
         } catch (err) {
             showToast(err.message || t('view.coh.toast.error'), { level: 'error' });
         }
     };
+    enh.mountToolbar(mount.querySelector('#coh-tools'), { viewId: VIEW, getInputs: () => lastBody || readBody(), getRows: () => reportRows(lastReport), filename: 'cost-of-hire.csv' });
+    mount.querySelector('#coh-sens-btn').addEventListener('click', () => runSens(mount, readBody(), tok));
     form.addEventListener('input', debounce(generate, 250));
     form.addEventListener('submit', (e) => { e.preventDefault(); generate(); });
     generate();
 }
 
-function renderResult(mount, r) {
+function reportRows(r) {
+    if (!r) return [];
+    return [
+        ['metric', 'value'],
+        ['total_w2_cost_usd', r.total_w2_cost_usd],
+        ['burden_pct', r.burden_pct],
+        ['w2_cheaper', r.w2_cheaper],
+        ['w2_effective_hourly_usd', r.w2_effective_hourly_usd],
+        ['contractor_effective_hourly_usd', r.contractor_effective_hourly_usd],
+    ];
+}
+
+async function renderResult(mount, r, body, tok) {
     const el = mount.querySelector('#coh-result');
     const winnerCls = r.w2_cheaper ? 'pos' : 'neg';
     const winner = r.w2_cheaper ? t('view.coh.winner.w2') : t('view.coh.winner.contractor');
+    // Line chart: fully-loaded W-2 cost as base salary sweeps 0.5× → 1.5×.
+    const base = body.base_salary_usd || 100000;
+    const xs = enh.linspace(base * 0.5, base * 1.5, 13);
+    const pts = await Promise.all(xs.map(async (sal) => {
+        const rr = await api.calcCostOfHire({ ...body, base_salary_usd: sal });
+        return { x: sal / 1000, y: rr ? rr.total_w2_cost_usd / 1000 : NaN };
+    }));
+    if (!viewIsCurrent(tok)) return;
+    const chart = enh.svgLineChart(pts, { xlabel: 'base $k', ylabel: 'W-2 cost $k' });
     el.innerHTML = `
         <div class="chart-panel">
             <h2 data-i18n="view.coh.h2.result">The comparison</h2>
@@ -85,6 +121,7 @@ function renderResult(mount, r) {
                 <div class="card"><div class="label" data-i18n="view.coh.card.burden">Burden over base</div>
                     <div class="value">${pct(r.burden_pct)}</div></div>
             </div>
+            ${chart}
             <table class="data-table">
                 <thead><tr>
                     <th data-i18n="view.coh.col.line">Line</th>
@@ -102,4 +139,18 @@ function renderResult(mount, r) {
         </div>
     `;
     applyUiI18n(el);
+}
+
+async function runSens(mount, base, tok) {
+    const panel = mount.querySelector('#coh-sens');
+    panel.innerHTML = `<p class="muted small" data-i18n="calc.enh.sens.running">Computing…</p>`; applyUiI18n(panel);
+    // x: base salary 0.5× → 1.5×; y: annual benefits 0 → 2×. Output: total W-2 cost.
+    const sal = base.base_salary_usd || 100000;
+    const ben = base.annual_benefits_usd || 12000;
+    const xVals = enh.linspace(sal * 0.5, sal * 1.5, 5);
+    const yVals = enh.linspace(0, ben * 2, 5);
+    const { cells } = await enh.runSensitivity({ base, xKey: 'base_salary_usd', yKey: 'annual_benefits_usd', xVals, yVals, compute: (b) => api.calcCostOfHire(b), pick: (r) => (r ? r.total_w2_cost_usd : null) });
+    if (!viewIsCurrent(tok)) return;
+    // Lower total cost is better → negate for shading (green = cheaper) while showing the real value.
+    panel.innerHTML = enh.renderSensitivityTable({ xVals, yVals, cells: cells.map((row) => row.map((v) => (v == null ? null : -v))), fmt: (v) => (v == null ? '—' : '$' + Math.round(-v / 1000) + 'k'), xfmt: (v) => '$' + Math.round(v / 1000) + 'k', yfmt: (v) => '$' + Math.round(v / 1000) + 'k', xName: t('view.coh.label.base_salary_usd') || 'Base', yName: t('view.coh.label.annual_benefits_usd') || 'Benefits' });
 }
