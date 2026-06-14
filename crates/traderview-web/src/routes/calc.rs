@@ -106,6 +106,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/lease-buyout", post(lease_buyout_route))
         .route("/calc/opex-escalation", post(opex_escalation_route))
         .route("/calc/leasing-commission", post(leasing_commission_route))
+        .route("/calc/holdover-rent", post(holdover_rent_route))
         .route("/calc/fix-and-flip", post(fix_and_flip_route))
         .route("/calc/cash-conversion-cycle", post(cash_conversion_cycle_route))
         .route("/calc/profit-first", post(profit_first_route))
@@ -11961,6 +11962,14 @@ async fn leasing_commission_route(
     Json(b): Json<traderview_core::leasing_commission::LeasingCommissionInput>,
 ) -> Json<traderview_core::leasing_commission::LeasingCommission> {
     Json(traderview_core::leasing_commission::generate(&b))
+}
+
+/// Holdover rent: penalty-multiple daily rate over the holdover days, premium.
+async fn holdover_rent_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::holdover_rent::HoldoverInput>,
+) -> Json<traderview_core::holdover_rent::HoldoverRent> {
+    Json(traderview_core::holdover_rent::generate(&b))
 }
 
 /// Fix-and-flip: the 70% rule max-allowable-offer plus the full deal P&L

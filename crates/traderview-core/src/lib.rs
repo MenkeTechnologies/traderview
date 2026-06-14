@@ -138,6 +138,7 @@ pub mod heikin_ashi;
 pub mod heikin_ashi_reversal;
 pub mod high_water_mark;
 pub mod holding_period_return;
+pub mod holdover_rent;
 pub mod home_sale_exclusion;
 pub mod holiday_calendar;
 pub mod hsa_triple_tax;
