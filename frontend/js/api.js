@@ -803,6 +803,7 @@ export const api = {
     calcBoardResolution:     (body) => request('/calc/board-resolution', { method: 'POST', body: JSON.stringify(body) }),
     calcSafe:                (body) => request('/calc/safe', { method: 'POST', body: JSON.stringify(body) }),
     calcOptionGrant:         (body) => request('/calc/option-grant', { method: 'POST', body: JSON.stringify(body) }),
+    calcRsuGrant:            (body) => request('/calc/rsu-grant', { method: 'POST', body: JSON.stringify(body) }),
     calcFixAndFlip:          (body) => request('/calc/fix-and-flip', { method: 'POST', body: JSON.stringify(body) }),
     calcCashConversionCycle: (body) => request('/calc/cash-conversion-cycle', { method: 'POST', body: JSON.stringify(body) }),
     calcProfitFirst:         (body) => request('/calc/profit-first', { method: 'POST', body: JSON.stringify(body) }),

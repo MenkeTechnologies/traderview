@@ -738,6 +738,7 @@ import { renderCapTable } from './views/cap_table.js';
 import { renderBoardResolution } from './views/board_resolution.js';
 import { renderSafe } from './views/safe_agreement.js';
 import { renderOptionGrant } from './views/option_grant.js';
+import { renderRsuGrant } from './views/rsu_grant.js';
 import { renderFixAndFlip } from './views/fix_and_flip.js';
 import { renderCashConversionCycle } from './views/cash_conversion_cycle.js';
 import { renderProfitFirst } from './views/profit_first.js';
@@ -3217,6 +3218,7 @@ export async function dispatch() {
             case 'board-resolution': await renderBoardResolution(mount, state); break;
             case 'safe': await renderSafe(mount, state); break;
             case 'option-grant': await renderOptionGrant(mount, state); break;
+            case 'rsu-grant': await renderRsuGrant(mount, state); break;
             case 'fix-and-flip': await renderFixAndFlip(mount, state); break;
             case 'cash-conversion-cycle': await renderCashConversionCycle(mount, state); break;
             case 'profit-first': await renderProfitFirst(mount, state); break;
@@ -4610,6 +4612,7 @@ export const viewRenderers = {
     'board-resolution': (m, s) => renderBoardResolution(m, s),
     'safe': (m, s) => renderSafe(m, s),
     'option-grant': (m, s) => renderOptionGrant(m, s),
+    'rsu-grant': (m, s) => renderRsuGrant(m, s),
     'fix-and-flip': (m, s) => renderFixAndFlip(m, s),
     'cash-conversion-cycle': (m, s) => renderCashConversionCycle(m, s),
     'profit-first': (m, s) => renderProfitFirst(m, s),

@@ -94,6 +94,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/board-resolution", post(board_resolution_route))
         .route("/calc/safe", post(safe_route))
         .route("/calc/option-grant", post(option_grant_route))
+        .route("/calc/rsu-grant", post(rsu_grant_route))
         .route("/calc/fix-and-flip", post(fix_and_flip_route))
         .route("/calc/cash-conversion-cycle", post(cash_conversion_cycle_route))
         .route("/calc/profit-first", post(profit_first_route))
@@ -11853,6 +11854,14 @@ async fn option_grant_route(
     Json(b): Json<traderview_core::option_grant::OptionGrantInput>,
 ) -> Json<traderview_core::option_grant::OptionGrant> {
     Json(traderview_core::option_grant::generate(&b))
+}
+
+/// RSU grant: cliff+monthly vesting, vest value (ordinary income), sell-to-cover.
+async fn rsu_grant_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::rsu_grant::RsuGrantInput>,
+) -> Json<traderview_core::rsu_grant::RsuGrant> {
+    Json(traderview_core::rsu_grant::generate(&b))
 }
 
 /// Fix-and-flip: the 70% rule max-allowable-offer plus the full deal P&L

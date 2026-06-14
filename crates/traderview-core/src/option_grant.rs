@@ -67,7 +67,7 @@ fn money(v: f64) -> String {
 }
 
 /// Whole months from `start` up to and including `end` (0 if end precedes start).
-fn months_between(start: NaiveDate, end: NaiveDate) -> i64 {
+pub fn months_between(start: NaiveDate, end: NaiveDate) -> i64 {
     if end < start {
         return 0;
     }
@@ -82,7 +82,7 @@ fn months_between(start: NaiveDate, end: NaiveDate) -> i64 {
 
 /// Standard cliff + monthly vest: nothing before the cliff; at/after the cliff,
 /// the linearly-accrued (floored) amount, capped at the total at full term.
-fn vested_shares(total: f64, vesting_months: u32, cliff_months: u32, elapsed: i64) -> f64 {
+pub fn vested_shares(total: f64, vesting_months: u32, cliff_months: u32, elapsed: i64) -> f64 {
     if vesting_months == 0 || elapsed < cliff_months as i64 {
         return 0.0;
     }
