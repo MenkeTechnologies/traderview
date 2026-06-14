@@ -5,6 +5,7 @@
 import { api } from '../api.js';
 import { esc } from '../util.js';
 import { t } from '../i18n.js';
+import * as enh from '../calc_enhance.js';
 
 export async function renderBaristaFire(mount, _state) {
     mount.innerHTML = `
@@ -55,6 +56,15 @@ async function runCompute(mount) {
     result.innerHTML = `<p class="muted">${esc(t('view.barista_fire.status.computing'))}</p>`;
     try {
         const r = await api.request('/barista-fire/compute', { method: 'POST', body: JSON.stringify(input) });
+        // Sweep: years to Barista FI as annual expenses range 0.5x -> 1.5x (lower expenses both
+        // shrink the Barista number and widen the savings gap, so years fall).
+        const ex = input.annual_expenses_usd || 40000;
+        const sx = enh.linspace(ex * 0.5, ex * 1.5, 11);
+        const pts = await Promise.all(sx.map(async (e) => {
+            const rr = await api.request('/barista-fire/compute', { method: 'POST', body: JSON.stringify({ ...input, annual_expenses_usd: e }) });
+            return { x: e / 1000, y: rr && rr.years_until_barista_fi != null ? rr.years_until_barista_fi : NaN };
+        }));
+        const chart = enh.svgLineChart(pts, { xlabel: 'expenses $k', ylabel: 'years' });
         const stCls = r.status === 'barista_fi' ? 'pos' : r.status === 'no_gap' ? 'pos' : 'neg';
         const deltaCls = r.current_vs_barista_delta_usd >= 0 ? 'pos' : 'neg';
         result.innerHTML = `
@@ -74,7 +84,22 @@ async function runCompute(mount) {
                 <div><div class="muted small">${esc(t('view.barista_fire.field.status'))}</div>
                     <strong class="${stCls}" style="text-transform:uppercase">${esc(t('view.barista_fire.status.' + r.status) || r.status)}</strong></div>
             </div>
+            ${chart}
+            <div id="bf-tools" class="ce-toolbar"></div>
         `;
+        // Summary export (Copy / CSV). No permalink — id-based inputs.
+        enh.mountToolbar(mount.querySelector('#bf-tools'), {
+            viewId: 'barista-fire',
+            link: false,
+            filename: 'barista-fire.csv',
+            getRows: () => [['metric', 'value'],
+                ['barista_fi_number_usd', r.barista_fi_number_usd],
+                ['full_fi_number_usd', r.full_fi_number_usd],
+                ['barista_savings_usd', r.barista_savings_usd],
+                ['gap_annual_usd', r.gap_annual_usd],
+                ['years_until_barista_fi', r.years_until_barista_fi == null ? '' : r.years_until_barista_fi],
+                ['status', r.status]],
+        });
     } catch (e) {
         result.innerHTML = `<p class="neg">${esc(String(e))}</p>`;
     }

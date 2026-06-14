@@ -5,6 +5,7 @@
 import { api } from '../api.js';
 import { esc } from '../util.js';
 import { t } from '../i18n.js';
+import * as enh from '../calc_enhance.js';
 
 export async function renderLeanFire(mount, _state) {
     mount.innerHTML = `
@@ -49,6 +50,14 @@ async function runCompute(mount) {
     result.innerHTML = `<p class="muted">${esc(t('view.lean_fire.status.computing'))}</p>`;
     try {
         const r = await api.request('/lean-fire/compute', { method: 'POST', body: JSON.stringify(input) });
+        // Sweep: years to lean FI as annual expenses range 0.5x -> 1.5x.
+        const ex = input.annual_expenses_usd || 30000;
+        const sx = enh.linspace(ex * 0.5, ex * 1.5, 11);
+        const pts = await Promise.all(sx.map(async (e) => {
+            const rr = await api.request('/lean-fire/compute', { method: 'POST', body: JSON.stringify({ ...input, annual_expenses_usd: e }) });
+            return { x: e / 1000, y: rr && rr.years_to_fi != null ? rr.years_to_fi : NaN };
+        }));
+        const chart = enh.svgLineChart(pts, { xlabel: 'expenses $k', ylabel: 'years' });
         const fiCls = r.is_lean_fi ? 'pos' : 'neg';
         const tierCls = r.expense_tier === 'ultralean' || r.expense_tier === 'lean' ? 'pos'
                        : r.expense_tier === 'not_lean' ? 'neg' : '';
@@ -68,7 +77,21 @@ async function runCompute(mount) {
                 <div><div class="muted small">${esc(t('view.lean_fire.field.cap'))}</div>
                     <strong>$${r.upper_lean_threshold_usd.toFixed(0)}/yr</strong></div>
             </div>
+            ${chart}
+            <div id="lf-tools" class="ce-toolbar"></div>
         `;
+        // Summary export (Copy / CSV). No permalink — id-based inputs.
+        enh.mountToolbar(mount.querySelector('#lf-tools'), {
+            viewId: 'lean-fire',
+            link: false,
+            filename: 'lean-fire.csv',
+            getRows: () => [['metric', 'value'],
+                ['fi_number_usd', r.fi_number_usd],
+                ['is_lean_fi', r.is_lean_fi],
+                ['years_to_fi', r.years_to_fi == null ? '' : r.years_to_fi],
+                ['expense_tier', r.expense_tier],
+                ['upper_lean_threshold_usd', r.upper_lean_threshold_usd]],
+        });
     } catch (e) {
         result.innerHTML = `<p class="neg">${esc(String(e))}</p>`;
     }
