@@ -843,6 +843,11 @@ import { renderSpanMargin } from './views/span_margin.js';
 import { renderIvSurface } from './views/iv_surface.js';
 import { renderMertonDefault } from './views/merton_default.js';
 import { renderCapeValuation } from './views/cape_valuation.js';
+import { renderDecumulationMc } from './views/decumulation_mc.js';
+import { renderCallableOas } from './views/callable_oas.js';
+import { renderIvCone } from './views/iv_cone.js';
+import { renderGammaPinZone } from './views/gamma_pin_zone.js';
+import { renderCalendarSpread } from './views/calendar_spread.js';
 import { renderMortgageRecast } from './views/mortgage_recast.js';
 import { renderTaxEquivalentYield } from './views/tax_equivalent_yield.js';
 import { renderPmiRemoval } from './views/pmi_removal.js';
@@ -3368,6 +3373,11 @@ export async function dispatch() {
             case 'iv-surface': await renderIvSurface(mount, state); break;
             case 'merton-default': await renderMertonDefault(mount, state); break;
             case 'cape-valuation': await renderCapeValuation(mount, state); break;
+            case 'decumulation-mc': await renderDecumulationMc(mount, state); break;
+            case 'callable-oas': await renderCallableOas(mount, state); break;
+            case 'iv-cone': await renderIvCone(mount, state); break;
+            case 'gamma-pin-zone': await renderGammaPinZone(mount, state); break;
+            case 'calendar-spread': await renderCalendarSpread(mount, state); break;
             case 'mortgage-recast': await renderMortgageRecast(mount, state); break;
             case 'tax-equivalent-yield': await renderTaxEquivalentYield(mount, state); break;
             case 'pmi-removal': await renderPmiRemoval(mount, state); break;
@@ -4807,6 +4817,11 @@ export const viewRenderers = {
     'iv-surface': (m, s) => renderIvSurface(m, s),
     'merton-default': (m, s) => renderMertonDefault(m, s),
     'cape-valuation': (m, s) => renderCapeValuation(m, s),
+    'decumulation-mc': (m, s) => renderDecumulationMc(m, s),
+    'callable-oas': (m, s) => renderCallableOas(m, s),
+    'iv-cone': (m, s) => renderIvCone(m, s),
+    'gamma-pin-zone': (m, s) => renderGammaPinZone(m, s),
+    'calendar-spread': (m, s) => renderCalendarSpread(m, s),
     'mortgage-recast': (m, s) => renderMortgageRecast(m, s),
     'tax-equivalent-yield': (m, s) => renderTaxEquivalentYield(m, s),
     'pmi-removal': (m, s) => renderPmiRemoval(m, s),
