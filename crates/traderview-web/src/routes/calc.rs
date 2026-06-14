@@ -34,6 +34,9 @@ pub fn router() -> Router<AppState> {
         .route("/calc/efficient-frontier", post(efficient_frontier_route))
         .route("/calc/valuation-multiples", post(valuation_multiples_route))
         .route("/calc/dividend-discount-model", post(dividend_discount_model_route))
+        .route("/calc/probability-of-profit", post(probability_of_profit_route))
+        .route("/calc/straddle", post(straddle_route))
+        .route("/calc/strangle", post(strangle_route))
         .route("/calc/risk-on-off", post(risk_on_off_route))
         // ── Margin / buying power ─────────────────────────────────────
         .route("/calc/margin-call", post(margin_call_route))
@@ -753,6 +756,30 @@ async fn dividend_discount_model_route(
     Json(b): Json<traderview_core::dividend_discount_model::DdmInput>,
 ) -> Json<traderview_core::dividend_discount_model::DdmReport> {
     Json(traderview_core::dividend_discount_model::generate(&b))
+}
+
+/// Probability of profit: lognormal P(profit) for a defined profit zone.
+async fn probability_of_profit_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::probability_of_profit::PopInput>,
+) -> Json<Option<traderview_core::probability_of_profit::PopReport>> {
+    Json(traderview_core::probability_of_profit::compute(&b))
+}
+
+/// Straddle: max profit/loss, breakevens, profit-zone width.
+async fn straddle_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::straddle::Straddle>,
+) -> Json<Option<traderview_core::straddle::StraddleReport>> {
+    Json(traderview_core::straddle::analyze(&b))
+}
+
+/// Strangle: max profit/loss, breakevens, profit-zone width.
+async fn strangle_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::strangle::Strangle>,
+) -> Json<Option<traderview_core::strangle::StrangleReport>> {
+    Json(traderview_core::strangle::analyze(&b))
 }
 
 async fn risk_on_off_route(

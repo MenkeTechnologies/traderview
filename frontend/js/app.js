@@ -830,6 +830,9 @@ import { renderTwoAssetPortfolio } from './views/two_asset_portfolio.js';
 import { renderEfficientFrontier } from './views/efficient_frontier.js';
 import { renderValuationMultiples } from './views/valuation_multiples.js';
 import { renderDividendDiscountModel } from './views/dividend_discount_model.js';
+import { renderProbabilityOfProfit } from './views/probability_of_profit.js';
+import { renderStraddle } from './views/straddle.js';
+import { renderStrangle } from './views/strangle.js';
 import { renderMortgageRecast } from './views/mortgage_recast.js';
 import { renderTaxEquivalentYield } from './views/tax_equivalent_yield.js';
 import { renderPmiRemoval } from './views/pmi_removal.js';
@@ -3342,6 +3345,9 @@ export async function dispatch() {
             case 'efficient-frontier': await renderEfficientFrontier(mount, state); break;
             case 'valuation-multiples': await renderValuationMultiples(mount, state); break;
             case 'dividend-discount-model': await renderDividendDiscountModel(mount, state); break;
+            case 'probability-of-profit': await renderProbabilityOfProfit(mount, state); break;
+            case 'straddle': await renderStraddle(mount, state); break;
+            case 'strangle': await renderStrangle(mount, state); break;
             case 'mortgage-recast': await renderMortgageRecast(mount, state); break;
             case 'tax-equivalent-yield': await renderTaxEquivalentYield(mount, state); break;
             case 'pmi-removal': await renderPmiRemoval(mount, state); break;
@@ -4768,6 +4774,9 @@ export const viewRenderers = {
     'efficient-frontier': (m, s) => renderEfficientFrontier(m, s),
     'valuation-multiples': (m, s) => renderValuationMultiples(m, s),
     'dividend-discount-model': (m, s) => renderDividendDiscountModel(m, s),
+    'probability-of-profit': (m, s) => renderProbabilityOfProfit(m, s),
+    'straddle': (m, s) => renderStraddle(m, s),
+    'strangle': (m, s) => renderStrangle(m, s),
     'mortgage-recast': (m, s) => renderMortgageRecast(m, s),
     'tax-equivalent-yield': (m, s) => renderTaxEquivalentYield(m, s),
     'pmi-removal': (m, s) => renderPmiRemoval(m, s),
