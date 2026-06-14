@@ -296,6 +296,7 @@ pub mod rent_vs_sell;
 pub mod roth_bracket_fill;
 pub mod roth_contribution;
 pub mod rule_of_40;
+pub mod rule_of_78;
 pub mod risk;
 pub mod risk_gate;
 pub mod risk_metrics;

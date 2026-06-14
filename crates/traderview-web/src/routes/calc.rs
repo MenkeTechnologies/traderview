@@ -57,6 +57,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/rent-roll", post(rent_roll_route))
         .route("/calc/tenant-turnover", post(tenant_turnover_route))
         .route("/calc/break-even-roas", post(break_even_roas_route))
+        .route("/calc/rule-of-78", post(rule_of_78_route))
         .route("/calc/risk-on-off", post(risk_on_off_route))
         // ── Margin / buying power ─────────────────────────────────────
         .route("/calc/margin-call", post(margin_call_route))
@@ -1011,6 +1012,14 @@ async fn break_even_roas_route(
     Json(b): Json<traderview_core::break_even_roas::RoasInput>,
 ) -> Json<traderview_core::break_even_roas::RoasReport> {
     Json(traderview_core::break_even_roas::generate(&b))
+}
+
+/// Rule of 78s: precomputed-interest rebate and early-payoff penalty.
+async fn rule_of_78_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::rule_of_78::RuleOf78Input>,
+) -> Json<traderview_core::rule_of_78::RuleOf78Report> {
+    Json(traderview_core::rule_of_78::generate(&b))
 }
 
 async fn risk_on_off_route(
