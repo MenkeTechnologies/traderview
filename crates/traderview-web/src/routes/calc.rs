@@ -55,6 +55,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/inventory-costing", post(inventory_costing_route))
         .route("/calc/macrs-depreciation", post(macrs_depreciation_route))
         .route("/calc/rent-roll", post(rent_roll_route))
+        .route("/calc/tenant-turnover", post(tenant_turnover_route))
         .route("/calc/risk-on-off", post(risk_on_off_route))
         // ── Margin / buying power ─────────────────────────────────────
         .route("/calc/margin-call", post(margin_call_route))
@@ -993,6 +994,14 @@ async fn rent_roll_route(
     Json(b): Json<traderview_core::rent_roll::RentRollInput>,
 ) -> Json<traderview_core::rent_roll::RentRollReport> {
     Json(traderview_core::rent_roll::generate(&b))
+}
+
+/// Tenant turnover cost: lost rent + make-ready + leasing + concession.
+async fn tenant_turnover_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::tenant_turnover::TurnoverInput>,
+) -> Json<traderview_core::tenant_turnover::TurnoverReport> {
+    Json(traderview_core::tenant_turnover::generate(&b))
 }
 
 async fn risk_on_off_route(

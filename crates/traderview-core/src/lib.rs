@@ -365,6 +365,7 @@ pub mod tax_lot_optimizer;
 pub mod take_home_paycheck;
 pub mod traditional_ira_deduction;
 pub mod tbill_yield;
+pub mod tenant_turnover;
 pub mod three_bar_reversal;
 pub mod tilt_detector;
 pub mod tilt_indicator;

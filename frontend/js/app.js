@@ -851,6 +851,7 @@ import { renderCalendarSpread } from './views/calendar_spread.js';
 import { renderInventoryCosting } from './views/inventory_costing.js';
 import { renderMacrsDepreciation } from './views/macrs_depreciation.js';
 import { renderRentRoll } from './views/rent_roll.js';
+import { renderTenantTurnover } from './views/tenant_turnover.js';
 import { renderMortgageRecast } from './views/mortgage_recast.js';
 import { renderTaxEquivalentYield } from './views/tax_equivalent_yield.js';
 import { renderPmiRemoval } from './views/pmi_removal.js';
@@ -3384,6 +3385,7 @@ export async function dispatch() {
             case 'inventory-costing': await renderInventoryCosting(mount, state); break;
             case 'macrs-depreciation': await renderMacrsDepreciation(mount, state); break;
             case 'rent-roll': await renderRentRoll(mount, state); break;
+            case 'tenant-turnover': await renderTenantTurnover(mount, state); break;
             case 'mortgage-recast': await renderMortgageRecast(mount, state); break;
             case 'tax-equivalent-yield': await renderTaxEquivalentYield(mount, state); break;
             case 'pmi-removal': await renderPmiRemoval(mount, state); break;
@@ -4831,6 +4833,7 @@ export const viewRenderers = {
     'inventory-costing': (m, s) => renderInventoryCosting(m, s),
     'macrs-depreciation': (m, s) => renderMacrsDepreciation(m, s),
     'rent-roll': (m, s) => renderRentRoll(m, s),
+    'tenant-turnover': (m, s) => renderTenantTurnover(m, s),
     'mortgage-recast': (m, s) => renderMortgageRecast(m, s),
     'tax-equivalent-yield': (m, s) => renderTaxEquivalentYield(m, s),
     'pmi-removal': (m, s) => renderPmiRemoval(m, s),

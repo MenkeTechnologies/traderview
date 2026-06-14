@@ -1805,6 +1805,7 @@ export const api = {
     calcInventoryCosting:    (b) => request('/calc/inventory-costing',    { method: 'POST', body: JSON.stringify(b) }),
     calcMacrsDepreciation:   (b) => request('/calc/macrs-depreciation',   { method: 'POST', body: JSON.stringify(b) }),
     calcRentRoll:            (b) => request('/calc/rent-roll',             { method: 'POST', body: JSON.stringify(b) }),
+    calcTenantTurnover:      (b) => request('/calc/tenant-turnover',       { method: 'POST', body: JSON.stringify(b) }),
     calcRiskOnOff:           (b) => request('/calc/risk-on-off',          { method: 'POST', body: JSON.stringify(b) }),
     calcMarginCall:          (b) => request('/calc/margin-call',          { method: 'POST', body: JSON.stringify(b) }),
     calcMarginRunway:        (b) => request('/calc/margin-runway',        { method: 'POST', body: JSON.stringify(b) }),
