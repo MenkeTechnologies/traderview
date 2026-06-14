@@ -6,6 +6,7 @@ import { applyUiI18n, t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import { showToast } from '../toast.js';
 import { debounce } from '../util.js';
+import * as enh from '../calc_enhance.js';
 
 const esc = (s) => String(s).replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
 const money = (n) => (n == null ? '—' : '$' + Number(n).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
@@ -99,6 +100,12 @@ function renderResult(mount, doc) {
                 <div class="card"><div class="label" data-i18n="view.incstmt.card.pretax">Pre-tax income</div>
                     <div class="value">${money(doc.pretax_income_usd)} (${pct(doc.pretax_margin_pct)})</div></div>
             </div>
+            ${enh.svgBarChart([
+                { label: 'Gross', value: doc.gross_profit_usd },
+                { label: 'Operating', value: doc.operating_income_usd },
+                { label: 'Pre-tax', value: doc.pretax_income_usd },
+                { label: 'Net', value: doc.net_income_usd },
+            ])}
             <div class="btn-row-inline">
                 <button class="btn btn-secondary" id="is-copy" type="button" data-i18n="view.incstmt.btn.copy">Copy</button>
                 <button class="btn btn-secondary" id="is-download" type="button" data-i18n="view.incstmt.btn.download">Download .txt</button>

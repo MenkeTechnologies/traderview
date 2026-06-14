@@ -6,10 +6,14 @@ import { applyUiI18n, t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import { showToast } from '../toast.js';
 import { debounce } from '../util.js';
+import * as enh from '../calc_enhance.js';
 
 const money = (n) => '$' + Number(n).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 });
 const pct = (n) => (n == null ? '—' : Number(n).toLocaleString(undefined, { maximumFractionDigits: 2 }) + '%');
 const ratio = (n) => (n == null ? '—' : Number(n).toLocaleString(undefined, { maximumFractionDigits: 3 }) + '×');
+const VIEW = 'free-cash-flow';
+let lastReport = null;
+let lastBody = null;
 
 export async function renderFreeCashFlow(mount, _appState) {
     const tok = currentViewToken();
@@ -37,6 +41,9 @@ export async function renderFreeCashFlow(mount, _appState) {
                 <label><span data-i18n="view.fcf.label.ni">Net income ($)</span>
                     <input type="number" step="0.01" name="net_income_usd" value="400"></label>
             </form>
+            <div id="fcf-tools" class="ce-toolbar"></div>
+            <button type="button" id="fcf-sens-btn" class="ce-tool" data-i18n="calc.enh.sens.run">▦ Sensitivity</button>
+            <div id="fcf-sens" class="ce-sens"></div>
         </div>
         <div id="fcf-result" class="lpv-preview"></div>
         </div>
@@ -44,31 +51,56 @@ export async function renderFreeCashFlow(mount, _appState) {
     applyUiI18n(mount);
 
     const form = mount.querySelector('#fcf-form');
-    const generate = async () => {
+    enh.prefillForm(form, enh.readHashInputs());
+    const readBody = () => {
         const fd = new FormData(form);
-        const body = {
+        return {
             operating_cash_flow_usd: Number(fd.get('operating_cash_flow_usd')) || 0,
             capital_expenditures_usd: Number(fd.get('capital_expenditures_usd')) || 0,
             revenue_usd: Number(fd.get('revenue_usd')) || 0,
             market_cap_usd: Number(fd.get('market_cap_usd')) || 0,
             net_income_usd: Number(fd.get('net_income_usd')) || 0,
         };
+    };
+    const generate = async () => {
+        const body = readBody();
         try {
             const r = await api.calcFreeCashFlow(body);
             if (!viewIsCurrent(tok)) return;
+            lastReport = r; lastBody = body;
             renderResult(mount, r);
         } catch (err) {
             showToast(err.message || t('view.fcf.toast.error'), { level: 'error' });
         }
     };
+    enh.mountToolbar(mount.querySelector('#fcf-tools'), { viewId: VIEW, getInputs: () => lastBody || readBody(), getRows: () => reportRows(lastReport), filename: 'free-cash-flow.csv' });
+    mount.querySelector('#fcf-sens-btn').addEventListener('click', () => runSens(mount, readBody(), tok));
     form.addEventListener('input', debounce(generate, 250));
     form.addEventListener('submit', (e) => { e.preventDefault(); generate(); });
     generate();
 }
 
-function renderResult(mount, r) {
+function reportRows(r) {
+    if (!r) return [];
+    return [
+        ['metric', 'value'],
+        ['free_cash_flow_usd', r.free_cash_flow_usd],
+        ['fcf_margin_pct', r.fcf_margin_pct],
+        ['fcf_yield_pct', r.fcf_yield_pct],
+        ['fcf_to_net_income', r.fcf_to_net_income],
+    ];
+}
+
+function renderResult(mount, r, body) {
     const el = mount.querySelector('#fcf-result');
     const fcfClass = r.free_cash_flow_usd >= 0 ? 'pos' : 'neg';
+    const b = body || lastBody || {};
+    // FCF = operating cash flow minus capex.
+    const chart = enh.svgBarChart([
+        { label: 'OCF', value: b.operating_cash_flow_usd || 0 },
+        { label: 'Capex', value: -(b.capital_expenditures_usd || 0) },
+        { label: 'FCF', value: r.free_cash_flow_usd },
+    ]);
     el.innerHTML = `
         <div class="chart-panel">
             <h2 data-i18n="view.fcf.h2.result">The cash flow</h2>
@@ -80,6 +112,7 @@ function renderResult(mount, r) {
                 <div class="card"><div class="label" data-i18n="view.fcf.card.margin">FCF margin</div>
                     <div class="value">${pct(r.fcf_margin_pct)}</div></div>
             </div>
+            ${chart}
             <table class="data-table">
                 <tbody>
                     <tr><td data-i18n="view.fcf.row.fcf">Free cash flow</td><td>${money(r.free_cash_flow_usd)}</td></tr>
@@ -91,4 +124,16 @@ function renderResult(mount, r) {
         </div>
     `;
     applyUiI18n(el);
+}
+
+async function runSens(mount, base, tok) {
+    const panel = mount.querySelector('#fcf-sens');
+    panel.innerHTML = `<p class="muted small" data-i18n="calc.enh.sens.running">Computing…</p>`; applyUiI18n(panel);
+    // x: capex 0 -> 2x OCF; y: operating cash flow 0.5x -> 1.5x. Output: free cash flow.
+    const ocf = base.operating_cash_flow_usd || 500;
+    const xVals = enh.linspace(0, ocf * 2, 5);
+    const yVals = enh.linspace(ocf * 0.5, ocf * 1.5, 5);
+    const { cells } = await enh.runSensitivity({ base, xKey: 'capital_expenditures_usd', yKey: 'operating_cash_flow_usd', xVals, yVals, compute: (b) => api.calcFreeCashFlow(b), pick: (r) => (r ? r.free_cash_flow_usd : null) });
+    if (!viewIsCurrent(tok)) return;
+    panel.innerHTML = enh.renderSensitivityTable({ xVals, yVals, cells, fmt: (v) => (v == null ? '—' : '$' + Math.round(v)), xfmt: (v) => '$' + Math.round(v), yfmt: (v) => '$' + Math.round(v), xName: t('view.fcf.label.capex') || 'Capex', yName: t('view.fcf.label.ocf') || 'OCF' });
 }

@@ -6,6 +6,7 @@ import { applyUiI18n, t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import { showToast } from '../toast.js';
 import { debounce } from '../util.js';
+import * as enh from '../calc_enhance.js';
 
 const esc = (s) => String(s).replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
 const money = (n) => (n == null ? '—' : '$' + Number(n).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
@@ -120,6 +121,11 @@ function renderResult(mount, doc) {
                 <div class="card pos"><div class="label" data-i18n="view.cfs.card.ending">Ending cash</div>
                     <div class="value">${money(doc.ending_cash_usd)}</div></div>
             </div>
+            ${enh.svgBarChart([
+                { label: 'Operating', value: doc.operating_cash_flow_usd },
+                { label: 'Investing', value: doc.investing_cash_flow_usd },
+                { label: 'Financing', value: doc.financing_cash_flow_usd },
+            ])}
             <div class="btn-row-inline">
                 <button class="btn btn-secondary" id="cfs-copy" type="button" data-i18n="view.cfs.btn.copy">Copy</button>
                 <button class="btn btn-secondary" id="cfs-download" type="button" data-i18n="view.cfs.btn.download">Download .txt</button>
