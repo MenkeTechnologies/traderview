@@ -793,6 +793,7 @@ export const api = {
     calcPurchaseAgreement:   (body) => request('/calc/purchase-agreement', { method: 'POST', body: JSON.stringify(body) }),
     calcClosingStatement:    (body) => request('/calc/closing-statement', { method: 'POST', body: JSON.stringify(body) }),
     calcLeaseOption:         (body) => request('/calc/lease-option', { method: 'POST', body: JSON.stringify(body) }),
+    calcLandContract:        (body) => request('/calc/land-contract', { method: 'POST', body: JSON.stringify(body) }),
     calcFixAndFlip:          (body) => request('/calc/fix-and-flip', { method: 'POST', body: JSON.stringify(body) }),
     calcCashConversionCycle: (body) => request('/calc/cash-conversion-cycle', { method: 'POST', body: JSON.stringify(body) }),
     calcProfitFirst:         (body) => request('/calc/profit-first', { method: 'POST', body: JSON.stringify(body) }),

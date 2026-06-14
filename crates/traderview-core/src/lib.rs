@@ -149,6 +149,7 @@ pub mod iv_rank;
 pub mod iv_skew;
 pub mod kelly;
 pub mod keltner;
+pub mod land_contract;
 pub mod landlord_notice;
 pub mod lead_paint_disclosure;
 pub mod lease_generator;

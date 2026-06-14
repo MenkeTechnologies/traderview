@@ -84,6 +84,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/purchase-agreement", post(purchase_agreement_route))
         .route("/calc/closing-statement", post(closing_statement_route))
         .route("/calc/lease-option", post(lease_option_route))
+        .route("/calc/land-contract", post(land_contract_route))
         .route("/calc/fix-and-flip", post(fix_and_flip_route))
         .route("/calc/cash-conversion-cycle", post(cash_conversion_cycle_route))
         .route("/calc/profit-first", post(profit_first_route))
@@ -11763,6 +11764,14 @@ async fn lease_option_route(
     Json(b): Json<traderview_core::lease_option::LeaseOptionInput>,
 ) -> Json<traderview_core::lease_option::LeaseOption> {
     Json(traderview_core::lease_option::generate(&b))
+}
+
+/// Land contract (contract for deed): amortized installment sale + clauses.
+async fn land_contract_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::land_contract::LandContractInput>,
+) -> Json<traderview_core::land_contract::LandContract> {
+    Json(traderview_core::land_contract::generate(&b))
 }
 
 /// Fix-and-flip: the 70% rule max-allowable-offer plus the full deal P&L
