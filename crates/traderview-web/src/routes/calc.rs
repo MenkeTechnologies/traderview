@@ -90,6 +90,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/earnest-money-receipt", post(earnest_money_receipt_route))
         .route("/calc/stock-subscription", post(stock_subscription_route))
         .route("/calc/convertible-note", post(convertible_note_route))
+        .route("/calc/cap-table", post(cap_table_route))
         .route("/calc/fix-and-flip", post(fix_and_flip_route))
         .route("/calc/cash-conversion-cycle", post(cash_conversion_cycle_route))
         .route("/calc/profit-first", post(profit_first_route))
@@ -11817,6 +11818,14 @@ async fn convertible_note_route(
     Json(b): Json<traderview_core::convertible_note::ConvertibleNoteInput>,
 ) -> Json<traderview_core::convertible_note::ConvertibleNote> {
     Json(traderview_core::convertible_note::generate(&b))
+}
+
+/// Cap table: per-holder ownership % of fully-diluted shares.
+async fn cap_table_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::cap_table::CapTableInput>,
+) -> Json<traderview_core::cap_table::CapTable> {
+    Json(traderview_core::cap_table::generate(&b))
 }
 
 /// Fix-and-flip: the 70% rule max-allowable-offer plus the full deal P&L
