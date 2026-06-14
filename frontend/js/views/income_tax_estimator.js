@@ -1,73 +1,25 @@
-// Income Tax Estimator — running YTD federal effective-tax estimate
-// against 2025 IRS brackets (most recent published). Supports single,
-// MFJ, MFS, HoH filing statuses. Includes standard deduction default,
-// optional itemized override, LTCG segregated at 0/15/20%, and FICA
-// (Social Security + Medicare + Additional Medicare 0.9% over the
-// threshold). Output is an effective+marginal breakdown table.
+// Income Tax Estimator — TY2025 federal estimate (IRS Rev. Proc. 2024-40).
+// Computation runs server-side via /calc/income-tax-estimator
+// (traderview-core::income_tax) — a faithful port of the former client-side
+// bracket/LTCG/FICA math, Python-pinned and unit-tested. The brackets, standard
+// deductions, LTCG breakpoints, and FICA thresholds live in the Rust module.
+// Class-based styling for release-WebKit correctness.
 
+import { api } from '../api.js';
+import { applyUiI18n } from '../i18n.js';
+import { currentViewToken, viewIsCurrent } from '../app.js';
+import { showToast } from '../toast.js';
+import { debounce } from '../util.js';
+import * as enh from '../calc_enhance.js';
 
-// 2025 federal brackets (IRS Rev. Proc. 2024-40, official inflation
-// adjustments for tax year 2025).
-const BRACKETS = {
-    single: [
-        [0,        0.10],
-        [11925,    0.12],
-        [48475,    0.22],
-        [103350,   0.24],
-        [197300,   0.32],
-        [250525,   0.35],
-        [626350,   0.37],
-    ],
-    mfj: [
-        [0,        0.10],
-        [23850,    0.12],
-        [96950,    0.22],
-        [206700,   0.24],
-        [394600,   0.32],
-        [501050,   0.35],
-        [751600,   0.37],
-    ],
-    mfs: [
-        [0,        0.10],
-        [11925,    0.12],
-        [48475,    0.22],
-        [103350,   0.24],
-        [197300,   0.32],
-        [250525,   0.35],
-        [375800,   0.37],
-    ],
-    hoh: [
-        [0,        0.10],
-        [17000,    0.12],
-        [64850,    0.22],
-        [103350,   0.24],
-        [197300,   0.32],
-        [250500,   0.35],
-        [626350,   0.37],
-    ],
-};
-
-const STD_DEDUCTION = {
-    single: 15000,
-    mfj:    30000,
-    mfs:    15000,
-    hoh:    22500,
-};
-
-const LTCG_BRACKETS = {
-    single: [ [0, 0.00], [48350, 0.15], [533400, 0.20] ],
-    mfj:    [ [0, 0.00], [96700, 0.15], [600050, 0.20] ],
-    mfs:    [ [0, 0.00], [48350, 0.15], [300000, 0.20] ],
-    hoh:    [ [0, 0.00], [64750, 0.15], [566700, 0.20] ],
-};
-
-const SS_WAGE_BASE_2025 = 176100;
-const SS_RATE = 0.062;
-const MEDI_RATE = 0.0145;
-const ADDL_MEDI_RATE = 0.009;
-const ADDL_MEDI_THRESHOLD = { single: 200000, mfj: 250000, mfs: 125000, hoh: 200000 };
+const fmt = (n, d) => (n == null || !Number.isFinite(Number(n)) ? '—' : Number(n).toLocaleString(undefined, { minimumFractionDigits: d, maximumFractionDigits: d }));
+const pct = (r) => (r == null ? '—' : Number(r).toFixed(1) + '%');
+const VIEW = 'income-tax-estimator';
+let lastReport = null;
 
 export async function renderIncomeTaxEstimator(mount, _state) {
+    const tok = currentViewToken();
+    if (!viewIsCurrent(tok)) return;
     mount.innerHTML = `
         <h1 class="view-title"><span data-i18n="view.income_tax_estimator.title">// INCOME TAX ESTIMATOR · TY2025</span></h1>
         <p class="muted small" data-i18n-html="view.income_tax_estimator.intro">
@@ -78,173 +30,118 @@ export async function renderIncomeTaxEstimator(mount, _state) {
             or credits — for those, use a CPA or tax software.
         </p>
         <div class="chart-panel">
-            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px;margin-bottom:12px">
-                <label>
-                    <span class="muted small">Filing status</span>
-                    <select id="tx-status" style="width:100%">
+            <div class="re-grid">
+                <label><span class="muted small">Filing status</span>
+                    <select id="tx-status">
                         <option value="single" selected>Single</option>
                         <option value="mfj">Married filing jointly</option>
                         <option value="mfs">Married filing separately</option>
                         <option value="hoh">Head of household</option>
-                    </select>
-                </label>
-                <label>
-                    <span class="muted small">W-2 / ordinary income $</span>
-                    <input type="number" id="tx-wages" step="1000" min="0" value="180000" style="width:100%">
-                </label>
-                <label>
-                    <span class="muted small">Short-term cap gains $</span>
-                    <input type="number" id="tx-stcg" step="100" value="0" style="width:100%">
-                </label>
-                <label>
-                    <span class="muted small">Long-term cap gains $</span>
-                    <input type="number" id="tx-ltcg" step="100" value="0" style="width:100%">
-                </label>
-                <label>
-                    <span class="muted small">Qualified dividends $</span>
-                    <input type="number" id="tx-qdiv" step="100" value="0" style="width:100%">
-                </label>
-                <label>
-                    <span class="muted small">Itemized override $ (0 = use std)</span>
-                    <input type="number" id="tx-item" step="500" value="0" style="width:100%">
-                </label>
-                <label>
-                    <span class="muted small">Pre-tax 401(k) / HSA $</span>
-                    <input type="number" id="tx-pretax" step="500" value="23500" style="width:100%">
-                </label>
+                    </select></label>
+                <label><span class="muted small">W-2 / ordinary income $</span>
+                    <input type="number" id="tx-wages" step="1000" min="0" value="180000"></label>
+                <label><span class="muted small">Short-term cap gains $</span>
+                    <input type="number" id="tx-stcg" step="100" value="0"></label>
+                <label><span class="muted small">Long-term cap gains $</span>
+                    <input type="number" id="tx-ltcg" step="100" value="0"></label>
+                <label><span class="muted small">Qualified dividends $</span>
+                    <input type="number" id="tx-qdiv" step="100" value="0"></label>
+                <label><span class="muted small">Itemized override $ (0 = use std)</span>
+                    <input type="number" id="tx-item" step="500" value="0"></label>
+                <label><span class="muted small">Pre-tax 401(k) / HSA $</span>
+                    <input type="number" id="tx-pretax" step="500" value="23500"></label>
             </div>
             <button class="btn btn-sm primary" id="tx-run" data-shortcut="r">⚡ Compute</button>
-            <div id="tx-result" style="margin-top:12px"></div>
+            <div id="tx-tools" class="ce-toolbar"></div>
+            <div id="tx-result" class="re-result"></div>
         </div>
     `;
+    applyUiI18n(mount);
 
-    const inputs = mount.querySelectorAll('#tx-status, #tx-wages, #tx-stcg, #tx-ltcg, #tx-qdiv, #tx-item, #tx-pretax');
-    inputs.forEach(el => el.addEventListener('input', () => compute(mount)));
-    mount.querySelector('#tx-run').addEventListener('click', () => compute(mount));
-    compute(mount);
+    const num = (id) => parseFloat(mount.querySelector(id).value) || 0;
+    const readBody = () => ({
+        filing_status: mount.querySelector('#tx-status').value,
+        wages_usd: num('#tx-wages'),
+        short_term_gains_usd: num('#tx-stcg'),
+        long_term_gains_usd: num('#tx-ltcg'),
+        qualified_dividends_usd: num('#tx-qdiv'),
+        itemized_override_usd: num('#tx-item'),
+        pretax_401k_hsa_usd: num('#tx-pretax'),
+    });
+    const compute = async () => {
+        try {
+            const r = await api.calcIncomeTax(readBody());
+            if (!viewIsCurrent(tok)) return;
+            lastReport = r;
+            renderResult(mount, r);
+        } catch (err) {
+            showToast(err.message || 'Could not compute the estimate.', { level: 'error' });
+        }
+    };
+    enh.mountToolbar(mount.querySelector('#tx-tools'), {
+        viewId: VIEW, link: false, filename: 'income-tax-estimator.csv',
+        getRows: () => reportRows(lastReport),
+    });
+    mount.querySelectorAll('#tx-status, #tx-wages, #tx-stcg, #tx-ltcg, #tx-qdiv, #tx-item, #tx-pretax').forEach(el => {
+        el.addEventListener('input', debounce(compute, 250));
+    });
+    mount.querySelector('#tx-run').addEventListener('click', compute);
+    compute();
 }
 
-function compute(mount) {
-    const status = mount.querySelector('#tx-status').value;
-    const wages = parseFloat(mount.querySelector('#tx-wages').value) || 0;
-    const stcg = parseFloat(mount.querySelector('#tx-stcg').value) || 0;
-    const ltcg = parseFloat(mount.querySelector('#tx-ltcg').value) || 0;
-    const qdiv = parseFloat(mount.querySelector('#tx-qdiv').value) || 0;
-    const itemOverride = parseFloat(mount.querySelector('#tx-item').value) || 0;
-    const pretax = parseFloat(mount.querySelector('#tx-pretax').value) || 0;
+function reportRows(r) {
+    if (!r || !r.valid) return [];
+    const rows = [['metric', 'value'],
+        ['total_income_usd', r.total_income_usd],
+        ['ordinary_tax_usd', r.ordinary_tax_usd],
+        ['preferential_tax_usd', r.preferential_tax_usd],
+        ['fica_total_usd', r.fica_total_usd],
+        ['total_tax_usd', r.total_tax_usd],
+        ['effective_rate_pct', r.effective_rate_pct],
+        ['take_home_usd', r.take_home_usd],
+        [], ['rate_pct', 'from_usd', 'to_usd', 'amount_usd', 'tax_usd']];
+    for (const b of r.ordinary_breakdown) rows.push([b.rate_pct, b.from_usd, b.to_usd == null ? '' : b.to_usd, b.amount_usd, b.tax_usd]);
+    return rows;
+}
 
-    // Ordinary income: W-2 + STCG, minus pre-tax deferrals.
-    const ordinaryGross = wages + stcg;
-    const ordinaryAfterPretax = Math.max(0, ordinaryGross - pretax);
-    const deduction = itemOverride > 0 ? itemOverride : STD_DEDUCTION[status];
-    const ordinaryTaxable = Math.max(0, ordinaryAfterPretax - deduction);
-    // Preferential income: LTCG + qualified dividends.
-    const prefTaxable = ltcg + qdiv;
+function bracketRows(rows) {
+    return rows.map(row => `<tr>
+        <td>${pct(row.rate_pct)}</td>
+        <td class="muted">$${fmt(row.from_usd, 0)} → ${row.to_usd == null ? '∞' : '$' + fmt(row.to_usd, 0)}</td>
+        <td>$${fmt(row.amount_usd, 0)}</td>
+        <td><strong>$${fmt(row.tax_usd, 0)}</strong></td>
+    </tr>`).join('');
+}
 
-    // Ordinary federal income tax (progressive brackets).
-    const { tax: ordTax, marginalRate: ordMarginal, breakdown: ordBreak } = applyBrackets(BRACKETS[status], ordinaryTaxable);
-
-    // LTCG: stacked ON TOP of ordinary taxable for bracket-position purposes.
-    // The 0%/15%/20% breakpoints are based on TOTAL taxable income, not LTCG
-    // alone. Compute LTCG tax by walking the preferential brackets starting
-    // at ordinaryTaxable as the "floor".
-    const { tax: prefTax, breakdown: prefBreak } = applyLtcgBrackets(LTCG_BRACKETS[status], ordinaryTaxable, prefTaxable);
-
-    // FICA: only on W-2 wages, NOT on STCG/LTCG/dividends. Employee side only.
-    const ssWages = Math.min(wages, SS_WAGE_BASE_2025);
-    const ssTax = ssWages * SS_RATE;
-    const mediTax = wages * MEDI_RATE;
-    const addlMediBase = Math.max(0, wages - ADDL_MEDI_THRESHOLD[status]);
-    const addlMedi = addlMediBase * ADDL_MEDI_RATE;
-    const fica = ssTax + mediTax + addlMedi;
-
-    const totalTax = ordTax + prefTax + fica;
-    const totalIncome = wages + stcg + ltcg + qdiv;
-    const effectiveRate = totalIncome > 0 ? totalTax / totalIncome : 0;
-    const takeHome = totalIncome - pretax - totalTax;
-
+function renderResult(mount, r) {
     const result = mount.querySelector('#tx-result');
+    if (!r.valid) { result.innerHTML = ''; return; }
+    // Where the total tax comes from: ordinary income tax, preferential, and FICA.
+    const chart = enh.svgBarChart([
+        { label: 'Ordinary', value: r.ordinary_tax_usd },
+        { label: 'LTCG/QD', value: r.preferential_tax_usd },
+        { label: 'FICA', value: r.fica_total_usd },
+    ]);
     result.innerHTML = `
-        <div class="cards" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px;margin-bottom:12px">
-            <div class="card"><div class="label">Total income</div><div class="value">$${fmt(totalIncome, 0)}</div></div>
-            <div class="card"><div class="label">Ordinary federal</div><div class="value neg">-$${fmt(ordTax, 0)}</div><div class="muted small">marginal ${pct(ordMarginal)}</div></div>
-            <div class="card"><div class="label">LTCG / qualified</div><div class="value neg">-$${fmt(prefTax, 0)}</div></div>
-            <div class="card"><div class="label">FICA</div><div class="value neg">-$${fmt(fica, 0)}</div><div class="muted small">SS $${fmt(ssTax, 0)} · Medi $${fmt(mediTax + addlMedi, 0)}</div></div>
-            <div class="card"><div class="label">Effective tax rate</div><div class="value">${pct(effectiveRate)}</div></div>
-            <div class="card"><div class="label">Est. take-home</div><div class="value pos">$${fmt(takeHome, 0)}</div></div>
+        <div class="cards">
+            <div class="card"><div class="label">Total income</div><div class="value">$${fmt(r.total_income_usd, 0)}</div></div>
+            <div class="card"><div class="label">Ordinary federal</div><div class="value neg">-$${fmt(r.ordinary_tax_usd, 0)}</div><div class="muted small">marginal ${pct(r.marginal_rate_pct)}</div></div>
+            <div class="card"><div class="label">LTCG / qualified</div><div class="value neg">-$${fmt(r.preferential_tax_usd, 0)}</div></div>
+            <div class="card"><div class="label">FICA</div><div class="value neg">-$${fmt(r.fica_total_usd, 0)}</div><div class="muted small">SS $${fmt(r.social_security_tax_usd, 0)} · Medi $${fmt(r.medicare_tax_usd, 0)}</div></div>
+            <div class="card"><div class="label">Effective tax rate</div><div class="value">${pct(r.effective_rate_pct)}</div></div>
+            <div class="card"><div class="label">Est. take-home</div><div class="value pos">$${fmt(r.take_home_usd, 0)}</div></div>
         </div>
+        ${chart}
         <h3 class="section-title">Ordinary bracket walk</h3>
         <table class="trades" data-table-key="tx-ord">
             <thead><tr><th>Rate</th><th>Bracket range</th><th>Income in bracket</th><th>Tax in bracket</th></tr></thead>
-            <tbody>${ordBreak.map(row => `<tr>
-                <td>${pct(row.rate)}</td>
-                <td class="muted">$${fmt(row.from, 0)} → ${row.to == null ? '∞' : '$' + fmt(row.to, 0)}</td>
-                <td>$${fmt(row.amount, 0)}</td>
-                <td><strong>$${fmt(row.tax, 0)}</strong></td>
-            </tr>`).join('')}</tbody>
+            <tbody>${bracketRows(r.ordinary_breakdown)}</tbody>
         </table>
-        ${prefBreak.length ? `
-        <h3 class="section-title" style="margin-top:18px">LTCG bracket walk (stacked above ordinary)</h3>
+        ${r.ltcg_breakdown.length ? `
+        <h3 class="section-title">LTCG bracket walk (stacked above ordinary)</h3>
         <table class="trades" data-table-key="tx-pref">
             <thead><tr><th>Rate</th><th>Bracket range</th><th>Income in bracket</th><th>Tax in bracket</th></tr></thead>
-            <tbody>${prefBreak.map(row => `<tr>
-                <td>${pct(row.rate)}</td>
-                <td class="muted">$${fmt(row.from, 0)} → ${row.to == null ? '∞' : '$' + fmt(row.to, 0)}</td>
-                <td>$${fmt(row.amount, 0)}</td>
-                <td><strong>$${fmt(row.tax, 0)}</strong></td>
-            </tr>`).join('')}</tbody>
+            <tbody>${bracketRows(r.ltcg_breakdown)}</tbody>
         </table>` : ''}
     `;
-}
-
-function applyBrackets(brackets, taxable) {
-    let tax = 0;
-    let marginalRate = 0;
-    const breakdown = [];
-    for (let i = 0; i < brackets.length; i++) {
-        const [from, rate] = brackets[i];
-        const to = brackets[i + 1] ? brackets[i + 1][0] : null;
-        if (taxable <= from) {
-            breakdown.push({ rate, from, to, amount: 0, tax: 0 });
-            continue;
-        }
-        const top = to == null ? taxable : Math.min(taxable, to);
-        const amount = Math.max(0, top - from);
-        const segTax = amount * rate;
-        tax += segTax;
-        marginalRate = rate;
-        breakdown.push({ rate, from, to, amount, tax: segTax });
-    }
-    return { tax, marginalRate, breakdown };
-}
-
-function applyLtcgBrackets(brackets, floor, pref) {
-    let tax = 0;
-    const breakdown = [];
-    if (pref <= 0) return { tax, breakdown };
-    const ceiling = floor + pref;
-    for (let i = 0; i < brackets.length; i++) {
-        const [from, rate] = brackets[i];
-        const to = brackets[i + 1] ? brackets[i + 1][0] : null;
-        if (ceiling <= from) {
-            breakdown.push({ rate, from, to, amount: 0, tax: 0 });
-            continue;
-        }
-        const segLo = Math.max(floor, from);
-        const segHi = to == null ? ceiling : Math.min(ceiling, to);
-        const amount = Math.max(0, segHi - segLo);
-        const segTax = amount * rate;
-        tax += segTax;
-        breakdown.push({ rate, from, to, amount, tax: segTax });
-    }
-    return { tax, breakdown };
-}
-
-function fmt(n, d) {
-    if (n == null || !Number.isFinite(Number(n))) return '—';
-    return Number(n).toLocaleString(undefined, { minimumFractionDigits: d, maximumFractionDigits: d });
-}
-
-function pct(r) {
-    return (r * 100).toFixed(1) + '%';
 }

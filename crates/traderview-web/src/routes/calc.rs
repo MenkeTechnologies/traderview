@@ -36,6 +36,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/cap-rate", post(cap_rate_route))
         .route("/calc/yield-to-call", post(yield_to_call_route))
         .route("/calc/niit", post(niit_route))
+        .route("/calc/income-tax-estimator", post(income_tax_route))
         .route("/calc/dividend-discount-model", post(dividend_discount_model_route))
         .route("/calc/probability-of-profit", post(probability_of_profit_route))
         .route("/calc/straddle", post(straddle_route))
@@ -982,6 +983,13 @@ async fn liquidity_ratios_route(
     Json(b): Json<traderview_core::liquidity_ratios::LiquidityInput>,
 ) -> Json<traderview_core::liquidity_ratios::LiquidityReport> {
     Json(traderview_core::liquidity_ratios::generate(&b))
+}
+
+/// Income tax: TY2025 federal estimate (ordinary brackets, stacked LTCG, FICA).
+async fn income_tax_route(
+    Json(b): Json<traderview_core::income_tax::IncomeTaxInput>,
+) -> Json<traderview_core::income_tax::IncomeTaxReport> {
+    Json(traderview_core::income_tax::generate(&b))
 }
 
 /// NIIT: the 3.8% net investment income surtax over the MAGI threshold.
