@@ -54,6 +54,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/calendar-spread", post(calendar_spread_route))
         .route("/calc/inventory-costing", post(inventory_costing_route))
         .route("/calc/macrs-depreciation", post(macrs_depreciation_route))
+        .route("/calc/self-employment-tax", post(self_employment_tax_route))
         .route("/calc/risk-on-off", post(risk_on_off_route))
         // ── Margin / buying power ─────────────────────────────────────
         .route("/calc/margin-call", post(margin_call_route))
@@ -984,6 +985,14 @@ async fn macrs_depreciation_route(
     Json(b): Json<traderview_core::macrs_depreciation::MacrsInput>,
 ) -> Json<traderview_core::macrs_depreciation::MacrsReport> {
     Json(traderview_core::macrs_depreciation::generate(&b))
+}
+
+/// Self-employment tax: Social Security + Medicare on net SE earnings.
+async fn self_employment_tax_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::self_employment_tax::SeTaxInput>,
+) -> Json<traderview_core::self_employment_tax::SeTaxReport> {
+    Json(traderview_core::self_employment_tax::generate(&b))
 }
 
 async fn risk_on_off_route(

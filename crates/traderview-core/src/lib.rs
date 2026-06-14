@@ -316,6 +316,7 @@ pub mod scan;
 pub mod schaff_trend;
 pub mod second_income;
 pub mod sector_exposure;
+pub mod self_employment_tax;
 pub mod security_deposit_itemization;
 pub mod seller_disclosure;
 pub mod seller_financing;
