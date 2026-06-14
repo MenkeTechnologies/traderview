@@ -117,6 +117,7 @@ pub mod expense_ratio_drag;
 pub mod expense_reimbursement;
 pub mod fair_value_gap;
 pub mod fibonacci;
+pub mod final_paycheck;
 pub mod fix_and_flip;
 pub mod footprint;
 pub mod free_cash_flow;

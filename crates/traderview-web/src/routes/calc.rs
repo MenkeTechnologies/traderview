@@ -112,6 +112,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/contractor-1099", post(contractor_1099_route))
         .route("/calc/pto-balance", post(pto_balance_route))
         .route("/calc/wage-garnishment", post(wage_garnishment_route))
+        .route("/calc/final-paycheck", post(final_paycheck_route))
         .route("/calc/fix-and-flip", post(fix_and_flip_route))
         .route("/calc/cash-conversion-cycle", post(cash_conversion_cycle_route))
         .route("/calc/profit-first", post(profit_first_route))
@@ -12015,6 +12016,14 @@ async fn wage_garnishment_route(
     Json(b): Json<traderview_core::wage_garnishment::GarnishmentInput>,
 ) -> Json<traderview_core::wage_garnishment::WageGarnishment> {
     Json(traderview_core::wage_garnishment::generate(&b))
+}
+
+/// Final paycheck: waiting-time penalty (daily wage × days late, capped).
+async fn final_paycheck_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::final_paycheck::FinalPaycheckInput>,
+) -> Json<traderview_core::final_paycheck::FinalPaycheck> {
+    Json(traderview_core::final_paycheck::generate(&b))
 }
 
 /// Fix-and-flip: the 70% rule max-allowable-offer plus the full deal P&L
