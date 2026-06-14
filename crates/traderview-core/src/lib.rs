@@ -274,6 +274,7 @@ pub mod roc;
 pub mod rolling_zscore;
 pub mod rollup;
 pub mod round_levels;
+pub mod royalty_agreement;
 pub mod rsi_divergence;
 pub mod rsu_grant;
 pub mod safe_agreement;

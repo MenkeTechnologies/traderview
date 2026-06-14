@@ -98,6 +98,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/statement-of-account", post(statement_of_account_route))
         .route("/calc/warrant", post(warrant_route))
         .route("/calc/earnout", post(earnout_route))
+        .route("/calc/royalty", post(royalty_route))
         .route("/calc/fix-and-flip", post(fix_and_flip_route))
         .route("/calc/cash-conversion-cycle", post(cash_conversion_cycle_route))
         .route("/calc/profit-first", post(profit_first_route))
@@ -11889,6 +11890,14 @@ async fn earnout_route(
     Json(b): Json<traderview_core::earnout_agreement::EarnoutInput>,
 ) -> Json<traderview_core::earnout_agreement::EarnoutAgreement> {
     Json(traderview_core::earnout_agreement::generate(&b))
+}
+
+/// Royalty/license agreement: earned vs minimum-guarantee royalty, advance recoupment.
+async fn royalty_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::royalty_agreement::RoyaltyInput>,
+) -> Json<traderview_core::royalty_agreement::RoyaltyAgreement> {
+    Json(traderview_core::royalty_agreement::generate(&b))
 }
 
 /// Fix-and-flip: the 70% rule max-allowable-offer plus the full deal P&L
