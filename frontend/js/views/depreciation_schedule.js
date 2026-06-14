@@ -20,7 +20,8 @@ export async function renderDepreciationSchedule(mount, _appState) {
             The period-by-period book-value table for a fixed asset. Straight-line spreads (cost − salvage)
             evenly over the life; double-declining-balance applies twice the straight-line rate to the
             declining book value, floored so the book value never falls below salvage; sum-of-years-digits
-            weights the base by remaining life. Drafting aid, not accounting/tax advice.
+            weights the base by remaining life; units-of-production charges each year its share of the base
+            equal to that year's units over total estimated units. Drafting aid, not accounting/tax advice.
         </p>
         <div class="lpv-split">
         <div class="chart-panel">
@@ -41,7 +42,12 @@ export async function renderDepreciationSchedule(mount, _appState) {
                         <option value="straight_line" data-i18n="view.depsch.opt.sl">Straight-line</option>
                         <option value="ddb" data-i18n="view.depsch.opt.ddb">Double-declining-balance</option>
                         <option value="syd" data-i18n="view.depsch.opt.syd">Sum-of-years-digits</option>
+                        <option value="uop" data-i18n="view.depsch.opt.uop">Units-of-production</option>
                     </select></label>
+                <label><span data-i18n="view.depsch.label.total_units">Total estimated units (units-of-production)</span>
+                    <input type="number" step="100" min="0" name="total_estimated_units" value="100000"></label>
+                <label><span data-i18n="view.depsch.label.units_per_period">Units per year, comma-separated (units-of-production)</span>
+                    <input type="text" name="units_per_period" value="30000, 25000, 20000, 15000, 10000"></label>
                 <label><span data-i18n="view.depsch.label.start">Placed in service (year)</span>
                     <input type="number" step="1" min="0" name="start_year" value="2026"></label>
                 <label><span data-i18n="view.depsch.label.date">Date</span>
@@ -65,6 +71,9 @@ export async function renderDepreciationSchedule(mount, _appState) {
             salvage_usd: Number(fd.get('salvage_usd')) || 0,
             life_years: Number(fd.get('life_years')) || 0,
             method: fd.get('method') || 'straight_line',
+            total_estimated_units: Number(fd.get('total_estimated_units')) || 0,
+            units_per_period: (fd.get('units_per_period') || '')
+                .split(',').map((s) => Number(s.trim())).filter((n) => Number.isFinite(n)),
             start_year: Number(fd.get('start_year')) || 0,
             date: fd.get('date'),
             note: (fd.get('note') || '').trim(),
