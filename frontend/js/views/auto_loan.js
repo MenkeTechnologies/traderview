@@ -4,6 +4,7 @@
 import { api } from '../api.js';
 import { esc } from '../util.js';
 import { t } from '../i18n.js';
+import * as enh from '../calc_enhance.js';
 
 export async function renderAutoLoan(mount, _state) {
     mount.innerHTML = `
@@ -66,6 +67,8 @@ async function runCompute(mount) {
     result.innerHTML = `<p class="muted">${esc(t('view.auto_loan.status.computing'))}</p>`;
     try {
         const r = await api.request('/auto-loan/compute', { method: 'POST', body: JSON.stringify(input) });
+        // Balance-over-time curve straight from the returned amortization schedule.
+        const chart = enh.svgLineChart((r.schedule || []).map(m => ({ x: m.month, y: m.balance_usd })), { xlabel: 'month', ylabel: 'balance $' });
         result.innerHTML = `
             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-top:1rem">
                 <div><div class="muted small">${esc(t('view.auto_loan.field.principal'))}</div>
@@ -77,6 +80,8 @@ async function runCompute(mount) {
                 <div><div class="muted small">${esc(t('view.auto_loan.field.total_interest'))}</div>
                     <strong class="neg">$${r.total_interest_usd.toFixed(0)}</strong></div>
             </div>
+            ${chart}
+            <div id="al-tools" class="ce-toolbar"></div>
             <h2 style="margin-top:1rem">${esc(t('view.auto_loan.h2.schedule'))}</h2>
             <table class="trades">
                 <thead><tr>
@@ -97,6 +102,15 @@ async function runCompute(mount) {
                 `).join('')}</tbody>
             </table>
         `;
+        // Export the full amortization schedule (Copy / CSV). No permalink — this
+        // view uses id-based inputs that the hash-prefill helper cannot target.
+        enh.mountToolbar(mount.querySelector('#al-tools'), {
+            viewId: 'auto-loan',
+            link: false,
+            filename: 'auto-loan-schedule.csv',
+            getRows: () => [['month', 'payment', 'principal', 'interest', 'balance'],
+                ...(r.schedule || []).map(m => [m.month, m.payment_usd, m.principal_usd, m.interest_usd, m.balance_usd])],
+        });
     } catch (e) {
         result.innerHTML = `<p class="neg">${esc(String(e))}</p>`;
     }

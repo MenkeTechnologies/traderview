@@ -141,12 +141,15 @@ export function prefillForm(form, params) {
 // click time so they always reflect the latest computed result.
 //   getRows()   → array-of-arrays for CSV + clipboard (header row first)
 //   getInputs() → current input object for the permalink
-export function mountToolbar(container, { viewId, getInputs, getRows, filename }) {
+//   link        → set false to omit the Link button for views that cannot
+//                 prefill from the hash (e.g. id-based, non-name forms)
+export function mountToolbar(container, { viewId, getInputs, getRows, filename, link = true }) {
     if (!container) return;
+    const linkBtn = link ? `<button type="button" class="ce-tool" data-act="link">${t('calc.enh.link') || '🔗 Link'}</button>` : '';
     container.innerHTML = `
         <button type="button" class="ce-tool" data-act="copy">${t('calc.enh.copy') || '📋 Copy'}</button>
         <button type="button" class="ce-tool" data-act="csv">${t('calc.enh.csv') || '⬇ CSV'}</button>
-        <button type="button" class="ce-tool" data-act="link">${t('calc.enh.link') || '🔗 Link'}</button>`;
+        ${linkBtn}`;
     container.querySelector('[data-act="copy"]').addEventListener('click', () => {
         const rows = (getRows && getRows()) || [];
         copyText(rows.map((r) => r.join('\t')).join('\n'), t('calc.enh.what.result') || 'result');
@@ -156,9 +159,11 @@ export function mountToolbar(container, { viewId, getInputs, getRows, filename }
         if (!rows.length) return;
         downloadCsv(filename || `${viewId}.csv`, rows);
     });
-    container.querySelector('[data-act="link"]').addEventListener('click', () => {
-        copyText(buildPermalink(viewId, (getInputs && getInputs()) || {}), t('calc.enh.what.link') || 'link');
-    });
+    if (link) {
+        container.querySelector('[data-act="link"]').addEventListener('click', () => {
+            copyText(buildPermalink(viewId, (getInputs && getInputs()) || {}), t('calc.enh.what.link') || 'link');
+        });
+    }
 }
 
 // ---- Sensitivity --------------------------------------------------------

@@ -6,6 +6,7 @@
 import { api } from '../api.js';
 import { esc } from '../util.js';
 import { t } from '../i18n.js';
+import * as enh from '../calc_enhance.js';
 
 export async function renderMortgageAmortization(mount, _state) {
     mount.innerHTML = `
@@ -79,6 +80,8 @@ async function runCompute(mount) {
     result.innerHTML = `<p class="muted">${esc(t('view.mortgage_amortization.status.computing'))}</p>`;
     try {
         const r = await api.request('/mortgage-amortization/compute', { method: 'POST', body: JSON.stringify(input) });
+        // Balance-over-time curve from the first slice of the amortization schedule.
+        const chart = enh.svgLineChart((r.schedule_head || []).map(m => ({ x: m.month, y: m.balance_usd })), { xlabel: 'month', ylabel: 'balance $' });
         const ltvCls = r.ltv_pct > 80 ? 'neg' : 'pos';
         const baseY = `${Math.floor(r.baseline_term_months / 12)}y ${r.baseline_term_months % 12}m`;
         const extraY = `${Math.floor(r.extra_term_months / 12)}y ${r.extra_term_months % 12}m`;
@@ -120,6 +123,8 @@ async function runCompute(mount) {
                         <td class="pos">$${r.interest_saved_usd.toFixed(0)}</td></tr>
                 </tbody>
             </table>
+            ${chart}
+            <div id="ma-tools" class="ce-toolbar"></div>
             <h2 style="margin-top:1rem">${esc(t('view.mortgage_amortization.h2.schedule'))}</h2>
             <table class="trades">
                 <thead><tr>
@@ -140,6 +145,14 @@ async function runCompute(mount) {
                 `).join('')}</tbody>
             </table>
         `;
+        // Export the schedule head (Copy / CSV). No permalink — id-based inputs.
+        enh.mountToolbar(mount.querySelector('#ma-tools'), {
+            viewId: 'mortgage-amortization',
+            link: false,
+            filename: 'mortgage-schedule.csv',
+            getRows: () => [['month', 'payment', 'principal', 'interest', 'balance'],
+                ...(r.schedule_head || []).map(m => [m.month, m.payment_usd, m.principal_usd, m.interest_usd, m.balance_usd])],
+        });
     } catch (e) {
         result.innerHTML = `<p class="neg">${esc(String(e))}</p>`;
     }

@@ -6,6 +6,7 @@ import { applyUiI18n, t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import { showToast } from '../toast.js';
 import { debounce } from '../util.js';
+import * as enh from '../calc_enhance.js';
 
 const money = (n) => '$' + Number(n).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const months = (n) => {
@@ -14,6 +15,9 @@ const months = (n) => {
     const rem = n % 12;
     return `${n} (${y}y ${rem}m)`;
 };
+const VIEW = 'credit-card-payoff';
+let lastReport = null;
+let lastBody = null;
 
 export async function renderCreditCardPayoff(mount, _appState) {
     const tok = currentViewToken();
@@ -40,6 +44,9 @@ export async function renderCreditCardPayoff(mount, _appState) {
                 <label><span data-i18n="view.ccpayoff.label.fixed">Fixed payment to compare ($)</span>
                     <input type="number" step="0.01" min="0" name="fixed_payment_usd" value="200"></label>
             </form>
+            <div id="ccpayoff-tools" class="ce-toolbar"></div>
+            <button type="button" id="ccpayoff-sens-btn" class="ce-tool" data-i18n="calc.enh.sens.run">▦ Sensitivity</button>
+            <div id="ccpayoff-sens" class="ce-sens"></div>
         </div>
         <div id="ccpayoff-result" class="lpv-preview"></div>
         </div>
@@ -47,31 +54,61 @@ export async function renderCreditCardPayoff(mount, _appState) {
     applyUiI18n(mount);
 
     const form = mount.querySelector('#ccpayoff-form');
-    const generate = async () => {
+    enh.prefillForm(form, enh.readHashInputs());
+    const readBody = () => {
         const fd = new FormData(form);
-        const body = {
+        return {
             balance_usd: Number(fd.get('balance_usd')) || 0,
             apr_pct: Number(fd.get('apr_pct')) || 0,
             min_payment_pct: Number(fd.get('min_payment_pct')) || 0,
             min_payment_floor_usd: Number(fd.get('min_payment_floor_usd')) || 0,
             fixed_payment_usd: Number(fd.get('fixed_payment_usd')) || 0,
         };
+    };
+    const generate = async () => {
+        const body = readBody();
         try {
             const r = await api.calcCreditCardPayoff(body);
             if (!viewIsCurrent(tok)) return;
-            renderResult(mount, r);
+            lastReport = r; lastBody = body;
+            renderResult(mount, r, body, tok);
         } catch (err) {
             showToast(err.message || t('view.ccpayoff.toast.error'), { level: 'error' });
         }
     };
+    enh.mountToolbar(mount.querySelector('#ccpayoff-tools'), { viewId: VIEW, getInputs: () => lastBody || readBody(), getRows: () => reportRows(lastReport), filename: 'credit-card-payoff.csv' });
+    mount.querySelector('#ccpayoff-sens-btn').addEventListener('click', () => runSens(mount, readBody(), tok));
     form.addEventListener('input', debounce(generate, 250));
     form.addEventListener('submit', (e) => { e.preventDefault(); generate(); });
     generate();
 }
 
-function renderResult(mount, r) {
+function reportRows(r) {
+    if (!r) return [];
+    return [
+        ['metric', 'value'],
+        ['months_minimum', r.never_pays_off ? 'never' : r.months_minimum],
+        ['total_interest_minimum_usd', r.total_interest_minimum_usd],
+        ['total_paid_minimum_usd', r.total_paid_minimum_usd],
+        ['months_fixed', r.months_fixed == null ? '' : r.months_fixed],
+        ['total_interest_fixed_usd', r.total_interest_fixed_usd == null ? '' : r.total_interest_fixed_usd],
+        ['interest_saved_usd', r.interest_saved_usd == null ? '' : r.interest_saved_usd],
+    ];
+}
+
+async function renderResult(mount, r, body, tok) {
     const el = mount.querySelector('#ccpayoff-result');
     const minMonths = r.never_pays_off ? t('view.ccpayoff.never') : months(r.months_minimum);
+    // Line chart: months to clear the balance as the fixed payment sweeps from the
+    // first minimum up to 5× it (payoff time falls steeply as payment rises).
+    const lo = Math.max(r.first_minimum_usd || 25, body.balance_usd * 0.01);
+    const xs = enh.linspace(lo, lo * 5, 13);
+    const pts = await Promise.all(xs.map(async (pay) => {
+        const rr = await api.calcCreditCardPayoff({ ...body, fixed_payment_usd: pay });
+        return { x: pay, y: rr && rr.months_fixed != null ? rr.months_fixed : NaN };
+    }));
+    if (!viewIsCurrent(tok)) return;
+    const chart = enh.svgLineChart(pts, { xlabel: 'payment $', ylabel: 'months' });
     const fixedRows = r.months_fixed == null ? '' : `
         <tr><td data-i18n="view.ccpayoff.row.fixedmonths">Months (fixed)</td><td>${months(r.months_fixed)}</td></tr>
         <tr><td data-i18n="view.ccpayoff.row.fixedint">Interest (fixed)</td><td>${money(r.total_interest_fixed_usd)}</td></tr>
@@ -87,6 +124,7 @@ function renderResult(mount, r) {
                 <div class="card"><div class="label" data-i18n="view.ccpayoff.card.firstmin">First minimum</div>
                     <div class="value">${money(r.first_minimum_usd)}</div></div>
             </div>
+            ${chart}
             <table class="data-table">
                 <tbody>
                     <tr><td data-i18n="view.ccpayoff.row.minmonths">Months (minimum only)</td><td>${minMonths}</td></tr>
@@ -98,4 +136,16 @@ function renderResult(mount, r) {
         </div>
     `;
     applyUiI18n(el);
+}
+
+async function runSens(mount, base, tok) {
+    const panel = mount.querySelector('#ccpayoff-sens');
+    panel.innerHTML = `<p class="muted small" data-i18n="calc.enh.sens.running">Computing…</p>`; applyUiI18n(panel);
+    // x: APR 10% → 30%; y: fixed payment from first-min to 5×. Output: months to payoff (lower better → negate).
+    const lo = Math.max(base.min_payment_floor_usd || 25, base.balance_usd * 0.02);
+    const xVals = enh.linspace(10, 30, 5);
+    const yVals = enh.linspace(lo, lo * 5, 5);
+    const { cells } = await enh.runSensitivity({ base, xKey: 'apr_pct', yKey: 'fixed_payment_usd', xVals, yVals, compute: (b) => api.calcCreditCardPayoff(b), pick: (r) => (r && r.months_fixed != null ? r.months_fixed : null) });
+    if (!viewIsCurrent(tok)) return;
+    panel.innerHTML = enh.renderSensitivityTable({ xVals, yVals, cells: cells.map((row) => row.map((v) => (v == null ? null : -v))), fmt: (v) => (v == null ? '—' : String(-v) + 'mo'), xfmt: (v) => v.toFixed(0) + '%', yfmt: (v) => '$' + Math.round(v), xName: t('view.ccpayoff.label.apr') || 'APR', yName: t('view.ccpayoff.label.fixed') || 'Payment' });
 }
