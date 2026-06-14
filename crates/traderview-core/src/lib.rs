@@ -168,6 +168,7 @@ pub mod lease_option;
 pub mod lease_renewal;
 pub mod line_items;
 pub mod lease_termination;
+pub mod leasing_commission;
 pub mod leverage_dol_dfl;
 pub mod life_insurance_needs;
 pub mod like_kind_exchange;

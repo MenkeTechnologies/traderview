@@ -749,6 +749,7 @@ import { renderCpiRentAdjustment } from './views/cpi_rent_adjustment.js';
 import { renderDepositInterest } from './views/deposit_interest.js';
 import { renderLeaseBuyout } from './views/lease_buyout.js';
 import { renderOpexEscalation } from './views/opex_escalation.js';
+import { renderLeasingCommission } from './views/leasing_commission.js';
 import { renderFixAndFlip } from './views/fix_and_flip.js';
 import { renderCashConversionCycle } from './views/cash_conversion_cycle.js';
 import { renderProfitFirst } from './views/profit_first.js';
@@ -3239,6 +3240,7 @@ export async function dispatch() {
             case 'deposit-interest': await renderDepositInterest(mount, state); break;
             case 'lease-buyout': await renderLeaseBuyout(mount, state); break;
             case 'opex-escalation': await renderOpexEscalation(mount, state); break;
+            case 'leasing-commission': await renderLeasingCommission(mount, state); break;
             case 'fix-and-flip': await renderFixAndFlip(mount, state); break;
             case 'cash-conversion-cycle': await renderCashConversionCycle(mount, state); break;
             case 'profit-first': await renderProfitFirst(mount, state); break;
@@ -4643,6 +4645,7 @@ export const viewRenderers = {
     'deposit-interest': (m, s) => renderDepositInterest(m, s),
     'lease-buyout': (m, s) => renderLeaseBuyout(m, s),
     'opex-escalation': (m, s) => renderOpexEscalation(m, s),
+    'leasing-commission': (m, s) => renderLeasingCommission(m, s),
     'fix-and-flip': (m, s) => renderFixAndFlip(m, s),
     'cash-conversion-cycle': (m, s) => renderCashConversionCycle(m, s),
     'profit-first': (m, s) => renderProfitFirst(m, s),

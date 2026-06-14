@@ -105,6 +105,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/deposit-interest", post(deposit_interest_route))
         .route("/calc/lease-buyout", post(lease_buyout_route))
         .route("/calc/opex-escalation", post(opex_escalation_route))
+        .route("/calc/leasing-commission", post(leasing_commission_route))
         .route("/calc/fix-and-flip", post(fix_and_flip_route))
         .route("/calc/cash-conversion-cycle", post(cash_conversion_cycle_route))
         .route("/calc/profit-first", post(profit_first_route))
@@ -11952,6 +11953,14 @@ async fn opex_escalation_route(
     Json(b): Json<traderview_core::opex_escalation::OpexEscalationInput>,
 ) -> Json<traderview_core::opex_escalation::OpexEscalation> {
     Json(traderview_core::opex_escalation::generate(&b))
+}
+
+/// Leasing commission: tiered rate per lease-year on an escalating rent stream.
+async fn leasing_commission_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::leasing_commission::LeasingCommissionInput>,
+) -> Json<traderview_core::leasing_commission::LeasingCommission> {
+    Json(traderview_core::leasing_commission::generate(&b))
 }
 
 /// Fix-and-flip: the 70% rule max-allowable-offer plus the full deal P&L
