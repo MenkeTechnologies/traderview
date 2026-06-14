@@ -118,6 +118,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/split-shift-premium", post(split_shift_premium_route))
         .route("/calc/workers-comp-premium", post(workers_comp_premium_route))
         .route("/calc/allowance-doubtful", post(allowance_doubtful_route))
+        .route("/calc/depreciation-schedule", post(depreciation_schedule_route))
         .route("/calc/fix-and-flip", post(fix_and_flip_route))
         .route("/calc/cash-conversion-cycle", post(cash_conversion_cycle_route))
         .route("/calc/profit-first", post(profit_first_route))
@@ -12069,6 +12070,14 @@ async fn allowance_doubtful_route(
     Json(b): Json<traderview_core::allowance_doubtful::AllowanceInput>,
 ) -> Json<traderview_core::allowance_doubtful::AllowanceDoubtful> {
     Json(traderview_core::allowance_doubtful::generate(&b))
+}
+
+/// Depreciation schedule: straight-line or DDB period-by-period book value.
+async fn depreciation_schedule_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::depreciation_schedule::DepreciationScheduleInput>,
+) -> Json<traderview_core::depreciation_schedule::DepreciationSchedule> {
+    Json(traderview_core::depreciation_schedule::generate(&b))
 }
 
 /// Fix-and-flip: the 70% rule max-allowable-offer plus the full deal P&L

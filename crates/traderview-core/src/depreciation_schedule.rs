@@ -1,0 +1,237 @@
+//! Depreciation schedule — the period-by-period book-value table for a fixed asset
+//! under straight-line or double-declining-balance depreciation. Straight-line
+//! spreads (cost − salvage) evenly over the life; double-declining-balance applies
+//! twice the straight-line rate to the declining book value, floored so the book
+//! value never falls below salvage. Distinct from depreciation recapture, which
+//! computes the tax clawback on sale; this is the book schedule. Drafting aid, not
+//! accounting/tax advice.
+
+use serde::{Deserialize, Serialize};
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct DepreciationScheduleInput {
+    pub company_name: String,
+    pub asset_label: String,
+    /// Depreciable cost (capitalized basis).
+    pub cost_usd: f64,
+    /// Estimated salvage (residual) value at end of life.
+    #[serde(default)]
+    pub salvage_usd: f64,
+    /// Useful life in years.
+    pub life_years: u32,
+    /// "straight_line" or "ddb" (double-declining-balance).
+    #[serde(default)]
+    pub method: String,
+    /// Year the asset was placed in service (for labelling).
+    #[serde(default)]
+    pub start_year: i32,
+    pub date: String,
+    #[serde(default)]
+    pub note: String,
+}
+
+#[derive(Debug, Clone, Serialize, PartialEq)]
+pub struct ScheduleRow {
+    pub year: u32,
+    pub depreciation_usd: f64,
+    pub accumulated_usd: f64,
+    pub book_value_usd: f64,
+}
+
+#[derive(Debug, Clone, Serialize, PartialEq)]
+pub struct DocClause {
+    pub heading: String,
+    pub body: String,
+}
+
+#[derive(Debug, Clone, Serialize, PartialEq)]
+pub struct DepreciationSchedule {
+    pub title: String,
+    pub method_label: String,
+    pub depreciable_base_usd: f64,
+    /// Total depreciation over the life (cost − salvage).
+    pub total_depreciation_usd: f64,
+    pub schedule: Vec<ScheduleRow>,
+    pub clauses: Vec<DocClause>,
+}
+
+fn cents(x: f64) -> f64 {
+    (x * 100.0).round() / 100.0
+}
+
+fn money(v: f64) -> String {
+    format!("${:.2}", v)
+}
+
+pub fn generate(i: &DepreciationScheduleInput) -> DepreciationSchedule {
+    let is_ddb = i.method.trim().eq_ignore_ascii_case("ddb");
+    let base = (i.cost_usd - i.salvage_usd).max(0.0);
+
+    let mut schedule = Vec::with_capacity(i.life_years as usize);
+    let mut book = i.cost_usd;
+    let mut accumulated = 0.0;
+
+    if i.life_years > 0 {
+        let sl_annual = base / i.life_years as f64;
+        let ddb_rate = 2.0 / i.life_years as f64;
+        for y in 1..=i.life_years {
+            let dep = if is_ddb {
+                // Twice the SL rate on the declining book value, but never depreciate
+                // below salvage.
+                (book * ddb_rate).min((book - i.salvage_usd).max(0.0))
+            } else {
+                // Last year absorbs any rounding so book lands exactly on salvage.
+                if y == i.life_years {
+                    (book - i.salvage_usd).max(0.0)
+                } else {
+                    sl_annual
+                }
+            };
+            let dep = cents(dep);
+            book = cents(book - dep);
+            accumulated = cents(accumulated + dep);
+            schedule.push(ScheduleRow {
+                year: y,
+                depreciation_usd: dep,
+                accumulated_usd: accumulated,
+                book_value_usd: book,
+            });
+        }
+    }
+
+    let total = cents(accumulated);
+    let method_label = if is_ddb {
+        "Double-declining-balance"
+    } else {
+        "Straight-line"
+    };
+
+    let detail = if schedule.is_empty() {
+        "No schedule (life is zero).".to_string()
+    } else {
+        schedule
+            .iter()
+            .map(|r| {
+                let yr = if i.start_year > 0 {
+                    format!("{}", i.start_year + r.year as i32 - 1)
+                } else {
+                    format!("Year {}", r.year)
+                };
+                format!(
+                    "  • {}: depreciation {}, accumulated {}, book value {}",
+                    yr, money(r.depreciation_usd), money(r.accumulated_usd), money(r.book_value_usd)
+                )
+            })
+            .collect::<Vec<_>>()
+            .join("\n")
+    };
+
+    let mut clauses = vec![
+        DocClause {
+            heading: "Asset".into(),
+            body: format!(
+                "Company: {}\nAsset: {}\nCost: {}\nSalvage: {}\nLife: {} years\nMethod: {}\nDate: {}",
+                i.company_name,
+                i.asset_label,
+                money(i.cost_usd),
+                money(i.salvage_usd),
+                i.life_years,
+                method_label,
+                i.date
+            ),
+        },
+        DocClause {
+            heading: "Depreciable Base".into(),
+            body: format!(
+                "The depreciable base is {} (cost {} less salvage {}), fully depreciated over {} years.",
+                money(base), money(i.cost_usd), money(i.salvage_usd), i.life_years
+            ),
+        },
+        DocClause { heading: "Schedule".into(), body: detail },
+    ];
+
+    let note = i.note.trim();
+    if !note.is_empty() {
+        clauses.push(DocClause { heading: "Note".into(), body: note.to_string() });
+    }
+
+    DepreciationSchedule {
+        title: "Depreciation Schedule".into(),
+        method_label: method_label.to_string(),
+        depreciable_base_usd: cents(base),
+        total_depreciation_usd: total,
+        schedule,
+        clauses,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn close(a: f64, b: f64) -> bool {
+        (a - b).abs() < 0.01
+    }
+
+    fn base() -> DepreciationScheduleInput {
+        DepreciationScheduleInput {
+            company_name: "Acme Co".into(),
+            asset_label: "Delivery van".into(),
+            cost_usd: 10_000.0,
+            salvage_usd: 1_000.0,
+            life_years: 5,
+            method: "straight_line".into(),
+            start_year: 2026,
+            date: "2026-07-01".into(),
+            note: String::new(),
+        }
+    }
+
+    #[test]
+    fn straight_line_schedule() {
+        let d = generate(&base());
+        assert_eq!(d.schedule.len(), 5);
+        assert!(close(d.schedule[0].depreciation_usd, 1_800.0));
+        assert!(close(d.schedule[0].book_value_usd, 8_200.0));
+        assert!(close(d.schedule[4].book_value_usd, 1_000.0));
+        assert!(close(d.total_depreciation_usd, 9_000.0));
+    }
+
+    #[test]
+    fn ddb_schedule_tapers_to_salvage() {
+        let d = generate(&DepreciationScheduleInput { method: "ddb".into(), ..base() });
+        assert!(close(d.schedule[0].depreciation_usd, 4_000.0));
+        assert!(close(d.schedule[1].depreciation_usd, 2_400.0));
+        // Final year tapers so book lands on salvage.
+        assert!(close(d.schedule[4].depreciation_usd, 296.0));
+        assert!(close(d.schedule[4].book_value_usd, 1_000.0));
+        assert!(close(d.total_depreciation_usd, 9_000.0));
+    }
+
+    #[test]
+    fn never_below_salvage() {
+        let d = generate(&DepreciationScheduleInput { method: "ddb".into(), ..base() });
+        for r in &d.schedule {
+            assert!(r.book_value_usd >= 1_000.0 - 0.01);
+        }
+    }
+
+    #[test]
+    fn depreciable_base_excludes_salvage() {
+        let d = generate(&base());
+        assert!(close(d.depreciable_base_usd, 9_000.0));
+    }
+
+    #[test]
+    fn zero_salvage_full_cost_depreciated() {
+        let d = generate(&DepreciationScheduleInput { salvage_usd: 0.0, ..base() });
+        assert!(close(d.total_depreciation_usd, 10_000.0));
+        assert!(close(d.schedule[4].book_value_usd, 0.0));
+    }
+
+    #[test]
+    fn note_appended_when_present() {
+        let d = generate(&DepreciationScheduleInput { note: "Fleet asset #12.".into(), ..base() });
+        assert!(d.clauses.iter().any(|c| c.heading == "Note" && c.body.contains("Fleet")));
+    }
+}

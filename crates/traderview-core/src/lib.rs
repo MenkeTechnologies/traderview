@@ -84,6 +84,7 @@ pub mod daily_loss_limit;
 pub mod demand_for_payment;
 pub mod deposit_interest;
 pub mod depreciation_recapture;
+pub mod depreciation_schedule;
 pub mod debt_yield;
 pub mod disability_insurance_needs;
 pub mod discipline_score;
