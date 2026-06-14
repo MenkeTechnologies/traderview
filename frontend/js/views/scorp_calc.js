@@ -4,17 +4,10 @@
 // distributions (NOT subject to SE tax). Catch: S-corp costs $1.5-3k/yr in
 // payroll + filing fees and you can't underpay reasonable comp.
 
+import { api } from '../api.js';
 import { esc } from '../util.js';
 import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
-
-const SS_BASE = 168_600;
-const SS_RATE = 0.124;
-const SS_RATE_EMPLOYEE = 0.062;
-const SS_RATE_EMPLOYER = 0.062;
-const MEDICARE_RATE = 0.029;
-const MEDICARE_RATE_HALF = 0.0145;
-const SE_DEDUCTION = 0.9235;
 
 let state = {
     net_income: 200_000,
@@ -65,18 +58,34 @@ export async function renderScorpCalc(mount, _appState) {
     renderOutput();
 }
 
-function renderOutput() {
+async function renderOutput() {
     const el = document.getElementById('sc-output');
     if (!el) return;
-    const sp = computeSoleProp(state.net_income);
-    const sc = computeScorp(state.net_income, state.reasonable_comp_pct);
-    const totalOverhead = state.payroll_cost + state.extra_filing_cost;
-    const grossSavings = sp.se_tax - (sc.fica_employee + sc.fica_employer);
-    const netSavings = grossSavings - totalOverhead;
+    let r;
+    try {
+        r = await api.calcScorpElection({
+            net_income_usd: state.net_income,
+            reasonable_comp_fraction: state.reasonable_comp_pct,
+            payroll_cost_usd: state.payroll_cost,
+            extra_filing_cost_usd: state.extra_filing_cost,
+            marginal_rate_pct: state.marginal_rate * 100,
+        });
+    } catch (e) {
+        el.innerHTML = `<p class="neg">${esc(String(e))}</p>`;
+        return;
+    }
+    const sp = { se_base: r.se_base_usd, se_tax: r.se_tax_usd };
+    const sc = {
+        w2_wages: r.w2_wages_usd,
+        distributions: r.distributions_usd,
+        fica_employee: r.fica_employee_usd,
+        fica_employer: r.fica_employer_usd,
+    };
+    const totalOverhead = r.total_overhead_usd;
+    const grossSavings = r.gross_savings_usd;
+    const netSavings = r.net_savings_usd;
     const cls = netSavings > 0 ? 'pos' : netSavings < 0 ? 'neg' : '';
-    const recommendation = netSavings > 1500 ? t('view.scorp.recommend.elect')
-        : netSavings > 0 ? t('view.scorp.recommend.marginal')
-        : t('view.scorp.recommend.skip');
+    const recommendation = t('view.scorp.recommend.' + r.recommendation);
     el.innerHTML = `
         <div class="chart-panel">
             <h2 data-i18n="view.scorp.h2.comparison">Side-by-side comparison</h2>
@@ -140,20 +149,4 @@ function renderOutput() {
             </p>
         </div>
     `;
-}
-
-function computeSoleProp(net) {
-    const se_base = net * SE_DEDUCTION;
-    const ss_part = Math.min(se_base, SS_BASE) * SS_RATE;
-    const medicare_part = se_base * MEDICARE_RATE;
-    return { se_base, se_tax: ss_part + medicare_part };
-}
-
-function computeScorp(net, reasonablePct) {
-    const w2_wages = net * reasonablePct;
-    const distributions = net - w2_wages;
-    const ss_wages = Math.min(w2_wages, SS_BASE);
-    const fica_employee = ss_wages * SS_RATE_EMPLOYEE + w2_wages * MEDICARE_RATE_HALF;
-    const fica_employer = ss_wages * SS_RATE_EMPLOYER + w2_wages * MEDICARE_RATE_HALF;
-    return { w2_wages, distributions, fica_employee, fica_employer };
 }

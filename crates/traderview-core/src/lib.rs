@@ -330,6 +330,7 @@ pub mod scale_order;
 pub mod sde_valuation;
 pub mod scan;
 pub mod schaff_trend;
+pub mod scorp_calc;
 pub mod second_income;
 pub mod sector_exposure;
 pub mod security_deposit_itemization;
