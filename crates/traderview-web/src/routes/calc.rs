@@ -60,6 +60,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/rule-of-78", post(rule_of_78_route))
         .route("/calc/liquidity-ratios", post(liquidity_ratios_route))
         .route("/calc/revenue-retention", post(revenue_retention_route))
+        .route("/calc/saas-magic-number", post(saas_magic_number_route))
         .route("/calc/risk-on-off", post(risk_on_off_route))
         // ── Margin / buying power ─────────────────────────────────────
         .route("/calc/margin-call", post(margin_call_route))
@@ -1030,6 +1031,13 @@ async fn liquidity_ratios_route(
     Json(b): Json<traderview_core::liquidity_ratios::LiquidityInput>,
 ) -> Json<traderview_core::liquidity_ratios::LiquidityReport> {
     Json(traderview_core::liquidity_ratios::generate(&b))
+}
+
+/// SaaS magic number: annualized net-new revenue per dollar of prior S&M spend.
+async fn saas_magic_number_route(
+    Json(b): Json<traderview_core::saas_magic_number::MagicNumberInput>,
+) -> Json<traderview_core::saas_magic_number::MagicNumberReport> {
+    Json(traderview_core::saas_magic_number::generate(&b))
 }
 
 /// Revenue retention: net (NRR) and gross (GRR) recurring-revenue retention.

@@ -1810,6 +1810,7 @@ export const api = {
     calcRuleOf78:            (b) => request('/calc/rule-of-78',            { method: 'POST', body: JSON.stringify(b) }),
     calcLiquidityRatios:     (b) => request('/calc/liquidity-ratios',     { method: 'POST', body: JSON.stringify(b) }),
     calcRevenueRetention:    (b) => request('/calc/revenue-retention',     { method: 'POST', body: JSON.stringify(b) }),
+    calcSaasMagicNumber:     (b) => request('/calc/saas-magic-number',      { method: 'POST', body: JSON.stringify(b) }),
     calcRiskOnOff:           (b) => request('/calc/risk-on-off',          { method: 'POST', body: JSON.stringify(b) }),
     calcMarginCall:          (b) => request('/calc/margin-call',          { method: 'POST', body: JSON.stringify(b) }),
     calcMarginRunway:        (b) => request('/calc/margin-runway',        { method: 'POST', body: JSON.stringify(b) }),
