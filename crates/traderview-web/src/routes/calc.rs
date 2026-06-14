@@ -41,6 +41,8 @@ pub fn router() -> Router<AppState> {
         .route("/calc/iron-butterfly", post(iron_butterfly_route))
         .route("/calc/butterfly-spread", post(butterfly_spread_route))
         .route("/calc/box-spread", post(box_spread_route))
+        .route("/calc/crypto-liquidation", post(crypto_liquidation_route))
+        .route("/calc/perp-funding", post(perp_funding_route))
         .route("/calc/risk-on-off", post(risk_on_off_route))
         // ── Margin / buying power ─────────────────────────────────────
         .route("/calc/margin-call", post(margin_call_route))
@@ -841,6 +843,22 @@ async fn box_spread_route(
         b.market_risk_free_rate,
         b.arbitrage_threshold_bps,
     ))
+}
+
+/// Crypto perpetual liquidation price (isolated margin).
+async fn crypto_liquidation_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::crypto_liquidation::LiquidationInput>,
+) -> Json<traderview_core::crypto_liquidation::LiquidationReport> {
+    Json(traderview_core::crypto_liquidation::generate(&b))
+}
+
+/// Perpetual funding & basis: funding cost, annualized rate, premium to spot.
+async fn perp_funding_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::perp_funding::PerpFundingInput>,
+) -> Json<traderview_core::perp_funding::PerpFundingReport> {
+    Json(traderview_core::perp_funding::generate(&b))
 }
 
 async fn risk_on_off_route(
