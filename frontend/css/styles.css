@@ -4366,3 +4366,10 @@ mark.fzf-hl {
 
 .wcp-head,
 .wcp-row { grid-template-columns: minmax(70px, 0.9fr) minmax(100px, 1.4fr) 1.1fr 0.9fr auto; }
+
+.ef-svg { width: 100%; max-width: 360px; height: auto; margin: 8px 0; background: #0a0e14; border: 1px solid #1c2733; }
+.ef-svg .ef-mv { fill: #ffb300; }
+.ef-svg .ef-tan { fill: #00ff9c; }
+.ef-svg .ef-axis { fill: #5a6b7a; font-size: 9px; }
+.ef-tables { display: flex; gap: 12px; flex-wrap: wrap; }
+.ef-tables table { flex: 1; min-width: 160px; }

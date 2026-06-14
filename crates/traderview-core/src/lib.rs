@@ -105,6 +105,7 @@ pub mod earnings_calendar;
 pub mod earnings_move;
 pub mod earnout_agreement;
 pub mod economic_value_added;
+pub mod efficient_frontier;
 pub mod employee_writeup;
 pub mod efficiency_ratio;
 pub mod emotion_tags;

@@ -1781,6 +1781,7 @@ export const api = {
     calcVarGaussian:         (b) => request('/calc/var-gaussian',         { method: 'POST', body: JSON.stringify(b) }),
     calcMonteCarlo:          (b) => request('/calc/monte-carlo',          { method: 'POST', body: JSON.stringify(b) }),
     calcRiskParity:          (b) => request('/calc/risk-parity',          { method: 'POST', body: JSON.stringify(b) }),
+    calcEfficientFrontier:   (b) => request('/calc/efficient-frontier',   { method: 'POST', body: JSON.stringify(b) }),
     calcRiskOnOff:           (b) => request('/calc/risk-on-off',          { method: 'POST', body: JSON.stringify(b) }),
     calcMarginCall:          (b) => request('/calc/margin-call',          { method: 'POST', body: JSON.stringify(b) }),
     calcMarginRunway:        (b) => request('/calc/margin-runway',        { method: 'POST', body: JSON.stringify(b) }),
