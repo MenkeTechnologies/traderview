@@ -6,6 +6,7 @@ import { applyUiI18n, t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import { showToast } from '../toast.js';
 import { debounce } from '../util.js';
+import * as enh from '../calc_enhance.js';
 
 const FIELDS = [
     ['avg_monthly_revenue_usd', 'Avg monthly revenue / customer ($)', 100],
@@ -21,6 +22,9 @@ const RATING = {
     unprofitable: ['Unprofitable (<1:1)', 'neg'],
     'n/a': ['—', ''],
 };
+const VIEW = 'ltv-cac';
+let lastReport = null;
+let lastBody = null;
 
 export async function renderLtvCac(mount, _appState) {
     const tok = currentViewToken();
@@ -44,6 +48,9 @@ export async function renderLtvCac(mount, _appState) {
                         <input type="number" step="0.01" min="0" name="${key}" value="${def}" required></label>
                 `).join('')}
             </form>
+            <div id="ltvcac-tools" class="ce-toolbar"></div>
+            <button type="button" id="ltvcac-sens-btn" class="ce-tool" data-i18n="calc.enh.sens.run">▦ Sensitivity</button>
+            <div id="ltvcac-sens" class="ce-sens"></div>
         </div>
         <div id="ltvcac-result" class="lpv-preview"></div>
         </div>
@@ -51,26 +58,55 @@ export async function renderLtvCac(mount, _appState) {
     applyUiI18n(mount);
 
     const form = mount.querySelector('#ltvcac-form');
-    const generate = async () => {
+    enh.prefillForm(form, enh.readHashInputs());
+    const readBody = () => {
         const fd = new FormData(form);
         const body = {};
         for (const [key] of FIELDS) body[key] = Number(fd.get(key)) || 0;
+        return body;
+    };
+    const generate = async () => {
+        const body = readBody();
         try {
             const r = await api.calcLtvCac(body);
             if (!viewIsCurrent(tok)) return;
-            renderResult(mount, r);
+            lastReport = r; lastBody = body;
+            renderResult(mount, r, body, tok);
         } catch (err) {
             showToast(err.message || t('view.ltvcac.toast.error'), { level: 'error' });
         }
     };
+    enh.mountToolbar(mount.querySelector('#ltvcac-tools'), { viewId: VIEW, getInputs: () => lastBody || readBody(), getRows: () => reportRows(lastReport), filename: 'ltv-cac.csv' });
+    mount.querySelector('#ltvcac-sens-btn').addEventListener('click', () => runSens(mount, readBody(), tok));
     form.addEventListener('input', debounce(generate, 250));
     form.addEventListener('submit', (e) => { e.preventDefault(); generate(); });
     generate();
 }
 
-function renderResult(mount, r) {
+function reportRows(r) {
+    if (!r) return [];
+    return [
+        ['metric', 'value'],
+        ['ltv_cac_ratio', r.ltv_cac_ratio],
+        ['rating', r.rating],
+        ['cac_payback_months', r.cac_payback_months],
+        ['ltv_usd', r.ltv_usd],
+        ['avg_lifetime_months', r.avg_lifetime_months],
+        ['monthly_gross_profit_usd', r.monthly_gross_profit_usd],
+    ];
+}
+
+async function renderResult(mount, r, body, tok) {
     const el = mount.querySelector('#ltvcac-result');
     const [ratingLabel, ratingCls] = RATING[r.rating] || [r.rating, ''];
+    // Line chart: LTV:CAC ratio as monthly churn sweeps 1% → 20% (ratio falls as churn rises).
+    const xs = enh.linspace(1, 20, 13);
+    const pts = await Promise.all(xs.map(async (c) => {
+        const rr = await api.calcLtvCac({ ...body, monthly_churn_rate_pct: c });
+        return { x: c, y: rr ? rr.ltv_cac_ratio : NaN };
+    }));
+    if (!viewIsCurrent(tok)) return;
+    const chart = enh.svgLineChart(pts, { xlabel: 'churn %', ylabel: 'LTV:CAC' });
     el.innerHTML = `
         <div class="chart-panel">
             <h2 data-i18n="view.ltvcac.h2.result">The verdict</h2>
@@ -82,6 +118,7 @@ function renderResult(mount, r) {
                 <div class="card"><div class="label" data-i18n="view.ltvcac.card.payback">CAC payback</div>
                     <div class="value">${Number(r.cac_payback_months).toFixed(1)} <span data-i18n="view.ltvcac.months">mo</span></div></div>
             </div>
+            ${chart}
             <table class="data-table">
                 <thead><tr><th data-i18n="view.ltvcac.col.line">Line</th><th data-i18n="view.ltvcac.col.amount">Amount</th></tr></thead>
                 <tbody>
@@ -93,4 +130,15 @@ function renderResult(mount, r) {
         </div>
     `;
     applyUiI18n(el);
+}
+
+async function runSens(mount, base, tok) {
+    const panel = mount.querySelector('#ltvcac-sens');
+    panel.innerHTML = `<p class="muted small" data-i18n="calc.enh.sens.running">Computing…</p>`; applyUiI18n(panel);
+    // x: monthly churn 1% → 20%; y: CAC $100 → 2× current. Output: LTV:CAC ratio.
+    const xVals = enh.linspace(1, 20, 5);
+    const yVals = enh.linspace(100, (base.cac_usd || 400) * 2, 5);
+    const { cells } = await enh.runSensitivity({ base, xKey: 'monthly_churn_rate_pct', yKey: 'cac_usd', xVals, yVals, compute: (b) => api.calcLtvCac(b), pick: (r) => (r ? r.ltv_cac_ratio : null) });
+    if (!viewIsCurrent(tok)) return;
+    panel.innerHTML = enh.renderSensitivityTable({ xVals, yVals, cells, fmt: (v) => (v == null ? '—' : v.toFixed(2)), xfmt: (v) => v.toFixed(0) + '%', yfmt: (v) => '$' + Math.round(v), xName: t('view.ltvcac.label.monthly_churn_rate_pct') || 'Churn', yName: t('view.ltvcac.label.cac_usd') || 'CAC' });
 }
