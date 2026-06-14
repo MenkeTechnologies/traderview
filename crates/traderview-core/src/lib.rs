@@ -50,6 +50,7 @@ pub mod calmar_ratio;
 pub mod candlestick_patterns;
 pub mod cape_valuation;
 pub mod cam_reconciliation;
+pub mod cap_rate;
 pub mod cap_table;
 pub mod capital_gains_tax;
 pub mod capture_ratio;

@@ -1811,6 +1811,7 @@ export const api = {
     calcRevenueRetention:    (b) => request('/calc/revenue-retention',     { method: 'POST', body: JSON.stringify(b) }),
     calcSaasMagicNumber:     (b) => request('/calc/saas-magic-number',      { method: 'POST', body: JSON.stringify(b) }),
     calcSaasQuickRatio:      (b) => request('/calc/saas-quick-ratio',       { method: 'POST', body: JSON.stringify(b) }),
+    calcCapRate:             (b) => request('/calc/cap-rate',               { method: 'POST', body: JSON.stringify(b) }),
     calcRiskOnOff:           (b) => request('/calc/risk-on-off',          { method: 'POST', body: JSON.stringify(b) }),
     calcMarginCall:          (b) => request('/calc/margin-call',          { method: 'POST', body: JSON.stringify(b) }),
     calcMarginRunway:        (b) => request('/calc/margin-runway',        { method: 'POST', body: JSON.stringify(b) }),

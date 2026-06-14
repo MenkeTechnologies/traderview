@@ -33,6 +33,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/risk-parity", post(risk_parity_route))
         .route("/calc/efficient-frontier", post(efficient_frontier_route))
         .route("/calc/valuation-multiples", post(valuation_multiples_route))
+        .route("/calc/cap-rate", post(cap_rate_route))
         .route("/calc/dividend-discount-model", post(dividend_discount_model_route))
         .route("/calc/probability-of-profit", post(probability_of_profit_route))
         .route("/calc/straddle", post(straddle_route))
@@ -979,6 +980,13 @@ async fn liquidity_ratios_route(
     Json(b): Json<traderview_core::liquidity_ratios::LiquidityInput>,
 ) -> Json<traderview_core::liquidity_ratios::LiquidityReport> {
     Json(traderview_core::liquidity_ratios::generate(&b))
+}
+
+/// Cap rate: rental-property underwriting (cap rate, cash-on-cash, DSCR, 1% rule, GRM, P&L).
+async fn cap_rate_route(
+    Json(b): Json<traderview_core::cap_rate::CapRateInput>,
+) -> Json<traderview_core::cap_rate::CapRateReport> {
+    Json(traderview_core::cap_rate::generate(&b))
 }
 
 /// SaaS quick ratio: growth efficiency — gained MRR per dollar of lost MRR.

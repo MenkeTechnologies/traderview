@@ -3309,6 +3309,15 @@ table.sc-table tfoot td {
 .ce-sens-table tbody th { color: var(--cyan); text-align: right; }
 .ce-sens-corner { color: var(--text-dim) !important; text-align: left; }
 
+/* ---- rental-underwriting input grid (cap-rate view) ------------------- */
+.re-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 8px; margin-bottom: 12px;
+}
+.re-grid input { width: 100%; }
+.re-result { margin-top: 12px; }
+
 /* ---- color-scheme picker inside Settings ----------------------------- */
 .settings-scheme .scheme-grid {
     display: grid;

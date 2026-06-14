@@ -1,15 +1,25 @@
-// Real Estate Cap Rate + Cash-on-Cash + 1% Rule + GRM.
-// Standard rental-property underwriting suite:
-//   - Cap Rate     = NOI / property value (UNLEVERED yield)
-//   - Cash-on-Cash = annual cash flow / cash invested (LEVERED return)
-//   - 1% Rule      = monthly rent ≥ 1% of price (heuristic for cash flow positive)
-//   - GRM          = price / annual gross rent (lower = better deal)
-// NOI = gross rents − vacancy − op-ex (taxes, insurance, maintenance,
-// management, HOA) but NOT debt service or depreciation.
+// Real Estate Cap Rate + Cash-on-Cash + 1% Rule + GRM + DSCR.
+// Standard rental-property underwriting suite. Computation runs server-side via
+// /calc/cap-rate (traderview-core::cap_rate) — a faithful port of the former
+// client-side math, now Python-pinned and unit-tested. Styling is class-based
+// (no inline styles) so it renders correctly in release WebKit.
 
+import { api } from '../api.js';
+import { applyUiI18n, t } from '../i18n.js';
+import { currentViewToken, viewIsCurrent } from '../app.js';
+import { showToast } from '../toast.js';
+import { debounce } from '../util.js';
 import { esc } from '../util.js';
+import * as enh from '../calc_enhance.js';
+
+const fmt = (n, d) => (n == null || !Number.isFinite(Number(n)) ? '—' : Number(n).toLocaleString(undefined, { minimumFractionDigits: d, maximumFractionDigits: d }));
+const VIEW = 'real-estate-cap-rate';
+let lastReport = null;
+let lastBody = null;
 
 export async function renderRealEstateCapRate(mount, _state) {
+    const tok = currentViewToken();
+    if (!viewIsCurrent(tok)) return;
     mount.innerHTML = `
         <h1 class="view-title"><span data-i18n="view.real_estate_cap_rate.title">// RENTAL PROPERTY UNDERWRITING</span></h1>
         <p class="muted small" data-i18n-html="view.real_estate_cap_rate.intro">
@@ -23,149 +33,138 @@ export async function renderRealEstateCapRate(mount, _state) {
         </p>
         <div class="chart-panel">
             <h3 class="section-title">Property</h3>
-            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px;margin-bottom:12px">
-                <label>
-                    <span class="muted small">Purchase price $</span>
-                    <input type="number" id="re-price" step="5000" min="0" value="350000" style="width:100%">
-                </label>
-                <label>
-                    <span class="muted small">Monthly rent $</span>
-                    <input type="number" id="re-rent" step="50" min="0" value="2800" style="width:100%">
-                </label>
-                <label>
-                    <span class="muted small">Down payment %</span>
-                    <input type="number" id="re-down" step="5" min="0" max="100" value="25" style="width:100%">
-                </label>
-                <label>
-                    <span class="muted small">Mortgage rate %</span>
-                    <input type="number" id="re-rate" step="0.125" min="0" max="20" value="7.0" style="width:100%">
-                </label>
-                <label>
-                    <span class="muted small">Loan term (years)</span>
-                    <input type="number" id="re-term" step="1" min="1" max="40" value="30" style="width:100%">
-                </label>
-                <label>
-                    <span class="muted small">Closing costs $</span>
-                    <input type="number" id="re-closing" step="500" min="0" value="9000" style="width:100%">
-                </label>
+            <div class="re-grid">
+                <label><span class="muted small">Purchase price $</span>
+                    <input type="number" id="re-price" step="5000" min="0" value="350000"></label>
+                <label><span class="muted small">Monthly rent $</span>
+                    <input type="number" id="re-rent" step="50" min="0" value="2800"></label>
+                <label><span class="muted small">Down payment %</span>
+                    <input type="number" id="re-down" step="5" min="0" max="100" value="25"></label>
+                <label><span class="muted small">Mortgage rate %</span>
+                    <input type="number" id="re-rate" step="0.125" min="0" max="20" value="7.0"></label>
+                <label><span class="muted small">Loan term (years)</span>
+                    <input type="number" id="re-term" step="1" min="1" max="40" value="30"></label>
+                <label><span class="muted small">Closing costs $</span>
+                    <input type="number" id="re-closing" step="500" min="0" value="9000"></label>
             </div>
             <h3 class="section-title">Operating expenses (annual)</h3>
-            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px;margin-bottom:12px">
-                <label>
-                    <span class="muted small">Vacancy %</span>
-                    <input type="number" id="re-vac" step="0.5" min="0" max="50" value="5" style="width:100%">
-                </label>
-                <label>
-                    <span class="muted small">Property tax $/yr</span>
-                    <input type="number" id="re-tax" step="100" min="0" value="3800" style="width:100%">
-                </label>
-                <label>
-                    <span class="muted small">Insurance $/yr</span>
-                    <input type="number" id="re-ins" step="100" min="0" value="1400" style="width:100%">
-                </label>
-                <label>
-                    <span class="muted small">Maintenance / CapEx % of rent</span>
-                    <input type="number" id="re-maint" step="0.5" min="0" max="50" value="10" style="width:100%">
-                </label>
-                <label>
-                    <span class="muted small">Property mgmt % of rent</span>
-                    <input type="number" id="re-mgmt" step="0.5" min="0" max="20" value="8" style="width:100%">
-                </label>
-                <label>
-                    <span class="muted small">HOA + utilities $/mo</span>
-                    <input type="number" id="re-hoa" step="25" min="0" value="0" style="width:100%">
-                </label>
+            <div class="re-grid">
+                <label><span class="muted small">Vacancy %</span>
+                    <input type="number" id="re-vac" step="0.5" min="0" max="50" value="5"></label>
+                <label><span class="muted small">Property tax $/yr</span>
+                    <input type="number" id="re-tax" step="100" min="0" value="3800"></label>
+                <label><span class="muted small">Insurance $/yr</span>
+                    <input type="number" id="re-ins" step="100" min="0" value="1400"></label>
+                <label><span class="muted small">Maintenance / CapEx % of rent</span>
+                    <input type="number" id="re-maint" step="0.5" min="0" max="50" value="10"></label>
+                <label><span class="muted small">Property mgmt % of rent</span>
+                    <input type="number" id="re-mgmt" step="0.5" min="0" max="20" value="8"></label>
+                <label><span class="muted small">HOA + utilities $/mo</span>
+                    <input type="number" id="re-hoa" step="25" min="0" value="0"></label>
             </div>
             <button class="btn btn-sm primary" id="re-run">⚡ Compute</button>
-            <div id="re-result" style="margin-top:12px"></div>
+            <div id="re-tools" class="ce-toolbar"></div>
+            <div id="re-result" class="re-result"></div>
         </div>
     `;
-    mount.querySelectorAll('#re-price, #re-rent, #re-down, #re-rate, #re-term, #re-closing, #re-vac, #re-tax, #re-ins, #re-maint, #re-mgmt, #re-hoa').forEach(el => {
-        el.addEventListener('input', () => compute(mount));
+    applyUiI18n(mount);
+
+    const num = (id) => parseFloat(mount.querySelector(id).value) || 0;
+    const readBody = () => ({
+        price_usd: num('#re-price'),
+        monthly_rent_usd: num('#re-rent'),
+        down_payment_frac: num('#re-down') / 100,
+        mortgage_rate_frac: num('#re-rate') / 100,
+        loan_term_years: Math.round(num('#re-term')) || 30,
+        closing_costs_usd: num('#re-closing'),
+        vacancy_frac: num('#re-vac') / 100,
+        property_tax_annual_usd: num('#re-tax'),
+        insurance_annual_usd: num('#re-ins'),
+        maintenance_frac: num('#re-maint') / 100,
+        management_frac: num('#re-mgmt') / 100,
+        hoa_monthly_usd: num('#re-hoa'),
     });
-    mount.querySelector('#re-run').addEventListener('click', () => compute(mount));
-    compute(mount);
+    const compute = async () => {
+        const body = readBody();
+        try {
+            const r = await api.calcCapRate(body);
+            if (!viewIsCurrent(tok)) return;
+            lastReport = r; lastBody = body;
+            await renderResult(mount, r, body, tok);
+        } catch (err) {
+            showToast(err.message || 'Could not compute the underwriting.', { level: 'error' });
+        }
+    };
+    enh.mountToolbar(mount.querySelector('#re-tools'), {
+        viewId: VIEW, link: false, filename: 'cap-rate.csv',
+        getRows: () => reportRows(lastReport, lastBody),
+    });
+    mount.querySelectorAll('#re-price, #re-rent, #re-down, #re-rate, #re-term, #re-closing, #re-vac, #re-tax, #re-ins, #re-maint, #re-mgmt, #re-hoa').forEach(el => {
+        el.addEventListener('input', debounce(compute, 250));
+    });
+    mount.querySelector('#re-run').addEventListener('click', compute);
+    compute();
 }
 
-function compute(mount) {
-    const price = parseFloat(mount.querySelector('#re-price').value) || 0;
-    const rent = parseFloat(mount.querySelector('#re-rent').value) || 0;
-    const downPct = parseFloat(mount.querySelector('#re-down').value) / 100;
-    const rate = parseFloat(mount.querySelector('#re-rate').value) / 100;
-    const term = parseInt(mount.querySelector('#re-term').value, 10) || 30;
-    const closing = parseFloat(mount.querySelector('#re-closing').value) || 0;
-    const vacPct = parseFloat(mount.querySelector('#re-vac').value) / 100;
-    const propTax = parseFloat(mount.querySelector('#re-tax').value) || 0;
-    const ins = parseFloat(mount.querySelector('#re-ins').value) || 0;
-    const maintPct = parseFloat(mount.querySelector('#re-maint').value) / 100;
-    const mgmtPct = parseFloat(mount.querySelector('#re-mgmt').value) / 100;
-    const hoaMo = parseFloat(mount.querySelector('#re-hoa').value) || 0;
-    const result = mount.querySelector('#re-result');
+function reportRows(r, body) {
+    if (!r || !r.valid) return [];
+    return [
+        ['metric', 'value'],
+        ['cap_rate_pct', r.cap_rate_pct],
+        ['cash_on_cash_pct', r.cash_on_cash_pct],
+        ['annual_cash_flow_usd', r.annual_cash_flow_usd],
+        ['dscr', r.dscr == null ? '' : r.dscr],
+        ['one_pct_rule_pct', r.one_pct_rule_pct],
+        ['grm', r.grm],
+        ['noi_usd', r.noi_usd],
+        ['verdict', r.verdict],
+    ];
+}
 
-    if (price <= 0 || rent <= 0) {
-        result.innerHTML = `<p class="muted">Price and rent > 0 required.</p>`;
+async function renderResult(mount, r, body, tok) {
+    const result = mount.querySelector('#re-result');
+    if (!r.valid) {
+        result.innerHTML = `<p class="muted">Price and rent &gt; 0 required.</p>`;
         return;
     }
-
-    const grossAnnualRent = rent * 12;
-    const vacancy = grossAnnualRent * vacPct;
-    const maint = grossAnnualRent * maintPct;
-    const mgmt = grossAnnualRent * mgmtPct;
-    const hoaAnnual = hoaMo * 12;
-    const effectiveRent = grossAnnualRent - vacancy;
-    const opex = propTax + ins + maint + mgmt + hoaAnnual;
-    const noi = effectiveRent - opex;
-    const capRate = noi / price;
-
-    // Mortgage payment.
-    const loan = price * (1 - downPct);
-    const r_m = rate / 12;
-    const n = term * 12;
-    const pi = r_m === 0 ? loan / n : loan * r_m * Math.pow(1 + r_m, n) / (Math.pow(1 + r_m, n) - 1);
-    const annualDebtService = pi * 12;
-    const cashFlow = noi - annualDebtService;
-    const cashInvested = price * downPct + closing;
-    const cashOnCash = cashInvested > 0 ? cashFlow / cashInvested : 0;
-    const dscr = annualDebtService > 0 ? noi / annualDebtService : Infinity;
-
-    const onePctRule = (rent / price) * 100;
-    const onePctOk = onePctRule >= 1.0;
-    const grm = price / grossAnnualRent;
-
-    const verdict = capRate >= 0.08 ? 'STRONG' : capRate >= 0.06 ? 'OK' : capRate >= 0.04 ? 'WEAK' : 'PASS';
-    const verdictCls = capRate >= 0.08 ? 'pos' : capRate >= 0.04 ? '' : 'neg';
-
+    const verdictCls = r.cap_rate_pct >= 8 ? 'pos' : r.cap_rate_pct >= 4 ? '' : 'neg';
+    const dscrTxt = r.dscr == null ? '∞' : fmt(r.dscr, 2);
+    // Line chart: cap rate as purchase price sweeps 0.5× → 1.5× (yield falls as price rises).
+    const base = body.price_usd || 350000;
+    const xs = enh.linspace(base * 0.5, base * 1.5, 13);
+    const pts = await Promise.all(xs.map(async (p) => {
+        const rr = await api.calcCapRate({ ...body, price_usd: p });
+        return { x: p / 1000, y: rr && rr.valid ? rr.cap_rate_pct : NaN };
+    }));
+    if (!viewIsCurrent(tok)) return;
+    const chart = enh.svgLineChart(pts, { xlabel: 'price $k', ylabel: 'cap rate %' });
     result.innerHTML = `
-        <div class="cards" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px;margin-bottom:12px">
-            <div class="card"><div class="label">Cap rate (unlevered)</div><div class="value ${verdictCls}"><strong>${fmt(capRate * 100, 2)}%</strong></div><div class="muted small">NOI / price</div></div>
-            <div class="card"><div class="label">Cash-on-cash return</div><div class="value ${cashOnCash >= 0.08 ? 'pos' : cashOnCash >= 0 ? '' : 'neg'}"><strong>${fmt(cashOnCash * 100, 2)}%</strong></div><div class="muted small">CF / cash invested</div></div>
-            <div class="card"><div class="label">Annual cash flow</div><div class="value ${cashFlow > 0 ? 'pos' : 'neg'}">$${fmt(cashFlow, 0)}</div><div class="muted small">$${fmt(cashFlow / 12, 0)}/mo</div></div>
-            <div class="card"><div class="label">DSCR</div><div class="value ${dscr >= 1.25 ? 'pos' : dscr >= 1 ? '' : 'neg'}">${dscr === Infinity ? '∞' : fmt(dscr, 2)}</div><div class="muted small">≥1.25 for lender approval</div></div>
-            <div class="card"><div class="label">1% rule (rent/price)</div><div class="value ${onePctOk ? 'pos' : 'neg'}">${fmt(onePctRule, 2)}%</div><div class="muted small">≥1% = ${onePctOk ? '✓' : '✗'} cash flow signal</div></div>
-            <div class="card"><div class="label">GRM</div><div class="value">${fmt(grm, 1)}</div><div class="muted small">Price / annual rent — lower better</div></div>
-            <div class="card"><div class="label">Verdict</div><div class="value ${verdictCls}"><strong>${esc(verdict)}</strong></div></div>
+        <div class="cards">
+            <div class="card"><div class="label">Cap rate (unlevered)</div><div class="value ${verdictCls}"><strong>${fmt(r.cap_rate_pct, 2)}%</strong></div><div class="muted small">NOI / price</div></div>
+            <div class="card"><div class="label">Cash-on-cash return</div><div class="value ${r.cash_on_cash_pct >= 8 ? 'pos' : r.cash_on_cash_pct >= 0 ? '' : 'neg'}"><strong>${fmt(r.cash_on_cash_pct, 2)}%</strong></div><div class="muted small">CF / cash invested</div></div>
+            <div class="card"><div class="label">Annual cash flow</div><div class="value ${r.annual_cash_flow_usd > 0 ? 'pos' : 'neg'}">$${fmt(r.annual_cash_flow_usd, 0)}</div><div class="muted small">$${fmt(r.monthly_cash_flow_usd, 0)}/mo</div></div>
+            <div class="card"><div class="label">DSCR</div><div class="value ${r.dscr == null || r.dscr >= 1.25 ? 'pos' : r.dscr >= 1 ? '' : 'neg'}">${dscrTxt}</div><div class="muted small">≥1.25 for lender approval</div></div>
+            <div class="card"><div class="label">1% rule (rent/price)</div><div class="value ${r.one_pct_ok ? 'pos' : 'neg'}">${fmt(r.one_pct_rule_pct, 2)}%</div><div class="muted small">≥1% = ${r.one_pct_ok ? '✓' : '✗'} cash flow signal</div></div>
+            <div class="card"><div class="label">GRM</div><div class="value">${fmt(r.grm, 1)}</div><div class="muted small">Price / annual rent — lower better</div></div>
+            <div class="card"><div class="label">Verdict</div><div class="value ${verdictCls}"><strong>${esc(r.verdict)}</strong></div></div>
         </div>
+        ${chart}
         <h3 class="section-title">P&L breakdown</h3>
         <table class="trades" data-table-key="re-pl">
             <thead><tr><th>Line</th><th>Annual</th><th>Monthly</th></tr></thead>
             <tbody>
-                <tr><td>Gross scheduled rent</td><td>$${fmt(grossAnnualRent, 0)}</td><td>$${fmt(grossAnnualRent / 12, 0)}</td></tr>
-                <tr><td class="muted">Less vacancy (${fmt(vacPct * 100, 1)}%)</td><td class="muted">-$${fmt(vacancy, 0)}</td><td class="muted">-$${fmt(vacancy / 12, 0)}</td></tr>
-                <tr><td><strong>Effective gross income</strong></td><td><strong>$${fmt(effectiveRent, 0)}</strong></td><td><strong>$${fmt(effectiveRent / 12, 0)}</strong></td></tr>
-                <tr><td>Property tax</td><td>-$${fmt(propTax, 0)}</td><td>-$${fmt(propTax / 12, 0)}</td></tr>
-                <tr><td>Insurance</td><td>-$${fmt(ins, 0)}</td><td>-$${fmt(ins / 12, 0)}</td></tr>
-                <tr><td>Maintenance / CapEx</td><td>-$${fmt(maint, 0)}</td><td>-$${fmt(maint / 12, 0)}</td></tr>
-                <tr><td>Property management</td><td>-$${fmt(mgmt, 0)}</td><td>-$${fmt(mgmt / 12, 0)}</td></tr>
-                <tr><td>HOA + utilities</td><td>-$${fmt(hoaAnnual, 0)}</td><td>-$${fmt(hoaMo, 0)}</td></tr>
-                <tr><td><strong>NOI</strong></td><td><strong>$${fmt(noi, 0)}</strong></td><td><strong>$${fmt(noi / 12, 0)}</strong></td></tr>
-                <tr><td class="muted">Less debt service (P+I)</td><td class="muted">-$${fmt(annualDebtService, 0)}</td><td class="muted">-$${fmt(pi, 0)}</td></tr>
-                <tr><td><strong>Cash flow</strong></td><td class="${cashFlow > 0 ? 'pos' : 'neg'}"><strong>$${fmt(cashFlow, 0)}</strong></td><td class="${cashFlow > 0 ? 'pos' : 'neg'}"><strong>$${fmt(cashFlow / 12, 0)}</strong></td></tr>
+                <tr><td>Gross scheduled rent</td><td>$${fmt(r.gross_annual_rent_usd, 0)}</td><td>$${fmt(r.gross_annual_rent_usd / 12, 0)}</td></tr>
+                <tr><td class="muted">Less vacancy (${fmt(body.vacancy_frac * 100, 1)}%)</td><td class="muted">-$${fmt(r.vacancy_loss_usd, 0)}</td><td class="muted">-$${fmt(r.vacancy_loss_usd / 12, 0)}</td></tr>
+                <tr><td><strong>Effective gross income</strong></td><td><strong>$${fmt(r.effective_gross_income_usd, 0)}</strong></td><td><strong>$${fmt(r.effective_gross_income_usd / 12, 0)}</strong></td></tr>
+                <tr><td>Property tax</td><td>-$${fmt(body.property_tax_annual_usd, 0)}</td><td>-$${fmt(body.property_tax_annual_usd / 12, 0)}</td></tr>
+                <tr><td>Insurance</td><td>-$${fmt(body.insurance_annual_usd, 0)}</td><td>-$${fmt(body.insurance_annual_usd / 12, 0)}</td></tr>
+                <tr><td>Maintenance / CapEx</td><td>-$${fmt(r.maintenance_usd, 0)}</td><td>-$${fmt(r.maintenance_usd / 12, 0)}</td></tr>
+                <tr><td>Property management</td><td>-$${fmt(r.management_usd, 0)}</td><td>-$${fmt(r.management_usd / 12, 0)}</td></tr>
+                <tr><td>HOA + utilities</td><td>-$${fmt(r.hoa_annual_usd, 0)}</td><td>-$${fmt(body.hoa_monthly_usd, 0)}</td></tr>
+                <tr><td><strong>NOI</strong></td><td><strong>$${fmt(r.noi_usd, 0)}</strong></td><td><strong>$${fmt(r.noi_usd / 12, 0)}</strong></td></tr>
+                <tr><td class="muted">Less debt service (P+I)</td><td class="muted">-$${fmt(r.annual_debt_service_usd, 0)}</td><td class="muted">-$${fmt(r.monthly_pi_usd, 0)}</td></tr>
+                <tr><td><strong>Cash flow</strong></td><td class="${r.annual_cash_flow_usd > 0 ? 'pos' : 'neg'}"><strong>$${fmt(r.annual_cash_flow_usd, 0)}</strong></td><td class="${r.annual_cash_flow_usd > 0 ? 'pos' : 'neg'}"><strong>$${fmt(r.monthly_cash_flow_usd, 0)}</strong></td></tr>
             </tbody>
         </table>
     `;
-}
-
-function fmt(n, d) {
-    if (n == null || !Number.isFinite(Number(n))) return '—';
-    return Number(n).toLocaleString(undefined, { minimumFractionDigits: d, maximumFractionDigits: d });
 }
