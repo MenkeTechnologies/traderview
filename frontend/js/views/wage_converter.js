@@ -6,8 +6,10 @@ import { applyUiI18n, t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import { showToast } from '../toast.js';
 import { debounce } from '../util.js';
+import * as enh from '../calc_enhance.js';
 
 const money = (n) => '$' + Number(n).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+let lastReport = null;
 
 export async function renderWageConverter(mount, _appState) {
     const tok = currentViewToken();
@@ -35,6 +37,7 @@ export async function renderWageConverter(mount, _appState) {
                 <label><span data-i18n="view.wage.label.weeks">Weeks / year</span>
                     <input type="number" step="0.01" min="0" name="weeks_per_year" value="52" required></label>
             </form>
+            <div id="wage-tools" class="ce-toolbar"></div>
         </div>
         <div id="wage-result" class="lpv-preview"></div>
         </div>
@@ -53,11 +56,27 @@ export async function renderWageConverter(mount, _appState) {
         try {
             const r = await api.calcWageConverter(body);
             if (!viewIsCurrent(tok)) return;
+            lastReport = r;
             renderResult(mount, r);
         } catch (err) {
             showToast(err.message || t('view.wage.toast.error'), { level: 'error' });
         }
     };
+    // Export only — the periods (hourly … annual) span too many orders of
+    // magnitude for one bar chart to be meaningful.
+    enh.mountToolbar(mount.querySelector('#wage-tools'), {
+        viewId: 'wage-converter', link: false, filename: 'wage-converter.csv',
+        getRows: () => {
+            const r = lastReport;
+            if (!r) return [];
+            return [['period', 'amount_usd'],
+                ['hourly', r.hourly_usd],
+                ['weekly', r.weekly_usd],
+                ['biweekly', r.biweekly_usd],
+                ['monthly', r.monthly_usd],
+                ['annual', r.annual_usd]];
+        },
+    });
     form.addEventListener('input', debounce(generate, 250));
     form.addEventListener('submit', (e) => { e.preventDefault(); generate(); });
     generate();

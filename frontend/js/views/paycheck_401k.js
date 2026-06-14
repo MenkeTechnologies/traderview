@@ -5,6 +5,9 @@ import { api } from '../api.js';
 import { applyUiI18n, t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import { showToast } from '../toast.js';
+import * as enh from '../calc_enhance.js';
+
+let lastReport = null;
 
 const FIELDS = [
     ['annual_limit_usd', 'Annual deferral limit ($)', 23000],
@@ -41,12 +44,27 @@ export async function renderPaycheck401k(mount, _appState) {
                 <label data-tip="view.paycheck401k.tip.true_up"><input type="checkbox" name="plan_has_true_up"> <span data-i18n="view.paycheck401k.label.true_up">Plan trues up match</span></label>
                 <button class="primary" type="submit" data-i18n="view.paycheck401k.btn.run">Calculate</button>
             </form>
+            <div id="pc-tools" class="ce-toolbar"></div>
         </div>
         <div id="pc-result"></div>
     `;
     applyUiI18n(mount);
 
     const form = mount.querySelector('#pc-form');
+    enh.mountToolbar(mount.querySelector('#pc-tools'), {
+        viewId: 'paycheck-401k', link: false, filename: 'paycheck-401k.csv',
+        getRows: () => {
+            const r = lastReport;
+            if (!r) return [];
+            return [['metric', 'value'],
+                ['even_per_period_usd', r.even_per_period_usd],
+                ['even_pct_of_pay', r.even_pct_of_pay],
+                ['match_threshold_per_period_usd', r.match_threshold_per_period_usd],
+                ['full_match_per_period_usd', r.full_match_per_period_usd],
+                ['forfeited_match_usd', r.forfeited_match_usd],
+                ['remaining_to_limit_usd', r.remaining_to_limit_usd]];
+        },
+    });
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
         const fd = new FormData(e.target);
@@ -55,6 +73,7 @@ export async function renderPaycheck401k(mount, _appState) {
         try {
             const r = await api.calcPaycheck401k(body);
             if (!viewIsCurrent(tok)) return;
+            lastReport = r;
             renderResult(mount, r);
         } catch (err) {
             showToast(err.message || t('view.paycheck401k.toast.error'), { level: 'error' });
@@ -66,6 +85,11 @@ export async function renderPaycheck401k(mount, _appState) {
 function renderResult(mount, r) {
     const el = mount.querySelector('#pc-result');
     const forfeited = Number(r.forfeited_match_usd);
+    // Per-check deferral needed vs the employer match it earns.
+    const chart = enh.svgBarChart([
+        { label: 'Defer', value: r.even_per_period_usd },
+        { label: 'Match', value: r.full_match_per_period_usd },
+    ]);
     const ptl = r.periods_to_limit_at_planned;
     let note;
     if (forfeited > 0) {
@@ -94,6 +118,7 @@ function renderResult(mount, r) {
                 <div class="card ${forfeited > 0 ? 'neg' : ''}"><div class="label" data-i18n="view.paycheck401k.card.forfeit">Match forfeited (front-load)</div>
                     <div class="value ${forfeited > 0 ? 'neg' : ''}">${money(forfeited)}</div></div>
             </div>
+            ${chart}
             <p class="muted small">${note}</p>
         </div>
     `;

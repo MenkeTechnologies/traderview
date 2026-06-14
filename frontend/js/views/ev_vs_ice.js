@@ -5,6 +5,7 @@
 import { api } from '../api.js';
 import { esc } from '../util.js';
 import { t } from '../i18n.js';
+import * as enh from '../calc_enhance.js';
 
 const STATE = {
     annual_miles: 12000,
@@ -158,6 +159,11 @@ async function runCompute(mount) {
     result.innerHTML = `<p class="muted">${esc(t('view.ev_vs_ice.status.computing'))}</p>`;
     try {
         const r = await api.request('/ev-vs-ice/compute', { method: 'POST', body: JSON.stringify(STATE) });
+        // Total cost of ownership: EV vs ICE over the hold (lower wins).
+        const chart = enh.svgBarChart([
+            { label: 'EV', value: r.ev.total_cost_usd },
+            { label: 'ICE', value: r.ice.total_cost_usd },
+        ]);
         const winCls = r.net_winner === 'ev' ? 'pos' : '';
         const sCls = r.savings_ev_minus_ice_usd > 0 ? 'pos' : 'neg';
         const beFmt = r.years_to_breakeven == null ? '∞'
@@ -189,11 +195,27 @@ async function runCompute(mount) {
                 <div><div class="muted small">${esc(t('view.ev_vs_ice.field.breakeven'))}</div>
                     <strong>${beFmt}</strong></div>
             </div>
+            ${chart}
+            <div id="ei-tools" class="ce-toolbar"></div>
             <h2 style="margin-top:1rem">${esc(t('view.ev_vs_ice.h2.ev'))}</h2>
             ${pathTable(r.ev)}
             <h2 style="margin-top:1rem">${esc(t('view.ev_vs_ice.h2.ice'))}</h2>
             ${pathTable(r.ice)}
         `;
+        // EV vs ICE cost-component export (Copy / CSV). No permalink — STATE inputs.
+        enh.mountToolbar(mount.querySelector('#ei-tools'), {
+            viewId: 'ev-vs-ice',
+            link: false,
+            filename: 'ev-vs-ice.csv',
+            getRows: () => [['component', 'ev_usd', 'ice_usd'],
+                ['financing_interest', r.ev.financing_interest_usd, r.ice.financing_interest_usd],
+                ['fuel', r.ev.fuel_total_usd, r.ice.fuel_total_usd],
+                ['maintenance', r.ev.maintenance_total_usd, r.ice.maintenance_total_usd],
+                ['insurance', r.ev.insurance_total_usd, r.ice.insurance_total_usd],
+                ['depreciation', r.ev.depreciation_usd, r.ice.depreciation_usd],
+                ['credits', r.ev.credits_applied_usd, r.ice.credits_applied_usd],
+                ['total_cost', r.ev.total_cost_usd, r.ice.total_cost_usd]],
+        });
     } catch (e) {
         result.innerHTML = `<p class="neg">${esc(String(e))}</p>`;
     }
