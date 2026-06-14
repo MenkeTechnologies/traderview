@@ -1,21 +1,25 @@
-// Net Investment Income Tax (NIIT) — additional 3.8% surtax on
-// investment income for high earners. Enacted under ACA (2013) as the
-// "Medicare contribution tax." Applies to lesser of:
-//   (a) net investment income, OR
-//   (b) modified AGI in excess of threshold
-// Thresholds (NOT inflation-adjusted — frozen since 2013):
-//   single $200,000 · MFJ $250,000 · MFS $125,000 · HoH $200,000
-// Net investment income = interest + dividends + cap gains + rents
-// + royalties + non-qual annuities + passive biz income MINUS allocable
-// deductions. Excludes wages, self-employment, retirement distributions,
-// active business income.
+// Net Investment Income Tax (NIIT) — the ACA 3.8% surtax on investment income
+// for high earners, on the lesser of net investment income or MAGI over the
+// (2013-frozen) threshold. Computation runs server-side via /calc/niit
+// (traderview-core::niit) — a faithful port of the former client-side math,
+// Python-pinned and unit-tested. Class-based styling for release-WebKit.
 
+import { api } from '../api.js';
+import { applyUiI18n } from '../i18n.js';
+import { currentViewToken, viewIsCurrent } from '../app.js';
+import { showToast } from '../toast.js';
+import { debounce } from '../util.js';
 import { esc } from '../util.js';
+import * as enh from '../calc_enhance.js';
 
-const THRESHOLD = { single: 200000, mfj: 250000, mfs: 125000, hoh: 200000 };
-const NIIT_RATE = 0.038;
+const fmt = (n, d) => (n == null || !Number.isFinite(Number(n)) ? '—' : Number(n).toLocaleString(undefined, { minimumFractionDigits: d, maximumFractionDigits: d }));
+const VIEW = 'niit-calculator';
+let lastReport = null;
+let lastBody = null;
 
 export async function renderNiitCalculator(mount, _state) {
+    const tok = currentViewToken();
+    if (!viewIsCurrent(tok)) return;
     mount.innerHTML = `
         <h1 class="view-title"><span data-i18n="view.niit_calculator.title">// NIIT · 3.8% INVESTMENT SURTAX</span></h1>
         <p class="muted small" data-i18n-html="view.niit_calculator.intro">
@@ -26,102 +30,122 @@ export async function renderNiitCalculator(mount, _state) {
             earners as nominal income drifts upward.
         </p>
         <div class="chart-panel">
-            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px;margin-bottom:12px">
-                <label>
-                    <span class="muted small">Filing status</span>
-                    <select id="niit-status" style="width:100%">
+            <div class="re-grid">
+                <label><span class="muted small">Filing status</span>
+                    <select id="niit-status">
                         <option value="single">Single</option>
                         <option value="mfj" selected>MFJ</option>
                         <option value="mfs">MFS</option>
                         <option value="hoh">HoH</option>
-                    </select>
-                </label>
-                <label>
-                    <span class="muted small">MAGI $</span>
-                    <input type="number" id="niit-magi" step="1000" min="0" value="320000" style="width:100%">
-                </label>
-                <label>
-                    <span class="muted small">Interest income $</span>
-                    <input type="number" id="niit-interest" step="100" min="0" value="5000" style="width:100%">
-                </label>
-                <label>
-                    <span class="muted small">Dividends (qual + ord) $</span>
-                    <input type="number" id="niit-div" step="100" min="0" value="12000" style="width:100%">
-                </label>
-                <label>
-                    <span class="muted small">Net capital gains $</span>
-                    <input type="number" id="niit-gains" step="100" value="40000" style="width:100%">
-                </label>
-                <label>
-                    <span class="muted small">Rental net income $</span>
-                    <input type="number" id="niit-rent" step="100" value="8000" style="width:100%">
-                </label>
-                <label>
-                    <span class="muted small">Royalties + passive biz $</span>
-                    <input type="number" id="niit-passive" step="100" min="0" value="0" style="width:100%">
-                </label>
-                <label>
-                    <span class="muted small">Allocable deductions $</span>
-                    <input type="number" id="niit-ded" step="100" min="0" value="0" style="width:100%">
-                </label>
+                    </select></label>
+                <label><span class="muted small">MAGI $</span>
+                    <input type="number" id="niit-magi" step="1000" min="0" value="320000"></label>
+                <label><span class="muted small">Interest income $</span>
+                    <input type="number" id="niit-interest" step="100" min="0" value="5000"></label>
+                <label><span class="muted small">Dividends (qual + ord) $</span>
+                    <input type="number" id="niit-div" step="100" min="0" value="12000"></label>
+                <label><span class="muted small">Net capital gains $</span>
+                    <input type="number" id="niit-gains" step="100" value="40000"></label>
+                <label><span class="muted small">Rental net income $</span>
+                    <input type="number" id="niit-rent" step="100" value="8000"></label>
+                <label><span class="muted small">Royalties + passive biz $</span>
+                    <input type="number" id="niit-passive" step="100" min="0" value="0"></label>
+                <label><span class="muted small">Allocable deductions $</span>
+                    <input type="number" id="niit-ded" step="100" min="0" value="0"></label>
             </div>
             <button class="btn btn-sm primary" id="niit-run">⚡ Compute</button>
-            <div id="niit-result" style="margin-top:12px"></div>
+            <div id="niit-tools" class="ce-toolbar"></div>
+            <div id="niit-result" class="re-result"></div>
         </div>
     `;
-    mount.querySelectorAll('#niit-status, #niit-magi, #niit-interest, #niit-div, #niit-gains, #niit-rent, #niit-passive, #niit-ded').forEach(el => {
-        el.addEventListener('input', () => compute(mount));
+    applyUiI18n(mount);
+
+    const num = (id) => parseFloat(mount.querySelector(id).value) || 0;
+    const readBody = () => ({
+        filing_status: mount.querySelector('#niit-status').value,
+        magi_usd: num('#niit-magi'),
+        interest_usd: num('#niit-interest'),
+        dividends_usd: num('#niit-div'),
+        net_capital_gains_usd: num('#niit-gains'),
+        rental_net_income_usd: num('#niit-rent'),
+        royalties_passive_usd: num('#niit-passive'),
+        allocable_deductions_usd: num('#niit-ded'),
     });
-    mount.querySelector('#niit-run').addEventListener('click', () => compute(mount));
-    compute(mount);
+    const compute = async () => {
+        const body = readBody();
+        try {
+            const r = await api.calcNiit(body);
+            if (!viewIsCurrent(tok)) return;
+            lastReport = r; lastBody = body;
+            renderResult(mount, r, body);
+        } catch (err) {
+            showToast(err.message || 'Could not compute the NIIT.', { level: 'error' });
+        }
+    };
+    enh.mountToolbar(mount.querySelector('#niit-tools'), {
+        viewId: VIEW, link: false, filename: 'niit.csv',
+        getRows: () => reportRows(lastReport),
+    });
+    mount.querySelectorAll('#niit-status, #niit-magi, #niit-interest, #niit-div, #niit-gains, #niit-rent, #niit-passive, #niit-ded').forEach(el => {
+        el.addEventListener('input', debounce(compute, 250));
+    });
+    mount.querySelector('#niit-run').addEventListener('click', compute);
+    compute();
 }
 
-function compute(mount) {
-    const status = mount.querySelector('#niit-status').value;
-    const magi = parseFloat(mount.querySelector('#niit-magi').value) || 0;
-    const interest = parseFloat(mount.querySelector('#niit-interest').value) || 0;
-    const div = parseFloat(mount.querySelector('#niit-div').value) || 0;
-    const gains = parseFloat(mount.querySelector('#niit-gains').value) || 0;
-    const rent = parseFloat(mount.querySelector('#niit-rent').value) || 0;
-    const passive = parseFloat(mount.querySelector('#niit-passive').value) || 0;
-    const ded = parseFloat(mount.querySelector('#niit-ded').value) || 0;
+function reportRows(r) {
+    if (!r || !r.valid) return [];
+    return [
+        ['metric', 'value'],
+        ['threshold_usd', r.threshold_usd],
+        ['magi_excess_usd', r.magi_excess_usd],
+        ['net_investment_income_usd', r.net_investment_income_usd],
+        ['subject_to_niit_usd', r.subject_to_niit_usd],
+        ['niit_tax_usd', r.niit_tax_usd],
+        ['effective_on_investment_pct', r.effective_on_investment_pct],
+    ];
+}
+
+function renderResult(mount, r, body) {
     const result = mount.querySelector('#niit-result');
-
-    const grossInvestment = interest + div + gains + rent + passive;
-    const netInvestment = Math.max(0, grossInvestment - ded);
-    const thresh = THRESHOLD[status];
-    const magiExcess = Math.max(0, magi - thresh);
-    const subject = Math.min(netInvestment, magiExcess);
-    const niitTax = subject * NIIT_RATE;
-    const effOnInvestment = netInvestment > 0 ? niitTax / netInvestment : 0;
-
+    if (!r.valid) {
+        result.innerHTML = `<p class="muted">Enter a non-negative MAGI.</p>`;
+        return;
+    }
+    // What's subject to NIIT: net investment income vs MAGI excess — the lesser binds.
+    const chart = enh.svgBarChart([
+        { label: 'Net inv', value: r.net_investment_income_usd },
+        { label: 'MAGI exc', value: r.magi_excess_usd },
+        { label: 'Subject', value: r.subject_to_niit_usd },
+    ]);
+    const note = r.magi_excess_usd <= 0
+        ? '<p class="pos small"><strong>Not subject to NIIT</strong> — MAGI below threshold.</p>'
+        : r.net_investment_income_usd <= 0
+            ? '<p class="pos small"><strong>No net investment income</strong> — NIIT does not apply.</p>'
+            : '';
     result.innerHTML = `
-        <div class="cards" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px;margin-bottom:12px">
-            <div class="card"><div class="label">MAGI threshold</div><div class="value">$${fmt(thresh, 0)}</div><div class="muted small">${esc(status.toUpperCase())} (frozen 2013)</div></div>
-            <div class="card"><div class="label">MAGI excess</div><div class="value ${magiExcess > 0 ? 'neg' : 'pos'}">$${fmt(magiExcess, 0)}</div></div>
-            <div class="card"><div class="label">Net investment income</div><div class="value">$${fmt(netInvestment, 0)}</div></div>
-            <div class="card"><div class="label">Subject to NIIT</div><div class="value">$${fmt(subject, 0)}</div><div class="muted small">min(net inv, MAGI excess)</div></div>
-            <div class="card"><div class="label">NIIT @ 3.8%</div><div class="value neg"><strong>$${fmt(niitTax, 0)}</strong></div></div>
-            <div class="card"><div class="label">Effective on investment $</div><div class="value">${fmt(effOnInvestment * 100, 2)}%</div></div>
+        <div class="cards">
+            <div class="card"><div class="label">MAGI threshold</div><div class="value">$${fmt(r.threshold_usd, 0)}</div><div class="muted small">${esc(body.filing_status.toUpperCase())} (frozen 2013)</div></div>
+            <div class="card"><div class="label">MAGI excess</div><div class="value ${r.magi_excess_usd > 0 ? 'neg' : 'pos'}">$${fmt(r.magi_excess_usd, 0)}</div></div>
+            <div class="card"><div class="label">Net investment income</div><div class="value">$${fmt(r.net_investment_income_usd, 0)}</div></div>
+            <div class="card"><div class="label">Subject to NIIT</div><div class="value">$${fmt(r.subject_to_niit_usd, 0)}</div><div class="muted small">min(net inv, MAGI excess)</div></div>
+            <div class="card"><div class="label">NIIT @ 3.8%</div><div class="value neg"><strong>$${fmt(r.niit_tax_usd, 0)}</strong></div></div>
+            <div class="card"><div class="label">Effective on investment $</div><div class="value">${fmt(r.effective_on_investment_pct, 2)}%</div></div>
         </div>
+        ${chart}
         <h3 class="section-title">Investment income detail</h3>
         <table class="trades" data-table-key="niit-detail">
             <thead><tr><th>Component</th><th>Amount</th></tr></thead>
             <tbody>
-                <tr><td>Interest</td><td>$${fmt(interest, 0)}</td></tr>
-                <tr><td>Dividends</td><td>$${fmt(div, 0)}</td></tr>
-                <tr><td>Net capital gains</td><td>$${fmt(gains, 0)}</td></tr>
-                <tr><td>Rental net income</td><td>$${fmt(rent, 0)}</td></tr>
-                <tr><td>Royalties / passive biz</td><td>$${fmt(passive, 0)}</td></tr>
-                <tr><td class="muted">Less: allocable deductions</td><td class="muted">-$${fmt(ded, 0)}</td></tr>
-                <tr><td><strong>Net investment income</strong></td><td><strong>$${fmt(netInvestment, 0)}</strong></td></tr>
+                <tr><td>Interest</td><td>$${fmt(body.interest_usd, 0)}</td></tr>
+                <tr><td>Dividends</td><td>$${fmt(body.dividends_usd, 0)}</td></tr>
+                <tr><td>Net capital gains</td><td>$${fmt(body.net_capital_gains_usd, 0)}</td></tr>
+                <tr><td>Rental net income</td><td>$${fmt(body.rental_net_income_usd, 0)}</td></tr>
+                <tr><td>Royalties / passive biz</td><td>$${fmt(body.royalties_passive_usd, 0)}</td></tr>
+                <tr><td class="muted">Less: allocable deductions</td><td class="muted">-$${fmt(body.allocable_deductions_usd, 0)}</td></tr>
+                <tr><td><strong>Net investment income</strong></td><td><strong>$${fmt(r.net_investment_income_usd, 0)}</strong></td></tr>
             </tbody>
         </table>
-        ${magiExcess <= 0 ? '<p class="pos small" style="margin-top:8px"><strong>Not subject to NIIT</strong> — MAGI below threshold.</p>' : netInvestment <= 0 ? '<p class="pos small" style="margin-top:8px"><strong>No net investment income</strong> — NIIT does not apply.</p>' : ''}
+        ${note}
     `;
-}
-
-function fmt(n, d) {
-    if (n == null || !Number.isFinite(Number(n))) return '—';
-    return Number(n).toLocaleString(undefined, { minimumFractionDigits: d, maximumFractionDigits: d });
 }

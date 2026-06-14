@@ -1813,6 +1813,7 @@ export const api = {
     calcSaasQuickRatio:      (b) => request('/calc/saas-quick-ratio',       { method: 'POST', body: JSON.stringify(b) }),
     calcCapRate:             (b) => request('/calc/cap-rate',               { method: 'POST', body: JSON.stringify(b) }),
     calcYieldToCall:         (b) => request('/calc/yield-to-call',          { method: 'POST', body: JSON.stringify(b) }),
+    calcNiit:                (b) => request('/calc/niit',                   { method: 'POST', body: JSON.stringify(b) }),
     calcRiskOnOff:           (b) => request('/calc/risk-on-off',          { method: 'POST', body: JSON.stringify(b) }),
     calcMarginCall:          (b) => request('/calc/margin-call',          { method: 'POST', body: JSON.stringify(b) }),
     calcMarginRunway:        (b) => request('/calc/margin-runway',        { method: 'POST', body: JSON.stringify(b) }),

@@ -35,6 +35,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/valuation-multiples", post(valuation_multiples_route))
         .route("/calc/cap-rate", post(cap_rate_route))
         .route("/calc/yield-to-call", post(yield_to_call_route))
+        .route("/calc/niit", post(niit_route))
         .route("/calc/dividend-discount-model", post(dividend_discount_model_route))
         .route("/calc/probability-of-profit", post(probability_of_profit_route))
         .route("/calc/straddle", post(straddle_route))
@@ -981,6 +982,13 @@ async fn liquidity_ratios_route(
     Json(b): Json<traderview_core::liquidity_ratios::LiquidityInput>,
 ) -> Json<traderview_core::liquidity_ratios::LiquidityReport> {
     Json(traderview_core::liquidity_ratios::generate(&b))
+}
+
+/// NIIT: the 3.8% net investment income surtax over the MAGI threshold.
+async fn niit_route(
+    Json(b): Json<traderview_core::niit::NiitInput>,
+) -> Json<traderview_core::niit::NiitReport> {
+    Json(traderview_core::niit::generate(&b))
 }
 
 /// Yield to call: YTM / YTC / yield-to-worst for a callable bond.
