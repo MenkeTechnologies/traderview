@@ -151,6 +151,7 @@ pub mod hsa_triple_tax;
 pub mod ichimoku;
 pub mod implementation_shortfall;
 pub mod indicators;
+pub mod income_statement;
 pub mod inside_bar_breakout;
 pub mod inspection_checklist;
 pub mod interest_coverage;
