@@ -4,6 +4,7 @@
 import { api } from '../api.js';
 import { esc } from '../util.js';
 import { t } from '../i18n.js';
+import * as enh from '../calc_enhance.js';
 
 export async function renderRmdCalculator(mount, _state) {
     mount.innerHTML = `
@@ -49,6 +50,8 @@ async function runCompute(mount) {
     result.innerHTML = `<p class="muted">${esc(t('view.rmd_calculator.status.computing'))}</p>`;
     try {
         const r = await api.request('/rmd-calculator/compute', { method: 'POST', body: JSON.stringify(input) });
+        // RMD-per-age bar chart from the projection (the withdrawal ramp).
+        const chart = enh.svgBarChart((r.projection || []).map(y => ({ label: String(y.age), value: y.rmd_amount_usd })));
         const untilCls = r.years_until_rmd <= 0 ? '' : 'pos';
         result.innerHTML = `
             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-top:1rem">
@@ -63,6 +66,8 @@ async function runCompute(mount) {
                 <div><div class="muted small">${esc(t('view.rmd_calculator.field.total_rmds'))}</div>
                     <strong class="neg">$${(r.total_rmds_through_projection_usd / 1000).toFixed(0)}K</strong></div>
             </div>
+            ${chart}
+            <div id="rmd-tools" class="ce-toolbar"></div>
             <h2 style="margin-top:1rem">${esc(t('view.rmd_calculator.h2.projection'))}</h2>
             <table class="trades">
                 <thead><tr>
@@ -83,6 +88,14 @@ async function runCompute(mount) {
                 `).join('')}</tbody>
             </table>
         `;
+        // Projection export (Copy / CSV). No permalink — id-based inputs.
+        enh.mountToolbar(mount.querySelector('#rmd-tools'), {
+            viewId: 'rmd-calculator',
+            link: false,
+            filename: 'rmd-calculator.csv',
+            getRows: () => [['age', 'start_balance_usd', 'rmd_factor', 'rmd_amount_usd', 'end_balance_usd'],
+                ...(r.projection || []).map(y => [y.age, y.start_balance_usd, y.rmd_factor, y.rmd_amount_usd, y.end_balance_after_rmd_usd])],
+        });
     } catch (e) {
         result.innerHTML = `<p class="neg">${esc(String(e))}</p>`;
     }

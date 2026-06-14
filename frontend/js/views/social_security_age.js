@@ -5,6 +5,7 @@
 import { api } from '../api.js';
 import { esc } from '../util.js';
 import { t } from '../i18n.js';
+import * as enh from '../calc_enhance.js';
 
 export async function renderSocialSecurityAge(mount, _state) {
     mount.innerHTML = `
@@ -50,6 +51,11 @@ async function runCompute(mount) {
     result.innerHTML = `<p class="muted">${esc(t('view.social_security_age.status.computing'))}</p>`;
     try {
         const r = await api.request('/social-security-age/compute', { method: 'POST', body: JSON.stringify(input) });
+        // Lifetime total to life expectancy at each claim age — the decision metric.
+        const chart = enh.svgBarChart([
+            { label: '@' + r.claim_a.claim_age, value: r.claim_a.lifetime_total_to_life_expectancy_usd },
+            { label: '@' + r.claim_b.claim_age, value: r.claim_b.lifetime_total_to_life_expectancy_usd },
+        ]);
         const winnerLabel = r.net_winner_at_life_expectancy === 'claim_a'
             ? `Claim @ ${r.claim_a.claim_age}`
             : r.net_winner_at_life_expectancy === 'claim_b'
@@ -71,6 +77,8 @@ async function runCompute(mount) {
                 <div><div class="muted small">${esc(t('view.social_security_age.field.winner'))}</div>
                     <strong class="pos" style="font-size:1.2em">${esc(winnerLabel)}</strong></div>
             </div>
+            ${chart}
+            <div id="ssa-tools" class="ce-toolbar"></div>
             <h2 style="margin-top:1rem">${esc(t('view.social_security_age.h2.compare'))}</h2>
             <table class="trades">
                 <thead><tr>
@@ -86,6 +94,15 @@ async function runCompute(mount) {
                 </tbody>
             </table>
         `;
+        // Claim-age comparison export (Copy / CSV). No permalink — id-based inputs.
+        enh.mountToolbar(mount.querySelector('#ssa-tools'), {
+            viewId: 'social-security-age',
+            link: false,
+            filename: 'social-security-age.csv',
+            getRows: () => [['claim_age', 'monthly_usd', 'annual_usd', 'pct_of_fra', 'lifetime_total_usd'],
+                ...[r.claim_a, r.claim_b].map(c => [c.claim_age, c.monthly_benefit_usd, c.annual_benefit_usd, c.pct_of_fra, c.lifetime_total_to_life_expectancy_usd]),
+                ['breakeven_age', r.breakeven_age == null ? '' : r.breakeven_age, '', '', '']],
+        });
     } catch (e) {
         result.innerHTML = `<p class="neg">${esc(String(e))}</p>`;
     }

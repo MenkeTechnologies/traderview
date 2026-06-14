@@ -5,6 +5,7 @@
 import { api } from '../api.js';
 import { esc } from '../util.js';
 import { t } from '../i18n.js';
+import * as enh from '../calc_enhance.js';
 
 export async function renderPensionLumpVsAnnuity(mount, _state) {
     mount.innerHTML = `
@@ -50,6 +51,11 @@ async function runCompute(mount) {
     result.innerHTML = `<p class="muted">${esc(t('view.pension_lump_vs_annuity.status.computing'))}</p>`;
     try {
         const r = await api.request('/pension-lump-vs-annuity/compute', { method: 'POST', body: JSON.stringify(input) });
+        // Lump sum vs present value of the annuity — the core comparison.
+        const chart = enh.svgBarChart([
+            { label: 'Lump', value: r.lump_sum_usd },
+            { label: 'PV annuity', value: r.annuity_present_value_usd },
+        ]);
         const winCls = 'pos';
         result.innerHTML = `
             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-top:1rem">
@@ -70,7 +76,22 @@ async function runCompute(mount) {
                 <div><div class="muted small">${esc(t('view.pension_lump_vs_annuity.field.advantage'))}</div>
                     <strong class="pos">$${(r.winner_advantage_usd / 1000).toFixed(1)}K</strong></div>
             </div>
+            ${chart}
+            <div id="plva-tools" class="ce-toolbar"></div>
         `;
+        // Export (Copy / CSV). No permalink — id-based inputs.
+        enh.mountToolbar(mount.querySelector('#plva-tools'), {
+            viewId: 'pension-lump-vs-annuity',
+            link: false,
+            filename: 'pension-lump-vs-annuity.csv',
+            getRows: () => [['metric', 'value'],
+                ['lump_sum_usd', r.lump_sum_usd],
+                ['annuity_present_value_usd', r.annuity_present_value_usd],
+                ['annuity_total_payments_usd', r.annuity_total_payments_usd],
+                ['implied_internal_rate_pct', r.implied_internal_rate_pct == null ? '' : r.implied_internal_rate_pct],
+                ['net_winner', r.net_winner],
+                ['winner_advantage_usd', r.winner_advantage_usd]],
+        });
     } catch (e) {
         result.innerHTML = `<p class="neg">${esc(String(e))}</p>`;
     }

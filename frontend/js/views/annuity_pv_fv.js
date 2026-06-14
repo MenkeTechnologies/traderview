@@ -3,6 +3,7 @@
 import { api } from '../api.js';
 import { esc } from '../util.js';
 import { t } from '../i18n.js';
+import * as enh from '../calc_enhance.js';
 
 export async function renderAnnuityPvFv(mount, _state) {
     mount.innerHTML = `
@@ -51,6 +52,12 @@ async function runCompute(mount) {
     result.innerHTML = `<p class="muted">${esc(t('view.annuity_pv_fv.status.computing'))}</p>`;
     try {
         const r = await api.request('/annuity-pv-fv/compute', { method: 'POST', body: JSON.stringify(input) });
+        // PV / FV / total-payments comparison bars.
+        const chart = enh.svgBarChart([
+            { label: 'PV', value: r.present_value_usd },
+            { label: 'Payments', value: r.total_payments_usd },
+            { label: 'FV', value: r.future_value_usd },
+        ]);
         result.innerHTML = `
             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-top:1rem">
                 <div><div class="muted small">${esc(t('view.annuity_pv_fv.field.n'))}</div>
@@ -68,7 +75,22 @@ async function runCompute(mount) {
                 <div><div class="muted small">${esc(t('view.annuity_pv_fv.field.interest_fv'))}</div>
                     <strong class="pos">$${r.total_interest_fv_usd.toFixed(0)}</strong></div>
             </div>
+            ${chart}
+            <div id="apvfv-tools" class="ce-toolbar"></div>
         `;
+        // Export (Copy / CSV). No permalink — id-based inputs.
+        enh.mountToolbar(mount.querySelector('#apvfv-tools'), {
+            viewId: 'annuity-pv-fv',
+            link: false,
+            filename: 'annuity-pv-fv.csv',
+            getRows: () => [['metric', 'value'],
+                ['n_periods', r.n_periods],
+                ['present_value_usd', r.present_value_usd],
+                ['future_value_usd', r.future_value_usd],
+                ['total_payments_usd', r.total_payments_usd],
+                ['total_interest_pv_usd', r.total_interest_pv_usd],
+                ['total_interest_fv_usd', r.total_interest_fv_usd]],
+        });
     } catch (e) {
         result.innerHTML = `<p class="neg">${esc(String(e))}</p>`;
     }
