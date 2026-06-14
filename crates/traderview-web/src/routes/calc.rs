@@ -38,6 +38,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/niit", post(niit_route))
         .route("/calc/income-tax-estimator", post(income_tax_route))
         .route("/calc/roth-conversion-ladder", post(roth_conversion_ladder_route))
+        .route("/calc/sequence-of-returns", post(sequence_of_returns_route))
         .route("/calc/dividend-discount-model", post(dividend_discount_model_route))
         .route("/calc/probability-of-profit", post(probability_of_profit_route))
         .route("/calc/straddle", post(straddle_route))
@@ -984,6 +985,13 @@ async fn liquidity_ratios_route(
     Json(b): Json<traderview_core::liquidity_ratios::LiquidityInput>,
 ) -> Json<traderview_core::liquidity_ratios::LiquidityReport> {
     Json(traderview_core::liquidity_ratios::generate(&b))
+}
+
+/// Sequence-of-returns risk: 4 orderings of the same returns vs withdrawals.
+async fn sequence_of_returns_route(
+    Json(b): Json<traderview_core::sequence_of_returns::SequenceInput>,
+) -> Json<traderview_core::sequence_of_returns::SequenceReport> {
+    Json(traderview_core::sequence_of_returns::generate(&b))
 }
 
 /// Roth conversion ladder: year-by-year conversion tax + 5-year access schedule.

@@ -1,27 +1,32 @@
-// Sequence-of-Returns Risk — Bengen 4% Rule pressure-tested.
-// Two portfolios with identical AVERAGE return can have wildly
-// different terminal values if one starts with bad years and the
-// other with good ones — because withdrawals against a depleted
-// portfolio compound the damage. This view simulates 3 scenarios
-// on the same nominal-return sequence:
-//   A) Forward order — historical sequence as is
-//   B) Reversed order — same returns, ending first
-//   C) Bad-early — sorted ascending (worst years first)
-//   D) Good-early — sorted descending (best years first)
-// All four end with the same arithmetic mean return but very
-// different terminal values.
+// Sequence-of-Returns Risk — the same annual returns in four orderings (forward,
+// reversed, worst-first, best-first) run against an inflation-adjusted withdrawal.
+// Identical mean, very different terminal balances. Computation runs server-side
+// via /calc/sequence-of-returns (traderview-core::sequence_of_returns) — a
+// faithful port of the former client-side simulator, Python-pinned and tested.
+// Class-based styling for release-WebKit correctness.
 
+import { api } from '../api.js';
+import { applyUiI18n } from '../i18n.js';
+import { currentViewToken, viewIsCurrent } from '../app.js';
+import { showToast } from '../toast.js';
+import { debounce } from '../util.js';
 import { esc } from '../util.js';
+import * as enh from '../calc_enhance.js';
 
-// Default sequence: SPY annual total returns 2000-2024 (approximate).
-// Captures the "lost decade" (2000-2010) ideal for sequence-risk demos.
 const DEFAULT_RETURNS = [
     -9.1, -11.9, -22.1, 28.7, 10.9, 4.9, 15.8, 5.5, -37.0, 26.5,
     15.1, 2.1, 16.0, 32.4, 13.7, 1.4, 12.0, 21.8, -4.4, 31.5,
     18.4, 28.7, -18.1, 26.3, 25.0,
 ];
 
+const fmt = (n, d) => (n == null || !Number.isFinite(Number(n)) ? '—' : Number(n).toLocaleString(undefined, { minimumFractionDigits: d, maximumFractionDigits: d }));
+const VIEW = 'sequence-of-returns';
+let lastReport = null;
+let lastStart = 0;
+
 export async function renderSequenceOfReturns(mount, _state) {
+    const tok = currentViewToken();
+    if (!viewIsCurrent(tok)) return;
     mount.innerHTML = `
         <h1 class="view-title"><span data-i18n="view.sequence_of_returns.title">// SEQUENCE OF RETURNS RISK</span></h1>
         <p class="muted small" data-i18n-html="view.sequence_of_returns.intro">
@@ -34,108 +39,102 @@ export async function renderSequenceOfReturns(mount, _state) {
             (the "lost decade" makes the effect dramatic).
         </p>
         <div class="chart-panel">
-            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px;margin-bottom:12px">
-                <label>
-                    <span class="muted small">Starting balance $</span>
-                    <input type="number" id="sr-start" step="10000" min="0" value="1000000" style="width:100%">
-                </label>
-                <label>
-                    <span class="muted small">Annual withdrawal $</span>
-                    <input type="number" id="sr-wd" step="1000" min="0" value="40000" style="width:100%">
-                </label>
-                <label>
-                    <span class="muted small">Inflation adjust withdrawal %/yr</span>
-                    <input type="number" id="sr-infl" step="0.1" min="0" max="20" value="3.0" style="width:100%">
-                </label>
-                <label>
-                    <span class="muted small">Returns sequence (%/yr, comma-separated)</span>
-                    <input type="text" id="sr-seq" value="${DEFAULT_RETURNS.join(',')}" style="width:100%">
-                </label>
+            <div class="re-grid">
+                <label><span class="muted small">Starting balance $</span>
+                    <input type="number" id="sr-start" step="10000" min="0" value="1000000"></label>
+                <label><span class="muted small">Annual withdrawal $</span>
+                    <input type="number" id="sr-wd" step="1000" min="0" value="40000"></label>
+                <label><span class="muted small">Inflation adjust withdrawal %/yr</span>
+                    <input type="number" id="sr-infl" step="0.1" min="0" max="20" value="3.0"></label>
+                <label><span class="muted small">Returns sequence (%/yr, comma-separated)</span>
+                    <input type="text" id="sr-seq" value="${DEFAULT_RETURNS.join(',')}"></label>
             </div>
             <button class="btn btn-sm primary" id="sr-run">⚡ Simulate</button>
-            <div id="sr-result" style="margin-top:12px"></div>
+            <div id="sr-tools" class="ce-toolbar"></div>
+            <div id="sr-result" class="re-result"></div>
         </div>
     `;
-    mount.querySelectorAll('#sr-start, #sr-wd, #sr-infl, #sr-seq').forEach(el => {
-        el.addEventListener('input', () => compute(mount));
+    applyUiI18n(mount);
+
+    const readBody = () => ({
+        returns_pct: (mount.querySelector('#sr-seq').value || '').split(',').map(s => parseFloat(s.trim())).filter(n => Number.isFinite(n)),
+        start_balance_usd: parseFloat(mount.querySelector('#sr-start').value) || 0,
+        annual_withdrawal_usd: parseFloat(mount.querySelector('#sr-wd').value) || 0,
+        inflation_pct: parseFloat(mount.querySelector('#sr-infl').value) || 0,
     });
-    mount.querySelector('#sr-run').addEventListener('click', () => compute(mount));
-    compute(mount);
+    const compute = async () => {
+        const body = readBody();
+        if (body.returns_pct.length < 5) {
+            mount.querySelector('#sr-result').innerHTML = `<p class="muted">Need at least 5 annual returns.</p>`;
+            lastReport = null; return;
+        }
+        try {
+            const r = await api.calcSequenceOfReturns(body);
+            if (!viewIsCurrent(tok)) return;
+            lastReport = r; lastStart = body.start_balance_usd;
+            renderResult(mount, r, body.start_balance_usd);
+        } catch (err) {
+            showToast(err.message || 'Could not run the simulation.', { level: 'error' });
+        }
+    };
+    enh.mountToolbar(mount.querySelector('#sr-tools'), {
+        viewId: VIEW, link: false, filename: 'sequence-of-returns.csv',
+        getRows: () => reportRows(lastReport),
+    });
+    mount.querySelectorAll('#sr-start, #sr-wd, #sr-infl, #sr-seq').forEach(el => {
+        el.addEventListener('input', debounce(compute, 250));
+    });
+    mount.querySelector('#sr-run').addEventListener('click', compute);
+    compute();
 }
 
-function compute(mount) {
-    const start = parseFloat(mount.querySelector('#sr-start').value) || 0;
-    const wd = parseFloat(mount.querySelector('#sr-wd').value) || 0;
-    const infl = parseFloat(mount.querySelector('#sr-infl').value) / 100;
-    const seqStr = mount.querySelector('#sr-seq').value;
-    const result = mount.querySelector('#sr-result');
-
-    const returns = seqStr.split(',').map(s => parseFloat(s.trim()) / 100).filter(n => Number.isFinite(n));
-    if (returns.length < 5) {
-        result.innerHTML = `<p class="muted">Need at least 5 annual returns.</p>`;
-        return;
-    }
-    const mean = returns.reduce((s, r) => s + r, 0) / returns.length;
-    const sorted = returns.slice().sort((a, b) => a - b);
-    const scenarios = [
-        { name: 'Forward (actual)',     seq: returns.slice(),          cls: '' },
-        { name: 'Reversed',             seq: returns.slice().reverse(), cls: 'muted' },
-        { name: 'Worst-years-first',    seq: sorted.slice(),            cls: 'neg' },
-        { name: 'Best-years-first',     seq: sorted.slice().reverse(),  cls: 'pos' },
+function reportRows(r) {
+    if (!r || !r.valid) return [];
+    return [
+        ['scenario', 'end_balance_usd', 'failed_at_year', 'total_withdrawn_usd'],
+        ...r.scenarios.map(s => [s.name, s.end_balance_usd, s.failed_at_year == null ? '' : s.failed_at_year, s.total_withdrawn_usd]),
     ];
+}
 
-    const runs = scenarios.map(sc => {
-        let bal = start;
-        let realWd = wd;
-        const path = [];
-        let failedAtYear = null;
-        for (let i = 0; i < sc.seq.length; i++) {
-            const open = bal;
-            const ret = sc.seq[i];
-            bal *= (1 + ret);
-            bal -= realWd;
-            path.push({ year: i + 1, open, ret, wd: realWd, close: bal });
-            if (bal <= 0 && failedAtYear == null) { failedAtYear = i + 1; bal = 0; }
-            realWd *= (1 + infl);
-        }
-        return { ...sc, end: bal, path, failedAtYear, totalWd: path.reduce((s, p) => s + p.wd, 0) };
-    });
-
+function renderResult(mount, r, start) {
+    const result = mount.querySelector('#sr-result');
+    if (!r.valid) { result.innerHTML = ''; return; }
+    // End-balance comparison across the four orderings (failures clamped to 0 so
+    // the bar scale stays readable — the card text shows the failure year).
+    const chart = enh.svgBarChart(r.scenarios.map(s => ({ label: s.name.split(' ')[0], value: Math.max(0, s.end_balance_usd) })));
+    const cardCls = (s) => (s.failed_at_year != null || s.end_balance_usd <= 0) ? 'neg'
+        : s.name.startsWith('Best') ? 'pos' : s.name.startsWith('Worst') ? 'neg' : '';
     result.innerHTML = `
-        <p class="muted small">Arithmetic mean return: <strong>${fmt(mean * 100, 2)}%</strong>/yr across ${returns.length} years.</p>
-        <div class="cards" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:8px;margin-bottom:12px">
-            ${runs.map(r => `<div class="card">
-                <div class="label">${esc(r.name)}</div>
-                <div class="value ${r.end <= 0 ? 'neg' : r.cls}">${r.end <= 0 ? 'FAILED yr ' + r.failedAtYear : '$' + fmt(r.end, 0)}</div>
-                <div class="muted small">Total withdrawn: $${fmt(r.totalWd, 0)}</div>
+        <p class="muted small">Arithmetic mean return: <strong>${fmt(r.mean_return_pct, 2)}%</strong>/yr across ${r.years} years.</p>
+        <div class="cards">
+            ${r.scenarios.map(s => `<div class="card">
+                <div class="label">${esc(s.name)}</div>
+                <div class="value ${cardCls(s)}">${s.failed_at_year != null ? 'FAILED yr ' + s.failed_at_year : '$' + fmt(s.end_balance_usd, 0)}</div>
+                <div class="muted small">Total withdrawn: $${fmt(s.total_withdrawn_usd, 0)}</div>
             </div>`).join('')}
         </div>
+        ${chart}
         <h3 class="section-title">Year-by-year breakdown</h3>
         <table class="trades" data-table-key="sr-walk">
             <thead><tr>
                 <th>Year</th>
-                ${runs.map(r => `<th>${esc(r.name)}<br/><span class="muted small">close</span></th>`).join('')}
+                ${r.scenarios.map(s => `<th>${esc(s.name.split(' ')[0])}<br/><span class="muted small">close</span></th>`).join('')}
             </tr></thead>
-            <tbody>${returns.map((_, i) => `<tr>
+            <tbody>${Array.from({ length: r.years }, (_, i) => `<tr>
                 <td>${i + 1}</td>
-                ${runs.map(r => {
-                    const cell = r.path[i];
+                ${r.scenarios.map(s => {
+                    const cell = s.path[i];
                     if (!cell) return `<td class="muted">—</td>`;
-                    const cls = cell.close <= 0 ? 'neg' : (cell.close < start * 0.5 ? 'muted' : '');
-                    return `<td class="${cls}"><span class="muted small">[${(cell.ret*100).toFixed(1)}%]</span> $${fmt(cell.close, 0)}</td>`;
+                    const cls = cell.close_usd <= 0 ? 'neg' : (cell.close_usd < start * 0.5 ? 'muted' : '');
+                    return `<td class="${cls}"><span class="muted small">[${fmt(cell.return_pct, 1)}%]</span> $${fmt(cell.close_usd, 0)}</td>`;
                 }).join('')}
             </tr>`).join('')}</tbody>
         </table>
-        <p class="muted small" style="margin-top:8px">
+        <p class="muted small">
             <strong>Defense:</strong> hold 1-3 years of expenses in cash + short
             bonds so you can suspend equity withdrawals during a market crash
             (the "bucket strategy"). Reduces sequence risk dramatically without
             lowering long-term return.
         </p>
     `;
-}
-
-function fmt(n, d) {
-    if (n == null || !Number.isFinite(Number(n))) return '—';
-    return Number(n).toLocaleString(undefined, { minimumFractionDigits: d, maximumFractionDigits: d });
 }

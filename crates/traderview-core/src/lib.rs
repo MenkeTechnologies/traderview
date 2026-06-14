@@ -331,6 +331,7 @@ pub mod security_deposit_itemization;
 pub mod seller_disclosure;
 pub mod seller_financing;
 pub mod sentiment;
+pub mod sequence_of_returns;
 pub mod severance_agreement;
 pub mod setup_catalog;
 pub mod sharpe_by_window;
