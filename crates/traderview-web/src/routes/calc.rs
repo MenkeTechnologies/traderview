@@ -108,6 +108,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/leasing-commission", post(leasing_commission_route))
         .route("/calc/holdover-rent", post(holdover_rent_route))
         .route("/calc/prorated-rent", post(prorated_rent_route))
+        .route("/calc/ti-allowance", post(ti_allowance_route))
         .route("/calc/fix-and-flip", post(fix_and_flip_route))
         .route("/calc/cash-conversion-cycle", post(cash_conversion_cycle_route))
         .route("/calc/profit-first", post(profit_first_route))
@@ -11979,6 +11980,14 @@ async fn prorated_rent_route(
     Json(b): Json<traderview_core::prorated_rent::ProratedRentInput>,
 ) -> Json<traderview_core::prorated_rent::ProratedRent> {
     Json(traderview_core::prorated_rent::generate(&b))
+}
+
+/// TI allowance reconciliation: per-sqft allowance vs actual cost → overage/unused.
+async fn ti_allowance_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::ti_allowance::TiAllowanceInput>,
+) -> Json<traderview_core::ti_allowance::TiAllowance> {
+    Json(traderview_core::ti_allowance::generate(&b))
 }
 
 /// Fix-and-flip: the 70% rule max-allowable-offer plus the full deal P&L

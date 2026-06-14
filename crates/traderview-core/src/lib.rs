@@ -347,6 +347,7 @@ pub mod tilt_indicator;
 pub mod time_in_force;
 pub mod timeframe_confluence;
 pub mod timesheet;
+pub mod ti_allowance;
 pub mod trade_expectancy;
 pub mod trade_plan_checklist;
 pub mod trade_quality;
