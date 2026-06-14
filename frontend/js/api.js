@@ -826,6 +826,7 @@ export const api = {
     calcReportingTimePay:    (body) => request('/calc/reporting-time-pay', { method: 'POST', body: JSON.stringify(body) }),
     calcSplitShiftPremium:   (body) => request('/calc/split-shift-premium', { method: 'POST', body: JSON.stringify(body) }),
     calcWorkersComp:         (body) => request('/calc/workers-comp-premium', { method: 'POST', body: JSON.stringify(body) }),
+    calcAllowanceDoubtful:   (body) => request('/calc/allowance-doubtful', { method: 'POST', body: JSON.stringify(body) }),
     calcFixAndFlip:          (body) => request('/calc/fix-and-flip', { method: 'POST', body: JSON.stringify(body) }),
     calcCashConversionCycle: (body) => request('/calc/cash-conversion-cycle', { method: 'POST', body: JSON.stringify(body) }),
     calcProfitFirst:         (body) => request('/calc/profit-first', { method: 'POST', body: JSON.stringify(body) }),

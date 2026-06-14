@@ -6,6 +6,7 @@
 
 pub mod accrued_interest;
 pub mod acceleration_deceleration;
+pub mod allowance_doubtful;
 pub mod adx;
 pub mod age_based_allocation;
 pub mod altman_z_score;
