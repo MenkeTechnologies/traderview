@@ -94,6 +94,7 @@ pub mod dynamic_kelly;
 pub mod earnest_money_receipt;
 pub mod earnings_calendar;
 pub mod earnings_move;
+pub mod earnout_agreement;
 pub mod economic_value_added;
 pub mod employee_writeup;
 pub mod efficiency_ratio;

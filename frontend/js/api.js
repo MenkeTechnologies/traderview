@@ -806,6 +806,7 @@ export const api = {
     calcRsuGrant:            (body) => request('/calc/rsu-grant', { method: 'POST', body: JSON.stringify(body) }),
     calcStatementOfAccount:  (body) => request('/calc/statement-of-account', { method: 'POST', body: JSON.stringify(body) }),
     calcWarrant:             (body) => request('/calc/warrant', { method: 'POST', body: JSON.stringify(body) }),
+    calcEarnout:             (body) => request('/calc/earnout', { method: 'POST', body: JSON.stringify(body) }),
     calcFixAndFlip:          (body) => request('/calc/fix-and-flip', { method: 'POST', body: JSON.stringify(body) }),
     calcCashConversionCycle: (body) => request('/calc/cash-conversion-cycle', { method: 'POST', body: JSON.stringify(body) }),
     calcProfitFirst:         (body) => request('/calc/profit-first', { method: 'POST', body: JSON.stringify(body) }),
