@@ -855,6 +855,7 @@ import { renderTenantTurnover } from './views/tenant_turnover.js';
 import { renderBreakEvenRoas } from './views/break_even_roas.js';
 import { renderRuleOf78 } from './views/rule_of_78.js';
 import { renderLiquidityRatios } from './views/liquidity_ratios.js';
+import { renderRevenueRetention } from './views/revenue_retention.js';
 import { renderMortgageRecast } from './views/mortgage_recast.js';
 import { renderTaxEquivalentYield } from './views/tax_equivalent_yield.js';
 import { renderPmiRemoval } from './views/pmi_removal.js';
@@ -3392,6 +3393,7 @@ export async function dispatch() {
             case 'break-even-roas': await renderBreakEvenRoas(mount, state); break;
             case 'rule-of-78': await renderRuleOf78(mount, state); break;
             case 'liquidity-ratios': await renderLiquidityRatios(mount, state); break;
+            case 'revenue-retention': await renderRevenueRetention(mount, state); break;
             case 'mortgage-recast': await renderMortgageRecast(mount, state); break;
             case 'tax-equivalent-yield': await renderTaxEquivalentYield(mount, state); break;
             case 'pmi-removal': await renderPmiRemoval(mount, state); break;
@@ -4843,6 +4845,7 @@ export const viewRenderers = {
     'break-even-roas': (m, s) => renderBreakEvenRoas(m, s),
     'rule-of-78': (m, s) => renderRuleOf78(m, s),
     'liquidity-ratios': (m, s) => renderLiquidityRatios(m, s),
+    'revenue-retention': (m, s) => renderRevenueRetention(m, s),
     'mortgage-recast': (m, s) => renderMortgageRecast(m, s),
     'tax-equivalent-yield': (m, s) => renderTaxEquivalentYield(m, s),
     'pmi-removal': (m, s) => renderPmiRemoval(m, s),
