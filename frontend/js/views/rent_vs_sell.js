@@ -7,6 +7,11 @@ import { applyUiI18n, t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import { showToast } from '../toast.js';
 import { debounce } from '../util.js';
+import * as enh from '../calc_enhance.js';
+
+const VIEW = 'rent-vs-sell';
+let lastReport = null;
+let lastBody = null;
 
 const FIELDS = [
     ['current_value_usd', 'Current value ($)', 300000],
@@ -47,6 +52,7 @@ export async function renderRentVsSell(mount, _appState) {
                         <input type="number" step="0.01" min="0" name="${key}" value="${def}" required></label>
                 `).join('')}
             </form>
+            <div id="rvs-tools" class="ce-toolbar"></div>
         </div>
         <div id="rvs-result" class="lpv-preview"></div>
         </div>
@@ -54,27 +60,51 @@ export async function renderRentVsSell(mount, _appState) {
     applyUiI18n(mount);
 
     const form = mount.querySelector('#rvs-form');
-    const generate = async () => {
+    enh.prefillForm(form, enh.readHashInputs());
+    const readBody = () => {
         const fd = new FormData(form);
         const body = {};
         for (const [key] of FIELDS) body[key] = Number(fd.get(key)) || 0;
         body.years = Math.max(0, Math.round(body.years));
+        return body;
+    };
+    const generate = async () => {
+        const body = readBody();
         try {
             const r = await api.calcRentVsSell(body);
             if (!viewIsCurrent(tok)) return;
+            lastReport = r; lastBody = body;
             renderResult(mount, r);
         } catch (err) {
             showToast(err.message || t('view.rvs.toast.error'), { level: 'error' });
         }
     };
+    enh.mountToolbar(mount.querySelector('#rvs-tools'), { viewId: VIEW, getInputs: () => lastBody || readBody(), getRows: () => reportRows(lastReport), filename: 'rent-vs-sell.csv' });
     form.addEventListener('input', debounce(generate, 250));
     form.addEventListener('submit', (e) => { e.preventDefault(); generate(); });
     generate();
 }
 
+function reportRows(r) {
+    if (!r) return [];
+    return [
+        ['metric', 'value'],
+        ['keep_wealth_usd', r.keep_wealth_usd],
+        ['sell_wealth_usd', r.sell_wealth_usd],
+        ['keep_advantage_usd', r.keep_advantage_usd],
+        ['keep_wins', r.keep_wins],
+        ['accumulated_cash_flow_usd', r.accumulated_cash_flow_usd],
+    ];
+}
+
 function renderResult(mount, r) {
     const el = mount.querySelector('#rvs-result');
     const winnerCls = r.keep_wins ? 'pos' : 'neg';
+    // End-of-horizon wealth: keep the rental vs sell now and invest.
+    const chart = enh.svgBarChart([
+        { label: 'Keep', value: r.keep_wealth_usd },
+        { label: 'Sell', value: r.sell_wealth_usd },
+    ]);
     const winner = r.keep_wins ? t('view.rvs.winner.keep') : t('view.rvs.winner.sell');
     const adv = Number(r.keep_advantage_usd);
     el.innerHTML = `
@@ -86,6 +116,7 @@ function renderResult(mount, r) {
                 <div class="card"><div class="label" data-i18n="view.rvs.card.advantage">Keep advantage</div>
                     <div class="value ${adv >= 0 ? 'pos' : 'neg'}">${adv >= 0 ? '+' : '−'}${money(Math.abs(adv))}</div></div>
             </div>
+            ${chart}
             <table class="data-table">
                 <thead><tr>
                     <th data-i18n="view.rvs.col.line">Line</th>

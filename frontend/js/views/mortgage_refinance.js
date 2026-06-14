@@ -5,6 +5,7 @@
 import { api } from '../api.js';
 import { esc } from '../util.js';
 import { t } from '../i18n.js';
+import * as enh from '../calc_enhance.js';
 
 export async function renderMortgageRefinance(mount, _state) {
     mount.innerHTML = `
@@ -82,6 +83,11 @@ async function runCompute(mount) {
     result.innerHTML = `<p class="muted">${esc(t('view.mortgage_refinance.status.computing'))}</p>`;
     try {
         const r = await api.request('/mortgage-refinance/compute', { method: 'POST', body: JSON.stringify(input) });
+        // Current vs new monthly P&I — the payment side of the refi decision.
+        const chart = enh.svgBarChart([
+            { label: 'Current', value: r.current_monthly_pi_usd },
+            { label: 'New', value: r.new_monthly_pi_usd },
+        ]);
         const stCls = r.status === 'refi_wins' ? 'pos' : r.status === 'no_savings' ? 'neg' : '';
         const savCls = r.monthly_savings_usd > 0 ? 'pos' : 'neg';
         const beFmt = r.breakeven_months == null ? '∞'
@@ -102,6 +108,8 @@ async function runCompute(mount) {
                 <div><div class="muted small">${esc(t('view.mortgage_refinance.field.status'))}</div>
                     <strong class="${stCls}" style="text-transform:uppercase">${esc(t('view.mortgage_refinance.status.' + r.status) || r.status)}</strong></div>
             </div>
+            ${chart}
+            <div id="mr-tools" class="ce-toolbar"></div>
             <h2 style="margin-top:1rem">${esc(t('view.mortgage_refinance.h2.lifetime'))}</h2>
             <table class="trades">
                 <tbody>
@@ -114,6 +122,18 @@ async function runCompute(mount) {
                 </tbody>
             </table>
         `;
+        // Summary export (Copy / CSV). No permalink — id-based inputs.
+        enh.mountToolbar(mount.querySelector('#mr-tools'), {
+            viewId: 'mortgage-refinance',
+            link: false,
+            filename: 'mortgage-refinance.csv',
+            getRows: () => [['metric', 'value'],
+                ['current_monthly_pi_usd', r.current_monthly_pi_usd],
+                ['new_monthly_pi_usd', r.new_monthly_pi_usd],
+                ['monthly_savings_usd', r.monthly_savings_usd],
+                ['breakeven_months', r.breakeven_months == null ? '' : r.breakeven_months],
+                ['lifetime_interest_delta_usd', r.lifetime_interest_delta_usd]],
+        });
     } catch (e) {
         result.innerHTML = `<p class="neg">${esc(String(e))}</p>`;
     }

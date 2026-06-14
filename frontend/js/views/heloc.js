@@ -6,6 +6,7 @@
 import { api } from '../api.js';
 import { esc } from '../util.js';
 import { t } from '../i18n.js';
+import * as enh from '../calc_enhance.js';
 
 export async function renderHeloc(mount, _state) {
     mount.innerHTML = `
@@ -57,6 +58,11 @@ async function runCompute(mount) {
     result.innerHTML = `<p class="muted">${esc(t('view.heloc.status.computing'))}</p>`;
     try {
         const r = await api.request('/heloc/compute', { method: 'POST', body: JSON.stringify(input) });
+        // Interest by phase: interest-only draw phase vs amortizing repayment phase.
+        const chart = enh.svgBarChart([
+            { label: 'Draw', value: r.draw_phase_total_interest_usd },
+            { label: 'Repay', value: r.repayment_phase_total_interest_usd },
+        ]);
         const utilCls = r.utilization_pct > 80 ? 'neg' : r.utilization_pct < 10 ? 'pos' : '';
         const stCls = r.status === 'maxed' ? 'neg' : r.status === 'underutilized' || r.status === 'principal_reducing' ? 'pos' : '';
         result.innerHTML = `
@@ -92,7 +98,20 @@ async function runCompute(mount) {
             </table>
             <h2 style="margin-top:1rem">${esc(t('view.heloc.h2.total'))}</h2>
             <div><strong class="neg" style="font-size:1.4em">$${r.total_lifetime_interest_usd.toFixed(0)}</strong></div>
+            ${chart}
+            <div id="hc-tools" class="ce-toolbar"></div>
         `;
+        // Summary export (Copy / CSV). No permalink — id-based inputs.
+        enh.mountToolbar(mount.querySelector('#hc-tools'), {
+            viewId: 'heloc',
+            link: false,
+            filename: 'heloc.csv',
+            getRows: () => [['metric', 'value'],
+                ['utilization_pct', r.utilization_pct],
+                ['draw_phase_total_interest_usd', r.draw_phase_total_interest_usd],
+                ['repayment_phase_total_interest_usd', r.repayment_phase_total_interest_usd],
+                ['total_lifetime_interest_usd', r.total_lifetime_interest_usd]],
+        });
     } catch (e) {
         result.innerHTML = `<p class="neg">${esc(String(e))}</p>`;
     }
