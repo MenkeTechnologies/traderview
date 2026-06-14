@@ -840,6 +840,7 @@ import { renderBoxSpread } from './views/box_spread.js';
 import { renderCryptoLiquidation } from './views/crypto_liquidation.js';
 import { renderPerpFunding } from './views/perp_funding.js';
 import { renderSpanMargin } from './views/span_margin.js';
+import { renderIvSurface } from './views/iv_surface.js';
 import { renderMortgageRecast } from './views/mortgage_recast.js';
 import { renderTaxEquivalentYield } from './views/tax_equivalent_yield.js';
 import { renderPmiRemoval } from './views/pmi_removal.js';
@@ -3362,6 +3363,7 @@ export async function dispatch() {
             case 'crypto-liquidation': await renderCryptoLiquidation(mount, state); break;
             case 'perp-funding': await renderPerpFunding(mount, state); break;
             case 'span-margin': await renderSpanMargin(mount, state); break;
+            case 'iv-surface': await renderIvSurface(mount, state); break;
             case 'mortgage-recast': await renderMortgageRecast(mount, state); break;
             case 'tax-equivalent-yield': await renderTaxEquivalentYield(mount, state); break;
             case 'pmi-removal': await renderPmiRemoval(mount, state); break;
@@ -4798,6 +4800,7 @@ export const viewRenderers = {
     'crypto-liquidation': (m, s) => renderCryptoLiquidation(m, s),
     'perp-funding': (m, s) => renderPerpFunding(m, s),
     'span-margin': (m, s) => renderSpanMargin(m, s),
+    'iv-surface': (m, s) => renderIvSurface(m, s),
     'mortgage-recast': (m, s) => renderMortgageRecast(m, s),
     'tax-equivalent-yield': (m, s) => renderTaxEquivalentYield(m, s),
     'pmi-removal': (m, s) => renderPmiRemoval(m, s),

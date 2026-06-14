@@ -167,6 +167,7 @@ pub mod irmaa;
 pub mod iv_backtest;
 pub mod iv_rank;
 pub mod iv_skew;
+pub mod iv_surface;
 pub mod kelly;
 pub mod keltner;
 pub mod land_contract;

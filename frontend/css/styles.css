@@ -4374,3 +4374,7 @@ mark.fzf-hl {
 .ef-tables { display: flex; gap: 12px; flex-wrap: wrap; }
 .ef-tables table { flex: 1; min-width: 160px; }
 .span-worst td { background: #2a1620; color: #ff6b8a; }
+.ivs-head,
+.ivs-row { grid-template-columns: minmax(70px,1.2fr) 1fr 1fr auto; }
+.ivs-surface td { text-align: center; color: #07111a; font-weight: 600; }
+.ivs-surface th { text-align: center; }
