@@ -158,6 +158,7 @@ pub mod holdover_rent;
 pub mod home_sale_exclusion;
 pub mod holiday_calendar;
 pub mod hsa_triple_tax;
+pub mod ibond_calculator;
 pub mod ichimoku;
 pub mod implementation_shortfall;
 pub mod indicators;

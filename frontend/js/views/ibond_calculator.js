@@ -7,7 +7,9 @@
 // redeemed before 5 years. Max $10k/yr/person electronic + $5k paper.
 // Tax: federal-taxable, state-exempt; deferrable until redemption.
 
+import { api } from '../api.js';
 import { esc } from '../util.js';
+import { applyUiI18n, t } from '../i18n.js';
 
 // Recent rate history (Treasury Direct, May 2022 → Nov 2024). Used as
 // "what if you'd held through these resets" historical replay.
@@ -36,27 +38,27 @@ export async function renderIbondCalculator(mount, _state) {
         <div class="chart-panel">
             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px;margin-bottom:12px">
                 <label>
-                    <span class="muted small">Initial purchase $</span>
+                    <span class="muted small" data-i18n="view.ibond_calculator.field.amount">Initial purchase $</span>
                     <input type="number" id="ib-amount" step="100" min="25" max="10000" value="10000" style="width:100%">
                 </label>
                 <label>
-                    <span class="muted small">Fixed rate %</span>
+                    <span class="muted small" data-i18n="view.ibond_calculator.field.fixed">Fixed rate %</span>
                     <input type="number" id="ib-fixed" step="0.05" min="0" max="5" value="1.20" style="width:100%">
                 </label>
                 <label>
-                    <span class="muted small">Inflation rate %/semi</span>
+                    <span class="muted small" data-i18n="view.ibond_calculator.field.semi">Inflation rate %/semi</span>
                     <input type="number" id="ib-semi" step="0.05" min="-5" max="10" value="0.95" style="width:100%">
                 </label>
                 <label>
-                    <span class="muted small">Hold months</span>
+                    <span class="muted small" data-i18n="view.ibond_calculator.field.months">Hold months</span>
                     <input type="number" id="ib-months" step="1" min="12" max="360" value="60" style="width:100%">
                 </label>
             </div>
-            <button class="btn btn-sm primary" id="ib-run">⚡ Compute</button>
+            <button class="btn btn-sm primary" id="ib-run" data-i18n="view.ibond_calculator.btn.run">⚡ Compute</button>
             <div id="ib-result" style="margin-top:12px"></div>
-            <h3 class="section-title" style="margin-top:18px">Recent composite-rate history</h3>
+            <h3 class="section-title" style="margin-top:18px" data-i18n="view.ibond_calculator.h3.history">Recent composite-rate history</h3>
             <table class="trades" data-table-key="ib-hist">
-                <thead><tr><th>Period</th><th>Fixed %</th><th>Semi-annual inflation %</th><th>Composite %</th></tr></thead>
+                <thead><tr><th data-i18n="view.ibond_calculator.th.period">Period</th><th data-i18n="view.ibond_calculator.th.fixed">Fixed %</th><th data-i18n="view.ibond_calculator.th.semi_infl">Semi-annual inflation %</th><th data-i18n="view.ibond_calculator.th.composite">Composite %</th></tr></thead>
                 <tbody>${RATE_HISTORY.map(h => `<tr>
                     <td>${esc(h.period)}</td>
                     <td>${fmt(h.fixed, 2)}%</td>
@@ -66,6 +68,7 @@ export async function renderIbondCalculator(mount, _state) {
             </table>
         </div>
     `;
+    applyUiI18n(mount);
     mount.querySelectorAll('#ib-amount, #ib-fixed, #ib-semi, #ib-months').forEach(el => {
         el.addEventListener('input', () => compute(mount));
     });
@@ -73,79 +76,60 @@ export async function renderIbondCalculator(mount, _state) {
     compute(mount);
 }
 
-function compute(mount) {
-    const amount = parseFloat(mount.querySelector('#ib-amount').value) || 0;
-    const fixed_ann = parseFloat(mount.querySelector('#ib-fixed').value) / 100;
-    const semi_infl = parseFloat(mount.querySelector('#ib-semi').value) / 100;
-    const months = Math.max(1, parseInt(mount.querySelector('#ib-months').value, 10) || 0);
+async function compute(mount) {
     const result = mount.querySelector('#ib-result');
-    if (amount <= 0) {
-        result.innerHTML = `<p class="muted">Enter a positive amount.</p>`;
+    const body = {
+        amount_usd: parseFloat(mount.querySelector('#ib-amount').value) || 0,
+        fixed_rate_pct: parseFloat(mount.querySelector('#ib-fixed').value) || 0,
+        semi_inflation_pct: parseFloat(mount.querySelector('#ib-semi').value) || 0,
+        hold_months: Math.max(1, parseInt(mount.querySelector('#ib-months').value, 10) || 0),
+    };
+    if (body.amount_usd <= 0) {
+        result.innerHTML = `<p class="muted">${esc(t('view.ibond_calculator.empty.invalid'))}</p>`;
         return;
     }
-
-    // Treasury's official composite formula uses semi-annual inflation
-    // rate directly (NOT annualized) — composite = fixed + 2·semi + fixed·semi.
-    // We'll assume the semi-annual rate is held constant across all
-    // resets; the user can experiment.
-    const fixed_semi = fixed_ann / 2;
-    const composite_ann = fixed_ann + 2 * semi_infl + fixed_ann * semi_infl;
-    const r_month = Math.pow(1 + composite_ann, 1/12) - 1;
-
-    let value = amount;
-    let lastThreeMonths = 0;
-    const rows = [];
-    let cumInterest = 0;
-    let redeemable = 0;
-    for (let m = 1; m <= months; m++) {
-        const interest = value * r_month;
-        value += interest;
-        cumInterest += interest;
-        if (m >= months - 2) lastThreeMonths += interest;
-        if (m === 12)  rows.push({ month: m, value, cum: cumInterest, redeemable: m >= 12 ? value - lastThreeMonthsAt(value, r_month) : 0, label: '1-year mark (lockup ends)' });
-        if (m === 60)  rows.push({ month: m, value, cum: cumInterest, redeemable: value, label: '5-year mark (penalty drops)' });
-        if (m === 120) rows.push({ month: m, value, cum: cumInterest, redeemable: value, label: '10-year mark' });
-        if (m === 240) rows.push({ month: m, value, cum: cumInterest, redeemable: value, label: '20-year mark (orig issue)' });
-        if (m === 360) rows.push({ month: m, value, cum: cumInterest, redeemable: value, label: '30-year final maturity' });
+    try {
+        const r = await api.calcIbondCalculator(body);
+        renderResult(result, r, body);
+    } catch (e) {
+        result.innerHTML = `<p class="neg">${esc(String(e))}</p>`;
     }
-
-    // Redeemable today (after penalty if before 60 months).
-    const penaltyApplies = months < 60;
-    if (penaltyApplies && months >= 12) {
-        redeemable = value - lastThreeMonths;
-    } else if (months >= 60) {
-        redeemable = value;
-    } else {
-        redeemable = 0;
-    }
-
-    result.innerHTML = `
-        <div class="cards" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px;margin-bottom:12px">
-            <div class="card"><div class="label">Composite rate (annual)</div><div class="value pos">${fmt(composite_ann * 100, 2)}%</div><div class="muted small">${fmt(fixed_ann * 100, 2)}% fixed + ${fmt(semi_infl * 100, 2)}%/semi infl</div></div>
-            <div class="card"><div class="label">Value at hold</div><div class="value">$${fmt(value, 2)}</div></div>
-            <div class="card"><div class="label">Interest earned</div><div class="value pos">$${fmt(cumInterest, 2)}</div><div class="muted small">${fmt(cumInterest / amount * 100, 2)}% total return</div></div>
-            <div class="card">
-                <div class="label">Redeemable today</div>
-                <div class="value ${penaltyApplies ? 'neg' : 'pos'}">$${fmt(redeemable, 2)}</div>
-                <div class="muted small">${months < 12 ? 'Locked — &lt; 1yr' : penaltyApplies ? `Penalty −$${fmt(lastThreeMonths, 2)} (3mo interest)` : 'No penalty (≥5yr)'}</div>
-            </div>
-        </div>
-        ${rows.length ? `
-        <table class="trades" data-table-key="ib-milestones">
-            <thead><tr><th>Milestone</th><th>Month</th><th>Value</th><th>Cum interest</th></tr></thead>
-            <tbody>${rows.map(r => `<tr>
-                <td>${esc(r.label)}</td>
-                <td>${r.month}</td>
-                <td><strong>$${fmt(r.value, 2)}</strong></td>
-                <td class="pos">$${fmt(r.cum, 2)}</td>
-            </tr>`).join('')}</tbody>
-        </table>` : ''}
-    `;
 }
 
-function lastThreeMonthsAt(value, r_month) {
-    // Crude reverse-estimate of last 3 months of interest.
-    return value - value / Math.pow(1 + r_month, 3);
+function renderResult(result, r, body) {
+    const subComposite = t('view.ibond_calculator.sub.composite', {
+        fixed: fmt(body.fixed_rate_pct, 2) + '%', semi: fmt(body.semi_inflation_pct, 2) + '%',
+    });
+    const subInterest = t('view.ibond_calculator.sub.interest', { pct: fmt(r.total_return_pct, 2) + '%' });
+    const redeemSub = r.locked
+        ? t('view.ibond_calculator.redeem.locked')
+        : r.penalty_applies
+            ? t('view.ibond_calculator.redeem.penalty', { amount: '$' + fmt(r.last_three_months_interest_usd, 2) })
+            : t('view.ibond_calculator.redeem.nopenalty');
+    const rows = r.rows.map((row) => `<tr>
+                <td>${esc(t('view.ibond_calculator.ms.' + row.label_key))}</td>
+                <td>${row.month}</td>
+                <td><strong>$${fmt(row.value_usd, 2)}</strong></td>
+                <td class="pos">$${fmt(row.cum_interest_usd, 2)}</td>
+            </tr>`).join('');
+    result.innerHTML = `
+        <div class="cards" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px;margin-bottom:12px">
+            <div class="card"><div class="label" data-i18n="view.ibond_calculator.card.composite">Composite rate (annual)</div><div class="value pos">${fmt(r.composite_annual_pct, 2)}%</div><div class="muted small">${esc(subComposite)}</div></div>
+            <div class="card"><div class="label" data-i18n="view.ibond_calculator.card.value">Value at hold</div><div class="value">$${fmt(r.value_at_hold_usd, 2)}</div></div>
+            <div class="card"><div class="label" data-i18n="view.ibond_calculator.card.interest">Interest earned</div><div class="value pos">$${fmt(r.interest_earned_usd, 2)}</div><div class="muted small">${esc(subInterest)}</div></div>
+            <div class="card">
+                <div class="label" data-i18n="view.ibond_calculator.card.redeemable">Redeemable today</div>
+                <div class="value ${r.penalty_applies ? 'neg' : 'pos'}">$${fmt(r.redeemable_today_usd, 2)}</div>
+                <div class="muted small">${esc(redeemSub)}</div>
+            </div>
+        </div>
+        ${rows ? `
+        <table class="trades" data-table-key="ib-milestones">
+            <thead><tr><th data-i18n="view.ibond_calculator.th.milestone">Milestone</th><th data-i18n="view.ibond_calculator.th.month">Month</th><th data-i18n="view.ibond_calculator.th.value">Value</th><th data-i18n="view.ibond_calculator.th.cum">Cum interest</th></tr></thead>
+            <tbody>${rows}</tbody>
+        </table>` : ''}
+    `;
+    applyUiI18n(result);
 }
 
 function fmt(n, d) {
