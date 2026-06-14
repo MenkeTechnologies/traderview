@@ -6,9 +6,13 @@ import { api } from '../api.js';
 import { applyUiI18n, t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import { showToast } from '../toast.js';
+import * as enh from '../calc_enhance.js';
 
 const money = (n) => '$' + Number(n).toLocaleString(undefined, { maximumFractionDigits: 2 });
 const money0 = (n) => '$' + Number(n).toLocaleString(undefined, { maximumFractionDigits: 0 });
+const VIEW = 'irmaa';
+let lastReport = null;
+let lastBody = null;
 
 export async function renderIrmaa(mount, _appState) {
     const tok = currentViewToken();
@@ -37,24 +41,33 @@ export async function renderIrmaa(mount, _appState) {
                 <label data-tip="view.irmaa.tip.both"><input type="checkbox" name="both_spouses_on_medicare"> <span data-i18n="view.irmaa.label.both">Both spouses on Medicare</span></label>
                 <button class="primary" type="submit" data-i18n="view.irmaa.btn.run">Find tier</button>
             </form>
+            <div id="irmaa-tools" class="ce-toolbar"></div>
         </div>
         <div id="irmaa-result"></div>
     `;
     applyUiI18n(mount);
 
     const form = mount.querySelector('#irmaa-form');
-    form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const fd = new FormData(e.target);
-        const body = {
+    const hashIn = enh.readHashInputs();
+    enh.prefillForm(form, hashIn);
+    if ('both_spouses_on_medicare' in hashIn) form.querySelector('[name=both_spouses_on_medicare]').checked = hashIn.both_spouses_on_medicare === 'true';
+    const readBody = () => {
+        const fd = new FormData(form);
+        return {
             magi_usd: Number(fd.get('magi_usd')) || 0,
             filing_status: fd.get('filing_status'),
             both_spouses_on_medicare: fd.get('both_spouses_on_medicare') != null,
         };
+    };
+    enh.mountToolbar(mount.querySelector('#irmaa-tools'), { viewId: VIEW, getInputs: () => lastBody || readBody(), getRows: () => reportRows(lastReport), filename: 'irmaa.csv' });
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const body = readBody();
         try {
             const r = await api.calcIrmaa(body);
             if (!viewIsCurrent(tok)) return;
-            renderResult(mount, r);
+            lastReport = r; lastBody = body;
+            renderResult(mount, r, body, tok);
         } catch (err) {
             showToast(err.message || t('view.irmaa.toast.error'), { level: 'error' });
         }
@@ -62,9 +75,29 @@ export async function renderIrmaa(mount, _appState) {
     form.dispatchEvent(new Event('submit'));
 }
 
-function renderResult(mount, r) {
+function reportRows(r) {
+    if (!r) return [];
+    return [
+        ['metric', 'value'],
+        ['tier', r.tier],
+        ['annual_surcharge_usd', r.annual_surcharge_usd],
+        ['household_annual_surcharge_usd', r.household_annual_surcharge_usd],
+        ['monthly_surcharge_usd', r.monthly_surcharge_usd],
+        ['headroom_to_next_cliff_usd', r.headroom_to_next_cliff_usd == null ? '' : r.headroom_to_next_cliff_usd],
+    ];
+}
+
+async function renderResult(mount, r, body, tok) {
     const el = mount.querySelector('#irmaa-result');
     const tierCls = r.tier === 0 ? 'pos' : 'neg';
+    // Line chart: household surcharge as MAGI sweeps 0 -> $800k — the IRMAA cliff staircase.
+    const xs = enh.linspace(0, 800000, 24);
+    const pts = await Promise.all(xs.map(async (m) => {
+        const rr = await api.calcIrmaa({ ...body, magi_usd: m });
+        return { x: m / 1000, y: rr ? rr.household_annual_surcharge_usd : NaN };
+    }));
+    if (!viewIsCurrent(tok)) return;
+    const chart = enh.svgLineChart(pts, { xlabel: 'MAGI $k', ylabel: 'surcharge $/yr' });
     const upper = r.upper_threshold_usd == null
         ? t('view.irmaa.no_cap')
         : money0(r.upper_threshold_usd);
@@ -86,6 +119,7 @@ function renderResult(mount, r) {
                 <div class="card"><div class="label" data-i18n="view.irmaa.card.headroom">Headroom to next cliff</div>
                     <div class="value">${headroom}</div></div>
             </div>
+            ${chart}
             <table class="data-table">
                 <thead><tr>
                     <th data-i18n="view.irmaa.col.part">Premium part</th>

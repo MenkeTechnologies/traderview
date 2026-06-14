@@ -6,9 +6,13 @@ import { applyUiI18n, t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import { showToast } from '../toast.js';
 import { debounce } from '../util.js';
+import * as enh from '../calc_enhance.js';
 
 const money = (n) => (n == null ? '—' : '$' + Number(n).toLocaleString(undefined, { maximumFractionDigits: 0 }));
 const pct = (n) => (n == null ? '—' : Number(n).toLocaleString(undefined, { maximumFractionDigits: 2 }) + '%');
+const VIEW = 'estate-tax';
+let lastReport = null;
+let lastBody = null;
 
 export async function renderEstateTax(mount, _appState) {
     const tok = currentViewToken();
@@ -42,6 +46,9 @@ export async function renderEstateTax(mount, _appState) {
                 <label><span data-i18n="view.estate.label.rate">Top rate (%)</span>
                     <input type="number" step="0.1" min="0" name="rate_pct" value="40"></label>
             </form>
+            <div id="estate-tools" class="ce-toolbar"></div>
+            <button type="button" id="estate-sens-btn" class="ce-tool" data-i18n="calc.enh.sens.run">▦ Sensitivity</button>
+            <div id="estate-sens" class="ce-sens"></div>
         </div>
         <div id="estate-result" class="lpv-preview"></div>
         </div>
@@ -49,9 +56,10 @@ export async function renderEstateTax(mount, _appState) {
     applyUiI18n(mount);
 
     const form = mount.querySelector('#estate-form');
-    const generate = async () => {
+    enh.prefillForm(form, enh.readHashInputs());
+    const readBody = () => {
         const fd = new FormData(form);
-        const body = {
+        return {
             gross_estate_usd: Number(fd.get('gross_estate_usd')) || 0,
             debts_expenses_usd: Number(fd.get('debts_expenses_usd')) || 0,
             marital_deduction_usd: Number(fd.get('marital_deduction_usd')) || 0,
@@ -61,22 +69,49 @@ export async function renderEstateTax(mount, _appState) {
             dsue_usd: Number(fd.get('dsue_usd')) || 0,
             rate_pct: Number(fd.get('rate_pct')) || 0,
         };
+    };
+    const generate = async () => {
+        const body = readBody();
         try {
             const r = await api.calcEstateTax(body);
             if (!viewIsCurrent(tok)) return;
-            renderResult(mount, r);
+            lastReport = r; lastBody = body;
+            renderResult(mount, r, body, tok);
         } catch (err) {
             showToast(err.message || t('view.estate.toast.error'), { level: 'error' });
         }
     };
+    enh.mountToolbar(mount.querySelector('#estate-tools'), { viewId: VIEW, getInputs: () => lastBody || readBody(), getRows: () => reportRows(lastReport), filename: 'estate-tax.csv' });
+    mount.querySelector('#estate-sens-btn').addEventListener('click', () => runSens(mount, readBody(), tok));
     form.addEventListener('input', debounce(generate, 250));
     form.addEventListener('submit', (e) => { e.preventDefault(); generate(); });
     generate();
 }
 
-function renderResult(mount, r) {
+function reportRows(r) {
+    if (!r) return [];
+    return [
+        ['metric', 'value'],
+        ['estate_tax_usd', r.estate_tax_usd],
+        ['net_to_heirs_usd', r.net_to_heirs_usd],
+        ['effective_rate_pct', r.effective_rate_pct],
+        ['taxable_estate_usd', r.taxable_estate_usd],
+        ['amount_taxed_usd', r.amount_taxed_usd],
+        ['total_exemption_usd', r.total_exemption_usd],
+    ];
+}
+
+async function renderResult(mount, r, body, tok) {
     const el = mount.querySelector('#estate-result');
     const taxCls = r.is_taxable ? 'neg' : 'pos';
+    // Line chart: estate tax as gross estate sweeps 0 -> $40M (zero below the exclusion, then ramps).
+    const xs = enh.linspace(0, 40000000, 16);
+    const pts = await Promise.all(xs.map(async (g) => {
+        const rr = await api.calcEstateTax({ ...body, gross_estate_usd: g });
+        return { x: g / 1000000, y: rr ? rr.estate_tax_usd / 1000000 : NaN };
+    }));
+    if (!viewIsCurrent(tok)) return;
+    const chart = enh.svgLineChart(pts, { xlabel: 'estate $M', ylabel: 'tax $M' });
     const statusRow = r.is_taxable
         ? `<tr class="neg"><td data-i18n="view.estate.row.status">Status</td><td data-i18n="view.estate.status.taxable">Estate tax due</td></tr>`
         : `<tr class="pos"><td data-i18n="view.estate.row.status">Status</td><td data-i18n="view.estate.status.exempt">Under exclusion — no tax</td></tr>`;
@@ -91,6 +126,7 @@ function renderResult(mount, r) {
                 <div class="card"><div class="label" data-i18n="view.estate.card.effrate">Effective rate</div>
                     <div class="value">${pct(r.effective_rate_pct)}</div></div>
             </div>
+            ${chart}
             <table class="data-table">
                 <tbody>
                     <tr><td data-i18n="view.estate.row.taxable">Taxable estate</td><td>${money(r.taxable_estate_usd)}</td></tr>
@@ -106,4 +142,15 @@ function renderResult(mount, r) {
         </div>
     `;
     applyUiI18n(el);
+}
+
+async function runSens(mount, base, tok) {
+    const panel = mount.querySelector('#estate-sens');
+    panel.innerHTML = `<p class="muted small" data-i18n="calc.enh.sens.running">Computing…</p>`; applyUiI18n(panel);
+    // x: gross estate 0 -> $40M; y: top rate 18% -> 45%. Output: estate tax.
+    const xVals = enh.linspace(0, 40000000, 5);
+    const yVals = enh.linspace(18, 45, 5);
+    const { cells } = await enh.runSensitivity({ base, xKey: 'gross_estate_usd', yKey: 'rate_pct', xVals, yVals, compute: (b) => api.calcEstateTax(b), pick: (r) => (r ? r.estate_tax_usd : null) });
+    if (!viewIsCurrent(tok)) return;
+    panel.innerHTML = enh.renderSensitivityTable({ xVals, yVals, cells, fmt: (v) => (v == null ? '—' : '$' + (v / 1000000).toFixed(1) + 'M'), xfmt: (v) => '$' + (v / 1000000).toFixed(0) + 'M', yfmt: (v) => v.toFixed(0) + '%', xName: t('view.estate.label.gross') || 'Estate', yName: t('view.estate.label.rate') || 'Rate' });
 }

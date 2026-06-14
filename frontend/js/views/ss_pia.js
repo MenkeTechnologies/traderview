@@ -7,6 +7,7 @@ import { applyUiI18n, t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import { showToast } from '../toast.js';
 import { debounce } from '../util.js';
+import * as enh from '../calc_enhance.js';
 
 const FIELDS = [
     ['aime_usd', 'Average indexed monthly earnings ($)', 6000],
@@ -16,6 +17,9 @@ const FIELDS = [
 
 const money = (n) => '$' + Number(n).toLocaleString(undefined, { maximumFractionDigits: 2 });
 const pct = (n) => Number(n).toFixed(1) + '%';
+const VIEW = 'ss-pia';
+let lastReport = null;
+let lastBody = null;
 
 export async function renderSsPia(mount, _appState) {
     const tok = currentViewToken();
@@ -38,6 +42,7 @@ export async function renderSsPia(mount, _appState) {
                         <input type="number" step="0.01" min="0" name="${key}" value="${def}" required></label>
                 `).join('')}
             </form>
+            <div id="pia-tools" class="ce-toolbar"></div>
         </div>
         <div id="pia-result" class="lpv-preview"></div>
         </div>
@@ -45,25 +50,53 @@ export async function renderSsPia(mount, _appState) {
     applyUiI18n(mount);
 
     const form = mount.querySelector('#pia-form');
-    const generate = async () => {
+    enh.prefillForm(form, enh.readHashInputs());
+    const readBody = () => {
         const fd = new FormData(form);
         const body = {};
         for (const [key] of FIELDS) body[key] = Number(fd.get(key)) || 0;
+        return body;
+    };
+    const generate = async () => {
+        const body = readBody();
         try {
             const r = await api.calcSsPia(body);
             if (!viewIsCurrent(tok)) return;
-            renderResult(mount, r);
+            lastReport = r; lastBody = body;
+            renderResult(mount, r, body, tok);
         } catch (err) {
             showToast(err.message || t('view.pia.toast.error'), { level: 'error' });
         }
     };
+    enh.mountToolbar(mount.querySelector('#pia-tools'), { viewId: VIEW, getInputs: () => lastBody || readBody(), getRows: () => reportRows(lastReport), filename: 'ss-pia.csv' });
     form.addEventListener('input', debounce(generate, 250));
     form.addEventListener('submit', (e) => { e.preventDefault(); generate(); });
     generate();
 }
 
-function renderResult(mount, r) {
+function reportRows(r) {
+    if (!r) return [];
+    return [
+        ['metric', 'value'],
+        ['pia_monthly_usd', r.pia_monthly_usd],
+        ['pia_annual_usd', r.pia_annual_usd],
+        ['replacement_rate_pct', r.replacement_rate_pct],
+        ['tier1_usd', r.tier1_usd],
+        ['tier2_usd', r.tier2_usd],
+        ['tier3_usd', r.tier3_usd],
+    ];
+}
+
+async function renderResult(mount, r, body, tok) {
     const el = mount.querySelector('#pia-result');
+    // Line chart: PIA as AIME sweeps 0 -> $12k — the 90/32/15 kinked curve (bend points show as slope breaks).
+    const xs = enh.linspace(0, 12000, 16);
+    const pts = await Promise.all(xs.map(async (a) => {
+        const rr = await api.calcSsPia({ ...body, aime_usd: a });
+        return { x: a, y: rr ? rr.pia_monthly_usd : NaN };
+    }));
+    if (!viewIsCurrent(tok)) return;
+    const chart = enh.svgLineChart(pts, { xlabel: 'AIME $', ylabel: 'PIA $/mo' });
     el.innerHTML = `
         <div class="chart-panel">
             <h2 data-i18n="view.pia.h2.result">Your benefit</h2>
@@ -75,6 +108,7 @@ function renderResult(mount, r) {
                 <div class="card"><div class="label" data-i18n="view.pia.card.replacement">Replacement rate</div>
                     <div class="value">${pct(r.replacement_rate_pct)}</div></div>
             </div>
+            ${chart}
             <table class="data-table">
                 <thead><tr>
                     <th data-i18n="view.pia.col.tier">Tier</th>
