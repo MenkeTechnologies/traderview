@@ -55,6 +55,7 @@ pub mod cci;
 pub mod chaikin_volatility;
 pub mod change_of_character;
 pub mod choppiness;
+pub mod closing_statement;
 pub mod cluster_analysis;
 pub mod commercial_lease;
 pub mod commission_agreement;

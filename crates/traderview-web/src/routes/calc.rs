@@ -82,6 +82,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/cease-desist", post(cease_desist_route))
         .route("/calc/employee-writeup", post(employee_writeup_route))
         .route("/calc/purchase-agreement", post(purchase_agreement_route))
+        .route("/calc/closing-statement", post(closing_statement_route))
         .route("/calc/fix-and-flip", post(fix_and_flip_route))
         .route("/calc/cash-conversion-cycle", post(cash_conversion_cycle_route))
         .route("/calc/profit-first", post(profit_first_route))
@@ -11745,6 +11746,14 @@ async fn purchase_agreement_route(
     Json(b): Json<traderview_core::purchase_agreement::PurchaseAgreementInput>,
 ) -> Json<traderview_core::purchase_agreement::PurchaseAgreement> {
     Json(traderview_core::purchase_agreement::generate(&b))
+}
+
+/// Seller's closing statement: commission + payoff + tax proration → net.
+async fn closing_statement_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::closing_statement::ClosingInput>,
+) -> Json<traderview_core::closing_statement::ClosingStatement> {
+    Json(traderview_core::closing_statement::generate(&b))
 }
 
 /// Fix-and-flip: the 70% rule max-allowable-offer plus the full deal P&L
