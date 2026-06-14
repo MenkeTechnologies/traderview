@@ -83,6 +83,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/employee-writeup", post(employee_writeup_route))
         .route("/calc/purchase-agreement", post(purchase_agreement_route))
         .route("/calc/closing-statement", post(closing_statement_route))
+        .route("/calc/lease-option", post(lease_option_route))
         .route("/calc/fix-and-flip", post(fix_and_flip_route))
         .route("/calc/cash-conversion-cycle", post(cash_conversion_cycle_route))
         .route("/calc/profit-first", post(profit_first_route))
@@ -11754,6 +11755,14 @@ async fn closing_statement_route(
     Json(b): Json<traderview_core::closing_statement::ClosingInput>,
 ) -> Json<traderview_core::closing_statement::ClosingStatement> {
     Json(traderview_core::closing_statement::generate(&b))
+}
+
+/// Lease-option (rent-to-own): rent credits + net price at exercise.
+async fn lease_option_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::lease_option::LeaseOptionInput>,
+) -> Json<traderview_core::lease_option::LeaseOption> {
+    Json(traderview_core::lease_option::generate(&b))
 }
 
 /// Fix-and-flip: the 70% rule max-allowable-offer plus the full deal P&L

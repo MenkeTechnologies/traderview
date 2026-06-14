@@ -727,6 +727,7 @@ import { renderCeaseDesist } from './views/cease_desist.js';
 import { renderEmployeeWriteup } from './views/employee_writeup.js';
 import { renderPurchaseAgreement } from './views/purchase_agreement.js';
 import { renderClosingStatement } from './views/closing_statement.js';
+import { renderLeaseOption } from './views/lease_option.js';
 import { renderFixAndFlip } from './views/fix_and_flip.js';
 import { renderCashConversionCycle } from './views/cash_conversion_cycle.js';
 import { renderProfitFirst } from './views/profit_first.js';
@@ -3195,6 +3196,7 @@ export async function dispatch() {
             case 'employee-writeup': await renderEmployeeWriteup(mount, state); break;
             case 'purchase-agreement': await renderPurchaseAgreement(mount, state); break;
             case 'closing-statement': await renderClosingStatement(mount, state); break;
+            case 'lease-option': await renderLeaseOption(mount, state); break;
             case 'fix-and-flip': await renderFixAndFlip(mount, state); break;
             case 'cash-conversion-cycle': await renderCashConversionCycle(mount, state); break;
             case 'profit-first': await renderProfitFirst(mount, state); break;
@@ -4577,6 +4579,7 @@ export const viewRenderers = {
     'employee-writeup': (m, s) => renderEmployeeWriteup(m, s),
     'purchase-agreement': (m, s) => renderPurchaseAgreement(m, s),
     'closing-statement': (m, s) => renderClosingStatement(m, s),
+    'lease-option': (m, s) => renderLeaseOption(m, s),
     'fix-and-flip': (m, s) => renderFixAndFlip(m, s),
     'cash-conversion-cycle': (m, s) => renderCashConversionCycle(m, s),
     'profit-first': (m, s) => renderProfitFirst(m, s),
