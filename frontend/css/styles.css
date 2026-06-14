@@ -4380,3 +4380,6 @@ mark.fzf-hl {
 .ivs-surface th { text-align: center; }
 .inv-head,
 .inv-row { grid-template-columns: 1fr 1fr auto; }
+.rr-head,
+.rr-row { grid-template-columns: minmax(50px,0.8fr) 1fr 1fr 0.5fr auto; }
+.rr-occ { display: flex; align-items: center; justify-content: center; }
