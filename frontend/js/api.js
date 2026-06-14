@@ -1818,6 +1818,7 @@ export const api = {
     calcRothConversionLadder:(b) => request('/calc/roth-conversion-ladder', { method: 'POST', body: JSON.stringify(b) }),
     calcSequenceOfReturns:   (b) => request('/calc/sequence-of-returns',    { method: 'POST', body: JSON.stringify(b) }),
     calcLumpSumVsDca:        (b) => request('/calc/lump-sum-vs-dca',        { method: 'POST', body: JSON.stringify(b) }),
+    calcMortgagePayoffVsInvest:(b) => request('/calc/mortgage-payoff-vs-invest', { method: 'POST', body: JSON.stringify(b) }),
     calcRiskOnOff:           (b) => request('/calc/risk-on-off',          { method: 'POST', body: JSON.stringify(b) }),
     calcMarginCall:          (b) => request('/calc/margin-call',          { method: 'POST', body: JSON.stringify(b) }),
     calcMarginRunway:        (b) => request('/calc/margin-runway',        { method: 'POST', body: JSON.stringify(b) }),

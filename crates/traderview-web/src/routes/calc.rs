@@ -40,6 +40,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/roth-conversion-ladder", post(roth_conversion_ladder_route))
         .route("/calc/sequence-of-returns", post(sequence_of_returns_route))
         .route("/calc/lump-sum-vs-dca", post(lump_sum_vs_dca_route))
+        .route("/calc/mortgage-payoff-vs-invest", post(mortgage_payoff_vs_invest_route))
         .route("/calc/dividend-discount-model", post(dividend_discount_model_route))
         .route("/calc/probability-of-profit", post(probability_of_profit_route))
         .route("/calc/straddle", post(straddle_route))
@@ -1000,6 +1001,12 @@ async fn lump_sum_vs_dca_route(
     Json(b): Json<traderview_core::lump_sum_vs_dca::LumpSumVsDcaInput>,
 ) -> Json<traderview_core::lump_sum_vs_dca::LumpSumVsDcaReport> {
     Json(traderview_core::lump_sum_vs_dca::generate(&b))
+}
+
+async fn mortgage_payoff_vs_invest_route(
+    Json(b): Json<traderview_core::mortgage_payoff_vs_invest::PayoffVsInvestInput>,
+) -> Json<traderview_core::mortgage_payoff_vs_invest::PayoffVsInvestReport> {
+    Json(traderview_core::mortgage_payoff_vs_invest::generate(&b))
 }
 
 async fn roth_conversion_ladder_route(

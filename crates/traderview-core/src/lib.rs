@@ -217,6 +217,7 @@ pub mod mfi;
 pub mod models;
 pub mod monte_carlo;
 pub mod mortgage_affordability;
+pub mod mortgage_payoff_vs_invest;
 pub mod mortgage_points;
 pub mod mortgage_recast;
 pub mod mirr;
