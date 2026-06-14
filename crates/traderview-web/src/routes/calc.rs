@@ -56,6 +56,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/macrs-depreciation", post(macrs_depreciation_route))
         .route("/calc/rent-roll", post(rent_roll_route))
         .route("/calc/tenant-turnover", post(tenant_turnover_route))
+        .route("/calc/break-even-roas", post(break_even_roas_route))
         .route("/calc/risk-on-off", post(risk_on_off_route))
         // ── Margin / buying power ─────────────────────────────────────
         .route("/calc/margin-call", post(margin_call_route))
@@ -1002,6 +1003,14 @@ async fn tenant_turnover_route(
     Json(b): Json<traderview_core::tenant_turnover::TurnoverInput>,
 ) -> Json<traderview_core::tenant_turnover::TurnoverReport> {
     Json(traderview_core::tenant_turnover::generate(&b))
+}
+
+/// Break-even ROAS: ad profitability vs the break-even return on ad spend.
+async fn break_even_roas_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::break_even_roas::RoasInput>,
+) -> Json<traderview_core::break_even_roas::RoasReport> {
+    Json(traderview_core::break_even_roas::generate(&b))
 }
 
 async fn risk_on_off_route(

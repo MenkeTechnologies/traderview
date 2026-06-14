@@ -36,6 +36,7 @@ pub mod bond_duration;
 pub mod bond_pricing;
 pub mod bracket_order;
 pub mod break_even;
+pub mod break_even_roas;
 pub mod break_premium;
 pub mod breakeven_occupancy;
 pub mod burn_rate;
