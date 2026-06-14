@@ -808,6 +808,7 @@ export const api = {
     calcWarrant:             (body) => request('/calc/warrant', { method: 'POST', body: JSON.stringify(body) }),
     calcEarnout:             (body) => request('/calc/earnout', { method: 'POST', body: JSON.stringify(body) }),
     calcRoyalty:             (body) => request('/calc/royalty', { method: 'POST', body: JSON.stringify(body) }),
+    calcCamReconciliation:   (body) => request('/calc/cam-reconciliation', { method: 'POST', body: JSON.stringify(body) }),
     calcFixAndFlip:          (body) => request('/calc/fix-and-flip', { method: 'POST', body: JSON.stringify(body) }),
     calcCashConversionCycle: (body) => request('/calc/cash-conversion-cycle', { method: 'POST', body: JSON.stringify(body) }),
     calcProfitFirst:         (body) => request('/calc/profit-first', { method: 'POST', body: JSON.stringify(body) }),

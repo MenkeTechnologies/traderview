@@ -99,6 +99,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/warrant", post(warrant_route))
         .route("/calc/earnout", post(earnout_route))
         .route("/calc/royalty", post(royalty_route))
+        .route("/calc/cam-reconciliation", post(cam_reconciliation_route))
         .route("/calc/fix-and-flip", post(fix_and_flip_route))
         .route("/calc/cash-conversion-cycle", post(cash_conversion_cycle_route))
         .route("/calc/profit-first", post(profit_first_route))
@@ -11898,6 +11899,14 @@ async fn royalty_route(
     Json(b): Json<traderview_core::royalty_agreement::RoyaltyInput>,
 ) -> Json<traderview_core::royalty_agreement::RoyaltyAgreement> {
     Json(traderview_core::royalty_agreement::generate(&b))
+}
+
+/// CAM reconciliation: pro-rata-by-sqft share of actual CAM vs estimates paid.
+async fn cam_reconciliation_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::cam_reconciliation::CamInput>,
+) -> Json<traderview_core::cam_reconciliation::CamReconciliation> {
+    Json(traderview_core::cam_reconciliation::generate(&b))
 }
 
 /// Fix-and-flip: the 70% rule max-allowable-offer plus the full deal P&L
