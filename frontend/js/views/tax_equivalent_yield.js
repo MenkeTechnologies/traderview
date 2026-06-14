@@ -6,10 +6,14 @@ import { applyUiI18n, t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import { showToast } from '../toast.js';
 import { debounce } from '../util.js';
+import * as enh from '../calc_enhance.js';
 
 const pct = (n) => (n == null ? '—' : Number(n).toLocaleString(undefined, { maximumFractionDigits: 3 }) + '%');
 
 const VERDICT = { muni: 'view.tey.verdict.muni', taxable: 'view.tey.verdict.taxable', equal: 'view.tey.verdict.equal' };
+const VIEW = 'tax-equivalent-yield';
+let lastReport = null;
+let lastBody = null;
 
 export async function renderTaxEquivalentYield(mount, _appState) {
     const tok = currentViewToken();
@@ -39,6 +43,9 @@ export async function renderTaxEquivalentYield(mount, _appState) {
                 <label><span data-i18n="view.tey.label.niit">NIIT (3.8%) applies</span>
                     <input type="checkbox" name="niit_applies"></label>
             </form>
+            <div id="tey-tools" class="ce-toolbar"></div>
+            <button type="button" id="tey-sens-btn" class="ce-tool" data-i18n="calc.enh.sens.run">▦ Sensitivity</button>
+            <div id="tey-sens" class="ce-sens"></div>
         </div>
         <div id="tey-result" class="lpv-preview"></div>
         </div>
@@ -46,9 +53,14 @@ export async function renderTaxEquivalentYield(mount, _appState) {
     applyUiI18n(mount);
 
     const form = mount.querySelector('#tey-form');
-    const generate = async () => {
+    const hashIn = enh.readHashInputs();
+    enh.prefillForm(form, hashIn);
+    // prefillForm sets .value; checkboxes need .checked restored explicitly.
+    if ('in_state' in hashIn) form.querySelector('[name=in_state]').checked = hashIn.in_state === 'true';
+    if ('niit_applies' in hashIn) form.querySelector('[name=niit_applies]').checked = hashIn.niit_applies === 'true';
+    const readBody = () => {
         const fd = new FormData(form);
-        const body = {
+        return {
             muni_yield_pct: Number(fd.get('muni_yield_pct')) || 0,
             taxable_yield_pct: Number(fd.get('taxable_yield_pct')) || 0,
             federal_rate_pct: Number(fd.get('federal_rate_pct')) || 0,
@@ -56,22 +68,48 @@ export async function renderTaxEquivalentYield(mount, _appState) {
             in_state: form.querySelector('[name=in_state]').checked,
             niit_applies: form.querySelector('[name=niit_applies]').checked,
         };
+    };
+    const generate = async () => {
+        const body = readBody();
         try {
             const r = await api.calcTaxEquivalentYield(body);
             if (!viewIsCurrent(tok)) return;
-            renderResult(mount, r);
+            lastReport = r; lastBody = body;
+            renderResult(mount, r, body, tok);
         } catch (err) {
             showToast(err.message || t('view.tey.toast.error'), { level: 'error' });
         }
     };
+    enh.mountToolbar(mount.querySelector('#tey-tools'), { viewId: VIEW, getInputs: () => lastBody || readBody(), getRows: () => reportRows(lastReport), filename: 'tax-equivalent-yield.csv' });
+    mount.querySelector('#tey-sens-btn').addEventListener('click', () => runSens(mount, readBody(), tok));
     form.addEventListener('input', debounce(generate, 250));
     form.addEventListener('submit', (e) => { e.preventDefault(); generate(); });
     generate();
 }
 
-function renderResult(mount, r) {
+function reportRows(r) {
+    if (!r) return [];
+    return [
+        ['metric', 'value'],
+        ['tax_equivalent_yield_pct', r.tax_equivalent_yield_pct],
+        ['muni_after_tax_pct', r.muni_after_tax_pct],
+        ['combined_taxable_rate_pct', r.combined_taxable_rate_pct],
+        ['taxable_after_tax_pct', r.taxable_after_tax_pct == null ? '' : r.taxable_after_tax_pct],
+        ['verdict', r.verdict || ''],
+    ];
+}
+
+async function renderResult(mount, r, body, tok) {
     const el = mount.querySelector('#tey-result');
     const winCls = r.verdict === 'muni' ? 'pos' : (r.verdict === 'taxable' ? 'neg' : '');
+    // Line chart: tax-equivalent yield as the federal rate sweeps 10% → 40% (rises with the bracket).
+    const xs = enh.linspace(10, 40, 13);
+    const pts = await Promise.all(xs.map(async (f) => {
+        const rr = await api.calcTaxEquivalentYield({ ...body, federal_rate_pct: f });
+        return { x: f, y: rr && rr.tax_equivalent_yield_pct != null ? rr.tax_equivalent_yield_pct : NaN };
+    }));
+    if (!viewIsCurrent(tok)) return;
+    const chart = enh.svgLineChart(pts, { xlabel: 'fed %', ylabel: 'TEY %' });
     const verdictRow = r.verdict
         ? `<tr class="${winCls}"><td data-i18n="view.tey.row.verdict">Better after tax</td><td data-i18n="${VERDICT[r.verdict]}">—</td></tr>`
         : '';
@@ -88,6 +126,7 @@ function renderResult(mount, r) {
                 <div class="card"><div class="label" data-i18n="view.tey.card.rate">Combined tax rate</div>
                     <div class="value">${pct(r.combined_taxable_rate_pct)}</div></div>
             </div>
+            ${chart}
             <table class="data-table">
                 <tbody>
                     <tr><td data-i18n="view.tey.row.muniat">Muni after-tax</td><td>${pct(r.muni_after_tax_pct)}</td></tr>
@@ -100,4 +139,15 @@ function renderResult(mount, r) {
         </div>
     `;
     applyUiI18n(el);
+}
+
+async function runSens(mount, base, tok) {
+    const panel = mount.querySelector('#tey-sens');
+    panel.innerHTML = `<p class="muted small" data-i18n="calc.enh.sens.running">Computing…</p>`; applyUiI18n(panel);
+    // x: federal rate 10% → 40%; y: muni yield 1% → 6%. Output: tax-equivalent yield.
+    const xVals = enh.linspace(10, 40, 5);
+    const yVals = enh.linspace(1, 6, 5);
+    const { cells } = await enh.runSensitivity({ base, xKey: 'federal_rate_pct', yKey: 'muni_yield_pct', xVals, yVals, compute: (b) => api.calcTaxEquivalentYield(b), pick: (r) => (r ? r.tax_equivalent_yield_pct : null) });
+    if (!viewIsCurrent(tok)) return;
+    panel.innerHTML = enh.renderSensitivityTable({ xVals, yVals, cells, fmt: (v) => (v == null ? '—' : v.toFixed(2) + '%'), xfmt: (v) => v.toFixed(0) + '%', yfmt: (v) => v.toFixed(1) + '%', xName: t('view.tey.label.federal') || 'Fed', yName: t('view.tey.label.muni') || 'Muni' });
 }
