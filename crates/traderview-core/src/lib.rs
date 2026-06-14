@@ -361,6 +361,7 @@ pub mod vwap_slippage;
 pub mod vwmacd;
 pub mod wacc;
 pub mod wage_converter;
+pub mod warrant_agreement;
 pub mod wash_sale;
 pub mod williams_r;
 pub mod winloss_asymmetry;

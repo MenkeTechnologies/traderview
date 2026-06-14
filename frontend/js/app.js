@@ -740,6 +740,7 @@ import { renderSafe } from './views/safe_agreement.js';
 import { renderOptionGrant } from './views/option_grant.js';
 import { renderRsuGrant } from './views/rsu_grant.js';
 import { renderStatementOfAccount } from './views/statement_of_account.js';
+import { renderWarrant } from './views/warrant_agreement.js';
 import { renderFixAndFlip } from './views/fix_and_flip.js';
 import { renderCashConversionCycle } from './views/cash_conversion_cycle.js';
 import { renderProfitFirst } from './views/profit_first.js';
@@ -3221,6 +3222,7 @@ export async function dispatch() {
             case 'option-grant': await renderOptionGrant(mount, state); break;
             case 'rsu-grant': await renderRsuGrant(mount, state); break;
             case 'statement-of-account': await renderStatementOfAccount(mount, state); break;
+            case 'warrant': await renderWarrant(mount, state); break;
             case 'fix-and-flip': await renderFixAndFlip(mount, state); break;
             case 'cash-conversion-cycle': await renderCashConversionCycle(mount, state); break;
             case 'profit-first': await renderProfitFirst(mount, state); break;
@@ -4616,6 +4618,7 @@ export const viewRenderers = {
     'option-grant': (m, s) => renderOptionGrant(m, s),
     'rsu-grant': (m, s) => renderRsuGrant(m, s),
     'statement-of-account': (m, s) => renderStatementOfAccount(m, s),
+    'warrant': (m, s) => renderWarrant(m, s),
     'fix-and-flip': (m, s) => renderFixAndFlip(m, s),
     'cash-conversion-cycle': (m, s) => renderCashConversionCycle(m, s),
     'profit-first': (m, s) => renderProfitFirst(m, s),
