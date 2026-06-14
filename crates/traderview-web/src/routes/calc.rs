@@ -109,6 +109,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/holdover-rent", post(holdover_rent_route))
         .route("/calc/prorated-rent", post(prorated_rent_route))
         .route("/calc/ti-allowance", post(ti_allowance_route))
+        .route("/calc/contractor-1099", post(contractor_1099_route))
         .route("/calc/fix-and-flip", post(fix_and_flip_route))
         .route("/calc/cash-conversion-cycle", post(cash_conversion_cycle_route))
         .route("/calc/profit-first", post(profit_first_route))
@@ -11988,6 +11989,14 @@ async fn ti_allowance_route(
     Json(b): Json<traderview_core::ti_allowance::TiAllowanceInput>,
 ) -> Json<traderview_core::ti_allowance::TiAllowance> {
     Json(traderview_core::ti_allowance::generate(&b))
+}
+
+/// 1099-NEC summary: total contractor pay, reporting threshold, backup withholding.
+async fn contractor_1099_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::contractor_1099::Contractor1099Input>,
+) -> Json<traderview_core::contractor_1099::Contractor1099> {
+    Json(traderview_core::contractor_1099::generate(&b))
 }
 
 /// Fix-and-flip: the 70% rule max-allowable-offer plus the full deal P&L

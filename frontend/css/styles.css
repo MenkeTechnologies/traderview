@@ -4360,3 +4360,6 @@ mark.fzf-hl {
 
 .soa-head,
 .soa-row { grid-template-columns: minmax(100px, 1.4fr) 1.2fr 1fr auto; }
+
+.nec-head,
+.nec-row { grid-template-columns: minmax(120px, 1.6fr) 1.2fr 1fr auto; }

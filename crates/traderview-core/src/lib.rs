@@ -64,6 +64,7 @@ pub mod commercial_lease;
 pub mod commission_agreement;
 pub mod commission_optimizer;
 pub mod concentration;
+pub mod contractor_1099;
 pub mod contractor_agreement;
 pub mod convertible_note;
 pub mod coppock;
