@@ -301,6 +301,7 @@ pub mod standard_vs_itemized;
 pub mod stats;
 pub mod stochastic;
 pub mod stock_split;
+pub mod stock_subscription;
 pub mod stop_hunt;
 pub mod stop_loss_backtest;
 pub mod stops;

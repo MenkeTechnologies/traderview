@@ -88,6 +88,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/lease-assignment", post(lease_assignment_route))
         .route("/calc/seller-disclosure", post(seller_disclosure_route))
         .route("/calc/earnest-money-receipt", post(earnest_money_receipt_route))
+        .route("/calc/stock-subscription", post(stock_subscription_route))
         .route("/calc/fix-and-flip", post(fix_and_flip_route))
         .route("/calc/cash-conversion-cycle", post(cash_conversion_cycle_route))
         .route("/calc/profit-first", post(profit_first_route))
@@ -11799,6 +11800,14 @@ async fn earnest_money_receipt_route(
     Json(b): Json<traderview_core::earnest_money_receipt::EarnestMoneyInput>,
 ) -> Json<traderview_core::earnest_money_receipt::EarnestMoneyReceipt> {
     Json(traderview_core::earnest_money_receipt::generate(&b))
+}
+
+/// Stock subscription: investment + resulting ownership % and clauses.
+async fn stock_subscription_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::stock_subscription::StockSubscriptionInput>,
+) -> Json<traderview_core::stock_subscription::StockSubscription> {
+    Json(traderview_core::stock_subscription::generate(&b))
 }
 
 /// Fix-and-flip: the 70% rule max-allowable-offer plus the full deal P&L
