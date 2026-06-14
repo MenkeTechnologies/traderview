@@ -86,6 +86,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/lease-option", post(lease_option_route))
         .route("/calc/land-contract", post(land_contract_route))
         .route("/calc/lease-assignment", post(lease_assignment_route))
+        .route("/calc/seller-disclosure", post(seller_disclosure_route))
         .route("/calc/fix-and-flip", post(fix_and_flip_route))
         .route("/calc/cash-conversion-cycle", post(cash_conversion_cycle_route))
         .route("/calc/profit-first", post(profit_first_route))
@@ -11781,6 +11782,14 @@ async fn lease_assignment_route(
     Json(b): Json<traderview_core::lease_assignment::LeaseAssignmentInput>,
 ) -> Json<traderview_core::lease_assignment::LeaseAssignment> {
     Json(traderview_core::lease_assignment::generate(&b))
+}
+
+/// Seller's property disclosure: known-defect statement with counts.
+async fn seller_disclosure_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::seller_disclosure::SellerDisclosureInput>,
+) -> Json<traderview_core::seller_disclosure::SellerDisclosure> {
+    Json(traderview_core::seller_disclosure::generate(&b))
 }
 
 /// Fix-and-flip: the 70% rule max-allowable-offer plus the full deal P&L
