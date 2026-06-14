@@ -46,6 +46,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/reverse-mortgage", post(reverse_mortgage_route))
         .route("/calc/time-value-money", post(time_value_money_route))
         .route("/calc/scorp-election", post(scorp_calc_route))
+        .route("/calc/quarterly-tax", post(quarterly_tax_route))
         .route("/calc/dividend-discount-model", post(dividend_discount_model_route))
         .route("/calc/probability-of-profit", post(probability_of_profit_route))
         .route("/calc/straddle", post(straddle_route))
@@ -1042,6 +1043,12 @@ async fn scorp_calc_route(
     Json(b): Json<traderview_core::scorp_calc::ScorpInput>,
 ) -> Json<traderview_core::scorp_calc::ScorpReport> {
     Json(traderview_core::scorp_calc::generate(&b))
+}
+
+async fn quarterly_tax_route(
+    Json(b): Json<traderview_core::quarterly_tax::QuarterlyTaxInput>,
+) -> Json<traderview_core::quarterly_tax::QuarterlyTaxReport> {
+    Json(traderview_core::quarterly_tax::generate(&b))
 }
 
 async fn roth_conversion_ladder_route(

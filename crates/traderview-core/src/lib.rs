@@ -280,6 +280,7 @@ pub mod purchase_order;
 pub mod put_call_ratio;
 pub mod qbi_deduction;
 pub mod qlac;
+pub mod quarterly_tax;
 pub mod pyramid;
 pub mod pyramid_rules;
 pub mod random_walk_index;

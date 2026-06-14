@@ -13,22 +13,6 @@ import { esc } from '../util.js';
 import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
-const SS_BASE_2024 = 168_600;  // Social-security wage base
-const SS_RATE = 0.124;
-const MEDICARE_RATE = 0.029;
-const MEDICARE_ADD = 0.009; // additional Medicare > $200k single / $250k MFJ
-const SE_DEDUCTION = 0.9235;
-
-const FED_BRACKETS_2024_SINGLE = [
-    [11_600,  0.10],
-    [47_150,  0.12],
-    [100_525, 0.22],
-    [191_950, 0.24],
-    [243_725, 0.32],
-    [609_350, 0.35],
-    [Infinity, 0.37],
-];
-
 let state = {
     ytdTradingPnl: 0,
     otherIncome: 0,
@@ -99,23 +83,30 @@ export async function renderQuarterlyTax(mount, _appState) {
     renderOutput();
 }
 
-function renderOutput() {
+async function renderOutput() {
     const el = document.getElementById('qtax-output');
     if (!el) return;
     const proj = projectAnnual();
-    const seTax = computeSelfEmploymentTax(state.ytdTradingPnl);
-    const halfSe = seTax / 2;
-    const taxableIncome = Math.max(0, proj.totalIncome - halfSe - standardDeduction(state.filingStatus));
-    const fedIncomeTax = computeFedTax(taxableIncome);
-    const projectedTotal = fedIncomeTax + seTax;
-    const safeHarborBase = Math.max(
-        proj.totalIncome > 150_000 ? state.priorYearTax * 1.10 : state.priorYearTax,
-        0
-    );
-    const safeHarborFloor = Math.min(projectedTotal * 0.90, safeHarborBase);
-    const perQuarter = projectedTotal / 4;
-    const totalPaid = state.quarterlyPaid.reduce((a, b) => a + b, 0);
-    const remaining = Math.max(0, projectedTotal - totalPaid);
+    let r;
+    try {
+        r = await api.calcQuarterlyTax({
+            ytd_trading_pnl_usd: state.ytdTradingPnl,
+            total_income_usd: proj.totalIncome,
+            prior_year_tax_usd: state.priorYearTax,
+            filing_status: state.filingStatus,
+            quarterly_paid_usd: state.quarterlyPaid,
+        });
+    } catch (e) {
+        el.innerHTML = `<p class="neg">${esc(String(e))}</p>`;
+        return;
+    }
+    const seTax = r.se_tax_usd;
+    const taxableIncome = r.taxable_income_usd;
+    const fedIncomeTax = r.fed_income_tax_usd;
+    const projectedTotal = r.projected_total_usd;
+    const safeHarborFloor = r.safe_harbor_floor_usd;
+    const perQuarter = r.per_quarter_usd;
+    const effectiveRate = r.effective_rate_pct;
     const nextQ = nextQuarterInfo();
     el.innerHTML = `
         <div class="chart-panel">
@@ -139,7 +130,7 @@ function renderOutput() {
                 </div>
                 <div class="card">
                     <div class="label" data-i18n="view.qtax.card.effective_rate">Effective rate</div>
-                    <div class="value">${proj.totalIncome > 0 ? ((projectedTotal / proj.totalIncome) * 100).toFixed(1) : '0.0'}%</div>
+                    <div class="value">${effectiveRate.toFixed(1)}%</div>
                 </div>
                 <div class="card">
                     <div class="label" data-i18n="view.qtax.card.safe_harbor">Safe-harbor floor</div>
@@ -159,9 +150,10 @@ function renderOutput() {
                 </tr></thead>
                 <tbody>${[1, 2, 3, 4].map(q => {
                     const paid = state.quarterlyPaid[q - 1];
-                    const cls = paid >= perQuarter ? 'pos' : paid > 0 ? '' : 'neg';
-                    const status = paid >= perQuarter ? t('view.qtax.status.ok')
-                        : paid > 0 ? t('view.qtax.status.partial', { short: (perQuarter - paid).toFixed(0) })
+                    const qs = r.quarters[q - 1];
+                    const cls = qs.status_key === 'ok' ? 'pos' : qs.status_key === 'partial' ? '' : 'neg';
+                    const status = qs.status_key === 'ok' ? t('view.qtax.status.ok')
+                        : qs.status_key === 'partial' ? t('view.qtax.status.partial', { short: qs.short_usd.toFixed(0) })
                         : t('view.qtax.status.unpaid');
                     return `<tr>
                         <td>Q${q}</td>
@@ -198,29 +190,6 @@ function projectAnnual() {
     const annualizedTrading = state.ytdTradingPnl * (365 / elapsedDays);
     const totalIncome = annualizedTrading + state.otherIncome;
     return { annualizedTrading, totalIncome, elapsedDays };
-}
-
-function computeSelfEmploymentTax(net) {
-    if (net <= 0) return 0;
-    const seBase = net * SE_DEDUCTION;
-    const ssTaxable = Math.min(seBase, SS_BASE_2024);
-    return ssTaxable * SS_RATE + seBase * MEDICARE_RATE;
-}
-
-function computeFedTax(taxable) {
-    let owe = 0;
-    let lastCap = 0;
-    for (const [cap, rate] of FED_BRACKETS_2024_SINGLE) {
-        const slice = Math.max(0, Math.min(taxable, cap) - lastCap);
-        owe += slice * rate;
-        if (taxable <= cap) break;
-        lastCap = cap;
-    }
-    return owe;
-}
-
-function standardDeduction(status) {
-    return ({ single: 14_600, mfj: 29_200, hoh: 21_900 })[status] || 14_600;
 }
 
 function quarterDueDate(q) {
