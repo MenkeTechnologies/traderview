@@ -744,6 +744,7 @@ import { renderWarrant } from './views/warrant_agreement.js';
 import { renderEarnout } from './views/earnout_agreement.js';
 import { renderRoyalty } from './views/royalty_agreement.js';
 import { renderCamReconciliation } from './views/cam_reconciliation.js';
+import { renderPercentageRent } from './views/percentage_rent.js';
 import { renderFixAndFlip } from './views/fix_and_flip.js';
 import { renderCashConversionCycle } from './views/cash_conversion_cycle.js';
 import { renderProfitFirst } from './views/profit_first.js';
@@ -3229,6 +3230,7 @@ export async function dispatch() {
             case 'earnout': await renderEarnout(mount, state); break;
             case 'royalty': await renderRoyalty(mount, state); break;
             case 'cam-reconciliation': await renderCamReconciliation(mount, state); break;
+            case 'percentage-rent': await renderPercentageRent(mount, state); break;
             case 'fix-and-flip': await renderFixAndFlip(mount, state); break;
             case 'cash-conversion-cycle': await renderCashConversionCycle(mount, state); break;
             case 'profit-first': await renderProfitFirst(mount, state); break;
@@ -4628,6 +4630,7 @@ export const viewRenderers = {
     'earnout': (m, s) => renderEarnout(m, s),
     'royalty': (m, s) => renderRoyalty(m, s),
     'cam-reconciliation': (m, s) => renderCamReconciliation(m, s),
+    'percentage-rent': (m, s) => renderPercentageRent(m, s),
     'fix-and-flip': (m, s) => renderFixAndFlip(m, s),
     'cash-conversion-cycle': (m, s) => renderCashConversionCycle(m, s),
     'profit-first': (m, s) => renderProfitFirst(m, s),

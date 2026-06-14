@@ -100,6 +100,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/earnout", post(earnout_route))
         .route("/calc/royalty", post(royalty_route))
         .route("/calc/cam-reconciliation", post(cam_reconciliation_route))
+        .route("/calc/percentage-rent", post(percentage_rent_route))
         .route("/calc/fix-and-flip", post(fix_and_flip_route))
         .route("/calc/cash-conversion-cycle", post(cash_conversion_cycle_route))
         .route("/calc/profit-first", post(profit_first_route))
@@ -11907,6 +11908,14 @@ async fn cam_reconciliation_route(
     Json(b): Json<traderview_core::cam_reconciliation::CamInput>,
 ) -> Json<traderview_core::cam_reconciliation::CamReconciliation> {
     Json(traderview_core::cam_reconciliation::generate(&b))
+}
+
+/// Percentage rent: base + rate × sales over the (natural or stated) breakpoint.
+async fn percentage_rent_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::percentage_rent::PercentageRentInput>,
+) -> Json<traderview_core::percentage_rent::PercentageRentStatement> {
+    Json(traderview_core::percentage_rent::generate(&b))
 }
 
 /// Fix-and-flip: the 70% rule max-allowable-offer plus the full deal P&L
