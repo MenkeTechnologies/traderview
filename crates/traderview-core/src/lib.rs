@@ -205,6 +205,7 @@ pub mod offer_letter;
 pub mod oi_change;
 pub mod open_type;
 pub mod opening_range;
+pub mod opex_escalation;
 pub mod optimal_f;
 pub mod option_grant;
 pub mod options_margin;

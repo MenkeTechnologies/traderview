@@ -104,6 +104,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/cpi-rent-adjustment", post(cpi_rent_adjustment_route))
         .route("/calc/deposit-interest", post(deposit_interest_route))
         .route("/calc/lease-buyout", post(lease_buyout_route))
+        .route("/calc/opex-escalation", post(opex_escalation_route))
         .route("/calc/fix-and-flip", post(fix_and_flip_route))
         .route("/calc/cash-conversion-cycle", post(cash_conversion_cycle_route))
         .route("/calc/profit-first", post(profit_first_route))
@@ -11943,6 +11944,14 @@ async fn lease_buyout_route(
     Json(b): Json<traderview_core::lease_buyout::LeaseBuyoutInput>,
 ) -> Json<traderview_core::lease_buyout::LeaseBuyout> {
     Json(traderview_core::lease_buyout::generate(&b))
+}
+
+/// Operating-expense escalation: base-year stop + occupancy gross-up, pro-rata share.
+async fn opex_escalation_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::opex_escalation::OpexEscalationInput>,
+) -> Json<traderview_core::opex_escalation::OpexEscalation> {
+    Json(traderview_core::opex_escalation::generate(&b))
 }
 
 /// Fix-and-flip: the 70% rule max-allowable-offer plus the full deal P&L
