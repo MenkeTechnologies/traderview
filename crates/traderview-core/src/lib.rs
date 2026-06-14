@@ -366,6 +366,7 @@ pub mod stock_subscription;
 pub mod stop_hunt;
 pub mod stop_loss_backtest;
 pub mod stops;
+pub mod stretch_ira;
 pub mod sublease_agreement;
 pub mod strategy_alert;
 pub mod strategy_correlation;
