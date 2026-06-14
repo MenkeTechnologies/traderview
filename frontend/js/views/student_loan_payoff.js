@@ -6,6 +6,7 @@
 import { api } from '../api.js';
 import { esc } from '../util.js';
 import { t } from '../i18n.js';
+import * as enh from '../calc_enhance.js';
 
 export async function renderStudentLoanPayoff(mount, _state) {
     mount.innerHTML = `
@@ -51,6 +52,8 @@ async function runCompute(mount) {
     result.innerHTML = `<p class="muted">${esc(t('view.student_loan_payoff.status.computing'))}</p>`;
     try {
         const r = await api.request('/student-loan-payoff/compute', { method: 'POST', body: JSON.stringify(input) });
+        // Total-paid-per-plan bar chart (compare repayment plans; lowest is best).
+        const chart = enh.svgBarChart((r.plans || []).map(p => ({ label: t('view.student_loan_payoff.plan.' + p.plan) || p.plan, value: p.total_paid_usd })));
         result.innerHTML = `
             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:1rem">
                 <div><div class="muted small">${esc(t('view.student_loan_payoff.field.poverty'))}</div>
@@ -60,6 +63,8 @@ async function runCompute(mount) {
                 <div><div class="muted small">${esc(t('view.student_loan_payoff.field.best'))}</div>
                     <strong class="pos" style="text-transform:uppercase">${esc(t('view.student_loan_payoff.plan.' + r.best_plan_total_paid) || r.best_plan_total_paid)}</strong></div>
             </div>
+            ${chart}
+            <div id="sl-tools" class="ce-toolbar"></div>
             <h2 style="margin-top:1rem">${esc(t('view.student_loan_payoff.h2.plans'))}</h2>
             <table class="trades">
                 <thead><tr>
@@ -85,6 +90,14 @@ async function runCompute(mount) {
                 }).join('')}</tbody>
             </table>
         `;
+        // Per-plan export (Copy / CSV). No permalink — id-based inputs.
+        enh.mountToolbar(mount.querySelector('#sl-tools'), {
+            viewId: 'student-loan-payoff',
+            link: false,
+            filename: 'student-loan-payoff.csv',
+            getRows: () => [['plan', 'monthly_first_usd', 'months', 'total_paid_usd', 'interest_paid_usd', 'forgiven_usd'],
+                ...(r.plans || []).map(p => [p.plan, p.monthly_payment_first_usd, p.months_to_payoff_or_forgive, p.total_paid_usd, p.interest_paid_usd, p.forgiven_balance_usd])],
+        });
     } catch (e) {
         result.innerHTML = `<p class="neg">${esc(String(e))}</p>`;
     }

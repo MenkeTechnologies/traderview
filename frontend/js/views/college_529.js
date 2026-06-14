@@ -5,6 +5,7 @@
 import { api } from '../api.js';
 import { esc } from '../util.js';
 import { t } from '../i18n.js';
+import * as enh from '../calc_enhance.js';
 
 export async function renderCollege529(mount, _state) {
     mount.innerHTML = `
@@ -58,6 +59,8 @@ async function runCompute(mount) {
     result.innerHTML = `<p class="muted">${esc(t('view.college_529.status.computing'))}</p>`;
     try {
         const r = await api.request('/college-529/compute', { method: 'POST', body: JSON.stringify(input) });
+        // Projected-cost-per-college-year bar chart.
+        const chart = enh.svgBarChart((r.per_year_cost || []).map(y => ({ label: 'Age ' + y.year_age, value: y.cost_usd })));
         const okCls = r.on_track ? 'pos' : 'neg';
         const reqCls = input.current_monthly_contribution_usd >= r.required_monthly_contribution_usd ? 'pos' : 'neg';
         result.innerHTML = `
@@ -75,6 +78,8 @@ async function runCompute(mount) {
                 <div><div class="muted small">${esc(t('view.college_529.field.on_track'))}</div>
                     <strong class="${okCls}">${r.on_track ? '✓ ' + esc(t('view.college_529.status.on_track')) : '✗ ' + esc(t('view.college_529.status.short'))}</strong></div>
             </div>
+            ${chart}
+            <div id="c529-tools" class="ce-toolbar"></div>
             <h2 style="margin-top:1rem">${esc(t('view.college_529.h2.per_year'))}</h2>
             <table class="trades">
                 <thead><tr>
@@ -91,6 +96,15 @@ async function runCompute(mount) {
                 `).join('')}</tbody>
             </table>
         `;
+        // Per-year cost + summary export (Copy / CSV). No permalink — id-based inputs.
+        enh.mountToolbar(mount.querySelector('#c529-tools'), {
+            viewId: 'college-529',
+            link: false,
+            filename: 'college-529.csv',
+            getRows: () => [['year_index', 'age', 'cost_usd'],
+                ...(r.per_year_cost || []).map(y => [y.year_index, y.year_age, y.cost_usd]),
+                ['TOTAL', '', r.total_projected_cost_usd]],
+        });
     } catch (e) {
         result.innerHTML = `<p class="neg">${esc(String(e))}</p>`;
     }

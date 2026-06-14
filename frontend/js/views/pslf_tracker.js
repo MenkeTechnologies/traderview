@@ -5,6 +5,7 @@
 import { api } from '../api.js';
 import { esc } from '../util.js';
 import { t } from '../i18n.js';
+import * as enh from '../calc_enhance.js';
 
 export async function renderPslfTracker(mount, _state) {
     mount.innerHTML = `
@@ -51,6 +52,11 @@ async function runCompute(mount) {
     result.innerHTML = `<p class="muted">${esc(t('view.pslf_tracker.status.computing'))}</p>`;
     try {
         const r = await api.request('/pslf-tracker/compute', { method: 'POST', body: JSON.stringify(input) });
+        // Cost-vs-benefit: total paid until forgiveness vs the balance forgiven tax-free.
+        const chart = enh.svgBarChart([
+            { label: 'Paid', value: r.total_paid_until_forgiveness_usd },
+            { label: 'Forgiven', value: r.projected_forgiven_balance_usd },
+        ]);
         const stCls = r.status === 'complete' || r.status === 'on_track' ? 'pos'
                     : r.status === 'paused' || r.status === 'ineligible_employer' ? 'neg' : '';
         const pctDone = (r.qualifying_payments_made / 120 * 100).toFixed(1);
@@ -70,7 +76,22 @@ async function runCompute(mount) {
                 <div><div class="muted small">${esc(t('view.pslf_tracker.field.status'))}</div>
                     <strong class="${stCls}" style="text-transform:uppercase">${esc(t('view.pslf_tracker.status.' + r.status) || r.status)}</strong></div>
             </div>
+            ${chart}
+            <div id="pslf-tools" class="ce-toolbar"></div>
         `;
+        // Summary export (Copy / CSV). No permalink — id-based inputs.
+        enh.mountToolbar(mount.querySelector('#pslf-tools'), {
+            viewId: 'pslf-tracker',
+            link: false,
+            filename: 'pslf-tracker.csv',
+            getRows: () => [['metric', 'value'],
+                ['qualifying_payments_made', r.qualifying_payments_made],
+                ['payments_remaining', r.payments_remaining],
+                ['years_to_forgiveness', r.years_to_forgiveness],
+                ['total_paid_until_forgiveness_usd', r.total_paid_until_forgiveness_usd],
+                ['projected_forgiven_balance_usd', r.projected_forgiven_balance_usd],
+                ['status', r.status]],
+        });
     } catch (e) {
         result.innerHTML = `<p class="neg">${esc(String(e))}</p>`;
     }

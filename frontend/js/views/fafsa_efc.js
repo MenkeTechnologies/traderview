@@ -4,6 +4,7 @@
 import { api } from '../api.js';
 import { esc } from '../util.js';
 import { t } from '../i18n.js';
+import * as enh from '../calc_enhance.js';
 
 export async function renderFafsaEfc(mount, _state) {
     mount.innerHTML = `
@@ -52,6 +53,13 @@ async function runCompute(mount) {
     result.innerHTML = `<p class="muted">${esc(t('view.fafsa_efc.status.computing'))}</p>`;
     try {
         const r = await api.request('/fafsa-efc/compute', { method: 'POST', body: JSON.stringify(input) });
+        // SAI contribution breakdown — the four sources that sum into the index.
+        const chart = enh.svgBarChart([
+            { label: 'ParInc', value: r.parent_income_contribution_usd },
+            { label: 'ParAsset', value: r.parent_asset_contribution_usd },
+            { label: 'StuInc', value: r.student_income_contribution_usd },
+            { label: 'StuAsset', value: r.student_asset_contribution_usd },
+        ]);
         const tierCls = r.aid_tier === 'max_pell' || r.aid_tier === 'pell_eligible' ? 'pos'
                        : r.aid_tier === 'full_pay_likely' ? 'neg' : '';
         result.innerHTML = `
@@ -63,6 +71,8 @@ async function runCompute(mount) {
                 <div><div class="muted small">${esc(t('view.fafsa_efc.field.tier'))}</div>
                     <strong class="${tierCls}" style="text-transform:uppercase">${esc(t('view.fafsa_efc.tier.' + r.aid_tier) || r.aid_tier)}</strong></div>
             </div>
+            ${chart}
+            <div id="fa-tools" class="ce-toolbar"></div>
             <h2 style="margin-top:1rem">${esc(t('view.fafsa_efc.h2.breakdown'))}</h2>
             <table class="trades">
                 <tbody>
@@ -81,6 +91,20 @@ async function runCompute(mount) {
                 </tbody>
             </table>
         `;
+        // SAI breakdown export (Copy / CSV). No permalink — id-based inputs.
+        enh.mountToolbar(mount.querySelector('#fa-tools'), {
+            viewId: 'fafsa-efc',
+            link: false,
+            filename: 'fafsa-efc.csv',
+            getRows: () => [['metric', 'value'],
+                ['sai_usd', r.sai_usd],
+                ['sai_per_student_usd', r.sai_per_student_usd],
+                ['aid_tier', r.aid_tier],
+                ['parent_income_contribution_usd', r.parent_income_contribution_usd],
+                ['parent_asset_contribution_usd', r.parent_asset_contribution_usd],
+                ['student_income_contribution_usd', r.student_income_contribution_usd],
+                ['student_asset_contribution_usd', r.student_asset_contribution_usd]],
+        });
     } catch (e) {
         result.innerHTML = `<p class="neg">${esc(String(e))}</p>`;
     }
