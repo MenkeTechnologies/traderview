@@ -3,6 +3,7 @@
 import { api } from '../api.js';
 import { esc } from '../util.js';
 import { t } from '../i18n.js';
+import * as enh from '../calc_enhance.js';
 
 export async function renderGlidePath(mount, _state) {
     mount.innerHTML = `
@@ -55,7 +56,11 @@ async function runCompute(mount) {
     try {
         const r = await api.request('/glide-path/compute', { method: 'POST', body: JSON.stringify(input) });
         const phaseCls = p => p === 'pre' || p === 'working' ? '' : p === 'to_landing' ? 'neg' : '';
+        // The glide path itself — stock allocation declining with age.
+        const chart = enh.svgLineChart((r.glide || []).map(p => ({ x: p.age, y: p.stock_pct })), { xlabel: 'age', ylabel: 'stock %' });
         result.innerHTML = `
+            ${chart}
+            <div id="gp-tools" class="ce-toolbar"></div>
             <h2 style="margin-top:1rem">${esc(t('view.glide_path.h2.glide'))}</h2>
             <table class="trades">
                 <thead><tr>
@@ -74,6 +79,14 @@ async function runCompute(mount) {
                 `).join('')}</tbody>
             </table>
         `;
+        // Glide-path export (Copy / CSV). No permalink — id-based inputs.
+        enh.mountToolbar(mount.querySelector('#gp-tools'), {
+            viewId: 'glide-path',
+            link: false,
+            filename: 'glide-path.csv',
+            getRows: () => [['age', 'stock_pct', 'bond_pct', 'phase'],
+                ...(r.glide || []).map(p => [p.age, p.stock_pct, p.bond_pct, p.phase])],
+        });
     } catch (e) {
         result.innerHTML = `<p class="neg">${esc(String(e))}</p>`;
     }

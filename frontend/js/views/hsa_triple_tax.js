@@ -7,6 +7,7 @@ import { applyUiI18n, t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import { showToast } from '../toast.js';
 import { debounce } from '../util.js';
+import * as enh from '../calc_enhance.js';
 
 const FIELDS = [
     ['annual_contribution_usd', 'Annual contribution ($)', 4000],
@@ -17,6 +18,9 @@ const FIELDS = [
 ];
 
 const money = (n) => '$' + Number(n).toLocaleString(undefined, { maximumFractionDigits: 0 });
+const VIEW = 'hsa-triple-tax';
+let lastReport = null;
+let lastBody = null;
 
 export async function renderHsaTripleTax(mount, _appState) {
     const tok = currentViewToken();
@@ -39,6 +43,9 @@ export async function renderHsaTripleTax(mount, _appState) {
                         <input type="number" step="0.01" min="0" name="${key}" value="${def}" required></label>
                 `).join('')}
             </form>
+            <div id="hsa-tools" class="ce-toolbar"></div>
+            <button type="button" id="hsa-sens-btn" class="ce-tool" data-i18n="calc.enh.sens.run">▦ Sensitivity</button>
+            <div id="hsa-sens" class="ce-sens"></div>
         </div>
         <div id="hsa-result" class="lpv-preview"></div>
         </div>
@@ -46,26 +53,54 @@ export async function renderHsaTripleTax(mount, _appState) {
     applyUiI18n(mount);
 
     const form = mount.querySelector('#hsa-form');
-    const generate = async () => {
+    enh.prefillForm(form, enh.readHashInputs());
+    const readBody = () => {
         const fd = new FormData(form);
         const body = {};
         for (const [key] of FIELDS) body[key] = Number(fd.get(key)) || 0;
         body.years = Math.max(0, Math.round(body.years));
+        return body;
+    };
+    const generate = async () => {
+        const body = readBody();
         try {
             const r = await api.calcHsaTripleTax(body);
             if (!viewIsCurrent(tok)) return;
-            renderResult(mount, r);
+            lastReport = r; lastBody = body;
+            renderResult(mount, r, body, tok);
         } catch (err) {
             showToast(err.message || t('view.hsatt.toast.error'), { level: 'error' });
         }
     };
+    enh.mountToolbar(mount.querySelector('#hsa-tools'), { viewId: VIEW, getInputs: () => lastBody || readBody(), getRows: () => reportRows(lastReport), filename: 'hsa-triple-tax.csv' });
+    mount.querySelector('#hsa-sens-btn').addEventListener('click', () => runSens(mount, readBody(), tok));
     form.addEventListener('input', debounce(generate, 250));
     form.addEventListener('submit', (e) => { e.preventDefault(); generate(); });
     generate();
 }
 
-function renderResult(mount, r) {
+function reportRows(r) {
+    if (!r) return [];
+    return [
+        ['metric', 'value'],
+        ['hsa_advantage_usd', r.hsa_advantage_usd],
+        ['hsa_ending_usd', r.hsa_ending_usd],
+        ['taxable_ending_usd', r.taxable_ending_usd],
+        ['total_contributions_usd', r.total_contributions_usd],
+        ['upfront_tax_savings_usd', r.upfront_tax_savings_usd],
+    ];
+}
+
+async function renderResult(mount, r, body, tok) {
     const el = mount.querySelector('#hsa-result');
+    // Line chart: HSA advantage as the horizon sweeps 0 -> 40 years (compounding widens the gap).
+    const xs = enh.linspace(0, 40, 13);
+    const pts = await Promise.all(xs.map(async (yr) => {
+        const rr = await api.calcHsaTripleTax({ ...body, years: Math.round(yr) });
+        return { x: yr, y: rr ? rr.hsa_advantage_usd / 1000 : NaN };
+    }));
+    if (!viewIsCurrent(tok)) return;
+    const chart = enh.svgLineChart(pts, { xlabel: 'years', ylabel: 'advantage $k' });
     el.innerHTML = `
         <div class="chart-panel">
             <h2 data-i18n="view.hsatt.h2.result">The advantage</h2>
@@ -77,6 +112,7 @@ function renderResult(mount, r) {
                 <div class="card"><div class="label" data-i18n="view.hsatt.card.taxable">Taxable ending value</div>
                     <div class="value">${money(r.taxable_ending_usd)}</div></div>
             </div>
+            ${chart}
             <table class="data-table">
                 <thead><tr><th data-i18n="view.hsatt.col.line">Line</th><th data-i18n="view.hsatt.col.amount">Amount</th></tr></thead>
                 <tbody>
@@ -90,4 +126,15 @@ function renderResult(mount, r) {
         </div>
     `;
     applyUiI18n(el);
+}
+
+async function runSens(mount, base, tok) {
+    const panel = mount.querySelector('#hsa-sens');
+    panel.innerHTML = `<p class="muted small" data-i18n="calc.enh.sens.running">Computing…</p>`; applyUiI18n(panel);
+    // x: years 0 -> 40; y: annual growth 2% -> 12%. Output: HSA advantage.
+    const xVals = enh.linspace(0, 40, 5);
+    const yVals = enh.linspace(2, 12, 5);
+    const { cells } = await enh.runSensitivity({ base, xKey: 'years', yKey: 'annual_growth_pct', xVals: xVals.map(Math.round), yVals, compute: (b) => api.calcHsaTripleTax(b), pick: (r) => (r ? r.hsa_advantage_usd : null) });
+    if (!viewIsCurrent(tok)) return;
+    panel.innerHTML = enh.renderSensitivityTable({ xVals: xVals.map(Math.round), yVals, cells, fmt: (v) => (v == null ? '—' : '$' + Math.round(v / 1000) + 'k'), xfmt: (v) => v.toFixed(0) + 'y', yfmt: (v) => v.toFixed(0) + '%', xName: t('view.hsatt.label.years') || 'Years', yName: t('view.hsatt.label.annual_growth_pct') || 'Growth' });
 }

@@ -3,6 +3,7 @@
 import { api } from '../api.js';
 import { esc } from '../util.js';
 import { t } from '../i18n.js';
+import * as enh from '../calc_enhance.js';
 
 export async function renderTaxBracketOptimizer(mount, _state) {
     mount.innerHTML = `
@@ -42,6 +43,13 @@ async function runCompute(mount) {
     result.innerHTML = `<p class="muted">${esc(t('view.tax_bracket_optimizer.status.computing'))}</p>`;
     try {
         const r = await api.request('/tax-bracket-optimizer/compute', { method: 'POST', body: JSON.stringify(input) });
+        // Effective-rate-vs-income curve (progressive tiering) — swept across income.
+        const sx = enh.linspace(0, 600000, 16);
+        const pts = await Promise.all(sx.map(async (inc) => {
+            const rr = await api.request('/tax-bracket-optimizer/compute', { method: 'POST', body: JSON.stringify({ ...input, taxable_ordinary_income_usd: inc }) });
+            return { x: inc / 1000, y: rr ? rr.effective_rate_pct : NaN };
+        }));
+        const chart = enh.svgLineChart(pts, { xlabel: 'income $k', ylabel: 'eff rate %' });
         result.innerHTML = `
             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-top:1rem">
                 <div><div class="muted small">${esc(t('view.tax_bracket_optimizer.field.marginal'))}</div>
@@ -57,6 +65,8 @@ async function runCompute(mount) {
                 <div><div class="muted small">${esc(t('view.tax_bracket_optimizer.field.bracket_upper'))}</div>
                     <strong>${isFinite(r.current_bracket_upper_usd) ? '$' + r.current_bracket_upper_usd.toFixed(0) : '∞'}</strong></div>
             </div>
+            ${chart}
+            <div id="tbo-tools" class="ce-toolbar"></div>
             <h2 style="margin-top:1rem">${esc(t('view.tax_bracket_optimizer.h2.brackets'))}</h2>
             <table class="trades">
                 <thead><tr>
@@ -74,6 +84,17 @@ async function runCompute(mount) {
                 }).join('')}</tbody>
             </table>
         `;
+        // Bracket schedule + summary export (Copy / CSV). No permalink — id-based inputs.
+        enh.mountToolbar(mount.querySelector('#tbo-tools'), {
+            viewId: 'tax-bracket-optimizer',
+            link: false,
+            filename: 'tax-bracket-optimizer.csv',
+            getRows: () => [['rate_pct', 'lower_usd', 'upper_usd'],
+                ...(r.brackets || []).map(b => [b.rate_pct, b.lower_usd, isFinite(b.upper_usd) ? b.upper_usd : '']),
+                ['marginal_rate_pct', r.current_marginal_rate_pct, ''],
+                ['effective_rate_pct', r.effective_rate_pct, ''],
+                ['federal_tax_liability_usd', r.federal_tax_liability_usd, '']],
+        });
     } catch (e) {
         result.innerHTML = `<p class="neg">${esc(String(e))}</p>`;
     }
