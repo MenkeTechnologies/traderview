@@ -758,6 +758,7 @@ import { renderPtoBalance } from './views/pto_balance.js';
 import { renderWageGarnishment } from './views/wage_garnishment.js';
 import { renderFinalPaycheck } from './views/final_paycheck.js';
 import { renderBreakPremium } from './views/break_premium.js';
+import { renderReportingTimePay } from './views/reporting_time_pay.js';
 import { renderFixAndFlip } from './views/fix_and_flip.js';
 import { renderCashConversionCycle } from './views/cash_conversion_cycle.js';
 import { renderProfitFirst } from './views/profit_first.js';
@@ -3257,6 +3258,7 @@ export async function dispatch() {
             case 'wage-garnishment': await renderWageGarnishment(mount, state); break;
             case 'final-paycheck': await renderFinalPaycheck(mount, state); break;
             case 'break-premium': await renderBreakPremium(mount, state); break;
+            case 'reporting-time-pay': await renderReportingTimePay(mount, state); break;
             case 'fix-and-flip': await renderFixAndFlip(mount, state); break;
             case 'cash-conversion-cycle': await renderCashConversionCycle(mount, state); break;
             case 'profit-first': await renderProfitFirst(mount, state); break;
@@ -4670,6 +4672,7 @@ export const viewRenderers = {
     'wage-garnishment': (m, s) => renderWageGarnishment(m, s),
     'final-paycheck': (m, s) => renderFinalPaycheck(m, s),
     'break-premium': (m, s) => renderBreakPremium(m, s),
+    'reporting-time-pay': (m, s) => renderReportingTimePay(m, s),
     'fix-and-flip': (m, s) => renderFixAndFlip(m, s),
     'cash-conversion-cycle': (m, s) => renderCashConversionCycle(m, s),
     'profit-first': (m, s) => renderProfitFirst(m, s),

@@ -114,6 +114,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/wage-garnishment", post(wage_garnishment_route))
         .route("/calc/final-paycheck", post(final_paycheck_route))
         .route("/calc/break-premium", post(break_premium_route))
+        .route("/calc/reporting-time-pay", post(reporting_time_pay_route))
         .route("/calc/fix-and-flip", post(fix_and_flip_route))
         .route("/calc/cash-conversion-cycle", post(cash_conversion_cycle_route))
         .route("/calc/profit-first", post(profit_first_route))
@@ -12033,6 +12034,14 @@ async fn break_premium_route(
     Json(b): Json<traderview_core::break_premium::BreakPremiumInput>,
 ) -> Json<traderview_core::break_premium::BreakPremium> {
     Json(traderview_core::break_premium::generate(&b))
+}
+
+/// Reporting-time pay: clamped half-shift minimum guarantee, additional owed.
+async fn reporting_time_pay_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::reporting_time_pay::ReportingTimeInput>,
+) -> Json<traderview_core::reporting_time_pay::ReportingTimePay> {
+    Json(traderview_core::reporting_time_pay::generate(&b))
 }
 
 /// Fix-and-flip: the 70% rule max-allowable-offer plus the full deal P&L
