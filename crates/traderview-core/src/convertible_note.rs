@@ -61,37 +61,47 @@ fn money(v: f64) -> String {
     format!("${:.2}", v)
 }
 
+/// Discount-or-cap conversion pricing shared by the convertible note and the
+/// SAFE. Given an assumed round price per share, returns `(discount_price,
+/// cap_price, conversion_price)` where the conversion price is the lower
+/// (better-for-investor) of the available positive prices, falling back to the
+/// round price when neither a discount nor a cap applies. A zero discount, cap,
+/// or pre-money disables that leg. All figures rounded to cents.
+pub fn discount_cap_conversion(
+    round_price: f64,
+    discount_pct: f64,
+    valuation_cap_usd: f64,
+    round_pre_money_usd: f64,
+) -> (f64, f64, f64) {
+    let discount_price = if discount_pct > 0.0 && round_price > 0.0 {
+        cents(round_price * (1.0 - discount_pct / 100.0))
+    } else {
+        0.0
+    };
+    let cap_price = if valuation_cap_usd > 0.0 && round_pre_money_usd > 0.0 && round_price > 0.0 {
+        cents(round_price * (valuation_cap_usd / round_pre_money_usd))
+    } else {
+        0.0
+    };
+    let conversion = [discount_price, cap_price]
+        .into_iter()
+        .filter(|p| *p > 0.0)
+        .fold(f64::INFINITY, f64::min);
+    let conversion = if conversion.is_finite() { conversion } else { round_price };
+    (discount_price, cap_price, cents(conversion))
+}
+
 pub fn generate(i: &ConvertibleNoteInput) -> ConvertibleNote {
     let accrued = cents(i.principal_usd * i.annual_rate_pct / 100.0 * i.term_months as f64 / 12.0);
     let balance = cents(i.principal_usd + accrued);
 
     let round_price = i.assumed_round_price_per_share_usd;
-    let discount_price = if i.discount_pct > 0.0 && round_price > 0.0 {
-        cents(round_price * (1.0 - i.discount_pct / 100.0))
-    } else {
-        0.0
-    };
-    let cap_price = if i.valuation_cap_usd > 0.0 && i.assumed_round_pre_money_usd > 0.0 && round_price > 0.0 {
-        cents(round_price * (i.valuation_cap_usd / i.assumed_round_pre_money_usd))
-    } else {
-        0.0
-    };
-
-    // Conversion price = lowest available positive price (best for the investor);
-    // fall back to the round price if neither a discount nor a cap applies.
-    let candidates: Vec<f64> = [discount_price, cap_price]
-        .into_iter()
-        .filter(|p| *p > 0.0)
-        .collect();
-    let conversion_price = candidates
-        .iter()
-        .cloned()
-        .fold(f64::INFINITY, f64::min);
-    let conversion_price = if conversion_price.is_finite() {
-        conversion_price
-    } else {
-        round_price
-    };
+    let (discount_price, cap_price, conversion_price) = discount_cap_conversion(
+        round_price,
+        i.discount_pct,
+        i.valuation_cap_usd,
+        i.assumed_round_pre_money_usd,
+    );
 
     let shares = if conversion_price > 0.0 {
         cents(balance / conversion_price)
