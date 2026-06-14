@@ -43,6 +43,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/box-spread", post(box_spread_route))
         .route("/calc/crypto-liquidation", post(crypto_liquidation_route))
         .route("/calc/perp-funding", post(perp_funding_route))
+        .route("/calc/span-margin", post(span_margin_route))
         .route("/calc/risk-on-off", post(risk_on_off_route))
         // ── Margin / buying power ─────────────────────────────────────
         .route("/calc/margin-call", post(margin_call_route))
@@ -859,6 +860,14 @@ async fn perp_funding_route(
     Json(b): Json<traderview_core::perp_funding::PerpFundingInput>,
 ) -> Json<traderview_core::perp_funding::PerpFundingReport> {
     Json(traderview_core::perp_funding::generate(&b))
+}
+
+/// SPAN-style portfolio margin: worst-case loss across 16 risk scenarios.
+async fn span_margin_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::span_margin::SpanInput>,
+) -> Json<traderview_core::span_margin::SpanReport> {
+    Json(traderview_core::span_margin::generate(&b))
 }
 
 async fn risk_on_off_route(

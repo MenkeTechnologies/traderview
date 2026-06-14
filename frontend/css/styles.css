@@ -4373,3 +4373,4 @@ mark.fzf-hl {
 .ef-svg .ef-axis { fill: #5a6b7a; font-size: 9px; }
 .ef-tables { display: flex; gap: 12px; flex-wrap: wrap; }
 .ef-tables table { flex: 1; min-width: 160px; }
+.span-worst td { background: #2a1620; color: #ff6b8a; }

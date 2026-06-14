@@ -1793,6 +1793,7 @@ export const api = {
     calcBoxSpread:           (b) => request('/calc/box-spread',           { method: 'POST', body: JSON.stringify(b) }),
     calcCryptoLiquidation:   (b) => request('/calc/crypto-liquidation',   { method: 'POST', body: JSON.stringify(b) }),
     calcPerpFunding:         (b) => request('/calc/perp-funding',         { method: 'POST', body: JSON.stringify(b) }),
+    calcSpanMargin:          (b) => request('/calc/span-margin',          { method: 'POST', body: JSON.stringify(b) }),
     calcRiskOnOff:           (b) => request('/calc/risk-on-off',          { method: 'POST', body: JSON.stringify(b) }),
     calcMarginCall:          (b) => request('/calc/margin-call',          { method: 'POST', body: JSON.stringify(b) }),
     calcMarginRunway:        (b) => request('/calc/margin-runway',        { method: 'POST', body: JSON.stringify(b) }),
