@@ -316,6 +316,7 @@ pub mod ss_taxation;
 pub mod sortino;
 pub mod spousal_ira;
 pub mod spia;
+pub mod split_shift_premium;
 pub mod spread_attribution;
 pub mod spread_payoff;
 pub mod spread_tracker;
