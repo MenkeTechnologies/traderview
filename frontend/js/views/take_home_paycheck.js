@@ -6,9 +6,13 @@ import { applyUiI18n, t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import { showToast } from '../toast.js';
 import { debounce } from '../util.js';
+import * as enh from '../calc_enhance.js';
 
 const money = (n) => '$' + Number(n).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const pct = (n) => Number(n).toLocaleString(undefined, { maximumFractionDigits: 2 }) + '%';
+const VIEW = 'take-home-paycheck';
+let lastReport = null;
+let lastBody = null;
 
 export async function renderTakeHomePaycheck(mount, _appState) {
     const tok = currentViewToken();
@@ -47,6 +51,9 @@ export async function renderTakeHomePaycheck(mount, _appState) {
                 <label><span data-i18n="view.takehome.label.addlthresh">Add'l Medicare threshold ($)</span>
                     <input type="number" step="1" min="0" name="addl_medicare_threshold" value="200000"></label>
             </form>
+            <div id="takehome-tools" class="ce-toolbar"></div>
+            <button type="button" id="takehome-sens-btn" class="ce-tool" data-i18n="calc.enh.sens.run">▦ Sensitivity</button>
+            <div id="takehome-sens" class="ce-sens"></div>
         </div>
         <div id="takehome-result" class="lpv-preview"></div>
         </div>
@@ -54,9 +61,10 @@ export async function renderTakeHomePaycheck(mount, _appState) {
     applyUiI18n(mount);
 
     const form = mount.querySelector('#takehome-form');
-    const generate = async () => {
+    enh.prefillForm(form, enh.readHashInputs());
+    const readBody = () => {
         const fd = new FormData(form);
-        const body = {
+        return {
             gross_per_period: Number(fd.get('gross_per_period')) || 0,
             periods_per_year: Number(fd.get('periods_per_year')) || 0,
             federal_rate_pct: Number(fd.get('federal_rate_pct')) || 0,
@@ -66,21 +74,51 @@ export async function renderTakeHomePaycheck(mount, _appState) {
             ss_wage_base: Number(fd.get('ss_wage_base')) || 0,
             addl_medicare_threshold: Number(fd.get('addl_medicare_threshold')) || 0,
         };
+    };
+    const generate = async () => {
+        const body = readBody();
         try {
             const r = await api.calcTakeHomePaycheck(body);
             if (!viewIsCurrent(tok)) return;
+            lastReport = r; lastBody = body;
             renderResult(mount, r);
         } catch (err) {
             showToast(err.message || t('view.takehome.toast.error'), { level: 'error' });
         }
     };
+    enh.mountToolbar(mount.querySelector('#takehome-tools'), { viewId: VIEW, getInputs: () => lastBody || readBody(), getRows: () => reportRows(lastReport), filename: 'take-home-paycheck.csv' });
+    mount.querySelector('#takehome-sens-btn').addEventListener('click', () => runSens(mount, readBody(), tok));
     form.addEventListener('input', debounce(generate, 250));
     form.addEventListener('submit', (e) => { e.preventDefault(); generate(); });
     generate();
 }
 
+function reportRows(r) {
+    if (!r) return [];
+    return [
+        ['metric', 'value'],
+        ['take_home_annual', r.take_home_annual],
+        ['take_home_pct', r.take_home_pct],
+        ['effective_tax_rate_pct', r.effective_tax_rate_pct],
+        ['federal_annual', r.federal_annual],
+        ['state_annual', r.state_annual],
+        ['social_security_annual', r.social_security_annual],
+        ['medicare_annual', r.medicare_annual],
+        ['total_tax_annual', r.total_tax_annual],
+    ];
+}
+
 function renderResult(mount, r) {
     const el = mount.querySelector('#takehome-result');
+    // Where the annual gross goes — take-home vs each tax/deduction component.
+    const chart = enh.svgBarChart([
+        { label: 'Net', value: r.take_home_annual },
+        { label: 'Federal', value: r.federal_annual },
+        { label: 'State', value: r.state_annual },
+        { label: 'SocSec', value: r.social_security_annual },
+        { label: 'Medicare', value: r.medicare_annual },
+        { label: 'PreTax', value: r.pre_tax_annual },
+    ]);
     el.innerHTML = `
         <div class="chart-panel">
             <h2 data-i18n="view.takehome.h2.result">Your net</h2>
@@ -92,6 +130,7 @@ function renderResult(mount, r) {
                 <div class="card"><div class="label" data-i18n="view.takehome.card.effrate">Effective tax rate</div>
                     <div class="value">${pct(r.effective_tax_rate_pct)}</div></div>
             </div>
+            ${chart}
             <table class="data-table">
                 <thead><tr><th data-i18n="view.takehome.col.item">Annual</th><th data-i18n="view.takehome.col.amount">Amount</th></tr></thead>
                 <tbody>
@@ -110,4 +149,15 @@ function renderResult(mount, r) {
         </div>
     `;
     applyUiI18n(el);
+}
+
+async function runSens(mount, base, tok) {
+    const panel = mount.querySelector('#takehome-sens');
+    panel.innerHTML = `<p class="muted small" data-i18n="calc.enh.sens.running">Computing…</p>`; applyUiI18n(panel);
+    // x: federal rate 0% -> 37%; y: state rate 0% -> 13%. Output: annual take-home.
+    const xVals = enh.linspace(0, 37, 5);
+    const yVals = enh.linspace(0, 13, 5);
+    const { cells } = await enh.runSensitivity({ base, xKey: 'federal_rate_pct', yKey: 'state_rate_pct', xVals, yVals, compute: (b) => api.calcTakeHomePaycheck(b), pick: (r) => (r ? r.take_home_annual : null) });
+    if (!viewIsCurrent(tok)) return;
+    panel.innerHTML = enh.renderSensitivityTable({ xVals, yVals, cells, fmt: (v) => (v == null ? '—' : '$' + Math.round(v / 1000) + 'k'), xfmt: (v) => v.toFixed(0) + '%', yfmt: (v) => v.toFixed(0) + '%', xName: t('view.takehome.label.federal') || 'Fed', yName: t('view.takehome.label.state') || 'State' });
 }

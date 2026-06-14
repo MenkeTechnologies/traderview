@@ -6,9 +6,13 @@ import { applyUiI18n, t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import { showToast } from '../toast.js';
 import { debounce } from '../util.js';
+import * as enh from '../calc_enhance.js';
 
 const money = (n) => '$' + Number(n).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const hrs = (n) => Number(n).toLocaleString(undefined, { maximumFractionDigits: 1 });
+const VIEW = 'overtime-pay';
+let lastReport = null;
+let lastBody = null;
 
 export async function renderOvertimePay(mount, _appState) {
     const tok = currentViewToken();
@@ -39,6 +43,9 @@ export async function renderOvertimePay(mount, _appState) {
                 <label><span data-i18n="view.ot.label.weeks">Weeks / year</span>
                     <input type="number" step="1" min="1" name="weeks_per_year" value="52"></label>
             </form>
+            <div id="ot-tools" class="ce-toolbar"></div>
+            <button type="button" id="ot-sens-btn" class="ce-tool" data-i18n="calc.enh.sens.run">▦ Sensitivity</button>
+            <div id="ot-sens" class="ce-sens"></div>
         </div>
         <div id="ot-result" class="lpv-preview"></div>
         </div>
@@ -46,9 +53,10 @@ export async function renderOvertimePay(mount, _appState) {
     applyUiI18n(mount);
 
     const form = mount.querySelector('#ot-form');
-    const generate = async () => {
+    enh.prefillForm(form, enh.readHashInputs());
+    const readBody = () => {
         const fd = new FormData(form);
-        const body = {
+        return {
             hourly_rate_usd: Number(fd.get('hourly_rate_usd')) || 0,
             regular_hours: Number(fd.get('regular_hours')) || 0,
             overtime_hours: Number(fd.get('overtime_hours')) || 0,
@@ -57,21 +65,49 @@ export async function renderOvertimePay(mount, _appState) {
             double_time_multiplier: Number(fd.get('double_time_multiplier')) || 0,
             weeks_per_year: Number(fd.get('weeks_per_year')) || 0,
         };
+    };
+    const generate = async () => {
+        const body = readBody();
         try {
             const r = await api.calcOvertimePay(body);
             if (!viewIsCurrent(tok)) return;
-            renderResult(mount, r);
+            lastReport = r; lastBody = body;
+            renderResult(mount, r, body, tok);
         } catch (err) {
             showToast(err.message || t('view.ot.toast.error'), { level: 'error' });
         }
     };
+    enh.mountToolbar(mount.querySelector('#ot-tools'), { viewId: VIEW, getInputs: () => lastBody || readBody(), getRows: () => reportRows(lastReport), filename: 'overtime-pay.csv' });
+    mount.querySelector('#ot-sens-btn').addEventListener('click', () => runSens(mount, readBody(), tok));
     form.addEventListener('input', debounce(generate, 250));
     form.addEventListener('submit', (e) => { e.preventDefault(); generate(); });
     generate();
 }
 
-function renderResult(mount, r) {
+function reportRows(r) {
+    if (!r) return [];
+    return [
+        ['metric', 'value'],
+        ['weekly_gross_usd', r.weekly_gross_usd],
+        ['annual_gross_usd', r.annual_gross_usd],
+        ['effective_hourly_usd', r.effective_hourly_usd],
+        ['regular_pay_usd', r.regular_pay_usd],
+        ['overtime_pay_usd', r.overtime_pay_usd],
+        ['double_time_pay_usd', r.double_time_pay_usd],
+        ['premium_pay_usd', r.premium_pay_usd],
+    ];
+}
+
+async function renderResult(mount, r, body, tok) {
     const el = mount.querySelector('#ot-result');
+    // Line chart: weekly gross as overtime hours sweep 0 -> 30.
+    const xs = enh.linspace(0, 30, 13);
+    const pts = await Promise.all(xs.map(async (h) => {
+        const rr = await api.calcOvertimePay({ ...body, overtime_hours: h });
+        return { x: h, y: rr ? rr.weekly_gross_usd : NaN };
+    }));
+    if (!viewIsCurrent(tok)) return;
+    const chart = enh.svgLineChart(pts, { xlabel: 'OT hrs', ylabel: 'weekly $' });
     el.innerHTML = `
         <div class="chart-panel">
             <h2 data-i18n="view.ot.h2.result">The paycheck</h2>
@@ -83,6 +119,7 @@ function renderResult(mount, r) {
                 <div class="card"><div class="label" data-i18n="view.ot.card.premium">OT premium</div>
                     <div class="value">${money(r.premium_pay_usd)}</div></div>
             </div>
+            ${chart}
             <table class="data-table">
                 <tbody>
                     <tr><td data-i18n="view.ot.row.regular">Regular pay</td><td>${money(r.regular_pay_usd)}</td></tr>
@@ -96,4 +133,16 @@ function renderResult(mount, r) {
         </div>
     `;
     applyUiI18n(el);
+}
+
+async function runSens(mount, base, tok) {
+    const panel = mount.querySelector('#ot-sens');
+    panel.innerHTML = `<p class="muted small" data-i18n="calc.enh.sens.running">Computing…</p>`; applyUiI18n(panel);
+    // x: overtime hours 0 -> 30; y: hourly rate 0.5x -> 1.5x. Output: weekly gross.
+    const rate = base.hourly_rate_usd || 20;
+    const xVals = enh.linspace(0, 30, 5);
+    const yVals = enh.linspace(rate * 0.5, rate * 1.5, 5);
+    const { cells } = await enh.runSensitivity({ base, xKey: 'overtime_hours', yKey: 'hourly_rate_usd', xVals, yVals, compute: (b) => api.calcOvertimePay(b), pick: (r) => (r ? r.weekly_gross_usd : null) });
+    if (!viewIsCurrent(tok)) return;
+    panel.innerHTML = enh.renderSensitivityTable({ xVals, yVals, cells, fmt: (v) => (v == null ? '—' : '$' + Math.round(v)), xfmt: (v) => v.toFixed(0) + 'h', yfmt: (v) => '$' + v.toFixed(0), xName: t('view.ot.label.ot') || 'OT hrs', yName: t('view.ot.label.rate') || 'Rate' });
 }
