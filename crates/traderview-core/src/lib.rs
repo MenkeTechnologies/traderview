@@ -362,6 +362,7 @@ pub mod ti_allowance;
 pub mod trade_expectancy;
 pub mod trade_plan_checklist;
 pub mod trade_quality;
+pub mod trial_balance;
 pub mod trend_channel;
 pub mod treynor;
 pub mod triple_screen;
