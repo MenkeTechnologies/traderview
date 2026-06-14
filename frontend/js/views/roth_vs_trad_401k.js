@@ -4,6 +4,7 @@
 import { api } from '../api.js';
 import { esc } from '../util.js';
 import { t } from '../i18n.js';
+import * as enh from '../calc_enhance.js';
 
 export async function renderRothVsTrad401k(mount, _state) {
     mount.innerHTML = `
@@ -53,6 +54,11 @@ async function runCompute(mount) {
     result.innerHTML = `<p class="muted">${esc(t('view.roth_vs_trad_401k.status.computing'))}</p>`;
     try {
         const r = await api.request('/roth-vs-trad-401k/compute', { method: 'POST', body: JSON.stringify(input) });
+        // Roth vs Traditional after-tax total comparison bars.
+        const chart = enh.svgBarChart([
+            { label: 'Traditional', value: r.traditional_after_tax_total_usd },
+            { label: 'Roth', value: r.roth_after_tax_total_usd },
+        ]);
         const winCls = r.net_winner === 'traditional' ? 'pos' : r.net_winner === 'roth' ? 'pos' : '';
         result.innerHTML = `
             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-top:1rem">
@@ -67,6 +73,8 @@ async function runCompute(mount) {
                 <div><div class="muted small">${esc(t('view.roth_vs_trad_401k.field.breakeven_rate'))}</div>
                     <strong>${r.breakeven_retirement_tax_rate_pct.toFixed(1)}%</strong></div>
             </div>
+            ${chart}
+            <div id="rvt-tools" class="ce-toolbar"></div>
             <h2 style="margin-top:1rem">${esc(t('view.roth_vs_trad_401k.h2.detail'))}</h2>
             <table class="trades">
                 <tbody>
@@ -79,6 +87,18 @@ async function runCompute(mount) {
                 </tbody>
             </table>
         `;
+        // Export (Copy / CSV). No permalink — id-based inputs.
+        enh.mountToolbar(mount.querySelector('#rvt-tools'), {
+            viewId: 'roth-vs-trad-401k',
+            link: false,
+            filename: 'roth-vs-trad-401k.csv',
+            getRows: () => [['metric', 'value'],
+                ['traditional_after_tax_total_usd', r.traditional_after_tax_total_usd],
+                ['roth_after_tax_total_usd', r.roth_after_tax_total_usd],
+                ['net_winner', r.net_winner],
+                ['winner_advantage_usd', r.winner_advantage_usd],
+                ['breakeven_retirement_tax_rate_pct', r.breakeven_retirement_tax_rate_pct]],
+        });
     } catch (e) {
         result.innerHTML = `<p class="neg">${esc(String(e))}</p>`;
     }

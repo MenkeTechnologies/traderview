@@ -6,10 +6,14 @@ import { applyUiI18n, t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import { showToast } from '../toast.js';
 import { debounce } from '../util.js';
+import * as enh from '../calc_enhance.js';
 
 const money = (n) => '$' + Number(n).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 });
 
 const STATUS_CLS = { full: 'pos', partial: '', none: 'neg' };
+const VIEW = 'traditional-ira-deduction';
+let lastReport = null;
+let lastBody = null;
 
 export async function renderTraditionalIraDeduction(mount, _appState) {
     const tok = currentViewToken();
@@ -46,6 +50,7 @@ export async function renderTraditionalIraDeduction(mount, _appState) {
                 <label><span data-i18n="view.tradira.label.catchup">Catch-up ($)</span>
                     <input type="number" step="1" min="0" name="catch_up_usd" value="1100"></label>
             </form>
+            <div id="tradira-tools" class="ce-toolbar"></div>
         </div>
         <div id="tradira-result" class="lpv-preview"></div>
         </div>
@@ -53,9 +58,14 @@ export async function renderTraditionalIraDeduction(mount, _appState) {
     applyUiI18n(mount);
 
     const form = mount.querySelector('#tradira-form');
-    const generate = async () => {
+    const hashIn = enh.readHashInputs();
+    enh.prefillForm(form, hashIn);
+    ['covered_by_plan', 'spouse_covered', 'age_50_plus'].forEach((k) => {
+        if (k in hashIn) form.querySelector(`[name=${k}]`).checked = hashIn[k] === 'true';
+    });
+    const readBody = () => {
         const fd = new FormData(form);
-        const body = {
+        return {
             magi_usd: Number(fd.get('magi_usd')) || 0,
             filing_status: fd.get('filing_status'),
             covered_by_plan: form.querySelector('[name=covered_by_plan]').checked,
@@ -64,22 +74,48 @@ export async function renderTraditionalIraDeduction(mount, _appState) {
             base_limit_usd: Number(fd.get('base_limit_usd')) || 0,
             catch_up_usd: Number(fd.get('catch_up_usd')) || 0,
         };
+    };
+    const generate = async () => {
+        const body = readBody();
         try {
             const r = await api.calcTraditionalIraDeduction(body);
             if (!viewIsCurrent(tok)) return;
-            renderResult(mount, r);
+            lastReport = r; lastBody = body;
+            renderResult(mount, r, body, tok);
         } catch (err) {
             showToast(err.message || t('view.tradira.toast.error'), { level: 'error' });
         }
     };
+    enh.mountToolbar(mount.querySelector('#tradira-tools'), { viewId: VIEW, getInputs: () => lastBody || readBody(), getRows: () => reportRows(lastReport), filename: 'traditional-ira-deduction.csv' });
     form.addEventListener('input', debounce(generate, 250));
     form.addEventListener('submit', (e) => { e.preventDefault(); generate(); });
     generate();
 }
 
-function renderResult(mount, r) {
+function reportRows(r) {
+    if (!r) return [];
+    return [
+        ['metric', 'value'],
+        ['deductible_usd', r.deductible_usd],
+        ['max_contribution_usd', r.max_contribution_usd],
+        ['nondeductible_usd', r.nondeductible_usd],
+        ['phaseout_start_usd', r.phaseout_start_usd],
+        ['phaseout_end_usd', r.phaseout_end_usd],
+        ['status', r.status],
+    ];
+}
+
+async function renderResult(mount, r, body, tok) {
     const el = mount.querySelector('#tradira-result');
     const cls = STATUS_CLS[r.status] ?? '';
+    // Line chart: deductible contribution across MAGI 0 -> $300k (the phase-out ramp).
+    const xs = enh.linspace(0, 300000, 16);
+    const pts = await Promise.all(xs.map(async (m) => {
+        const rr = await api.calcTraditionalIraDeduction({ ...body, magi_usd: m });
+        return { x: m / 1000, y: rr ? rr.deductible_usd : NaN };
+    }));
+    if (!viewIsCurrent(tok)) return;
+    const chart = enh.svgLineChart(pts, { xlabel: 'MAGI $k', ylabel: 'deductible $' });
     el.innerHTML = `
         <div class="chart-panel">
             <h2 data-i18n="view.tradira.h2.result">What you can deduct</h2>
@@ -91,6 +127,7 @@ function renderResult(mount, r) {
                 <div class="card ${cls}"><div class="label" data-i18n="view.tradira.card.status">Status</div>
                     <div class="value ${cls}" data-i18n="view.tradira.status.${r.status}">—</div></div>
             </div>
+            ${chart}
             <table class="data-table">
                 <tbody>
                     <tr><td data-i18n="view.tradira.row.max">Max contribution</td><td>${money(r.max_contribution_usd)}</td></tr>

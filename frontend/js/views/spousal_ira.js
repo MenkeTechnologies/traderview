@@ -7,6 +7,11 @@ import { applyUiI18n, t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import { showToast } from '../toast.js';
 import { debounce } from '../util.js';
+import * as enh from '../calc_enhance.js';
+
+const VIEW = 'spousal-ira';
+let lastReport = null;
+let lastBody = null;
 
 const NUM = [
     ['combined_earned_income_usd', 'Combined earned income ($)', 80000],
@@ -46,6 +51,7 @@ export async function renderSpousalIra(mount, _appState) {
                     <label><input type="checkbox" name="${key}"> <span data-i18n="view.sira.label.${key}">${label}</span></label>
                 `).join('')}
             </form>
+            <div id="sira-tools" class="ce-toolbar"></div>
         </div>
         <div id="sira-result" class="lpv-preview"></div>
         </div>
@@ -53,27 +59,55 @@ export async function renderSpousalIra(mount, _appState) {
     applyUiI18n(mount);
 
     const form = mount.querySelector('#sira-form');
-    const generate = async () => {
+    const hashIn = enh.readHashInputs();
+    enh.prefillForm(form, hashIn);
+    for (const [key] of CHECKS) {
+        if (key in hashIn) form.querySelector(`[name=${key}]`).checked = hashIn[key] === 'true';
+    }
+    const readBody = () => {
         const fd = new FormData(form);
         const body = {};
         for (const [key] of NUM) body[key] = Number(fd.get(key)) || 0;
         for (const [key] of CHECKS) body[key] = fd.get(key) != null;
+        return body;
+    };
+    const generate = async () => {
+        const body = readBody();
         try {
             const r = await api.calcSpousalIra(body);
             if (!viewIsCurrent(tok)) return;
-            renderResult(mount, r);
+            lastReport = r; lastBody = body;
+            renderResult(mount, r, body, tok);
         } catch (err) {
             showToast(err.message || t('view.sira.toast.error'), { level: 'error' });
         }
     };
+    enh.mountToolbar(mount.querySelector('#sira-tools'), { viewId: VIEW, getInputs: () => lastBody || readBody(), getRows: () => reportRows(lastReport), filename: 'spousal-ira.csv' });
     form.addEventListener('input', debounce(generate, 250));
     form.addEventListener('submit', (e) => { e.preventDefault(); generate(); });
     generate();
 }
 
-function renderResult(mount, r) {
+function reportRows(r) {
+    if (!r) return [];
+    return [
+        ['metric', 'value'],
+        ['combined_contribution_usd', r.combined_contribution_usd],
+        ['max_combined_usd', r.max_combined_usd],
+        ['working_allowed_usd', r.working_allowed_usd],
+        ['nonworking_allowed_usd', r.nonworking_allowed_usd],
+        ['income_sufficient', r.income_sufficient],
+    ];
+}
+
+async function renderResult(mount, r, _body, _tok) {
     const el = mount.querySelector('#sira-result');
     const okCls = r.income_sufficient ? 'pos' : 'neg';
+    // Allowed-contribution-per-spouse comparison bars.
+    const chart = enh.svgBarChart([
+        { label: 'Working', value: r.working_allowed_usd },
+        { label: 'Non-work', value: r.nonworking_allowed_usd },
+    ]);
     el.innerHTML = `
         <div class="chart-panel">
             <h2 data-i18n="view.sira.h2.result">Eligibility</h2>
@@ -85,6 +119,7 @@ function renderResult(mount, r) {
                 <div class="card"><div class="label" data-i18n="view.sira.card.max">Max combined</div>
                     <div class="value">${money(r.max_combined_usd)}</div></div>
             </div>
+            ${chart}
             ${r.income_sufficient ? '' : `<p class="muted small neg" data-i18n="view.sira.warn.income">Combined earned income is below the contributions — total IRA contributions can't exceed earned income.</p>`}
             <table class="data-table">
                 <thead><tr>

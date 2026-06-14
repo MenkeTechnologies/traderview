@@ -6,10 +6,14 @@ import { applyUiI18n, t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import { showToast } from '../toast.js';
 import { debounce } from '../util.js';
+import * as enh from '../calc_enhance.js';
 
 const money = (n) => '$' + Number(n).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 });
 
 const STATUS_CLS = { full: 'pos', partial: '', none: 'neg' };
+const VIEW = 'roth-contribution';
+let lastReport = null;
+let lastBody = null;
 
 export async function renderRothContribution(mount, _appState) {
     const tok = currentViewToken();
@@ -41,6 +45,7 @@ export async function renderRothContribution(mount, _appState) {
                 <label><span data-i18n="view.rothlimit.label.catchup">Catch-up ($)</span>
                     <input type="number" step="1" min="0" name="catch_up_usd" value="1100"></label>
             </form>
+            <div id="roth-tools" class="ce-toolbar"></div>
         </div>
         <div id="roth-result" class="lpv-preview"></div>
         </div>
@@ -48,31 +53,60 @@ export async function renderRothContribution(mount, _appState) {
     applyUiI18n(mount);
 
     const form = mount.querySelector('#roth-form');
-    const generate = async () => {
+    const hashIn = enh.readHashInputs();
+    enh.prefillForm(form, hashIn);
+    if ('age_50_plus' in hashIn) form.querySelector('[name=age_50_plus]').checked = hashIn.age_50_plus === 'true';
+    const readBody = () => {
         const fd = new FormData(form);
-        const body = {
+        return {
             magi_usd: Number(fd.get('magi_usd')) || 0,
             filing_status: fd.get('filing_status'),
             age_50_plus: form.querySelector('[name=age_50_plus]').checked,
             base_limit_usd: Number(fd.get('base_limit_usd')) || 0,
             catch_up_usd: Number(fd.get('catch_up_usd')) || 0,
         };
+    };
+    const generate = async () => {
+        const body = readBody();
         try {
             const r = await api.calcRothContribution(body);
             if (!viewIsCurrent(tok)) return;
-            renderResult(mount, r);
+            lastReport = r; lastBody = body;
+            renderResult(mount, r, body, tok);
         } catch (err) {
             showToast(err.message || t('view.rothlimit.toast.error'), { level: 'error' });
         }
     };
+    enh.mountToolbar(mount.querySelector('#roth-tools'), { viewId: VIEW, getInputs: () => lastBody || readBody(), getRows: () => reportRows(lastReport), filename: 'roth-contribution.csv' });
     form.addEventListener('input', debounce(generate, 250));
     form.addEventListener('submit', (e) => { e.preventDefault(); generate(); });
     generate();
 }
 
-function renderResult(mount, r) {
+function reportRows(r) {
+    if (!r) return [];
+    return [
+        ['metric', 'value'],
+        ['allowed_contribution_usd', r.allowed_contribution_usd],
+        ['max_contribution_usd', r.max_contribution_usd],
+        ['disallowed_usd', r.disallowed_usd],
+        ['phaseout_start_usd', r.phaseout_start_usd],
+        ['phaseout_end_usd', r.phaseout_end_usd],
+        ['status', r.status],
+    ];
+}
+
+async function renderResult(mount, r, body, tok) {
     const el = mount.querySelector('#roth-result');
     const cls = STATUS_CLS[r.status] ?? '';
+    // Line chart: allowed contribution across MAGI 0 -> $300k (the phase-out ramp to zero).
+    const xs = enh.linspace(0, 300000, 16);
+    const pts = await Promise.all(xs.map(async (m) => {
+        const rr = await api.calcRothContribution({ ...body, magi_usd: m });
+        return { x: m / 1000, y: rr ? rr.allowed_contribution_usd : NaN };
+    }));
+    if (!viewIsCurrent(tok)) return;
+    const chart = enh.svgLineChart(pts, { xlabel: 'MAGI $k', ylabel: 'allowed $' });
     el.innerHTML = `
         <div class="chart-panel">
             <h2 data-i18n="view.rothlimit.h2.result">What you can contribute</h2>
@@ -84,6 +118,7 @@ function renderResult(mount, r) {
                 <div class="card ${cls}"><div class="label" data-i18n="view.rothlimit.card.status">Status</div>
                     <div class="value ${cls}" data-i18n="view.rothlimit.status.${r.status}">—</div></div>
             </div>
+            ${chart}
             <table class="data-table">
                 <tbody>
                     <tr><td data-i18n="view.rothlimit.row.max">Max limit</td><td>${money(r.max_contribution_usd)}</td></tr>
