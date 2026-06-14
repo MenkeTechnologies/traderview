@@ -201,6 +201,7 @@ pub mod oi_change;
 pub mod open_type;
 pub mod opening_range;
 pub mod optimal_f;
+pub mod option_grant;
 pub mod options_margin;
 pub mod order_block;
 pub mod overtime_pay;

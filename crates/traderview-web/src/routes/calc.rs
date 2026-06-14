@@ -93,6 +93,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/cap-table", post(cap_table_route))
         .route("/calc/board-resolution", post(board_resolution_route))
         .route("/calc/safe", post(safe_route))
+        .route("/calc/option-grant", post(option_grant_route))
         .route("/calc/fix-and-flip", post(fix_and_flip_route))
         .route("/calc/cash-conversion-cycle", post(cash_conversion_cycle_route))
         .route("/calc/profit-first", post(profit_first_route))
@@ -11844,6 +11845,14 @@ async fn safe_route(
     Json(b): Json<traderview_core::safe_agreement::SafeInput>,
 ) -> Json<traderview_core::safe_agreement::SafeAgreement> {
     Json(traderview_core::safe_agreement::generate(&b))
+}
+
+/// Stock option grant (ISO/NSO): cliff+monthly vesting, exercise spread, ISO AMT.
+async fn option_grant_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::option_grant::OptionGrantInput>,
+) -> Json<traderview_core::option_grant::OptionGrant> {
+    Json(traderview_core::option_grant::generate(&b))
 }
 
 /// Fix-and-flip: the 70% rule max-allowable-offer plus the full deal P&L
