@@ -116,6 +116,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/break-premium", post(break_premium_route))
         .route("/calc/reporting-time-pay", post(reporting_time_pay_route))
         .route("/calc/split-shift-premium", post(split_shift_premium_route))
+        .route("/calc/workers-comp-premium", post(workers_comp_premium_route))
         .route("/calc/fix-and-flip", post(fix_and_flip_route))
         .route("/calc/cash-conversion-cycle", post(cash_conversion_cycle_route))
         .route("/calc/profit-first", post(profit_first_route))
@@ -12051,6 +12052,14 @@ async fn split_shift_premium_route(
     Json(b): Json<traderview_core::split_shift_premium::SplitShiftInput>,
 ) -> Json<traderview_core::split_shift_premium::SplitShiftPremium> {
     Json(traderview_core::split_shift_premium::generate(&b))
+}
+
+/// Workers' comp premium: payroll × class rate per code, summed, × experience mod.
+async fn workers_comp_premium_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::workers_comp_premium::WorkersCompInput>,
+) -> Json<traderview_core::workers_comp_premium::WorkersCompPremium> {
+    Json(traderview_core::workers_comp_premium::generate(&b))
 }
 
 /// Fix-and-flip: the 70% rule max-allowable-offer plus the full deal P&L

@@ -384,6 +384,7 @@ pub mod warrant_agreement;
 pub mod wash_sale;
 pub mod williams_r;
 pub mod winloss_asymmetry;
+pub mod workers_comp_premium;
 pub mod wyckoff;
 pub mod years_to_fi;
 pub mod yield_curve;

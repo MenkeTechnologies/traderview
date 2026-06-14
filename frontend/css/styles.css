@@ -4363,3 +4363,6 @@ mark.fzf-hl {
 
 .nec-head,
 .nec-row { grid-template-columns: minmax(120px, 1.6fr) 1.2fr 1fr auto; }
+
+.wcp-head,
+.wcp-row { grid-template-columns: minmax(70px, 0.9fr) minmax(100px, 1.4fr) 1.1fr 0.9fr auto; }

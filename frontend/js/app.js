@@ -760,6 +760,7 @@ import { renderFinalPaycheck } from './views/final_paycheck.js';
 import { renderBreakPremium } from './views/break_premium.js';
 import { renderReportingTimePay } from './views/reporting_time_pay.js';
 import { renderSplitShiftPremium } from './views/split_shift_premium.js';
+import { renderWorkersComp } from './views/workers_comp_premium.js';
 import { renderFixAndFlip } from './views/fix_and_flip.js';
 import { renderCashConversionCycle } from './views/cash_conversion_cycle.js';
 import { renderProfitFirst } from './views/profit_first.js';
@@ -3261,6 +3262,7 @@ export async function dispatch() {
             case 'break-premium': await renderBreakPremium(mount, state); break;
             case 'reporting-time-pay': await renderReportingTimePay(mount, state); break;
             case 'split-shift-premium': await renderSplitShiftPremium(mount, state); break;
+            case 'workers-comp-premium': await renderWorkersComp(mount, state); break;
             case 'fix-and-flip': await renderFixAndFlip(mount, state); break;
             case 'cash-conversion-cycle': await renderCashConversionCycle(mount, state); break;
             case 'profit-first': await renderProfitFirst(mount, state); break;
@@ -4676,6 +4678,7 @@ export const viewRenderers = {
     'break-premium': (m, s) => renderBreakPremium(m, s),
     'reporting-time-pay': (m, s) => renderReportingTimePay(m, s),
     'split-shift-premium': (m, s) => renderSplitShiftPremium(m, s),
+    'workers-comp-premium': (m, s) => renderWorkersComp(m, s),
     'fix-and-flip': (m, s) => renderFixAndFlip(m, s),
     'cash-conversion-cycle': (m, s) => renderCashConversionCycle(m, s),
     'profit-first': (m, s) => renderProfitFirst(m, s),
