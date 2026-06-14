@@ -302,6 +302,7 @@ pub mod rental_application;
 pub mod rental_noi;
 pub mod rental_total_return;
 pub mod rent_vs_sell;
+pub mod reverse_mortgage;
 pub mod roth_bracket_fill;
 pub mod roth_contribution;
 pub mod roth_conversion_ladder;

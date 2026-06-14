@@ -43,6 +43,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/mortgage-payoff-vs-invest", post(mortgage_payoff_vs_invest_route))
         .route("/calc/drip-simulator", post(drip_simulator_route))
         .route("/calc/ibond-calculator", post(ibond_calculator_route))
+        .route("/calc/reverse-mortgage", post(reverse_mortgage_route))
         .route("/calc/dividend-discount-model", post(dividend_discount_model_route))
         .route("/calc/probability-of-profit", post(probability_of_profit_route))
         .route("/calc/straddle", post(straddle_route))
@@ -1021,6 +1022,12 @@ async fn ibond_calculator_route(
     Json(b): Json<traderview_core::ibond_calculator::IbondInput>,
 ) -> Json<traderview_core::ibond_calculator::IbondReport> {
     Json(traderview_core::ibond_calculator::generate(&b))
+}
+
+async fn reverse_mortgage_route(
+    Json(b): Json<traderview_core::reverse_mortgage::ReverseMortgageInput>,
+) -> Json<traderview_core::reverse_mortgage::ReverseMortgageReport> {
+    Json(traderview_core::reverse_mortgage::generate(&b))
 }
 
 async fn roth_conversion_ladder_route(
